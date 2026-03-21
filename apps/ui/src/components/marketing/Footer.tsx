@@ -26,7 +26,7 @@ const footerSections = [
   {
     title: 'Resources',
     links: [
-      { label: 'Documentation', href: '/docs' },
+
       { label: 'Pricing', href: '/pricing' },
       { label: 'Security', href: '/security' },
       { label: 'Integrations', href: '/product/integrations' },
