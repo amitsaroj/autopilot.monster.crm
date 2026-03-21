@@ -29,7 +29,7 @@ The system currently implements a warm-standby architecture across `us-east-1` (
 1. **Detection:** Route 53 Health Checks constantly ping the `us-east-1` API gateway.
 2. **Alerting:** Upon 3 consecutive failures over 30 seconds, a critical PagerDuty alert is triggered.
 3. **Database Promotion:** A manual (or scripted) process promotes the Aurora Replica in `us-west-2` to the Primary writer instance.
-4. **DNS Switch:** Route 53 updates the weighted routing policy, pointing 100% of `api.autopilotmonster.com` traffic to the `us-west-2` API Gateway.
+4. **DNS Switch:** Route 53 updates the weighted routing policy, pointing 100% of `api.autopilot.monster` traffic to the `us-west-2` API Gateway.
 5. **Compute Spin Up:** Auto Scaling Groups in `us-west-2` instantly boot additional ECS tasks to handle the incoming load.
 
 Target RTO (Recovery Time Objective): < 15 minutes.

@@ -68,7 +68,7 @@ export default function HomePage() {
               className="group px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2">
               Start Free Trial <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/features"
+            <Link href="/services"
               className="px-8 py-4 text-base font-semibold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-white/[0.04] rounded-xl border border-gray-200 dark:border-white/[0.08] hover:bg-gray-200 dark:hover:bg-white/[0.08] hover:text-gray-900 dark:hover:text-white transition-all backdrop-blur-sm">
               Watch Demo
             </Link>

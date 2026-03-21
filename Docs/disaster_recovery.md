@@ -31,6 +31,6 @@ If a bad migration runs and corrupts the public schema across all tenants:
 
 1. Verify `us-east-1` is actually irrecoverable via AWS Health Dashboard.
 2. Promote the `us-west-2` Aurora replica to standalone primary.
-3. Update Route53 DNS for `api.autopilotmonster.com` to point to the `us-west-2` load balancer.
+3. Update Route53 DNS for `api.autopilot.monster` to point to the `us-west-2` load balancer.
 4. Since `us-east-1` ElastiCache might be lost, users will be logged out. They must re-authenticate against the `us-west-2` system.
 5. Re-enable the system. Monitor load. RPO: minimal, RTO: 15-30m depending on manual DNS propagation.

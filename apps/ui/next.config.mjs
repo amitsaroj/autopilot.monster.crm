@@ -4,7 +4,7 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   images: {
-    domains: ['localhost', 'cdn.autopilotmonster.com'],
+    domains: ['localhost', 'cdn.autopilot.monster'],
     formats: ['image/avif', 'image/webp'],
   },
   async rewrites() {

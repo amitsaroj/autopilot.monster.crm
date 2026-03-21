@@ -14,7 +14,7 @@ Third-party scripts authenticate via short-lived Personal Access Tokens (PATs) o
 
 ### 1.2 Swagger / OpenAPI
 The NestJS `@nestjs/swagger` module automatically generates the `swagger.json` representing all 400+ endpoints.
-This is hosted publicly at `docs.autopilotmonster.com`.
+This is hosted publicly at `docs.autopilot.monster`.
 
 ## 2. API Keys Lifecycle
 

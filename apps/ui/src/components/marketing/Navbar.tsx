@@ -19,7 +19,7 @@ const navLinks = [
       { label: 'Marketplace', href: '/product/marketplace' },
     ]
   },
-  { label: 'Features', href: '/features' },
+  { label: 'Services', href: '/services' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Docs', href: '/docs' },
   { label: 'Blog', href: '/blog' },

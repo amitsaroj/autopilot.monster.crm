@@ -1,6 +1,6 @@
 # API Scope — Complete REST API Reference
 Project: autopilot.monster.crm  
-Base URL: `https://api.autopilotmonster.com/v1`  
+Base URL: `https://api.autopilot.monster/v1`  
 Auth: Bearer JWT (access token) or API key (x-api-key header)  
 All requests require: `x-tenant-id` header (except super-admin routes)
 

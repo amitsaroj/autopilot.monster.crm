@@ -32,7 +32,7 @@ Strict rate limits applied globally per tenant/IP to prevent abuse:
 
 ### 2.3 CORS & Headers
 - Helmet.js applied for secure HTTP headers (HSTS, NoSniff, XSS Filter).
-- CORS strictly limited to allowed frontend domains (`app.autopilotmonster.com`).
+- CORS strictly limited to allowed frontend domains (`app.autopilot.monster`).
 
 ---
 

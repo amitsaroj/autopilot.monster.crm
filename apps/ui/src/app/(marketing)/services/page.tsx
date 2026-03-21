@@ -79,7 +79,7 @@ const sections = [
   },
 ];
 
-export default function FeaturesPage() {
+export default function ServicesPage() {
   return (
     <div className="pt-32 pb-20">
       <div className="max-w-7xl mx-auto px-6">
@@ -91,7 +91,7 @@ export default function FeaturesPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">Platform Features</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">Platform Services</span>
           <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
             Every tool your<br />revenue team needs
           </h1>

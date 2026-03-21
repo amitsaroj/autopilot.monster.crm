@@ -263,7 +263,7 @@ export class DatabaseModule {}
 # App
 NODE_ENV=production
 PORT=3000
-API_URL=https://api.autopilotmonster.com
+API_URL=https://api.autopilot.monster
 
 # Database
 DB_HOST=postgres
@@ -316,7 +316,7 @@ SMTP_HOST=...
 SMTP_PORT=587
 SMTP_USER=...
 SMTP_PASS=...
-SMTP_FROM=noreply@autopilotmonster.com
+SMTP_FROM=noreply@autopilot.monster
 ```
 
 ---
