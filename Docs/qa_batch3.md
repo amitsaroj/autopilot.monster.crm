@@ -1,29 +1,12 @@
-# qa_batch3.md
+# QA Batch 3: Workflow Engine Reliability
+Project: autopilot.monster.crm
 
-AutopilotMonster Core Documentation
+---
 
-Enterprise CRM SaaS platform
-
-Includes:
-
-- NestJS backend
-- Next.js frontend
-- Multi tenant
-- RBAC
-- Billing
-- Pricing
-- Workflow
-- AI
-- Voice
-- WhatsApp
-- Marketplace
-- Plugin system
-- Queue workers
-- Event bus
-- Scheduler
-- Feature flags
-- Limits
-- Usage billing
-- Admin panel
-- Analytics
-- Logs
+- [ ] Build workflow trigger `DEAL_WON` -> action `SEND_EMAIL`.
+- [ ] Simulate deal win; verify worker picks up job.
+- [ ] Mock SendGrid 500 failure; verify exponential retry 5 times.
+- [ ] Test Condition Branch (Deal > $5000: Ping Slack, else: Add Task).
+- [ ] Pause workflow during execution state via DB. Wait step should hold.
+- [ ] Enforce max 25 steps limit on Professional Plan UI builder.
+- [ ] Evaluate variables injection (e.g. `{{contact.firstName}}` properly replaced).

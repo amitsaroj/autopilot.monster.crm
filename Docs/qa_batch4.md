@@ -1,29 +1,10 @@
-# qa_batch4.md
+# QA Batch 4: AI & RAG Engine
+Project: autopilot.monster.crm
 
-AutopilotMonster Core Documentation
+---
 
-Enterprise CRM SaaS platform
-
-Includes:
-
-- NestJS backend
-- Next.js frontend
-- Multi tenant
-- RBAC
-- Billing
-- Pricing
-- Workflow
-- AI
-- Voice
-- WhatsApp
-- Marketplace
-- Plugin system
-- Queue workers
-- Event bus
-- Scheduler
-- Feature flags
-- Limits
-- Usage billing
-- Admin panel
-- Analytics
-- Logs
+- [ ] Upload 5MB PDF to Knowledge Base; Verify Qdrant indexing matches 500-token chunks.
+- [ ] Ask Agent question outside Knowledge Base (Verify Fallback strategy executes).
+- [ ] Check streaming response (`text/event-stream`) visually chunks text smoothly to UI.
+- [ ] Test Tool Calls (Ask AI "Create a deal for Acme Corp"; Verify DB Deal created).
+- [ ] Trigger Human Handoff (Verify Agent stops, email sent to Rep).

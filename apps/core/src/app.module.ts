@@ -20,6 +20,12 @@ import { QueueModule } from './queue/queue.module';
 import { EventBusModule } from './events/event-bus.module';
 import { StorageModule } from './storage/storage.module';
 
+// Business Modules
+import { AiModule } from './modules/ai/ai.module';
+import { VoiceModule } from './modules/voice/voice.module';
+import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
+import { WorkflowModule } from './modules/workflow/workflow.module';
+
 // Common
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -63,6 +69,12 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     QueueModule,
     EventBusModule,
     StorageModule,
+
+    // Business Modules
+    AiModule,
+    VoiceModule,
+    WhatsappModule,
+    WorkflowModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

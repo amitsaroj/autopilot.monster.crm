@@ -1,29 +1,9 @@
-# qa_batch8.md
+# QA Batch 8: Limits & Feature Runtime
+Project: autopilot.monster.crm
 
-AutopilotMonster Core Documentation
+---
 
-Enterprise CRM SaaS platform
-
-Includes:
-
-- NestJS backend
-- Next.js frontend
-- Multi tenant
-- RBAC
-- Billing
-- Pricing
-- Workflow
-- AI
-- Voice
-- WhatsApp
-- Marketplace
-- Plugin system
-- Queue workers
-- Event bus
-- Scheduler
-- Feature flags
-- Limits
-- Usage billing
-- Admin panel
-- Analytics
-- Logs
+- [ ] Toggle `voice_calls` feature flag OFF in Admin. Verify UI hides dialer immediately.
+- [ ] Mock `LIMIT_EXCEEDED` exception globally. Ensure core App still loads CRM grid.
+- [ ] Apply `tenant_override` for Custom Workflows. Ensure it supersedes Base Plan limit.
+- [ ] Redis Outage Simulation: Ensure base API calls skip limits, but exterior metered usage fails closed.

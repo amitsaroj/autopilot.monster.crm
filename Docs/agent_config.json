@@ -1,2 +1,50 @@
-Full content for agent_config.json
-AutopilotMonster documentation
+{
+  "name": "autopilot-monster-assistant",
+  "version": "1.0.0",
+  "description": "Default configuration for AutopilotMonster's agentic AI framework.",
+  "models": {
+    "default": "gpt-4o",
+    "fallback": "gpt-4o-mini",
+    "fast": "gpt-4o-mini"
+  },
+  "memory": {
+    "enabled": true,
+    "maxTokens": 64000,
+    "strategy": "rolling_window",
+    "retention_days": 30
+  },
+  "tools": [
+    {
+      "name": "lookup_contact",
+      "description": "Look up a CRM contact by email or phone",
+      "parameters": {
+        "type": "object",
+        "properties": { "query": { "type": "string" } },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "create_deal",
+      "description": "Create a new deal in the current pipeline",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "value": { "type": "number" },
+          "contactId": { "type": "string" }
+        },
+        "required": ["name", "value"]
+      }
+    }
+  ],
+  "agentModes": {
+    "support": {
+      "temperature": 0.2,
+      "systemPrompt": "You are a helpful customer support agent. Answer questions using the knowledge base. If you don't know, hand off to a human."
+    },
+    "sales": {
+      "temperature": 0.5,
+      "systemPrompt": "You are a sales development representative. Your goal is to qualify leads, gather budget and timeline information, and book meetings."
+    }
+  }
+}

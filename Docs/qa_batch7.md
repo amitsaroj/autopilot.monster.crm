@@ -1,29 +1,10 @@
-# qa_batch7.md
+# QA Batch 7: Billing & Metering
+Project: autopilot.monster.crm
 
-AutopilotMonster Core Documentation
+---
 
-Enterprise CRM SaaS platform
-
-Includes:
-
-- NestJS backend
-- Next.js frontend
-- Multi tenant
-- RBAC
-- Billing
-- Pricing
-- Workflow
-- AI
-- Voice
-- WhatsApp
-- Marketplace
-- Plugin system
-- Queue workers
-- Event bus
-- Scheduler
-- Feature flags
-- Limits
-- Usage billing
-- Admin panel
-- Analytics
-- Logs
+- [ ] Exhaust 1,000 AI Token soft limit (Verify overage calculated correctly in UI).
+- [ ] Send Voice campaign; Validate `call_minutes` Redis increment exactly matches Twilio duration.
+- [ ] Attempt adding 6th User to Starter Plan (Expect 402 HTTP Response).
+- [ ] Upgrade Base Plan to Pro (Verify Stripe prorates accurately).
+- [ ] Simulate Stripe `charge.failed` Event (Verify UI drops to PAST_DUE).

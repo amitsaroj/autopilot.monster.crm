@@ -1,104 +1,138 @@
-import { TrendingUp, DollarSign, ArrowUpRight, Users, Target, BarChart3, RefreshCw } from 'lucide-react';
+"use client";
 
-const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
-const bars = [38, 42, 55, 49, 63, 71, 68, 74, 82, 90];
+import { useState } from 'react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
+  ComposedChart, Line, Area
+} from 'recharts';
+import { Calendar, Download, TrendingUp, DollarSign, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
 
-export default function AnalyticsRevenuePage() {
-  const maxBar = Math.max(...bars);
+const revenueData = [
+  { month: 'Jan', arr: 42000, new: 5000, churn: 1200 },
+  { month: 'Feb', arr: 48000, new: 7200, churn: 800 },
+  { month: 'Mar', arr: 56000, new: 9000, churn: 1500 },
+  { month: 'Apr', arr: 68000, new: 14000, churn: 2000 },
+  { month: 'May', arr: 85000, new: 19000, churn: 2400 },
+  { month: 'Jun', arr: 110000, new: 28000, churn: 3000 },
+  { month: 'Jul', arr: 142800, new: 35000, churn: 2200 },
+];
+
+export default function RevenueInsightsPage() {
+  const [year, setYear] = useState('2024');
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
+    <div className="space-y-8 animate-fade-in max-w-7xl">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="page-title">Revenue Analytics</h1>
-          <p className="page-description">MRR, ARR, churn, and revenue trends</p>
+          <h1 className="text-2xl font-bold text-foreground">Revenue Insights</h1>
+          <p className="text-sm text-muted-foreground mt-1">Deep dive into ARR, MRR, churn, and net renewals.</p>
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"><RefreshCw className="h-4 w-4" />Refresh</button>
+        <div className="flex items-center gap-3">
+          <select 
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className="appearance-none bg-background border border-input text-foreground text-sm rounded-lg px-4 py-2 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary shadow-sm cursor-pointer"
+          >
+            <option>2024</option>
+            <option>2023</option>
+            <option>All Time</option>
+          </select>
+          <button className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm rounded-lg transition-colors shadow-sm">
+            <Download className="w-4 h-4" /> Export Financials
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: 'MRR', value: '$18,400', change: '+12%', icon: DollarSign, up: true },
-          { label: 'ARR', value: '$220,800', change: '+12%', icon: TrendingUp, up: true },
-          { label: 'Churn Rate', value: '2.4%', change: '-0.3%', icon: Users, up: false },
-          { label: 'Avg Revenue / Account', value: '$3,680', change: '+8%', icon: Target, up: true },
-        ].map((s) => (
-          <div key={s.label} className="stat-card">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-muted-foreground">{s.label}</span>
-              <s.icon className="h-4 w-4 text-muted-foreground" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{s.value}</p>
-            <p className={`text-xs mt-1 flex items-center gap-1 ${s.up ? 'text-green-500' : 'text-red-400'}`}>
-              <ArrowUpRight className={`h-3 w-3 ${!s.up ? 'rotate-180' : ''}`} />{s.change} vs last month
-            </p>
+      {/* Top Level Financial Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* ARR Block */}
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-6 opacity-20">
+            <DollarSign className="w-24 h-24" />
           </div>
-        ))}
-      </div>
-
-      {/* Revenue chart */}
-      <div className="rounded-xl border border-border bg-card p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-sm font-semibold">MRR Trend (2024)</h2>
-          <div className="flex gap-2">
-            {['3M', '6M', '1Y', 'All'].map((p, i) => (
-              <button key={p} className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${i === 2 ? 'bg-[hsl(246,80%,60%)] border-transparent text-white' : 'border-border hover:bg-muted text-muted-foreground'}`}>{p}</button>
-            ))}
+          <p className="text-slate-400 text-sm font-semibold tracking-wider relative z-10">ANNUAL RECURRING REVENUE (ARR)</p>
+          <h2 className="text-4xl font-black mt-2 mb-4 relative z-10">$1.68M</h2>
+          <div className="flex items-center gap-3 relative z-10">
+            <span className="flex items-center gap-1 bg-green-500/20 text-green-400 px-2 py-1 rounded-md text-xs font-bold">
+              <ArrowUpRight className="w-3 h-3" /> +24.8%
+            </span>
+            <span className="text-slate-400 text-xs">from last year</span>
           </div>
         </div>
-        <div className="flex items-end gap-2 h-40">
-          {bars.map((h, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1">
-              <div
-                className="w-full rounded-t-md bg-[hsl(246,80%,60%)] opacity-80 hover:opacity-100 transition-opacity"
-                style={{ height: `${(h / maxBar) * 140}px` }}
-                title={`$${h}k`}
+
+        {/* MRR Block */}
+        <div className="bg-card border border-border p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-muted-foreground text-sm font-semibold tracking-wider">MONTHLY RECURRING REVENUE</p>
+            <div className="p-2 bg-blue-100 rounded-lg"><TrendingUp className="w-4 h-4 text-blue-600" /></div>
+          </div>
+          <h2 className="text-3xl font-black text-foreground mb-4">$142,800</h2>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-green-600 text-sm font-bold">
+              <ArrowUpRight className="w-4 h-4" /> +18.2%
+            </span>
+            <span className="text-muted-foreground text-sm">vs last month</span>
+          </div>
+        </div>
+
+        {/* Churn Block */}
+        <div className="bg-card border border-border p-6 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-muted-foreground text-sm font-semibold tracking-wider">NET REVENUE RETENTION</p>
+            <div className="p-2 bg-purple-100 rounded-lg"><Activity className="w-4 h-4 text-purple-600" /></div>
+          </div>
+          <h2 className="text-3xl font-black text-foreground mb-4">112.4%</h2>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-red-500 text-sm font-bold">
+              <ArrowDownRight className="w-4 h-4" /> -1.2%
+            </span>
+            <span className="text-muted-foreground text-sm">churn rate increase</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Complex Chart */}
+      <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Revenue Waterfall</h2>
+            <p className="text-sm text-muted-foreground">Monthly breakdown of accumulated ARR, New Business, and Churn</p>
+          </div>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-[hsl(246,80%,60%)]" /> ARR</div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-400" /> New Biz</div>
+            <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-400" /> Churn</div>
+          </div>
+        </div>
+        
+        <div className="h-[400px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={revenueData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <CartesianGrid stroke="#f5f5f5" vertical={false} />
+              <XAxis dataKey="month" scale="band" axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} dy={10} />
+              <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} tickFormatter={(value) => `$${value/1000}k`} dx={-10} />
+              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: '#6b7280'}} tickFormatter={(value) => `$${value/1000}k`} dx={10} />
+              <RechartsTooltip 
+                cursor={{ fill: 'transparent' }}
+                contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                formatter={(value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}
               />
-              <span className="text-xs text-muted-foreground">{months[i]}</span>
-            </div>
-          ))}
+              {/* ARR Area Background */}
+              <Area yAxisId="left" type="monotone" dataKey="arr" fill="hsl(246,80%,60%)" fillOpacity={0.1} stroke="transparent" />
+              {/* Data Bars */}
+              <Bar yAxisId="right" dataKey="new" barSize={30} fill="#4ade80" radius={[4, 4, 0, 0]} name="New Business" />
+              <Bar yAxisId="right" dataKey="churn" barSize={30} fill="#f87171" radius={[4, 4, 0, 0]} name="Churn" />
+              {/* ARR Line overlay */}
+              <Line yAxisId="left" type="monotone" dataKey="arr" stroke="hsl(246,80%,60%)" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} name="Total ARR" />
+            </ComposedChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold mb-4">Revenue by Plan</h2>
-          <div className="space-y-3">
-            {[
-              { name: 'Enterprise', revenue: '$10,800', percent: 59, color: 'bg-[hsl(246,80%,60%)]' },
-              { name: 'Professional', revenue: '$5,280', percent: 29, color: 'bg-blue-500' },
-              { name: 'Starter', revenue: '$2,320', percent: 12, color: 'bg-green-500' },
-            ].map((p) => (
-              <div key={p.name}>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-muted-foreground">{p.name}</span>
-                  <span className="font-semibold text-foreground">{p.revenue}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${p.color}`} style={{ width: `${p.percent}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="text-sm font-semibold mb-4">Cohort Retention (last 6 months)</h2>
-          <div className="space-y-2">
-            {['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'].map((m, i) => {
-              const ret = 100 - i * 3;
-              return (
-                <div key={m} className="flex items-center gap-3 text-xs">
-                  <span className="w-8 text-muted-foreground text-right">{m}</span>
-                  <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
-                    <div className="h-full bg-green-500/60 rounded flex items-center px-2" style={{ width: `${ret}%` }}>
-                      <span className="text-xs text-white font-medium">{ret}%</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

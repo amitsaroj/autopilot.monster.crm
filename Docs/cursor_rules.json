@@ -1,2 +1,31 @@
-Full content for cursor_rules.json
-AutopilotMonster documentation
+{
+  "project_rules": [
+    {
+      "pattern": "**/*.ts",
+      "rules": [
+        "Never use `any`.",
+        "Always use `import type` for type-only imports.",
+        "All controllers must have `@UseGuards(TenantGuard)` unless explicitly marked global.",
+        "Repositories must extend `BaseTenantRepository`.",
+        "Never perform raw SQL updates without appending `tenant_id = :tenantId`.",
+        "Use absolute imports `src/...` instead of `../../`."
+      ]
+    },
+    {
+      "pattern": "apps/ui/**/*.tsx",
+      "rules": [
+        "Use Tailwind CSS precisely.",
+        "Server Components by default. Use `"use client"` only when necessary (e.g., hooks, state).",
+        "Use Lucide React for icons.",
+        "Never fetch data directly in client components on mount; use React Query or Server components."
+      ]
+    },
+    {
+      "pattern": "apps/core/**/*.service.ts",
+      "rules": [
+        "Services must not interact with HTTP Req/Res objects.",
+        "Inject `PricingContext` to check limits before creating entities."
+      ]
+    }
+  ]
+}

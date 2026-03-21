@@ -1,64 +1,115 @@
-import { CreditCard, Plus, Trash2, Check, Shield, Star } from 'lucide-react';
+"use client";
 
-const cards = [
-  { brand: 'Visa', last4: '4242', exp: '08/27', default: true },
-  { brand: 'Mastercard', last4: '5555', exp: '12/25', default: false },
-];
+import { CreditCard, Plus, CheckCircle2, MoreVertical, Building } from 'lucide-react';
+import Link from 'next/link';
 
 export default function PaymentMethodsPage() {
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
-      <div className="page-header">
+    <div className="space-y-8 animate-fade-in max-w-4xl">
+      
+      {/* Header */}
+      <div className="border-b border-border pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">Payment Methods</h1>
-          <p className="page-description">Manage cards and billing methods</p>
+          <div className="flex items-center gap-2 mb-1">
+            <Link href="/billing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Billing</Link>
+            <span className="text-muted-foreground text-sm">/</span>
+            <span className="text-sm font-medium text-foreground">Payment Methods</span>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Payment Methods</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manage your credit cards and billing information.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"><Plus className="h-4 w-4" />Add Card</button>
+        <button className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm rounded-lg transition-colors shadow-sm">
+          <Plus className="w-4 h-4" /> Add Payment Method
+        </button>
       </div>
 
-      <div className="space-y-3">
-        {cards.map((c) => (
-          <div key={c.last4} className={`rounded-xl border bg-card p-5 flex items-center gap-4 ${c.default ? 'border-[hsl(246,80%,60%)]' : 'border-border'}`}>
-            <div className="w-14 h-9 rounded-lg bg-muted flex items-center justify-center font-bold text-sm text-foreground">{c.brand === 'Visa' ? '💳' : '💳'}</div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold text-foreground">{c.brand} ending in {c.last4}</p>
-                {c.default && <span className="flex items-center gap-1 px-1.5 py-0.5 bg-[hsl(246,80%,60%)]/10 text-[hsl(246,80%,60%)] text-xs rounded-full"><Star className="h-2.5 w-2.5" />Default</span>}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        {/* Saved Cards */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-foreground">Saved Cards</h2>
+          
+          {/* Card 1 (Default) */}
+          <div className="bg-card border border-[hsl(246,80%,60%)] rounded-xl p-5 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[hsl(246,80%,60%)]/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
+            
+            <div className="flex items-start justify-between relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-10 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0">
+                  <span className="font-black text-slate-800 italic tracking-tighter">VISA</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground">Visa ending in 4242</h3>
+                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase tracking-wider">Default</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-0.5">Expires 12/26</p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">Expires {c.exp}</p>
+              <button className="p-1.5 text-muted-foreground hover:bg-muted rounded-md transition-colors">
+                <MoreVertical className="w-4 h-4" />
+              </button>
             </div>
-            <div className="flex gap-2">
-              {!c.default && <button className="px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-muted transition-colors">Set Default</button>}
-              <button className="p-2 rounded-lg border border-border hover:bg-red-500/10 hover:border-red-500/30 transition-colors"><Trash2 className="h-3.5 w-3.5 text-muted-foreground" /></button>
+            <div className="mt-5 pt-4 border-t border-border flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle2 className="w-4 h-4 text-green-500" />
+              Your active subscription is billed to this card.
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Add new card */}
-      <div className="rounded-xl border border-dashed border-border bg-card p-6 space-y-4">
-        <h2 className="text-sm font-semibold flex items-center gap-2"><CreditCard className="h-4 w-4 text-[hsl(246,80%,60%)]" />Add New Card</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Card Number</label>
-            <input placeholder="1234 5678 9012 3456" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Expiry (MM/YY)</label>
-            <input placeholder="08/27" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">CVV</label>
-            <input placeholder="•••" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
-          </div>
-          <div className="col-span-2">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Name on Card</label>
-            <input placeholder="Amit Saroj" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
+          {/* Card 2 */}
+          <div className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div className="flex items-start justify-between relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-10 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0">
+                  <span className="font-bold text-slate-800 tracking-tighter">Mastercard</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Mastercard ending in 8812</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">Expires 08/25</p>
+                </div>
+              </div>
+              <button className="p-1.5 text-muted-foreground hover:bg-muted rounded-md transition-colors">
+                <MoreVertical className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="mt-5 pt-4 border-t border-border">
+              <button className="text-sm font-medium text-primary hover:underline">Make Default</button>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground"><Shield className="h-3.5 w-3.5 text-green-500" />Your card details are encrypted with TLS and processed by Stripe.</div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"><Check className="h-4 w-4" />Save Card</button>
+
+        {/* Billing Information */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Billing Information</h2>
+            <button className="text-primary hover:underline font-medium text-sm">Edit</button>
+          </div>
+          
+          <div className="bg-muted/30 border border-border rounded-xl p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <Building className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-foreground">AutopilotMonster Enterprise</h3>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                  Attn: Amit Saroj<br />
+                  123 Innovation Drive<br />
+                  Suite 400<br />
+                  San Francisco, CA 94105<br />
+                  United States
+                </p>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-border">
+              <p className="text-sm font-medium text-foreground mb-1">Tax ID / VAT Number</p>
+              <p className="text-sm text-muted-foreground font-mono bg-background border border-input rounded px-2 py-1 inline-block">US-123456789</p>
+              <p className="text-xs text-muted-foreground mt-2">This will appear on all your invoices.</p>
+            </div>
+          </div>
+        </div>
+        
       </div>
+
     </div>
   );
 }
