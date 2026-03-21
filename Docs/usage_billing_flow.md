@@ -1,2 +1,19 @@
-Full content for usage_billing_flow.md
-AutopilotMonster documentation
+# usage_billing_flow.md
+
+AutopilotMonster Runtime / Pricing / Control Documentation
+
+Rules:
+
+- Multi tenant SaaS
+- Plan based features
+- Usage billing
+- Credits system
+- Feature flags
+- Limits runtime checks
+- RBAC
+- Admin override
+- Tenant override
+- Plugin pricing
+- Cost tracking
+- Event driven updates
+- Queue processing

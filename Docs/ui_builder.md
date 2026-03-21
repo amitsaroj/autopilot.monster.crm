@@ -1,2 +1,16 @@
-Full content for ui_builder.md
-AutopilotMonster documentation
+# ui_builder.md
+
+AutopilotMonster Module Documentation
+
+This module follows enterprise architecture:
+
+- NestJS modular structure
+- Controller / Service / Repository
+- Tenant isolation
+- RBAC
+- Feature flags
+- Plan limits
+- Queue workers
+- Event bus
+- Audit logs
+- API versioning

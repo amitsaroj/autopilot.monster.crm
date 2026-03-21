@@ -1,31 +1,144 @@
-# Node
+
+# ============================================================
+# AUTOPILOT MONSTER CRM — .gitignore
+# Stack: Next.js · NestJS · Turborepo · TypeScript · Prisma · Docker
+# ============================================================
+
+# ─── Dependencies ───────────────────────────────────────────
 node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# ─── Build Outputs ──────────────────────────────────────────
 dist/
 build/
-coverage/
-.turbo/
+out/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+storybook-static/
 
-# Environment
+# ─── Turborepo ──────────────────────────────────────────────
+.turbo/
+.turbo-*
+
+# ─── TypeScript ─────────────────────────────────────────────
+*.tsbuildinfo
+*.d.ts.map
+
+# ─── Environment & Secrets ─────────────────────────────────
 .env
 .env.*
 !.env.example
+!.env.test.example
+.env.local
+.env.*.local
+secrets.json
+*.pem
+*.key
+*.cert
+*.p12
 
-# OS
-.DS_Store
-Thumbs.db
+# ─── Testing & Coverage ─────────────────────────────────────
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+playwright/.cache/
+cypress/videos/
+cypress/screenshots/
+cypress/downloads/
 
-# Logs
+# ─── Prisma ─────────────────────────────────────────────────
+# Keep schema.prisma and migrations — ignore generated client
+prisma/generated/
+prisma/.env
+
+# ─── Logs ───────────────────────────────────────────────────
 *.log
+*.log.*
 logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# TypeScript
+# ─── Cache ──────────────────────────────────────────────────
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 *.tsbuildinfo
 
-# Docker volumes
+# ─── Docker ─────────────────────────────────────────────────
+# Ignore local volume data; keep Dockerfiles and compose files
 data/
+volumes/
+docker-compose.override.yml
+
+# ─── OS & System ────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ─── IDE & Editor ───────────────────────────────────────────
+.idea/
+.idea/**
+*.iml
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+*.swo
+*~
+
+# ─── Package Manager Locks (keep one, ignore others) ────────
+# Uncomment whichever you are NOT using:
+# yarn.lock
+# pnpm-lock.yaml
+
+# ─── Misc / Tooling ─────────────────────────────────────────
+.vercel
+.netlify/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+.node_repl_history
+*.pid
+*.seed
+*.pid.lock
+jspm_packages/
+web_modules/
+
+# ─── Next.js Specific ───────────────────────────────────────
+.next/
+next-env.d.ts
+apps/ui/node_modules
+apps/ui/.next
+apps/ui/.turbo
+apps/ui/.next
+apps/ui/out
+apps/ui/dist
+
+# ─── NestJS Specific ────────────────────────────────────────
+dist/

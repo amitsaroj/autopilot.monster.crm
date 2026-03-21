@@ -1,2 +1,13 @@
-Full content for plan_middleware.md
-AutopilotMonster documentation
+# plan_middleware.md
+
+AutopilotMonster Documentation
+
+Enterprise SaaS rules:
+- tenant isolation
+- RBAC
+- pricing limits
+- feature flags
+- usage billing
+- queue workers
+- event bus
+- audit logs
