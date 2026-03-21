@@ -47,7 +47,7 @@ export default function MarketingNavbar() {
           : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
@@ -121,7 +121,7 @@ export default function MarketingNavbar() {
         </div>
 
         {/* Mobile Toggle */}
-        <div className="lg:hidden flex items-center gap-2">
+        <div className="lg:hidden flex items-center gap-2 shrink-0">
           <ThemeToggle variant="marketing" />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -139,9 +139,9 @@ export default function MarketingNavbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-xl border-t border-gray-200 dark:border-white/[0.06] overflow-hidden"
+            className="lg:hidden bg-white/95 dark:bg-[#0b0f19]/95 backdrop-blur-xl border-t border-gray-200 dark:border-white/[0.06] overflow-y-auto max-h-[calc(100vh-64px)]"
           >
-            <div className="px-6 py-6 space-y-4">
+            <div className="px-4 sm:px-6 py-6 space-y-4">
               {navLinks.map((link) =>
                 link.children ? (
                   <div key={link.label} className="space-y-2">
