@@ -1,0 +1,2 @@
+Full content for marketplace_design.md
+AutopilotMonster documentation

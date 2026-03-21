@@ -1,0 +1,30 @@
+/** Standardised error codes returned in API responses */
+export const ERROR_CODES = {
+  // Auth
+  UNAUTHORIZED: 'AUTH_001',
+  FORBIDDEN: 'AUTH_002',
+  TOKEN_EXPIRED: 'AUTH_003',
+  INVALID_TOKEN: 'AUTH_004',
+
+  // Tenant
+  TENANT_NOT_FOUND: 'TENANT_001',
+  TENANT_SUSPENDED: 'TENANT_002',
+
+  // Billing / Plan
+  PLAN_FEATURE_DISABLED: 'BILLING_001',
+  USAGE_LIMIT_EXCEEDED: 'BILLING_002',
+  SUBSCRIPTION_REQUIRED: 'BILLING_003',
+  PAYMENT_FAILED: 'BILLING_004',
+
+  // Validation
+  VALIDATION_ERROR: 'VAL_001',
+  NOT_FOUND: 'VAL_002',
+  CONFLICT: 'VAL_003',
+
+  // Server
+  INTERNAL_ERROR: 'SRV_001',
+  SERVICE_UNAVAILABLE: 'SRV_002',
+  RATE_LIMITED: 'SRV_003',
+} as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

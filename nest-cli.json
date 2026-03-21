@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/core/src",
+  "monorepo": true,
+  "root": "apps/core",
+  "compilerOptions": {
+    "webpack": false,
+    "tsConfigPath": "apps/core/tsconfig.json",
+    "plugins": [
+      {
+        "name": "@nestjs/swagger",
+        "options": {
+          "classValidatorShim": true,
+          "introspectComments": true
+        }
+      }
+    ]
+  },
+  "projects": {
+    "core": {
+      "type": "application",
+      "root": "apps/core",
+      "entryFile": "main",
+      "sourceRoot": "apps/core/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/core/tsconfig.json"
+      }
+    },
+    "auth": {
+      "type": "application",
+      "root": "apps/auth",
+      "entryFile": "main",
+      "sourceRoot": "apps/auth/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/auth/tsconfig.json"
+      }
+    },
+    "tenant": {
+      "type": "application",
+      "root": "apps/tenant",
+      "entryFile": "main",
+      "sourceRoot": "apps/tenant/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/tenant/tsconfig.json"
+      }
+    },
+    "rbac": {
+      "type": "application",
+      "root": "apps/rbac",
+      "entryFile": "main",
+      "sourceRoot": "apps/rbac/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/rbac/tsconfig.json"
+      }
+    },
+    "billing": {
+      "type": "application",
+      "root": "apps/billing",
+      "entryFile": "main",
+      "sourceRoot": "apps/billing/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/billing/tsconfig.json"
+      }
+    },
+    "pricing": {
+      "type": "application",
+      "root": "apps/pricing",
+      "entryFile": "main",
+      "sourceRoot": "apps/pricing/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/pricing/tsconfig.json"
+      }
+    },
+    "crm": {
+      "type": "application",
+      "root": "apps/crm",
+      "entryFile": "main",
+      "sourceRoot": "apps/crm/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/crm/tsconfig.json"
+      }
+    },
+    "workflow": {
+      "type": "application",
+      "root": "apps/workflow",
+      "entryFile": "main",
+      "sourceRoot": "apps/workflow/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/workflow/tsconfig.json"
+      }
+    },
+    "ai": {
+      "type": "application",
+      "root": "apps/ai",
+      "entryFile": "main",
+      "sourceRoot": "apps/ai/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ai/tsconfig.json"
+      }
+    },
+    "voice": {
+      "type": "application",
+      "root": "apps/voice",
+      "entryFile": "main",
+      "sourceRoot": "apps/voice/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/voice/tsconfig.json"
+      }
+    },
+    "messaging": {
+      "type": "application",
+      "root": "apps/messaging",
+      "entryFile": "main",
+      "sourceRoot": "apps/messaging/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/messaging/tsconfig.json"
+      }
+    },
+    "notifications": {
+      "type": "application",
+      "root": "apps/notifications",
+      "entryFile": "main",
+      "sourceRoot": "apps/notifications/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notifications/tsconfig.json"
+      }
+    },
+    "marketplace": {
+      "type": "application",
+      "root": "apps/marketplace",
+      "entryFile": "main",
+      "sourceRoot": "apps/marketplace/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/marketplace/tsconfig.json"
+      }
+    },
+    "plugin": {
+      "type": "application",
+      "root": "apps/plugin",
+      "entryFile": "main",
+      "sourceRoot": "apps/plugin/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/plugin/tsconfig.json"
+      }
+    },
+    "storage": {
+      "type": "application",
+      "root": "apps/storage",
+      "entryFile": "main",
+      "sourceRoot": "apps/storage/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/storage/tsconfig.json"
+      }
+    },
+    "search": {
+      "type": "application",
+      "root": "apps/search",
+      "entryFile": "main",
+      "sourceRoot": "apps/search/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/search/tsconfig.json"
+      }
+    },
+    "analytics": {
+      "type": "application",
+      "root": "apps/analytics",
+      "entryFile": "main",
+      "sourceRoot": "apps/analytics/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/analytics/tsconfig.json"
+      }
+    },
+    "admin": {
+      "type": "application",
+      "root": "apps/admin",
+      "entryFile": "main",
+      "sourceRoot": "apps/admin/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/admin/tsconfig.json"
+      }
+    }
+  }
+}

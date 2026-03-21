@@ -1,0 +1,4 @@
+// Migrations will be generated here via:
+// npm run migrate:generate -- -n <MigrationName>
+// Placeholder — do not delete this file.
+export {};

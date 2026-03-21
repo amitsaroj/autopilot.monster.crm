@@ -1,0 +1,2 @@
+Full content for pricing_permissions.md
+AutopilotMonster documentation
