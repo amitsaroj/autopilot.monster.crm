@@ -5,11 +5,11 @@ import { Shield, ShieldAlert, Key, UserCheck, Search, Filter, Mail, UserPlus, Mo
 import Link from 'next/link';
 
 const users = [
-  { id: '1', name: 'Amit Saroj', email: 'amit@autopilotmonster.com', role: 'Super Admin', mfa: true, status: 'Active', joined: 'Jan 15, 2024', lastActive: '2 mins ago' },
-  { id: '2', name: 'Priya Sharma', email: 'priya@autopilotmonster.com', role: 'Tenant Admin', mfa: true, status: 'Active', joined: 'Feb 10, 2024', lastActive: '1 hr ago' },
-  { id: '3', name: 'Alex Kim', email: 'alex@autopilotmonster.com', role: 'Sales Manager', mfa: false, status: 'Active', joined: 'Mar 22, 2024', lastActive: '5 hrs ago' },
-  { id: '4', name: 'Sarah Lee', email: 'sarah@autopilotmonster.com', role: 'Sales Rep', mfa: true, status: 'Invited', joined: 'Pending', lastActive: 'Never' },
-  { id: '5', name: 'John Doe', email: 'john@autopilotmonster.com', role: 'Support Agent', mfa: false, status: 'Suspended', joined: 'Apr 05, 2024', lastActive: '12 days ago' },
+  { id: '1', name: 'Amit Saroj', email: 'autopilot.monster@gmail.com', role: 'Super Admin', mfa: true, status: 'Active', joined: 'Jan 15, 2024', lastActive: '2 mins ago' },
+  { id: '2', name: 'Priya Sharma', email: 'autopilot.monster@gmail.com', role: 'Tenant Admin', mfa: true, status: 'Active', joined: 'Feb 10, 2024', lastActive: '1 hr ago' },
+  { id: '3', name: 'Alex Kim', email: 'autopilot.monster@gmail.com', role: 'Sales Manager', mfa: false, status: 'Active', joined: 'Mar 22, 2024', lastActive: '5 hrs ago' },
+  { id: '4', name: 'Sarah Lee', email: 'autopilot.monster@gmail.com', role: 'Sales Rep', mfa: true, status: 'Invited', joined: 'Pending', lastActive: 'Never' },
+  { id: '5', name: 'John Doe', email: 'autopilot.monster@gmail.com', role: 'Support Agent', mfa: false, status: 'Suspended', joined: 'Apr 05, 2024', lastActive: '12 days ago' },
 ];
 
 const roleStyles: Record<string, string> = {

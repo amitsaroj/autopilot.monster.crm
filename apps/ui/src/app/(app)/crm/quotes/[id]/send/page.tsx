@@ -26,7 +26,7 @@ export default function QuoteSendPage() {
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
         <h2 className="text-sm font-semibold flex items-center gap-2"><Mail className="h-4 w-4 text-[hsl(246,80%,60%)]" />Send by Email</h2>
         {[
-          { label: 'To', value: 'sarah.johnson@techcorp.com' },
+          { label: 'To', value: 'autopilot.monster@gmail.com' },
           { label: 'CC', value: '' },
           { label: 'Subject', value: 'Quote QT-2024-001 · Enterprise License — AutopilotMonster' },
         ].map((f) => (

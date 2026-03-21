@@ -31,7 +31,7 @@ export default function ContactDetailPage({ params }: { params: { id: string } }
             </div>
             <div className="space-y-3 text-sm">
               {[
-                { label: 'Email', value: 'sarah@techcorp.com', icon: Mail },
+                { label: 'Email', value: 'autopilot.monster@gmail.com', icon: Mail },
                 { label: 'Phone', value: '+1 (555) 234-5678', icon: Phone },
                 { label: 'LinkedIn', value: 'linkedin.com/in/sarahj', icon: Link2 },
               ].map((f) => (

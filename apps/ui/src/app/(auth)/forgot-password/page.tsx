@@ -8,7 +8,7 @@ export default function ForgotPasswordPage() {
       <form className="space-y-4">
         <div>
           <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Email address</label>
-          <input type="email" placeholder="you@company.com" className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="email" placeholder="autopilot.monster@gmail.com" className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <button type="submit" className="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20">
           Send reset link

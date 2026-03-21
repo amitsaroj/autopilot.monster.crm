@@ -1,7 +1,7 @@
 import { Search, Command } from 'lucide-react';
 
 const results = [
-  { type: 'Contact', label: 'Sarah Johnson', sub: 'sarah@techcorp.com · TechCorp', href: '/crm/contacts/1' },
+  { type: 'Contact', label: 'Sarah Johnson', sub: 'autopilot.monster@gmail.com · TechCorp', href: '/crm/contacts/1' },
   { type: 'Deal', label: 'Enterprise License $48k', sub: 'Stage: Proposal · TechCorp', href: '/crm/deals/1' },
   { type: 'Lead', label: 'Acme Corp — Hot Lead', sub: 'Score: 92 · Tom Bradley', href: '/crm/leads/1' },
   { type: 'Workflow', label: 'Lead Nurture Sequence', sub: 'Active · 1,284 runs', href: '/workflows/1' },

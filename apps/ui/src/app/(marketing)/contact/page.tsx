@@ -16,14 +16,14 @@ export default function ContactPage() {
               <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">First Name</label><input type="text" className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all" placeholder="John" /></div>
               <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Last Name</label><input type="text" className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all" placeholder="Smith" /></div>
             </div>
-            <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Work Email</label><input type="email" className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all" placeholder="john@company.com" /></div>
+            <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Work Email</label><input type="email" className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all" placeholder="autopilot.monster@gmail.com" /></div>
             <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Message</label><textarea rows={4} className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-none" placeholder="Tell us about your use case..." /></div>
             <button type="submit" className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 hover:scale-[1.01] transition-all">Send Message</button>
           </form>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="lg:col-span-2 space-y-6">
           {[
-            { icon: Mail, title: 'Email', info: 'sales@autopilotmonster.com', desc: 'Enterprise & partnership inquiries' },
+            { icon: Mail, title: 'Email', info: 'autopilot.monster@gmail.com', desc: 'Enterprise & partnership inquiries' },
             { icon: MessageCircle, title: 'Live Chat', info: 'Available 24/7', desc: 'Talk to our AI concierge or a human' },
             { icon: MapPin, title: 'Office', info: 'San Francisco, CA', desc: 'By appointment only' },
           ].map((item) => (

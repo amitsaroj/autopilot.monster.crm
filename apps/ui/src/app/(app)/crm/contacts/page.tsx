@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { Plus, Search, Filter, MoreHorizontal, Mail, Phone, ExternalLink, Download, UserPlus, CheckCircle2, ChevronDown } from 'lucide-react';
 
 const mockContacts = [
-  { id: '1', name: 'John Smith', company: 'Acme Corp', role: 'VP of Sales', email: 'john@acme.co', phone: '+1 (555) 019-2831', status: 'Active', lastContact: '2 hours ago', score: 92 },
-  { id: '2', name: 'Sarah Jenkins', company: 'TechFlow', role: 'CEO', email: 'sarah@techflow.io', phone: '+1 (555) 723-9912', status: 'Cold', lastContact: '14 days ago', score: 45 },
-  { id: '3', name: 'Mike Chen', company: 'Nexus Systems', role: 'CTO', email: 'mike.c@nexus.dev', phone: '+1 (555) 883-2001', status: 'Warm', lastContact: '1 day ago', score: 78 },
-  { id: '4', name: 'David Lee', company: 'OmniCorp', role: 'Director of Ops', email: 'dlee@omnicorp.net', phone: '+44 20 7123 4567', status: 'Active', lastContact: '5 hours ago', score: 88 },
-  { id: '5', name: 'Jessica Alba', company: 'DataWorks Inc', role: 'Head of Data', email: 'jessica@dataworks.ai', phone: '+1 (555) 442-9988', status: 'New', lastContact: 'Just now', score: 65 },
-  { id: '6', name: 'Bob Stone', company: 'LocalRetailer', role: 'Owner', email: 'bob@localbrand.com', phone: '+1 (555) 112-4432', status: 'Warm', lastContact: '3 days ago', score: 71 },
+  { id: '1', name: 'John Smith', company: 'Acme Corp', role: 'VP of Sales', email: 'autopilot.monster@gmail.com', phone: '+1 (555) 019-2831', status: 'Active', lastContact: '2 hours ago', score: 92 },
+  { id: '2', name: 'Sarah Jenkins', company: 'TechFlow', role: 'CEO', email: 'autopilot.monster@gmail.com', phone: '+1 (555) 723-9912', status: 'Cold', lastContact: '14 days ago', score: 45 },
+  { id: '3', name: 'Mike Chen', company: 'Nexus Systems', role: 'CTO', email: 'autopilot.monster@gmail.com', phone: '+1 (555) 883-2001', status: 'Warm', lastContact: '1 day ago', score: 78 },
+  { id: '4', name: 'David Lee', company: 'OmniCorp', role: 'Director of Ops', email: 'autopilot.monster@gmail.com', phone: '+44 20 7123 4567', status: 'Active', lastContact: '5 hours ago', score: 88 },
+  { id: '5', name: 'Jessica Alba', company: 'DataWorks Inc', role: 'Head of Data', email: 'autopilot.monster@gmail.com', phone: '+1 (555) 442-9988', status: 'New', lastContact: 'Just now', score: 65 },
+  { id: '6', name: 'Bob Stone', company: 'LocalRetailer', role: 'Owner', email: 'autopilot.monster@gmail.com', phone: '+1 (555) 112-4432', status: 'Warm', lastContact: '3 days ago', score: 71 },
 ];
 
 const statusStyles: Record<string, string> = {

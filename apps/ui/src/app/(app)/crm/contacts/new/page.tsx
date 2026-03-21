@@ -25,7 +25,7 @@ export default function NewContactPage() {
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">Email *</label>
-            <input type="email" placeholder="sarah@techcorp.com" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
+            <input type="email" placeholder="autopilot.monster@gmail.com" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
           </div>
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">Phone</label>

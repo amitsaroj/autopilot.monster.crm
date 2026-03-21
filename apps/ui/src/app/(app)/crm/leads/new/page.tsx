@@ -18,7 +18,7 @@ export default function NewLeadPage() {
           {[
             { label: 'First Name *', placeholder: 'John' },
             { label: 'Last Name *', placeholder: 'Doe' },
-            { label: 'Email *', placeholder: 'john@company.com', type: 'email' },
+            { label: 'Email *', placeholder: 'autopilot.monster@gmail.com', type: 'email' },
             { label: 'Phone', placeholder: '+1 555-000-1111', type: 'tel' },
             { label: 'Company', placeholder: 'Company Inc' },
             { label: 'Job Title', placeholder: 'VP of Sales' },

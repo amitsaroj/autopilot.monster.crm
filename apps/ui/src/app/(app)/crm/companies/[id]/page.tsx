@@ -2,9 +2,9 @@ import { Building2, Globe, MapPin, Users, DollarSign, Phone, Mail, Edit, Plus, E
 import Link from 'next/link';
 
 const contacts = [
-  { name: 'Sarah Johnson', role: 'CTO', email: 'sarah@techcorp.com', phone: '+1 555-234-5678', status: 'Active' },
-  { name: 'Mike Chen', role: 'VP Sales', email: 'mike@techcorp.com', phone: '+1 555-876-5432', status: 'Active' },
-  { name: 'Emily Davis', role: 'Procurement', email: 'emily@techcorp.com', phone: '+1 555-345-6789', status: 'Active' },
+  { name: 'Sarah Johnson', role: 'CTO', email: 'autopilot.monster@gmail.com', phone: '+1 555-234-5678', status: 'Active' },
+  { name: 'Mike Chen', role: 'VP Sales', email: 'autopilot.monster@gmail.com', phone: '+1 555-876-5432', status: 'Active' },
+  { name: 'Emily Davis', role: 'Procurement', email: 'autopilot.monster@gmail.com', phone: '+1 555-345-6789', status: 'Active' },
 ];
 const deals = [
   { name: 'Enterprise License', value: '$48,000', stage: 'Proposal', close: 'Oct 31' },

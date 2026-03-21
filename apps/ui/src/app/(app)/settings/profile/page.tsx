@@ -13,7 +13,7 @@ export default function ProfilePage() {
         <div className="w-20 h-20 rounded-2xl bg-[hsl(246,80%,60%)] flex items-center justify-center text-2xl font-bold text-white">A</div>
         <div>
           <p className="font-semibold text-foreground">Amit Saroj</p>
-          <p className="text-sm text-muted-foreground">admin@autopilotmonster.com · Super Admin</p>
+          <p className="text-sm text-muted-foreground">autopilot.monster@gmail.com · Super Admin</p>
           <div className="flex gap-2 mt-3">
             <button className="px-3 py-1.5 text-xs bg-[hsl(246,80%,60%)] text-white rounded-lg hover:bg-[hsl(246,80%,55%)] transition-colors">Upload Photo</button>
             <button className="px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-muted transition-colors">Remove</button>
@@ -44,7 +44,7 @@ export default function ProfilePage() {
         </div>
         <div>
           <label className="text-xs text-muted-foreground font-medium block mb-1">Email</label>
-          <input type="email" defaultValue="admin@autopilotmonster.com" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
+          <input type="email" defaultValue="autopilot.monster@gmail.com" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
         </div>
         <div>
           <label className="text-xs text-muted-foreground font-medium block mb-1">Bio</label>

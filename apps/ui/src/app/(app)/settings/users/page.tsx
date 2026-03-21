@@ -2,11 +2,11 @@ import { Plus, Users, Shield, Search, MoreHorizontal, Crown, UserCheck, User, Ma
 import Link from 'next/link';
 
 const members = [
-  { name: 'Amit Saroj', email: 'amit@autopilotmonster.com', role: 'Super Admin', status: 'Active', joined: 'Jan 2024', avatar: 'A' },
-  { name: 'Priya Sharma', email: 'priya@autopilotmonster.com', role: 'Admin', status: 'Active', joined: 'Feb 2024', avatar: 'P' },
-  { name: 'Alex Kim', email: 'alex@autopilotmonster.com', role: 'Sales Manager', status: 'Active', joined: 'Mar 2024', avatar: 'A' },
-  { name: 'Sarah Lee', email: 'sarah@autopilotmonster.com', role: 'Sales Rep', status: 'Active', joined: 'Apr 2024', avatar: 'S' },
-  { name: 'John Doe', email: 'john@autopilotmonster.com', role: 'Sales Rep', status: 'Invited', joined: 'Pending', avatar: 'J' },
+  { name: 'Amit Saroj', email: 'autopilot.monster@gmail.com', role: 'Super Admin', status: 'Active', joined: 'Jan 2024', avatar: 'A' },
+  { name: 'Priya Sharma', email: 'autopilot.monster@gmail.com', role: 'Admin', status: 'Active', joined: 'Feb 2024', avatar: 'P' },
+  { name: 'Alex Kim', email: 'autopilot.monster@gmail.com', role: 'Sales Manager', status: 'Active', joined: 'Mar 2024', avatar: 'A' },
+  { name: 'Sarah Lee', email: 'autopilot.monster@gmail.com', role: 'Sales Rep', status: 'Active', joined: 'Apr 2024', avatar: 'S' },
+  { name: 'John Doe', email: 'autopilot.monster@gmail.com', role: 'Sales Rep', status: 'Invited', joined: 'Pending', avatar: 'J' },
 ];
 
 const roleColors: Record<string, string> = {
