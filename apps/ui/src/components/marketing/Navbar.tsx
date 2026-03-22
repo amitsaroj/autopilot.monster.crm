@@ -7,8 +7,8 @@ import { Menu, X, ChevronDown } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navLinks = [
-  { 
-    label: 'Product', 
+  {
+    label: 'Product',
     children: [
       { label: 'CRM', href: '/product/crm' },
       { label: 'AI Agents', href: '/product/ai' },
@@ -17,6 +17,11 @@ const navLinks = [
       { label: 'Workflows', href: '/product/workflow' },
       { label: 'Analytics', href: '/product/analytics' },
       { label: 'Marketplace', href: '/product/marketplace' },
+      // { label: 'Voice AI', href: '/builder/voice-flows' },
+      // { label: 'Campaigns', href: '/crm/campaigns' },
+      // { label: 'Knowledge Base', href: '/ai/knowledge-base' },
+      { label: 'Call Logs', href: '/voice/logs' },
+      { label: 'Analytics', href: '/analytics/voice' },
     ]
   },
   { label: 'Services', href: '/services' },
@@ -41,14 +46,13 @@ export default function MarketingNavbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled 
-          ? 'bg-white/80 dark:bg-[#0b0f19]/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.06] shadow-lg dark:shadow-2xl dark:shadow-black/20' 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+          ? 'bg-white/80 dark:bg-[#0b0f19]/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/[0.06] shadow-lg dark:shadow-2xl dark:shadow-black/20'
           : 'bg-transparent'
-      }`}
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        
+
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-shadow">

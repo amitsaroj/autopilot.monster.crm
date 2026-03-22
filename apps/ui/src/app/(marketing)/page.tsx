@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, Users, Phone, MessageSquare, GitBranch, BarChart3, Sparkles } from 'lucide-react';
+import { ArrowRight, Zap, Users, Phone, MessageSquare, GitBranch, BarChart3, Sparkles, Globe, Blocks } from 'lucide-react';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -19,6 +19,11 @@ const features = [
   { icon: MessageSquare, title: 'WhatsApp OS', desc: 'Shared team inbox, broadcast campaigns, and visual no-code flow builder.', color: 'from-green-500 to-emerald-400' },
   { icon: GitBranch, title: 'Workflow Engine', desc: 'Drag-and-drop automation with triggers, conditions, delays, and multi-channel actions.', color: 'from-indigo-500 to-violet-400' },
   { icon: BarChart3, title: 'Revenue Analytics', desc: 'Real-time ARR tracking, pipeline forecasting, and AI-driven revenue insights.', color: 'from-teal-500 to-cyan-400' },
+  { icon: Zap, title: 'Bulk AI Calling', desc: 'Launch parallel outbound campaigns at scale with autonomous AI agents.', color: 'from-red-500 to-orange-600' },
+  { icon: Sparkles, title: 'Agentic Apps', desc: 'Custom autonomous apps built for complex reasoning and workflow execution.', color: 'from-indigo-600 to-blue-500' },
+  { icon: Zap, title: 'n8n & Zapier', desc: 'Deep integrations across your entire stack using leading automation tools.', color: 'from-orange-400 to-red-500' },
+  { icon: Globe, title: 'Web & App Dev', desc: 'Premium development services for high-performance digital products.', color: 'from-blue-400 to-indigo-500' },
+  { icon: Blocks, title: 'CMS & E-commerce', desc: 'Optimized WordPress and Shopify stores built for scale and speed.', color: 'from-purple-600 to-indigo-500' },
 ];
 
 export default function HomePage() {

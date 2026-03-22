@@ -4,6 +4,7 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import OpenAI from 'openai';
 import * as crypto from 'crypto';
 const pdfParse = require('pdf-parse');
+const mammoth = require('mammoth'); // For DOCX
 
 @Injectable()
 export class RagService {
@@ -20,63 +21,78 @@ export class RagService {
     });
   }
 
-  async processFileAndIndex(tenantId: string, fileBuffer: Buffer, fileName: string) {
-    this.logger.log(`Processing file ${fileName} for tenant ${tenantId}`);
+  async processFileAndIndex(tenantId: string, fileBuffer: Buffer, fileName: string, mimeType: string) {
+    this.logger.log(`Processing file ${fileName} (${mimeType}) for tenant ${tenantId}`);
     
-    // 1. Parse PDF
-    const data = await pdfParse(fileBuffer);
-    const text = data.text;
+    let text = '';
+    
+    // 1. Parse based on MimeType
+    if (mimeType.includes('pdf')) {
+      const data = await pdfParse(fileBuffer);
+      text = data.text;
+    } else if (mimeType.includes('word') || mimeType.includes('officedocument')) {
+      const result = await mammoth.extractRawText({ buffer: fileBuffer });
+      text = result.value;
+    } else {
+      text = fileBuffer.toString('utf-8');
+    }
 
-    // 2. Chunk text (simple 1000 char chunks)
-    const chunks = text.match(/[\s\S]{1,1000}/g) || [];
+    // 2. Advanced Chunking (1000 chars with 200 char overlap)
+    const chunkSize = 1000;
+    const overlap = 200;
+    const chunks: string[] = [];
+    
+    for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
+      chunks.push(text.slice(i, i + chunkSize));
+    }
 
-    // 3. Ensure Collection Exists
-    const collectionName = `tenant_${tenantId}`.replace(/-/g, '_');
+    // 3. Collection Management
+    const collectionName = this.getCollectionName(tenantId);
     try {
       await this.qdrant.getCollection(collectionName);
     } catch {
+      this.logger.log(`Creating new collection: ${collectionName}`);
       await this.qdrant.createCollection(collectionName, {
         vectors: { size: 1536, distance: 'Cosine' },
       });
     }
 
-    // 4. Generate Embeddings & Upsert (Process in smaller batches to avoid rate limits)
-    let totalIndexed = 0;
+    // 4. Batch Embed & Upsert
+    const points = [];
     for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      try {
-        const embeddingResponse = await this.openai.embeddings.create({
-          model: 'text-embedding-3-small',
-          input: chunk,
-        });
+        try {
+            const embeddingResponse = await this.openai.embeddings.create({
+                model: 'text-embedding-3-small',
+                input: chunks[i],
+            });
 
-        await this.qdrant.upsert(collectionName, {
-          wait: true,
-          points: [
-            {
-              id: crypto.randomUUID(),
-              vector: embeddingResponse.data[0].embedding,
-              payload: {
-                tenantId,
-                fileName,
-                text: chunk,
-                chunkIndex: i,
-              },
-            },
-          ],
-        });
-        totalIndexed++;
-      } catch (err) {
-        this.logger.error(`Failed to index chunk ${i} for ${fileName}`, err);
-      }
+            points.push({
+                id: crypto.randomUUID(),
+                vector: embeddingResponse.data[0].embedding,
+                payload: {
+                    tenantId,
+                    fileName,
+                    text: chunks[i],
+                    chunkIndex: i,
+                    timestamp: new Date().toISOString()
+                },
+            });
+
+            // Batch every 20 points
+            if (points.length >= 20 || i === chunks.length - 1) {
+                await this.qdrant.upsert(collectionName, { wait: true, points: [...points] });
+                points.length = 0; // Clear array
+            }
+        } catch (err) {
+            this.logger.error(`Failed to index chunk ${i} for ${fileName}`, err);
+        }
     }
     
-    this.logger.log(`Indexed ${totalIndexed} chunks to ${collectionName}`);
-    return { success: true, chunksIndexed: totalIndexed };
+    return { success: true, chunksIndexed: chunks.length };
   }
 
-  async queryKnowledgeBase(tenantId: string, query: string, limit = 5) {
-    const collectionName = `tenant_${tenantId}`.replace(/-/g, '_');
+  async queryKnowledgeBase(tenantId: string, query: string, limit = 4) {
+    const collectionName = this.getCollectionName(tenantId);
     try {
       const embeddingResponse = await this.openai.embeddings.create({
         model: 'text-embedding-3-small',
@@ -89,10 +105,14 @@ export class RagService {
         with_payload: true,
       });
       
-      return results.map(r => r.payload);
+      return results.map(r => r.payload?.['text']).join('\n\n---\n\n');
     } catch (err) {
-      this.logger.error(`Failed to query KB for tenant ${tenantId}`, err);
-      return [];
+      this.logger.error(`Query failed for ${tenantId}`, err);
+      return '';
     }
+  }
+
+  private getCollectionName(tenantId: string): string {
+    return `kb_${tenantId.replace(/[^a-zA-Z0-9]/g, '_')}`.toLowerCase();
   }
 }

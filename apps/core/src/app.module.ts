@@ -25,6 +25,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { VoiceModule } from './modules/voice/voice.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
+import { CrmModule } from './modules/crm/crm.module';
 
 // Common
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -75,6 +76,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     VoiceModule,
     WhatsappModule,
     WorkflowModule,
+    CrmModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

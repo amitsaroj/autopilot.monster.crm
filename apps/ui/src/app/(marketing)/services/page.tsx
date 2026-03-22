@@ -30,6 +30,14 @@ const sections = [
     href: '/product/voice',
   },
   {
+    tag: 'Bulk Voice',
+    title: 'Bulk AI Calling Campaigns',
+    desc: 'Launch thousands of concurrent AI calls with personalized scripts, automated retries, and real-time conversion tracking.',
+    icon: Zap,
+    color: 'from-red-500 to-orange-600',
+    href: '/product/bulk-voice',
+  },
+  {
     tag: 'WhatsApp OS',
     title: 'WhatsApp as a Revenue Channel',
     desc: 'Shared team inbox, broadcast campaigns, template management, and a visual no-code flow builder for automated conversations.',
@@ -76,6 +84,38 @@ const sections = [
     icon: Shield,
     color: 'from-red-500 to-orange-400',
     href: '/security',
+  },
+  {
+    tag: 'Agentic Apps',
+    title: 'Agentic App Development',
+    desc: 'Building autonomous, agent-led applications that handle complex reasoning and multi-step tasks natively.',
+    icon: Sparkles,
+    color: 'from-indigo-600 to-blue-500',
+    href: '/services/agentic-apps',
+  },
+  {
+    tag: 'Integrations',
+    title: 'n8n & Zapier Orchestration',
+    desc: 'Advanced workflow connectivity across 1,000+ apps using enterprise-grade low-code automation tools.',
+    icon: Zap,
+    color: 'from-orange-400 to-red-500',
+    href: '/services/integrations',
+  },
+  {
+    tag: 'Development',
+    title: 'Premium Web & App Dev',
+    desc: 'High-performance, scalable digital products built with modern frameworks and pixel-perfect design.',
+    icon: Globe,
+    color: 'from-blue-400 to-indigo-500',
+    href: '/services/web-app-dev',
+  },
+  {
+    tag: 'CMS',
+    title: 'WordPress & E-commerce',
+    desc: 'Custom Shopify and WordPress solutions optimized for speed, SEO, and maximum conversion rates.',
+    icon: Blocks,
+    color: 'from-purple-600 to-indigo-500',
+    href: '/services/ecommerce',
   },
 ];
 
