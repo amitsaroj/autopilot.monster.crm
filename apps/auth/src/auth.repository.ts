@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcryptjs';
 import { Repository } from 'typeorm';
-import { UserEntity, UserStatus } from './entities/user.entity';
+
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { SessionEntity } from './entities/session.entity';
-import * as bcrypt from 'bcryptjs';
+import { UserEntity, UserStatus } from './entities/user.entity';
 
 /**
  * AuthRepository — data access layer for auth module.

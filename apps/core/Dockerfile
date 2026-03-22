@@ -10,7 +10,7 @@ COPY package*.json ./
 COPY tsconfig.json ./
 
 # Install dependencies (only at root since it is a workspace)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy the core app and any shared libs
 COPY apps/core ./apps/core

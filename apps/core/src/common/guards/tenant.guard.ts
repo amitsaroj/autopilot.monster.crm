@@ -1,7 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { ERROR_CODES } from '../constants/error-codes.constants';
-import { HEADERS } from '../constants/app.constants';
 import type { Request } from 'express';
+
+import { HEADERS } from '../constants/app.constants';
+import { ERROR_CODES } from '../constants/error-codes.constants';
 import type { IRequestContext } from '../interfaces/request-context.interface';
 
 /**

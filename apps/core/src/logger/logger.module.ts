@@ -1,7 +1,8 @@
 import { Module, Global } from '@nestjs/common';
-import { WinstonModule } from 'nest-winston';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
+
 import { AppLogger } from './logger.service';
 import type { AppConfig } from '../config/app.config';
 

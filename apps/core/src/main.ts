@@ -1,11 +1,13 @@
 import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import { CoreModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import type { AppConfig } from './config/app.config';
-import helmet from 'helmet';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import compression from 'compression';
+import helmet from 'helmet';
+
+import { CoreModule } from './app.module';
+import type { AppConfig } from './config/app.config';
+
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(CoreModule, {

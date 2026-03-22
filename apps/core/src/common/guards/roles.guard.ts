@@ -1,9 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
+
 import { METADATA_KEYS } from '../constants/app.constants';
 import { ERROR_CODES } from '../constants/error-codes.constants';
 import type { IRequestContext } from '../interfaces/request-context.interface';
-import type { Request } from 'express';
 
 /**
  * RolesGuard — checks @Roles() metadata against the authenticated user's roles.

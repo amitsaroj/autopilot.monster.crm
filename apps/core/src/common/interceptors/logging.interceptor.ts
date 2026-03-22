@@ -5,11 +5,11 @@ import {
   CallHandler,
   Inject,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
+import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
-import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import type { Logger } from 'winston';
-import type { Request, Response } from 'express';
 
 /**
  * LoggingInterceptor — logs every inbound request and outbound response timing.

@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Query, Req, Res, Headers, ForbiddenException } from '@nestjs/common';
-import { Request, Response } from 'express';
-import { WhatsappService } from './whatsapp.service';
 import * as crypto from 'crypto';
+
+import { Controller, Get, Post, Query, Req, Res, Headers, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Request, Response } from 'express';
+
+import { WhatsappService } from './whatsapp.service';
 
 @Controller('v1/whatsapp/webhook')
 export class MetaWebhookController {

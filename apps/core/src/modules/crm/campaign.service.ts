@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { TwilioService } from '../voice/twilio.service';
-import { LeadService } from './lead.service';
-import { AgentService } from './agent.service';
 import { ConfigService } from '@nestjs/config';
+
+import { AgentService } from './agent.service';
+import { LeadService } from './lead.service';
+import { TwilioService } from '../voice/twilio.service';
+
 
 @Injectable()
 export class CampaignService {

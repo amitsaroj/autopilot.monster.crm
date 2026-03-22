@@ -1,7 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
-import type { Request, Response } from 'express';
 
 /**
  * CorrelationIdInterceptor — generates or passes-through x-correlation-id on every request.

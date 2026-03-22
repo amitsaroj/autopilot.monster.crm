@@ -40,7 +40,7 @@ export class WhatsappService {
     }
   }
 
-  async sendTextMessage(to: string, text: string, wabaId: string) {
+  async sendTextMessage(to: string, _text: string, wabaId: string) {
     this.logger.log(`Sending message to ${to} via ${wabaId}`);
     // Meta Cloud API Fetch call to /v17.0/${wabaId}/messages
     return true;

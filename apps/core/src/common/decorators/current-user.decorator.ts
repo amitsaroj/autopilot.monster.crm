@@ -1,6 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import type { IRequestContext } from '../interfaces/request-context.interface';
 import type { Request } from 'express';
+
+import type { IRequestContext } from '../interfaces/request-context.interface';
 
 /**
  * @CurrentUser() — extracts IRequestContext from the request.

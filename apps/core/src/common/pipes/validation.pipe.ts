@@ -4,9 +4,10 @@ import {
   ArgumentMetadata,
   BadRequestException,
 } from '@nestjs/common';
-import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import type { ClassConstructor } from 'class-transformer';
+import { validate } from 'class-validator';
+
 import { ERROR_CODES } from '../constants/error-codes.constants';
 
 /**

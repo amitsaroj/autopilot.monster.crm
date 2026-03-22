@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { ConfigService } from '@nestjs/config';
-import type { JwtPayload } from '../interfaces/jwt-payload.interface';
 import type { IRequestContext } from '@autopilot/core/common/interfaces/request-context.interface';
 import type { JwtConfig } from '@autopilot/core/config/jwt.config';
+import { Injectable } from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+
+import type { JwtPayload } from '../interfaces/jwt-payload.interface';
+
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {

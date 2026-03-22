@@ -1,11 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as twilio from 'twilio';
+import twilio from 'twilio';
 
 @Injectable()
 export class TwilioService {
   private readonly logger = new Logger(TwilioService.name);
-  private client: twilio.Twilio;
+  private client!: twilio.Twilio;
   private readonly twilioNumber: string;
 
   constructor(private configService: ConfigService) {

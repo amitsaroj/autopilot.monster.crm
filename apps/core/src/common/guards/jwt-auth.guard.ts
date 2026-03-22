@@ -1,8 +1,9 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
+
 import { METADATA_KEYS } from '../constants/app.constants';
 import type { IRequestContext } from '../interfaces/request-context.interface';
-import type { Request } from 'express';
 
 /**
  * JwtAuthGuard — stub for core module.

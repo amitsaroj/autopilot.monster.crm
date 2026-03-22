@@ -1,10 +1,12 @@
+import * as crypto from 'crypto';
+
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import OpenAI from 'openai';
-import * as crypto from 'crypto';
-const pdfParse = require('pdf-parse');
+
 const mammoth = require('mammoth'); // For DOCX
+const pdfParse = require('pdf-parse');
 
 @Injectable()
 export class RagService {

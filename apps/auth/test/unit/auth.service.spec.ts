@@ -1,6 +1,7 @@
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
+
 import { AuthService } from '../../src/auth.service';
 import { UserStatus } from '../../src/entities/user.entity';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
 
 const mockUser = {
   id: 'user-001',

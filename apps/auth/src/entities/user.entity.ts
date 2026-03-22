@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcryptjs';
 import {
   Entity,
   Column,
@@ -9,7 +10,6 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 
 export enum UserStatus {
   ACTIVE = 'active',

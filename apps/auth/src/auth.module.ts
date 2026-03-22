@@ -1,19 +1,20 @@
+import type { JwtConfig } from '@autopilot/core/config/jwt.config';
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
 import { AuthRepository } from './auth.repository';
-import { UserEntity } from './entities/user.entity';
-import { SessionEntity } from './entities/session.entity';
+import { AuthService } from './auth.service';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
+import { SessionEntity } from './entities/session.entity';
+import { UserEntity } from './entities/user.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import type { JwtConfig } from '@autopilot/core/config/jwt.config';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { LocalStrategy } from './strategies/local.strategy';
 
 @Module({
   imports: [

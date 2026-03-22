@@ -1,21 +1,22 @@
+import { ERROR_CODES } from '@autopilot/core/common/constants/error-codes.constants';
+import type { JwtConfig } from '@autopilot/core/config/jwt.config';
+import { EVENT_NAMES } from '@autopilot/core/events/event.constants';
 import {
   Injectable,
   UnauthorizedException,
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
+
 import { AuthRepository } from './auth.repository';
-import { UserEntity, UserStatus } from './entities/user.entity';
-import type { JwtPayload } from './interfaces/jwt-payload.interface';
-import type { AuthTokens } from './interfaces/auth-tokens.interface';
 import type { LoginDto, RegisterDto } from './dto/auth.dto';
-import { ERROR_CODES } from '@autopilot/core/common/constants/error-codes.constants';
-import { EVENT_NAMES } from '@autopilot/core/events/event.constants';
-import type { JwtConfig } from '@autopilot/core/config/jwt.config';
+import { UserEntity, UserStatus } from './entities/user.entity';
+import type { AuthTokens } from './interfaces/auth-tokens.interface';
+import type { JwtPayload } from './interfaces/jwt-payload.interface';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;

@@ -1,5 +1,6 @@
 import { Controller, Post, Get, UseInterceptors, UploadedFile, Req, Query, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+
 import { RagService } from './rag.service';
 
 @Controller('v1/ai')
@@ -16,7 +17,7 @@ export class AiController {
     // Fallback tenant ID for testing if TenantGuard is bypassed globally
     const tenantId = req.tenant?.id || 'default-tenant-123';
     
-    return this.ragService.processFileAndIndex(tenantId, file.buffer, file.originalname);
+    return this.ragService.processFileAndIndex(tenantId, file.buffer, file.originalname, file.mimetype);
   }
 
   @Get('knowledge-base/query')

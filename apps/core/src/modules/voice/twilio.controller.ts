@@ -1,13 +1,14 @@
 import { Controller, Post, Req, Res, Headers } from '@nestjs/common';
-import { TwilioService } from './twilio.service';
 import { Request, Response } from 'express';
+
+import { TwilioService } from './twilio.service';
 
 @Controller('v1/voice/twilio')
 export class TwilioController {
   constructor(private readonly twilioService: TwilioService) {}
 
   @Post('inbound')
-  handleInboundCall(@Req() req: Request, @Res() res: Response, @Headers('host') host: string) {
+  handleInboundCall(@Req() _req: Request, @Res() res: Response, @Headers('host') host: string) {
     // Generate the internal WebSocket URL assuming SSL termination at Edge
     const wssUrl = `wss://${host}/voice/stream`;
     

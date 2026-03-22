@@ -1,14 +1,15 @@
+import { CurrentUser } from '@autopilot/core/common/decorators/current-user.decorator';
+import { Public } from '@autopilot/core/common/decorators/public.decorator';
+import { TenantId } from '@autopilot/core/common/decorators/tenant-id.decorator';
+import type { IRequestContext } from '@autopilot/core/common/interfaces/request-context.interface';
 import {
   Controller, Post, Body, Get, UseGuards, HttpCode, HttpStatus, Ip,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto, ChangePasswordDto, LogoutDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Public } from '@autopilot/core/common/decorators/public.decorator';
-import { CurrentUser } from '@autopilot/core/common/decorators/current-user.decorator';
-import { TenantId } from '@autopilot/core/common/decorators/tenant-id.decorator';
-import type { IRequestContext } from '@autopilot/core/common/interfaces/request-context.interface';
 import type { AuthTokens } from './interfaces/auth-tokens.interface';
 
 @ApiTags('Auth')

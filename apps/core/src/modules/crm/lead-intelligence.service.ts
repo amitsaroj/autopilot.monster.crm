@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
+
 import { LeadService } from './lead.service';
 import { NotificationService } from './notification.service';
 

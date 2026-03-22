@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+
 import { QUEUE_NAMES } from './queue.constants';
 import type { RedisConfig } from '../config/redis.config';
 

@@ -1,5 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as Minio from 'minio';
+
+
 import type { MinioConfig } from '../config/minio.config';
 
 /**
@@ -13,7 +15,7 @@ export class StorageService {
   private readonly bucketBackups: string;
 
   constructor(
-    @Inject('MINIO_CONFIG') private readonly config: MinioConfig,
+    @Inject('MINIO_CONFIG') config: MinioConfig,
   ) {
     this.client = new Minio.Client({
       endPoint: config.endpoint,

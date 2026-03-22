@@ -1,6 +1,6 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
+import { Job } from 'bullmq';
 
 @Processor('workflows')
 export class WorkflowProcessor extends WorkerHost {
@@ -9,7 +9,7 @@ export class WorkflowProcessor extends WorkerHost {
   async process(job: Job<any, any, string>): Promise<any> {
     this.logger.log(`Executing Workflow Job ${job.id} for event: ${job.data.eventName}`);
     
-    const { workflowId, tenantId, payload } = job.data;
+    const { workflowId } = job.data;
 
     try {
       // 1. Fetch Workflow Definition Steps from DB
@@ -28,7 +28,7 @@ export class WorkflowProcessor extends WorkerHost {
          }
          
          if (step.type === 'ACTION') {
-           this.logger.log(`Executing Action: ${step.config.actionParams.channel}`);
+           this.logger.log(`Executing Action: ${step.config.actionParams?.channel || 'UNKNOWN'}`);
            // Call respective service (WhatsappService, TwilioService, EmailService)
            
            // await this.whatsappService.sendTextMessage(...)

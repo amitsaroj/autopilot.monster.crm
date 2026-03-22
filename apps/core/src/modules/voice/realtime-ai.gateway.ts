@@ -1,15 +1,18 @@
+import * as url from 'url';
+
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
   WebSocketGateway,
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
 import { Server, WebSocket as WsWebSocket } from 'ws';
-import { ConfigService } from '@nestjs/config';
+
 import { RagService } from '../ai/rag.service';
 import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
-import * as url from 'url';
+
 
 /**
  * Native WebSocket Server mapped to '/voice/stream'

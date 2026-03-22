@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiHeader } from '@nestjs/swagger';
+
 import { HEADERS } from '../constants/app.constants';
 
 /** Swagger decorator to document the x-tenant-id header requirement */

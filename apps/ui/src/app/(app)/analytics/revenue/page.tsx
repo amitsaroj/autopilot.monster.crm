@@ -119,7 +119,7 @@ export default function RevenueInsightsPage() {
               <RechartsTooltip 
                 cursor={{ fill: 'transparent' }}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                formatter={(value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)}
+                formatter={(value: any) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value as number)}
               />
               {/* ARR Area Background */}
               <Area yAxisId="left" type="monotone" dataKey="arr" fill="hsl(246,80%,60%)" fillOpacity={0.1} stroke="transparent" />

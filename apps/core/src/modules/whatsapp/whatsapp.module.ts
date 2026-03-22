@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { WhatsappService } from './whatsapp.service';
-import { MetaWebhookController } from './meta-webhook.controller';
 import { ConfigModule } from '@nestjs/config';
+
+import { MetaWebhookController } from './meta-webhook.controller';
+import { WhatsappService } from './whatsapp.service';
 
 @Module({
   imports: [ConfigModule],

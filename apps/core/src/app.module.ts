@@ -3,6 +3,16 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD, APP_PIPE } from '@nestjs/core';
 
 // Config factories
+import { CacheModule } from './cache/cache.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { PlanGuard } from './common/guards/plan.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { TenantGuard } from './common/guards/tenant.guard';
+import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { appConfig } from './config/app.config';
 import { databaseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
@@ -15,7 +25,6 @@ import { throttleConfig } from './config/throttle.config';
 import { DatabaseModule } from './database/database.module';
 import { LoggerModule } from './logger/logger.module';
 import { HealthModule } from './health/health.module';
-import { CacheModule } from './cache/cache.module';
 import { QueueModule } from './queue/queue.module';
 import { EventBusModule } from './events/event-bus.module';
 import { StorageModule } from './storage/storage.module';
@@ -28,15 +37,6 @@ import { WorkflowModule } from './modules/workflow/workflow.module';
 import { CrmModule } from './modules/crm/crm.module';
 
 // Common
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
-import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
-import { TenantGuard } from './common/guards/tenant.guard';
-import { RolesGuard } from './common/guards/roles.guard';
-import { PlanGuard } from './common/guards/plan.guard';
 import { ValidationPipe } from './common/pipes/validation.pipe';
 
 /**

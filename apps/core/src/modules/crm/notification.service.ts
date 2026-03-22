@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { WhatsappService } from '../whatsapp/whatsapp.service';
 import { ConfigService } from '@nestjs/config';
+
+import { WhatsappService } from '../whatsapp/whatsapp.service';
 
 @Injectable()
 export class NotificationService {
