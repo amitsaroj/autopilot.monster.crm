@@ -12,9 +12,7 @@ import type { IRequestContext } from '../interfaces/request-context.interface';
 @Injectable()
 export class TenantGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<
-      Request & { user: IRequestContext }
-    >();
+    const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
 
     const headerTenantId = request.headers[HEADERS.TENANT_ID] as string | undefined;
     const jwtTenantId = request.user?.tenantId;

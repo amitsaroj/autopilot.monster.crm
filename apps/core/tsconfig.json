@@ -5,7 +5,9 @@
     "baseUrl": "./",
     "paths": {
       "@autopilot/core": ["src/index.ts"],
-      "@autopilot/core/*": ["src/*"]
+      "@autopilot/core/*": ["src/*"],
+      "@autopilot/auth": ["../auth/src/index.ts"],
+      "@autopilot/auth/*": ["../auth/src/*"]
     }
   },
   "include": ["src/**/*"],

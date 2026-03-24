@@ -8,6 +8,9 @@ export const EVENT_NAMES = {
   USER_LOGIN: 'user.login',
   USER_LOGOUT: 'user.logout',
   PASSWORD_RESET: 'user.password.reset',
+  USER_VERIFIED: 'user.verified',
+  USER_MFA_ENABLED: 'user.mfa.enabled',
+  USER_MFA_DISABLED: 'user.mfa.disabled',
 
   // Tenant
   TENANT_CREATED: 'tenant.created',

@@ -1,9 +1,13 @@
-export interface IApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  error?: string;
-  code?: string;
-  timestamp: string;
-  correlationId?: string;
+export interface IApiResponse<T = any> {
+  status: number;
+  message: string;
+  error: boolean;
+  data: T;
+  meta?: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    nextPageNumber?: number;
+    previousPageNumber?: number;
+  };
 }

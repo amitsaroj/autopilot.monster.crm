@@ -9,19 +9,19 @@ export class CsvService {
    * Expected format: firstName,lastName,phone,email
    */
   async parseLeads(csvContent: string): Promise<any[]> {
-    const lines = csvContent.split(/\r?\n/).filter(line => line.trim() !== '');
+    const lines = csvContent.split(/\r?\n/).filter((line) => line.trim() !== '');
     if (lines.length < 2) return [];
 
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
     const leads = [];
 
     for (let i = 1; i < lines.length; i++) {
-      const values = lines[i].split(',').map(v => v.trim());
+      const values = lines[i].split(',').map((v) => v.trim());
       const lead: any = {};
       headers.forEach((header, index) => {
         lead[header] = values[index];
       });
-      
+
       // Basic validation
       if (lead.phone && lead.firstname) {
         leads.push({

@@ -12,17 +12,100 @@ import { NotificationService } from './notification.service';
 import { Agent } from '../../database/entities/agent.entity';
 import { Flow } from '../../database/entities/flow.entity';
 import { Lead } from '../../database/entities/lead.entity';
+import { Contact } from '../../database/entities/contact.entity';
+import { Company } from '../../database/entities/company.entity';
+import { Deal } from '../../database/entities/deal.entity';
+import { Activity } from '../../database/entities/activity.entity';
+import { Task } from '../../database/entities/task.entity';
+import { Note } from '../../database/entities/note.entity';
+import { Product } from '../../database/entities/product.entity';
+import { Quote } from '../../database/entities/quote.entity';
+import { Pipeline } from '../../database/entities/pipeline.entity';
+
+import { ContactService } from './contact.service';
+import { ContactRepository } from './contact.repository';
+import { CompanyService } from './company.service';
+import { CompanyRepository } from './company.repository';
+import { DealService } from './deal.service';
+import { DealRepository } from './deal.repository';
+import {
+  ActivityService,
+  TaskCrmService,
+  NoteService,
+  ProductService,
+  QuoteService,
+} from './crm-support.service';
+import {
+  ActivityRepository,
+  TaskCrmRepository,
+  NoteRepository,
+  ProductRepository,
+  QuoteRepository,
+} from './crm-support.repository';
 import { VoiceModule } from '../voice/voice.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Agent, Flow, Lead]),
+    TypeOrmModule.forFeature([
+      Agent,
+      Flow,
+      Lead,
+      Contact,
+      Company,
+      Deal,
+      Activity,
+      Task,
+      Note,
+      Product,
+      Quote,
+      Pipeline,
+    ]),
     forwardRef(() => WhatsappModule),
     forwardRef(() => VoiceModule),
   ],
   controllers: [CrmController],
-  providers: [AgentService, FlowService, LeadService, CsvService, LeadIntelligenceService, NotificationService, CampaignService],
-  exports: [AgentService, FlowService, LeadService, CsvService, LeadIntelligenceService, NotificationService, CampaignService],
+  providers: [
+    AgentService,
+    FlowService,
+    LeadService,
+    CsvService,
+    LeadIntelligenceService,
+    NotificationService,
+    CampaignService,
+    ContactService,
+    ContactRepository,
+    CompanyService,
+    CompanyRepository,
+    DealService,
+    DealRepository,
+    ActivityService,
+    ActivityRepository,
+    TaskCrmService,
+    TaskCrmRepository,
+    NoteService,
+    NoteRepository,
+    ProductService,
+    ProductRepository,
+    QuoteService,
+    QuoteRepository,
+  ],
+  exports: [
+    AgentService,
+    FlowService,
+    LeadService,
+    CsvService,
+    LeadIntelligenceService,
+    NotificationService,
+    CampaignService,
+    ContactService,
+    CompanyService,
+    DealService,
+    ActivityService,
+    TaskCrmService,
+    NoteService,
+    ProductService,
+    QuoteService,
+  ],
 })
 export class CrmModule {}

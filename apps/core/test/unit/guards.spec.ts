@@ -5,7 +5,10 @@ import { Reflector } from '@nestjs/core';
 import { UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import type { ExecutionContext } from '@nestjs/common';
 
-function makeContext(user: Partial<{ tenantId: string; roles: string[]; planId: string }>, headerTenantId?: string): ExecutionContext {
+function makeContext(
+  user: Partial<{ tenantId: string; roles: string[]; planId: string }>,
+  headerTenantId?: string,
+): ExecutionContext {
   return {
     switchToHttp: () => ({
       getRequest: () => ({

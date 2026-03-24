@@ -3,7 +3,7 @@
  * tenantId + planId are critical for runtime guard checks.
  */
 export interface JwtPayload {
-  sub: string;         // userId
+  sub: string; // userId
   email: string;
   tenantId: string;
   roles: string[];

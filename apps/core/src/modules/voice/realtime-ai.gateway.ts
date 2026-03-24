@@ -13,7 +13,6 @@ import { Server, WebSocket as WsWebSocket } from 'ws';
 import { RagService } from '../ai/rag.service';
 import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
 
-
 /**
  * Native WebSocket Server mapped to '/voice/stream'
  * Listens for Twilio Media Streams (G.711 mulaw audio base64 encoded)
@@ -25,21 +24,25 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
   server!: Server;
 
   private readonly logger = new Logger(RealtimeAiGateway.name);
-  private readonly openAiWsUrl = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
+  private readonly openAiWsUrl =
+    'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
 
   constructor(
     private configService: ConfigService,
     private ragService: RagService,
-    private leadIntelligenceService: LeadIntelligenceService
+    private leadIntelligenceService: LeadIntelligenceService,
   ) {}
 
-  private sessions = new Map<WsWebSocket, { 
-    openaiWs: WsWebSocket; 
-    tenantId: string; 
-    agentId: string;
-    transcript: string;
-    leadId?: string;
-  }>();
+  private sessions = new Map<
+    WsWebSocket,
+    {
+      openaiWs: WsWebSocket;
+      tenantId: string;
+      agentId: string;
+      transcript: string;
+      leadId?: string;
+    }
+  >();
 
   async handleConnection(client: WsWebSocket, request: any) {
     this.logger.log('Twilio Voice Client Connected to Gateway');
@@ -50,11 +53,11 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     const agentId = (parsedUrl.query.agentId as string) || 'default';
 
     const openAiApiKey = this.configService.get('OPENAI_API_KEY');
-    
+
     if (!openAiApiKey || openAiApiKey === 'mock-api-key') {
-       this.logger.warn('OpenAI Key is mock. Closing Twilio connection.');
-       client.close();
-       return;
+      this.logger.warn('OpenAI Key is mock. Closing Twilio connection.');
+      client.close();
+      return;
     }
 
     const openaiWs = new WsWebSocket(this.openAiWsUrl, {
@@ -66,12 +69,12 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
 
     const leadId = (parsedUrl.query.leadId as string) || undefined;
 
-    this.sessions.set(client, { 
-      openaiWs, 
-      tenantId, 
+    this.sessions.set(client, {
+      openaiWs,
+      tenantId,
       agentId,
       transcript: '',
-      leadId
+      leadId,
     });
 
     let streamSid: string | null = null;
@@ -83,40 +86,48 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
         if (msg.event === 'start') {
           streamSid = msg.start.streamSid;
           this.logger.log(`Starting media stream: ${streamSid} for tenant: ${tenantId}`);
-          
+
           // Fetch Knowledge Base Context for this tenant
-          const kbContext = await this.ragService.queryKnowledgeBase(tenantId, "What is this company about?", 3);
-          
+          const kbContext = await this.ragService.queryKnowledgeBase(
+            tenantId,
+            'What is this company about?',
+            3,
+          );
+
           const instructions = `
             You are a helpful AI voice agent for AutopilotMonster CRM, representing a company.
             Use the following context to answer customer questions naturally and concisely.
             If the answer isn't in the context, be honest but helpful.
             
             COMPANY CONTEXT:
-            ${kbContext || "No specific documents uploaded yet."}
+            ${kbContext || 'No specific documents uploaded yet.'}
             
             IDENTITY: You are Agent ID: ${agentId}. Keep responses under 2 sentences for natural flow.
           `;
 
           // Send session setup with context to OpenAI
-          const voice = parsedUrl.query.voice as string || 'shimmer';
-          
-          openaiWs.send(JSON.stringify({
-            type: 'session.update',
-            session: {
-              voice: voice, // dynamic voice selection (shimmer, alloy, echo, etc)
-              instructions,
-              turn_detection: { type: 'server_vad' },
-              input_audio_format: 'g711_ulaw',
-              output_audio_format: 'g711_ulaw',
-              modalities: ['text', 'audio'],
-            }
-          }));
+          const voice = (parsedUrl.query.voice as string) || 'shimmer';
+
+          openaiWs.send(
+            JSON.stringify({
+              type: 'session.update',
+              session: {
+                voice: voice, // dynamic voice selection (shimmer, alloy, echo, etc)
+                instructions,
+                turn_detection: { type: 'server_vad' },
+                input_audio_format: 'g711_ulaw',
+                output_audio_format: 'g711_ulaw',
+                modalities: ['text', 'audio'],
+              },
+            }),
+          );
         } else if (msg.event === 'media' && openaiWs.readyState === WsWebSocket.OPEN) {
-          openaiWs.send(JSON.stringify({
-             type: 'input_audio_buffer.append',
-             audio: msg.media.payload
-          }));
+          openaiWs.send(
+            JSON.stringify({
+              type: 'input_audio_buffer.append',
+              audio: msg.media.payload,
+            }),
+          );
         } else if (msg.event === 'stop') {
           this.logger.log(`Stream stopped: ${streamSid}`);
           openaiWs.close();
@@ -132,11 +143,13 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
         const response = JSON.parse(data);
         if (response.type === 'audio_delta' || response.type === 'response.audio.delta') {
           if (streamSid) {
-            client.send(JSON.stringify({
-               event: 'media',
-               streamSid,
-               media: { payload: response.delta }
-            }));
+            client.send(
+              JSON.stringify({
+                event: 'media',
+                streamSid,
+                media: { payload: response.delta },
+              }),
+            );
           }
         } else if (response.type === 'response.audio_transcript.done') {
           const session = this.sessions.get(client);
@@ -163,7 +176,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
         await this.leadIntelligenceService.analyzeCallOutcome(
           session.tenantId,
           session.leadId,
-          session.transcript
+          session.transcript,
         );
       }
       session.openaiWs.close();

@@ -5,7 +5,7 @@ import { UserStatus } from '../../src/entities/user.entity';
 
 const mockUser = {
   id: 'user-001',
-  email: 'test@example.com',
+  email: 'autopilot.monster@gmail.com',
   tenantId: 'tenant-001',
   status: UserStatus.ACTIVE,
   failedLoginAttempts: 0,
@@ -65,7 +65,12 @@ describe('AuthService', () => {
       mockRepo.createUser.mockResolvedValue({ ...mockUser, id: 'new-user' });
 
       const result = await service.register(
-        { email: 'new@example.com', password: 'Password1!', firstName: 'John', lastName: 'Doe' },
+        {
+          email: 'autopilot.monster@gmail.com',
+          password: 'Password1!',
+          firstName: 'John',
+          lastName: 'Doe',
+        },
         'tenant-001',
       );
 
@@ -79,7 +84,10 @@ describe('AuthService', () => {
     it('should throw ConflictException if email already registered', async () => {
       mockRepo.findUserByEmail.mockResolvedValue(mockUser);
       await expect(
-        service.register({ email: 'test@example.com', password: 'pw', firstName: 'A', lastName: 'B' }, 'tenant-001'),
+        service.register(
+          { email: 'autopilot.monster@gmail.com', password: 'pw', firstName: 'A', lastName: 'B' },
+          'tenant-001',
+        ),
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -88,14 +96,22 @@ describe('AuthService', () => {
   describe('validateCredentials', () => {
     it('should return null when user not found', async () => {
       mockRepo.findUserByEmail.mockResolvedValue(null);
-      const result = await service.validateCredentials('x@x.com', 'pw', 'tenant-001');
+      const result = await service.validateCredentials(
+        'autopilot.monster@gmail.com',
+        'pw',
+        'tenant-001',
+      );
       expect(result).toBeNull();
     });
 
     it('should return null and increment attempts on wrong password', async () => {
       mockUser.validatePassword = jest.fn().mockResolvedValue(false);
       mockRepo.findUserByEmail.mockResolvedValue(mockUser);
-      const result = await service.validateCredentials('test@example.com', 'wrong', 'tenant-001');
+      const result = await service.validateCredentials(
+        'autopilot.monster@gmail.com',
+        'wrong',
+        'tenant-001',
+      );
       expect(result).toBeNull();
       expect(mockRepo.incrementFailedAttempts).toHaveBeenCalledWith(mockUser.id, mockUser.tenantId);
     });
@@ -103,7 +119,11 @@ describe('AuthService', () => {
     it('should return user on valid credentials', async () => {
       mockUser.validatePassword = jest.fn().mockResolvedValue(true);
       mockRepo.findUserByEmail.mockResolvedValue(mockUser);
-      const result = await service.validateCredentials('test@example.com', 'correct', 'tenant-001');
+      const result = await service.validateCredentials(
+        'autopilot.monster@gmail.com',
+        'correct',
+        'tenant-001',
+      );
       expect(result).toBe(mockUser);
       expect(mockRepo.resetFailedAttempts).toHaveBeenCalledWith(mockUser.id, mockUser.tenantId);
     });
@@ -112,7 +132,7 @@ describe('AuthService', () => {
       const lockedUser = { ...mockUser, isLocked: true };
       mockRepo.findUserByEmail.mockResolvedValue(lockedUser);
       await expect(
-        service.validateCredentials('test@example.com', 'pw', 'tenant-001'),
+        service.validateCredentials('autopilot.monster@gmail.com', 'pw', 'tenant-001'),
       ).rejects.toThrow(UnauthorizedException);
     });
   });

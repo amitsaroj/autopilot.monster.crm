@@ -27,8 +27,18 @@ export class AuthRepository {
   async findUserByEmail(email: string, tenantId: string): Promise<UserEntity | null> {
     return this.userRepo.findOne({
       where: { email, tenantId },
-      select: ['id', 'email', 'passwordHash', 'status', 'tenantId',
-        'isMfaEnabled', 'failedLoginAttempts', 'lockedUntil', 'firstName', 'lastName'],
+      select: [
+        'id',
+        'email',
+        'passwordHash',
+        'status',
+        'tenantId',
+        'isMfaEnabled',
+        'failedLoginAttempts',
+        'lockedUntil',
+        'firstName',
+        'lastName',
+      ],
     });
   }
 
@@ -43,7 +53,10 @@ export class AuthRepository {
 
   async updateUser(id: string, tenantId: string, data: Partial<UserEntity>): Promise<void> {
     // Cast required: TypeORM's _QueryDeepPartialEntity struggles with jsonb Record<string, unknown>
-    await this.userRepo.update({ id, tenantId }, data as Parameters<typeof this.userRepo.update>[1]);
+    await this.userRepo.update(
+      { id, tenantId },
+      data as Parameters<typeof this.userRepo.update>[1],
+    );
   }
 
   async incrementFailedAttempts(id: string, tenantId: string): Promise<void> {
@@ -51,11 +64,14 @@ export class AuthRepository {
   }
 
   async resetFailedAttempts(id: string, tenantId: string): Promise<void> {
-    await this.userRepo.update({ id, tenantId }, {
-      failedLoginAttempts: 0,
-      lockedUntil: undefined,
-      lastLoginAt: new Date(),
-    });
+    await this.userRepo.update(
+      { id, tenantId },
+      {
+        failedLoginAttempts: 0,
+        lockedUntil: undefined,
+        lastLoginAt: new Date(),
+      },
+    );
   }
 
   async lockUser(id: string, tenantId: string, until: Date): Promise<void> {
@@ -64,9 +80,22 @@ export class AuthRepository {
 
   // ─── Refresh Tokens ────────────────────────────────────────────────────────
 
-  async saveRefreshToken(userId: string, tenantId: string, rawToken: string, expiresAt: Date, ipAddress?: string): Promise<void> {
+  async saveRefreshToken(
+    userId: string,
+    tenantId: string,
+    rawToken: string,
+    expiresAt: Date,
+    ipAddress?: string,
+  ): Promise<void> {
     const tokenHash = await bcrypt.hash(rawToken, 10);
-    const token = this.tokenRepo.create({ userId, tenantId, tokenHash, expiresAt, ipAddress, isRevoked: false });
+    const token = this.tokenRepo.create({
+      userId,
+      tenantId,
+      tokenHash,
+      expiresAt,
+      ipAddress,
+      isRevoked: false,
+    });
     await this.tokenRepo.save(token);
   }
 
@@ -106,5 +135,16 @@ export class AuthRepository {
 
   async updateUserStatus(id: string, tenantId: string, status: UserStatus): Promise<void> {
     await this.userRepo.update({ id, tenantId }, { status });
+  }
+
+  async findUserByVerificationToken(token: string): Promise<UserEntity | null> {
+    return this.userRepo.findOne({ where: { verificationToken: token } });
+  }
+
+  async findUserByResetToken(token: string): Promise<UserEntity | null> {
+    return this.userRepo.findOne({
+      where: { resetToken: token },
+      select: ['id', 'email', 'tenantId', 'resetTokenExpiresAt'],
+    });
   }
 }

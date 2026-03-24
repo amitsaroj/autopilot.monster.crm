@@ -13,10 +13,11 @@ import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 
 import { AuthRepository } from './auth.repository';
-import type { LoginDto, RegisterDto } from './dto/auth.dto';
+import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { UserEntity, UserStatus } from './entities/user.entity';
-import type { AuthTokens } from './interfaces/auth-tokens.interface';
-import type { JwtPayload } from './interfaces/jwt-payload.interface';
+import { AuthTokens } from './interfaces/auth-tokens.interface';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { MfaService } from './mfa.service';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly mfaService: MfaService,
   ) {
     const cfg = this.configService.get<JwtConfig>('jwt');
     if (cfg === undefined) throw new Error('JWT config missing');
@@ -72,6 +74,17 @@ export class AuthService {
     if (user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException({ message: 'Account is not active', code: ERROR_CODES.UNAUTHORIZED });
     }
+
+    if (user.isMfaEnabled) {
+       if (!dto.mfaCode) {
+           throw new UnauthorizedException({ message: 'MFA code required', code: ERROR_CODES.UNAUTHORIZED });
+       }
+       const isValid = this.mfaService.verifyToken(dto.mfaCode, user.mfaSecret!);
+       if (!isValid) {
+           throw new UnauthorizedException({ message: 'Invalid MFA code', code: ERROR_CODES.UNAUTHORIZED });
+       }
+    }
+
     const tokens = await this.generateTokens(user, ipAddress);
     this.eventEmitter.emit(EVENT_NAMES.USER_LOGIN, {
       name: EVENT_NAMES.USER_LOGIN, tenantId: user.tenantId, actorId: user.id,
@@ -86,14 +99,16 @@ export class AuthService {
     if (existing !== null) {
       throw new ConflictException({ message: 'Email already registered', code: ERROR_CODES.CONFLICT });
     }
+    const token = uuidv4();
     const user = await this.authRepo.createUser({
       email: dto.email, passwordHash: dto.password,
       firstName: dto.firstName, lastName: dto.lastName,
       tenantId, status: UserStatus.PENDING_VERIFICATION,
+      verificationToken: token,
     });
     this.eventEmitter.emit(EVENT_NAMES.USER_REGISTERED, {
       name: EVENT_NAMES.USER_REGISTERED, tenantId, actorId: user.id,
-      payload: { userId: user.id, email: user.email },
+      payload: { userId: user.id, email: user.email, token },
       occurredAt: new Date().toISOString(), correlationId: uuidv4(),
     });
     return { userId: user.id };
@@ -133,14 +148,112 @@ export class AuthService {
     await this.authRepo.updateUser(userId, tenantId, { passwordHash: newPassword });
   }
 
+  async forgotPassword(email: string, tenantId: string): Promise<void> {
+    const user = await this.authRepo.findUserByEmail(email, tenantId);
+    if (!user) return;
+
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 3600000); // 1 hour
+    await this.authRepo.updateUser(user.id, tenantId, {
+      resetToken: token,
+      resetTokenExpiresAt: expiresAt,
+    });
+
+    this.eventEmitter.emit(EVENT_NAMES.PASSWORD_RESET, {
+      name: EVENT_NAMES.PASSWORD_RESET, tenantId, actorId: user.id,
+      payload: { userId: user.id, email: user.email, token },
+      occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+    });
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await this.authRepo.findUserByResetToken(token);
+    if (!user || (user.resetTokenExpiresAt && user.resetTokenExpiresAt < new Date())) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    await this.authRepo.updateUser(user.id, user.tenantId, {
+      passwordHash: newPassword,
+      resetToken: undefined,
+      resetTokenExpiresAt: undefined,
+    });
+  }
+
+  async verifyEmail(token: string): Promise<void> {
+    const user = await this.authRepo.findUserByVerificationToken(token);
+    if (!user) throw new BadRequestException('Invalid verification token');
+
+    await this.authRepo.updateUser(user.id, user.tenantId, {
+      status: UserStatus.ACTIVE,
+      verificationToken: undefined,
+      emailVerifiedAt: new Date(),
+    });
+
+    this.eventEmitter.emit(EVENT_NAMES.USER_VERIFIED, {
+        name: EVENT_NAMES.USER_VERIFIED, tenantId: user.tenantId, actorId: user.id,
+        payload: { userId: user.id, email: user.email },
+        occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+    });
+  }
+
+  async generateMfaSecret(userId: string, tenantId: string) {
+    const user = await this.authRepo.findUserById(userId, tenantId);
+    if (!user) throw new BadRequestException('User not found');
+
+    const secret = this.mfaService.generateSecret();
+    const qrCodeUrl = this.mfaService.generateQrCodeUrl(user.email, 'Autopilot Monster', secret);
+
+    await this.authRepo.updateUser(userId, tenantId, { mfaSecret: secret });
+
+    return { secret, qrCodeUrl };
+  }
+
+  async enableMfa(userId: string, tenantId: string, token: string): Promise<void> {
+    const user = await this.authRepo.findUserById(userId, tenantId);
+    if (!user || !user.mfaSecret) throw new BadRequestException('MFA not initiated');
+
+    const isValid = this.mfaService.verifyToken(token, user.mfaSecret);
+    if (!isValid) throw new UnauthorizedException('Invalid MFA token');
+
+    await this.authRepo.updateUser(userId, tenantId, { isMfaEnabled: true });
+
+    this.eventEmitter.emit(EVENT_NAMES.USER_MFA_ENABLED, {
+        name: EVENT_NAMES.USER_MFA_ENABLED, tenantId, actorId: userId,
+        payload: { userId },
+        occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+    });
+  }
+
+  async disableMfa(userId: string, tenantId: string): Promise<void> {
+    await this.authRepo.updateUser(userId, tenantId, {
+      isMfaEnabled: false,
+      mfaSecret: undefined,
+    });
+
+    this.eventEmitter.emit(EVENT_NAMES.USER_MFA_DISABLED, {
+        name: EVENT_NAMES.USER_MFA_DISABLED, tenantId, actorId: userId,
+        payload: { userId },
+        occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+    });
+  }
+
+  async getSessions(userId: string, tenantId: string) {
+    return this.authRepo.findActiveSessions(userId, tenantId);
+  }
+
+  async revokeSession(userId: string, tenantId: string, sessionId: string) {
+    console.log(`Revoking session ${sessionId} for user ${userId} in tenant ${tenantId}`);
+    await this.authRepo.deactivateSession(sessionId, tenantId);
+  }
+
   private async generateTokens(user: UserEntity, _ipAddress: string): Promise<AuthTokens> {
     const payload: JwtPayload = {
       sub: user.id, email: user.email, tenantId: user.tenantId,
       roles: [], permissions: [], planId: '',
     };
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn }),
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.refreshSecret, expiresIn: this.jwtConfig.refreshExpiresIn }),
+      this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn as any }),
+      this.jwtService.signAsync(payload, { secret: this.jwtConfig.refreshSecret, expiresIn: this.jwtConfig.refreshExpiresIn as any }),
     ]);
     return { accessToken, refreshToken, expiresIn: 900, tokenType: 'Bearer' };
   }

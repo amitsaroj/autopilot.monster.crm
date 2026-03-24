@@ -90,6 +90,15 @@ export class UserEntity {
   @Column({ name: 'avatar_url', type: 'varchar', length: 512, nullable: true })
   avatarUrl?: string;
 
+  @Column({ name: 'verification_token', type: 'varchar', length: 128, nullable: true, select: false })
+  verificationToken?: string;
+
+  @Column({ name: 'reset_token', type: 'varchar', length: 128, nullable: true, select: false })
+  resetToken?: string;
+
+  @Column({ name: 'reset_token_expires_at', type: 'timestamptz', nullable: true })
+  resetTokenExpiresAt?: Date;
+
   @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, unknown>;
 

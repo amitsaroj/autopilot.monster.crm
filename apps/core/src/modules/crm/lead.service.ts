@@ -27,7 +27,7 @@ export class LeadService {
   }
 
   async bulkCreate(tenantId: string, leads: Partial<Lead>[]) {
-    const leadEntities = leads.map(l => this.leadRepo.create({ ...l, tenantId }));
+    const leadEntities = leads.map((l) => this.leadRepo.create({ ...l, tenantId }));
     return this.leadRepo.save(leadEntities);
   }
 

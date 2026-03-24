@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from '@autopilot/auth';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD, APP_PIPE } from '@nestjs/core';
 
@@ -35,6 +36,11 @@ import { VoiceModule } from './modules/voice/voice.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 import { CrmModule } from './modules/crm/crm.module';
+import { TenantModule } from './modules/tenant/tenant.module';
+import { RbacModule } from './modules/rbac/rbac.module';
+import { MonetizationModule } from './modules/monetization.module';
+import { NotificationModule } from './modules/notifications/notification.module';
+import { PlatformModule } from './modules/platform.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -77,6 +83,12 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     WhatsappModule,
     WorkflowModule,
     CrmModule,
+    TenantModule,
+    RbacModule,
+    MonetizationModule,
+    NotificationModule,
+    PlatformModule,
+    AuthModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

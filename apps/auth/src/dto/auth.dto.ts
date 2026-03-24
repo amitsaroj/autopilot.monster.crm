@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength, MaxLength, IsOptional, IsBoolean } from 'class-validator';
 
 export class LoginDto {
-  @ApiProperty({ example: 'admin@tenant.com' })
+  @ApiProperty({ example: 'autopilot.monster@gmail.com' })
   @IsEmail()
   email!: string;
 
@@ -87,4 +87,10 @@ export class LogoutDto {
   @IsBoolean()
   @IsOptional()
   allSessions?: boolean;
+}
+
+export class VerifyEmailDto {
+  @ApiProperty()
+  @IsString()
+  token!: string;
 }

@@ -23,11 +23,16 @@ export class RagService {
     });
   }
 
-  async processFileAndIndex(tenantId: string, fileBuffer: Buffer, fileName: string, mimeType: string) {
+  async processFileAndIndex(
+    tenantId: string,
+    fileBuffer: Buffer,
+    fileName: string,
+    mimeType: string,
+  ) {
     this.logger.log(`Processing file ${fileName} (${mimeType}) for tenant ${tenantId}`);
-    
+
     let text = '';
-    
+
     // 1. Parse based on MimeType
     if (mimeType.includes('pdf')) {
       const data = await pdfParse(fileBuffer);
@@ -43,8 +48,8 @@ export class RagService {
     const chunkSize = 1000;
     const overlap = 200;
     const chunks: string[] = [];
-    
-    for (let i = 0; i < text.length; i += (chunkSize - overlap)) {
+
+    for (let i = 0; i < text.length; i += chunkSize - overlap) {
       chunks.push(text.slice(i, i + chunkSize));
     }
 
@@ -62,34 +67,34 @@ export class RagService {
     // 4. Batch Embed & Upsert
     const points = [];
     for (let i = 0; i < chunks.length; i++) {
-        try {
-            const embeddingResponse = await this.openai.embeddings.create({
-                model: 'text-embedding-3-small',
-                input: chunks[i],
-            });
+      try {
+        const embeddingResponse = await this.openai.embeddings.create({
+          model: 'text-embedding-3-small',
+          input: chunks[i],
+        });
 
-            points.push({
-                id: crypto.randomUUID(),
-                vector: embeddingResponse.data[0].embedding,
-                payload: {
-                    tenantId,
-                    fileName,
-                    text: chunks[i],
-                    chunkIndex: i,
-                    timestamp: new Date().toISOString()
-                },
-            });
+        points.push({
+          id: crypto.randomUUID(),
+          vector: embeddingResponse.data[0].embedding,
+          payload: {
+            tenantId,
+            fileName,
+            text: chunks[i],
+            chunkIndex: i,
+            timestamp: new Date().toISOString(),
+          },
+        });
 
-            // Batch every 20 points
-            if (points.length >= 20 || i === chunks.length - 1) {
-                await this.qdrant.upsert(collectionName, { wait: true, points: [...points] });
-                points.length = 0; // Clear array
-            }
-        } catch (err) {
-            this.logger.error(`Failed to index chunk ${i} for ${fileName}`, err);
+        // Batch every 20 points
+        if (points.length >= 20 || i === chunks.length - 1) {
+          await this.qdrant.upsert(collectionName, { wait: true, points: [...points] });
+          points.length = 0; // Clear array
         }
+      } catch (err) {
+        this.logger.error(`Failed to index chunk ${i} for ${fileName}`, err);
+      }
     }
-    
+
     return { success: true, chunksIndexed: chunks.length };
   }
 
@@ -100,18 +105,56 @@ export class RagService {
         model: 'text-embedding-3-small',
         input: query,
       });
-      
+
       const results = await this.qdrant.search(collectionName, {
         vector: embeddingResponse.data[0].embedding,
         limit,
         with_payload: true,
       });
-      
-      return results.map(r => r.payload?.['text']).join('\n\n---\n\n');
+
+      return results.map((r) => r.payload?.['text']).join('\n\n---\n\n');
     } catch (err) {
       this.logger.error(`Query failed for ${tenantId}`, err);
       return '';
     }
+  }
+
+  async generate(prompt: string, options: any = {}) {
+    this.logger.log(`Generating text for prompt: ${prompt.slice(0, 50)}...`);
+    const response = await this.openai.chat.completions.create({
+      model: options.model || 'gpt-4o',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: options.temperature || 0.7,
+    });
+    return response.choices[0].message.content;
+  }
+
+  async analyze(text: string, task: string) {
+    this.logger.log(`Analyzing text for task: ${task}`);
+    const prompt = `Task: ${task}\n\nText: ${text}\n\nProvide the analysis in JSON format.`;
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [{ role: 'system', content: 'You are an AI data analyst.' }, { role: 'user', content: prompt }],
+      response_format: { type: 'json_object' },
+    });
+    return JSON.parse(response.choices[0].message.content || '{}');
+  }
+
+  async getModels() {
+    return [
+      { id: 'gpt-4o', name: 'GPT-4o (Best)' },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Fast)' },
+      { id: 'text-embedding-3-small', name: 'Embedding (V3 Small)' },
+    ];
+  }
+
+  async getUsage(tenantId: string) {
+    // Stub
+    return {
+      tokensUsed: 15000,
+      cost: 0.45,
+      tenantId,
+    };
   }
 
   private getCollectionName(tenantId: string): string {

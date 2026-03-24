@@ -913,7 +913,7 @@ Collection: tenant_{tenant_id}
 {
   sub: 'user-uuid',
   tenantId: 'tenant-uuid',
-  email: 'user@example.com',
+  email: 'autopilot.monster@gmail.com',
   role: 'SALES_REP',
   permissions: ['crm:read', 'crm:write'],
   iat: 1700000000,

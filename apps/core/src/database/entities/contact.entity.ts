@@ -1,0 +1,83 @@
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { BaseEntity } from './base.entity';
+import { Company } from './company.entity';
+
+export enum ContactStatus {
+  LEAD = 'LEAD',
+  PROSPECT = 'PROSPECT',
+  CUSTOMER = 'CUSTOMER',
+  CHURNED = 'CHURNED',
+}
+
+@Entity('contacts')
+@Index(['tenantId', 'email'], { unique: true })
+export class Contact extends BaseEntity {
+  @Column({ name: 'first_name', length: 100 })
+  firstName!: string;
+
+  @Column({ name: 'last_name', length: 100 })
+  lastName!: string;
+
+  @Column({ length: 255 })
+  @Index()
+  email!: string;
+
+  @Column({ length: 30, nullable: true })
+  phone?: string;
+
+  @Column({ length: 30, nullable: true })
+  mobile?: string;
+
+  @Column({ name: 'job_title', length: 200, nullable: true })
+  jobTitle?: string;
+
+  @Column({ length: 100, nullable: true })
+  department?: string;
+
+  @Column({ name: 'company_id', type: 'uuid', nullable: true })
+  companyId?: string;
+
+  @ManyToOne(() => Company, { nullable: true })
+  @JoinColumn({ name: 'company_id' })
+  company?: Company;
+
+  @Column({ name: 'owner_id', type: 'uuid', nullable: true })
+  ownerId?: string;
+
+  @Column({
+    type: 'enum',
+    enum: ContactStatus,
+    default: ContactStatus.LEAD,
+  })
+  status!: ContactStatus;
+
+  @Column({ name: 'lead_source', nullable: true })
+  leadSource?: string;
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  tags!: string[];
+
+  @Column({ name: 'custom_fields', type: 'jsonb', default: '{}' })
+  customFields!: Record<string, any>;
+
+  @Column({ name: 'do_not_contact', default: false })
+  doNotContact!: boolean;
+
+  @Column({ name: 'email_opt_out', default: false })
+  emailOptOut!: boolean;
+
+  @Column({ name: 'whatsapp_opt_in', default: false })
+  whatsappOptIn!: boolean;
+
+  @Column({ name: 'last_contacted_at', type: 'timestamptz', nullable: true })
+  lastContactedAt?: Date;
+
+  @Column({ name: 'linkedin_url', nullable: true })
+  linkedinUrl?: string;
+
+  @Column({ name: 'twitter_handle', nullable: true })
+  twitterHandle?: string;
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
+}

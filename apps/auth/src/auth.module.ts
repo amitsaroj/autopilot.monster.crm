@@ -26,13 +26,20 @@ import { LocalStrategy } from './strategies/local.strategy';
       useFactory: (configService: ConfigService) => {
         const jwt = configService.get<JwtConfig>('jwt');
         if (jwt === undefined) throw new Error('JWT config missing');
-        return { secret: jwt.secret, signOptions: { expiresIn: jwt.expiresIn } };
+        return { secret: jwt.secret, signOptions: { expiresIn: jwt.expiresIn as any } };
       },
     }),
     TypeOrmModule.forFeature([UserEntity, SessionEntity, RefreshTokenEntity]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthRepository, JwtStrategy, LocalStrategy, JwtAuthGuard, LocalAuthGuard],
+  providers: [
+    AuthService,
+    AuthRepository,
+    JwtStrategy,
+    LocalStrategy,
+    JwtAuthGuard,
+    LocalAuthGuard,
+  ],
   exports: [AuthService, JwtAuthGuard, TypeOrmModule],
 })
 export class AuthModule {}

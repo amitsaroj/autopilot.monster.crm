@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from '../../src/health/health.controller';
-import { HealthCheckService, TypeOrmHealthIndicator, MemoryHealthIndicator, DiskHealthIndicator } from '@nestjs/terminus';
+import {
+  HealthCheckService,
+  TypeOrmHealthIndicator,
+  MemoryHealthIndicator,
+  DiskHealthIndicator,
+} from '@nestjs/terminus';
 
 describe('HealthController', () => {
   let controller: HealthController;

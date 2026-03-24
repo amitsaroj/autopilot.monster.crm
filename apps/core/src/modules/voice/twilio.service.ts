@@ -12,7 +12,7 @@ export class TwilioService {
     const accountSid = this.configService.get('TWILIO_ACCOUNT_SID') || 'ACmock';
     const authToken = this.configService.get('TWILIO_AUTH_TOKEN') || 'mocktoken';
     this.twilioNumber = this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890';
-    
+
     // We only initialize the real client if credentials match a real SID pattern, to prevent crash on mock dev.
     if (accountSid.startsWith('AC') && accountSid.length === 34) {
       this.client = twilio(accountSid, authToken);
@@ -23,7 +23,7 @@ export class TwilioService {
 
   async initiateOutboundCall(to: string, wssUrl: string) {
     this.logger.log(`Initiating stream call to ${to}`);
-    
+
     const twiml = new twilio.twiml.VoiceResponse();
     // Connect to our NestJS WebSocket Gateway
     const connect = twiml.connect();

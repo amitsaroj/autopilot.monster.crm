@@ -1,6 +1,15 @@
 import * as crypto from 'crypto';
 
-import { Controller, Get, Post, Query, Req, Res, Headers, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Res,
+  Headers,
+  ForbiddenException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
@@ -12,7 +21,7 @@ export class MetaWebhookController {
 
   constructor(
     private readonly whatsappService: WhatsappService,
-    private configService: ConfigService
+    private configService: ConfigService,
   ) {
     this.appSecret = this.configService.get('META_APP_SECRET') || 'mock_secret';
   }
@@ -34,15 +43,16 @@ export class MetaWebhookController {
   async receiveMessage(
     @Req() req: Request,
     @Res() res: Response,
-    @Headers('x-hub-signature-256') signature: string
+    @Headers('x-hub-signature-256') signature: string,
   ) {
     // 1. Verify HMAC SHA-256 Signature to ensure payload actually came from Meta
     if (this.appSecret !== 'mock_secret' && signature) {
-       const rawBody = JSON.stringify(req.body); // In production, use rawBuffer middleware
-       const expectedSig = 'sha256=' + crypto.createHmac('sha256', this.appSecret).update(rawBody).digest('hex');
-       if (expectedSig !== signature) {
-          throw new ForbiddenException('Signature mismatch');
-       }
+      const rawBody = JSON.stringify(req.body); // In production, use rawBuffer middleware
+      const expectedSig =
+        'sha256=' + crypto.createHmac('sha256', this.appSecret).update(rawBody).digest('hex');
+      if (expectedSig !== signature) {
+        throw new ForbiddenException('Signature mismatch');
+      }
     }
 
     // 2. Acknowledge Receipt immediately (Meta requires 200 OK within 3 seconds)

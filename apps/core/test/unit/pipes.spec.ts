@@ -17,7 +17,10 @@ describe('ValidationPipe', () => {
   });
 
   it('should pass valid DTO', async () => {
-    const result = await pipe.transform({ name: 'John' }, { metatype: TestDto, type: 'body', data: '' });
+    const result = await pipe.transform(
+      { name: 'John' },
+      { metatype: TestDto, type: 'body', data: '' },
+    );
     expect((result as TestDto).name).toBe('John');
   });
 

@@ -41,15 +41,15 @@ export class LeadIntelligenceService {
             5. A suggested status (e.g., QUALIFIED, FOLLOW_UP, UNQUALIFIED).
             6. Primary Intent (e.g., PRICING, SUPPORT, DEMO).
             
-            Return ONLY a JSON object: { "name": "...", "email": "...", "summary": "...", "score": 85, "status": "QUALIFIED", "intent": "DEMO" }`
+            Return ONLY a JSON object: { "name": "...", "email": "...", "summary": "...", "score": 85, "status": "QUALIFIED", "intent": "DEMO" }`,
           },
-          { role: 'user', content: transcript }
+          { role: 'user', content: transcript },
         ],
-        response_format: { type: 'json_object' }
+        response_format: { type: 'json_object' },
       });
 
       const result = JSON.parse(response.choices[0].message.content || '{}');
-      
+
       // Update the lead in the database
       await this.leadService.update(tenantId, leadId, {
         score: result.score || 0,
@@ -60,8 +60,8 @@ export class LeadIntelligenceService {
         metadata: {
           extractedName: result.name,
           intent: result.intent,
-          analyzedAt: new Date().toISOString()
-        }
+          analyzedAt: new Date().toISOString(),
+        },
       });
 
       // Trigger automatic follow-up if qualified
@@ -71,7 +71,7 @@ export class LeadIntelligenceService {
           await this.notificationService.sendPostCallFollowUp(
             lead.phone,
             result.name || lead.firstName || 'there',
-            result.summary
+            result.summary,
           );
         }
       }

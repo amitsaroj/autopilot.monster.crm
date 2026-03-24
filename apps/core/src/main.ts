@@ -8,7 +8,6 @@ import helmet from 'helmet';
 import { CoreModule } from './app.module';
 import type { AppConfig } from './config/app.config';
 
-
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(CoreModule, {
     bufferLogs: true,

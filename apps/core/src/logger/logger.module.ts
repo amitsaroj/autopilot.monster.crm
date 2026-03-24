@@ -15,9 +15,7 @@ import type { AppConfig } from '../config/app.config';
       useFactory: (configService: ConfigService) => {
         const app = configService.get<AppConfig>('app');
         const level = app?.logLevel ?? 'debug';
-        const format = app?.logFormat === 'json'
-          ? winston.format.json()
-          : winston.format.simple();
+        const format = app?.logFormat === 'json' ? winston.format.json() : winston.format.simple();
 
         return {
           transports: [

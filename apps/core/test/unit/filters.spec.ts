@@ -3,7 +3,11 @@ import { AllExceptionsFilter } from '../../src/common/filters/all-exceptions.fil
 import { HttpException, HttpStatus } from '@nestjs/common';
 import type { ArgumentsHost } from '@nestjs/common';
 
-function makeArgHost(statusCodeSetter: jest.Mock, _jsonSetter: jest.Mock, headers: Record<string, string> = {}): ArgumentsHost {
+function makeArgHost(
+  statusCodeSetter: jest.Mock,
+  _jsonSetter: jest.Mock,
+  headers: Record<string, string> = {},
+): ArgumentsHost {
   return {
     switchToHttp: () => ({
       getResponse: () => ({
