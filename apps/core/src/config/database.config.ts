@@ -17,7 +17,8 @@ export interface DatabaseConfig {
 
 export const databaseConfig = registerAs(
   'database',
-  (): DatabaseConfig => ({
+  (): DatabaseConfig & { type: 'postgres' } => ({
+    type: 'postgres',
     host: process.env['DB_HOST'] ?? 'localhost',
     port: parseInt(process.env['DB_PORT'] ?? '5432', 10),
     database: process.env['DB_NAME'] ?? 'autopilot_crm',

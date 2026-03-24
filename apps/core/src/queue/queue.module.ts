@@ -19,9 +19,9 @@ const queueList = Object.values(QUEUE_NAMES);
         }
         return {
           redis: {
-            host: process.env['QUEUE_REDIS_HOST'] ?? redis.host,
-            port: parseInt(process.env['QUEUE_REDIS_PORT'] ?? String(redis.port), 10),
-            password: process.env['QUEUE_REDIS_PASSWORD'] ?? redis.password,
+            host: 'redis',
+            port: 6379,
+            password: 'password',
           },
           defaultJobOptions: {
             removeOnComplete: true,
