@@ -39,4 +39,42 @@ export class PricingService {
   async findAllPlans() {
     return this.pricingRepository.findAllPlans();
   }
+
+  // --- Management (SuperAdmin) ---
+
+  async createPlan(data: any) {
+    return this.pricingRepository.createPlan(data);
+  }
+
+  async updatePlan(id: string, data: any) {
+    return this.pricingRepository.updatePlan(id, data);
+  }
+
+  async deletePlan(id: string) {
+    return this.pricingRepository.deletePlan(id);
+  }
+
+  async addFeatureToPlan(data: any) {
+    return this.pricingRepository.createFeature(data);
+  }
+
+  async updatePlanFeature(id: string, data: any) {
+    return this.pricingRepository.updateFeature(id, data);
+  }
+
+  async removeFeatureFromPlan(id: string) {
+    return this.pricingRepository.deleteFeature(id);
+  }
+
+  async addLimitToPlan(data: any) {
+    return this.pricingRepository.createLimit(data);
+  }
+
+  async updatePlanLimit(id: string, data: any) {
+    return this.pricingRepository.updateLimit(id, data);
+  }
+
+  async removeLimitFromPlan(id: string) {
+    return this.pricingRepository.deleteLimit(id);
+  }
 }

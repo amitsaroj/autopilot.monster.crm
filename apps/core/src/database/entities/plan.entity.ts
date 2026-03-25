@@ -4,7 +4,10 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { PlanFeature } from './plan-feature.entity';
+import { PlanLimit } from './plan-limit.entity';
 
 @Entity('plans')
 export class Plan {
@@ -43,4 +46,10 @@ export class Plan {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
+
+  @OneToMany(() => PlanFeature, (feature) => feature.plan)
+  features!: PlanFeature[];
+
+  @OneToMany(() => PlanLimit, (limit) => limit.plan)
+  limits!: PlanLimit[];
 }

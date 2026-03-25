@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Company } from './company.entity';
 
@@ -19,7 +19,6 @@ export class Contact extends BaseEntity {
   lastName!: string;
 
   @Column({ length: 255 })
-  @Index()
   email!: string;
 
   @Column({ length: 30, nullable: true })
@@ -37,7 +36,7 @@ export class Contact extends BaseEntity {
   @Column({ name: 'company_id', type: 'uuid', nullable: true })
   companyId?: string;
 
-  @ManyToOne(() => Company, { nullable: true })
+  @ManyToOne(() => Company, (company) => company.contacts, { nullable: true })
   @JoinColumn({ name: 'company_id' })
   company?: Company;
 
@@ -80,4 +79,8 @@ export class Contact extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   notes?: string;
+
+  @Column()
+  @Index()
+  tenantId!: string;
 }

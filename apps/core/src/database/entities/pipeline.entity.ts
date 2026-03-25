@@ -1,22 +1,31 @@
-import { Entity, Column } from 'typeorm';
-import { BaseEntity } from './base.entity';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
+import { PipelineStage } from './pipeline-stage.entity';
+import { Deal } from './deal.entity';
 
 @Entity('pipelines')
-export class Pipeline extends BaseEntity {
-  @Column({ length: 255 })
+export class Pipeline {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column()
   name!: string;
 
-  @Column({ name: 'is_default', default: false })
-  isDefault!: boolean;
+  @Column({ default: 0 })
+  order!: number;
 
-  @Column({ length: 3, default: 'USD' })
-  currency!: string;
+  @OneToMany(() => PipelineStage, (stage) => stage.pipeline, { cascade: true })
+  stages!: PipelineStage[];
 
-  @Column({ type: 'jsonb', default: '[]' })
-  stages!: Array<{
-    id: string;
-    name: string;
-    probability: number;
-    sortOrder: number;
-  }>;
+  @OneToMany(() => Deal, (deal) => deal.pipeline)
+  deals!: Deal[];
+
+  @Column()
+  @Index()
+  tenantId!: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

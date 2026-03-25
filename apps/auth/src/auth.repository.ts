@@ -6,6 +6,9 @@ import { Repository } from 'typeorm';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { SessionEntity } from './entities/session.entity';
 import { UserEntity, UserStatus } from './entities/user.entity';
+import { Tenant } from '@autopilot/core/database/entities/tenant.entity';
+import { Role } from '@autopilot/core/database/entities/role.entity';
+import { UserRole } from '@autopilot/core/database/entities/user-role.entity';
 
 /**
  * AuthRepository — data access layer for auth module.
@@ -20,6 +23,12 @@ export class AuthRepository {
     private readonly tokenRepo: Repository<RefreshTokenEntity>,
     @InjectRepository(SessionEntity)
     private readonly sessionRepo: Repository<SessionEntity>,
+    @InjectRepository(Tenant)
+    private readonly tenantRepo: Repository<Tenant>,
+    @InjectRepository(Role)
+    private readonly roleRepo: Repository<Role>,
+    @InjectRepository(UserRole)
+    private readonly userRoleRepo: Repository<UserRole>,
   ) {}
 
   // ─── User ─────────────────────────────────────────────────────────────────
@@ -49,6 +58,15 @@ export class AuthRepository {
   async createUser(data: Partial<UserEntity>): Promise<UserEntity> {
     const user = this.userRepo.create(data);
     return this.userRepo.save(user);
+  }
+
+  async createTenant(data: Partial<Tenant>): Promise<Tenant> {
+    const tenant = this.tenantRepo.create(data);
+    return this.tenantRepo.save(tenant);
+  }
+
+  async findTenantById(id: string): Promise<Tenant | null> {
+    return this.tenantRepo.findOne({ where: { id } });
   }
 
   async updateUser(id: string, tenantId: string, data: Partial<UserEntity>): Promise<void> {
@@ -146,5 +164,18 @@ export class AuthRepository {
       where: { resetToken: token },
       select: ['id', 'email', 'tenantId', 'resetTokenExpiresAt'],
     });
+  }
+
+  // ─── RBAC ──────────────────────────────────────────────────────────────────
+
+  async fetchUserRolesWithPermissions(userId: string, tenantId: string): Promise<Role[]> {
+    const userRoles = await this.userRoleRepo.find({ where: { userId, tenantId } });
+    if (userRoles.length === 0) return [];
+
+    const roleIds = userRoles.map((ur) => ur.roleId);
+    return this.roleRepo.createQueryBuilder('role')
+      .leftJoinAndSelect('role.permissions', 'permission')
+      .where('role.id IN (:...roleIds)', { roleIds })
+      .getMany();
   }
 }

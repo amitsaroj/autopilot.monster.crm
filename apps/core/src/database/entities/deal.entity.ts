@@ -3,6 +3,7 @@ import { BaseEntity } from './base.entity';
 import { Contact } from './contact.entity';
 import { Company } from './company.entity';
 import { Pipeline } from './pipeline.entity';
+import { PipelineStage } from './pipeline-stage.entity';
 
 export enum DealStatus {
   OPEN = 'OPEN',
@@ -23,14 +24,20 @@ export class Deal extends BaseEntity {
   currency!: string;
 
   @Column({ name: 'pipeline_id', type: 'uuid' })
+  @Index()
   pipelineId!: string;
 
-  @ManyToOne(() => Pipeline)
+  @ManyToOne(() => Pipeline, (pipeline) => pipeline.deals)
   @JoinColumn({ name: 'pipeline_id' })
-  pipeline?: Pipeline;
+  pipeline!: Pipeline;
 
   @Column({ name: 'stage_id', type: 'uuid' })
+  @Index()
   stageId!: string;
+
+  @ManyToOne(() => PipelineStage, (stage) => stage.deals)
+  @JoinColumn({ name: 'stage_id' })
+  stage!: PipelineStage;
 
   @Column({ name: 'contact_id', type: 'uuid', nullable: true })
   contactId?: string;
@@ -73,4 +80,8 @@ export class Deal extends BaseEntity {
 
   @Column({ name: 'custom_fields', type: 'jsonb', default: '{}' })
   customFields!: Record<string, any>;
+
+  @Column()
+  @Index()
+  tenantId!: string;
 }

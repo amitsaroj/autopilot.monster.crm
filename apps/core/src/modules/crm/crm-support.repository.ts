@@ -6,6 +6,8 @@ import { Task } from '../../database/entities/task.entity';
 import { Note } from '../../database/entities/note.entity';
 import { Product } from '../../database/entities/product.entity';
 import { Quote } from '../../database/entities/quote.entity';
+import { Campaign } from '../../database/entities/campaign.entity';
+import { EmailMessage } from '../../database/entities/email-message.entity';
 import { BaseRepository } from '../../database/base.repository';
 
 @Injectable()
@@ -39,6 +41,19 @@ export class ProductRepository extends BaseRepository<Product> {
 @Injectable()
 export class QuoteRepository extends BaseRepository<Quote> {
   constructor(@InjectRepository(Quote) repo: Repository<Quote>) {
+    super(repo);
+  }
+}
+
+@Injectable()
+export class CampaignRepository extends BaseRepository<Campaign> {
+  constructor(@InjectRepository(Campaign) repo: Repository<Campaign>) {
+    super(repo);
+  }
+}
+@Injectable()
+export class EmailRepository extends BaseRepository<EmailMessage> {
+  constructor(@InjectRepository(EmailMessage) repo: Repository<EmailMessage>) {
     super(repo);
   }
 }

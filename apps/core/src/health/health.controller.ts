@@ -6,7 +6,9 @@ import {
   TypeOrmHealthIndicator,
   MemoryHealthIndicator,
   DiskHealthIndicator,
+  MicroserviceHealthIndicator,
 } from '@nestjs/terminus';
+import { Transport } from '@nestjs/microservices';
 
 @ApiTags('Health')
 @Controller('health')
@@ -16,6 +18,7 @@ export class HealthController {
     private readonly db: TypeOrmHealthIndicator,
     private readonly memory: MemoryHealthIndicator,
     private readonly disk: DiskHealthIndicator,
+    private readonly microservice: MicroserviceHealthIndicator,
   ) {}
 
   @Get()
@@ -26,6 +29,10 @@ export class HealthController {
       () => this.db.pingCheck('database'),
       () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024),
       () => this.disk.checkStorage('disk', { path: '/', thresholdPercent: 0.9 }),
+      () => this.microservice.pingCheck('redis', {
+        transport: Transport.REDIS,
+        options: { host: process.env.REDIS_HOST || 'localhost', port: parseInt(process.env.REDIS_PORT || '6379') },
+      }),
     ]);
   }
 

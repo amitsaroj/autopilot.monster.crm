@@ -27,6 +27,8 @@ const mockRepo = {
   deactivateAllUserSessions: jest.fn(),
   updateUser: jest.fn(),
   saveRefreshToken: jest.fn(),
+  createTenant: jest.fn(),
+  findTenantById: jest.fn(),
 };
 
 const mockJwtService = {
@@ -45,6 +47,12 @@ const mockConfigService = {
 
 const mockEventEmitter = { emit: jest.fn() };
 
+const mockMfaService = {
+  generateSecret: jest.fn(),
+  generateQrCodeUrl: jest.fn(),
+  verifyToken: jest.fn(),
+};
+
 describe('AuthService', () => {
   let service: AuthService;
 
@@ -55,6 +63,7 @@ describe('AuthService', () => {
       mockJwtService as never,
       mockConfigService as never,
       mockEventEmitter as never,
+      mockMfaService as never,
     );
   });
 
@@ -62,6 +71,7 @@ describe('AuthService', () => {
   describe('register', () => {
     it('should create a new user and emit USER_REGISTERED event', async () => {
       mockRepo.findUserByEmail.mockResolvedValue(null);
+      mockRepo.createTenant.mockResolvedValue({ id: 'tenant-001', name: 'My Workspace', slug: 'my-workspace' });
       mockRepo.createUser.mockResolvedValue({ ...mockUser, id: 'new-user' });
 
       const result = await service.register(
@@ -70,11 +80,13 @@ describe('AuthService', () => {
           password: 'Password1!',
           firstName: 'John',
           lastName: 'Doe',
+          tenantName: 'My Workspace',
         },
-        'tenant-001',
+        'any-tenant-id',
       );
 
-      expect(result.userId).toBe('new-user');
+      expect(result.user.id).toBe('new-user');
+      expect(result.tenant.id).toBe('tenant-001');
       expect(mockEventEmitter.emit).toHaveBeenCalledWith(
         'user.registered',
         expect.objectContaining({ name: 'user.registered' }),
@@ -85,7 +97,13 @@ describe('AuthService', () => {
       mockRepo.findUserByEmail.mockResolvedValue(mockUser);
       await expect(
         service.register(
-          { email: 'autopilot.monster@gmail.com', password: 'pw', firstName: 'A', lastName: 'B' },
+          { 
+            email: 'autopilot.monster@gmail.com', 
+            password: 'pw', 
+            firstName: 'A', 
+            lastName: 'B',
+            tenantName: 'Workspace' 
+          },
           'tenant-001',
         ),
       ).rejects.toThrow(ConflictException);

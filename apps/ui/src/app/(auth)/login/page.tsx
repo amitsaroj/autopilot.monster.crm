@@ -1,7 +1,44 @@
+'use client';
+
 import Link from 'next/link';
-import { ArrowRight, Zap } from 'lucide-react';
+import { ArrowRight, Zap, Loader2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { cn } from '@/lib/utils';
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const { login, isLoading } = useAuth();
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
+    try {
+      await login(data);
+      toast.success('Welcome back!');
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Invalid email or password');
+    }
+  };
+
   return (
     <div className="w-full max-w-md px-8 py-10 my-24 rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-card shadow-2xl">
       {/* Logo */}
@@ -15,14 +52,20 @@ export default function LoginPage() {
       <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">Welcome back</h1>
       <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">Sign in to your workspace</p>
 
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div>
           <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Email</label>
           <input
+            {...register('email')}
             type="email"
             placeholder="autopilot.monster@gmail.com"
-            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            disabled={isLoading}
+            className={cn(
+              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
+              errors.email && "border-red-500 focus:ring-red-500"
+            )}
           />
+          {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
         </div>
         <div>
           <div className="flex items-center justify-between mb-1.5">
@@ -32,18 +75,31 @@ export default function LoginPage() {
             </Link>
           </div>
           <input
+            {...register('password')}
             type="password"
             placeholder="••••••••"
-            className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+            disabled={isLoading}
+            className={cn(
+              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
+              errors.password && "border-red-500 focus:ring-red-500"
+            )}
           />
+          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
         </div>
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20"
+          disabled={isLoading}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Sign in
-          <ArrowRight className="w-4 h-4" />
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <>
+              Sign in
+              <ArrowRight className="w-4 h-4" />
+            </>
+          )}
         </button>
       </form>
 

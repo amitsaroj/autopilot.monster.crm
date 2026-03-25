@@ -36,4 +36,9 @@ export class LeadService {
     await this.leadRepo.update({ id, tenantId }, data);
     return this.findOne(tenantId, id);
   }
+
+  async remove(tenantId: string, id: string) {
+    await this.findOne(tenantId, id);
+    return this.leadRepo.delete({ id, tenantId });
+  }
 }

@@ -1,51 +1,57 @@
-import { Entity, Column, Index } from 'typeorm';
-import { BaseEntity } from './base.entity';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
+import { Contact } from './contact.entity';
 
 @Entity('companies')
-@Index(['tenantId', 'name'])
-export class Company extends BaseEntity {
-  @Column({ length: 255 })
+export class Company {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column()
   name!: string;
 
-  @Column({ length: 255, nullable: true })
-  domain?: string;
+  @Column({ nullable: true })
+  domain!: string;
 
-  @Column({ length: 100, nullable: true })
-  industry?: string;
+  @Column({ nullable: true })
+  website!: string;
+
+  @Column({ nullable: true })
+  industry!: string;
+
+  @Column({ nullable: true })
+  phone!: string;
+
+  @Column({ type: 'text', nullable: true })
+  address!: string;
+
+  @Column({ nullable: true })
+  city!: string;
+
+  @Column({ nullable: true })
+  country!: string;
+
+  @Column({ nullable: true })
+  logoUrl!: string;
 
   @Column({ name: 'size_range', nullable: true })
-  sizeRange?: string;
+  sizeRange!: string;
 
   @Column({ name: 'annual_revenue_range', nullable: true })
-  annualRevenueRange?: string;
-
-  @Column({ length: 100, nullable: true })
-  country?: string;
-
-  @Column({ length: 100, nullable: true })
-  city?: string;
-
-  @Column({ type: 'jsonb', nullable: true })
-  address?: {
-    street: string;
-    city: string;
-    state: string;
-    zip: string;
-    country: string;
-  };
-
-  @Column({ length: 30, nullable: true })
-  phone?: string;
-
-  @Column({ length: 255, nullable: true })
-  website?: string;
-
-  @Column({ name: 'owner_id', type: 'uuid', nullable: true })
-  ownerId?: string;
+  annualRevenueRange!: string;
 
   @Column({ type: 'text', array: true, default: '{}' })
   tags!: string[];
 
-  @Column({ name: 'custom_fields', type: 'jsonb', default: '{}' })
-  customFields!: Record<string, any>;
+  @OneToMany(() => Contact, (contact) => contact.company)
+  contacts!: Contact[];
+
+  @Column()
+  @Index()
+  tenantId!: string;
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

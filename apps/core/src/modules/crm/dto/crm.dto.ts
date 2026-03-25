@@ -48,11 +48,23 @@ export class CreateCompanyDto {
 
   @IsOptional()
   @IsString()
-  domain?: string;
+  website?: string;
 
   @IsOptional()
   @IsString()
   industry?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
 }
 
 export class CreateDealDto {

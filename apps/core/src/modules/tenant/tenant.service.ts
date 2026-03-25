@@ -32,30 +32,59 @@ export class TenantService {
     return this.tenantRepository.update(id, updateTenantDto);
   }
 
+  async suspend(id: string): Promise<Tenant> {
+    await this.findOne(id);
+    return this.tenantRepository.update(id, { status: 'SUSPENDED' });
+  }
+
+  async activate(id: string): Promise<Tenant> {
+    await this.findOne(id);
+    return this.tenantRepository.update(id, { status: 'ACTIVE' });
+  }
+
   async verifyDomain(id: string, domain: string): Promise<{ verified: boolean }> {
-    // Stub logic: In real app, check DNS or TXT records
-    console.log(`Verifying domain ${domain} for tenant ${id}`);
-    const isVerified = true;
+    const existing = await this.tenantRepository.findByCustomDomain(domain);
+    if (existing && existing.id !== id) {
+      throw new ConflictException('Domain already in use by another tenant');
+    }
+    // Mocking DNS check
+    const isVerified = true; 
     if (isVerified) {
-        await this.tenantRepository.update(id, { customDomain: domain });
+      await this.tenantRepository.update(id, { customDomain: domain });
     }
     return { verified: isVerified };
   }
 
   async updateBranding(id: string, data: any): Promise<Tenant> {
-      return this.tenantRepository.update(id, { branding: data });
+    await this.findOne(id);
+    return this.tenantRepository.update(id, { branding: data });
+  }
+
+  async getOverrides(id: string) {
+    const tenant = await this.findOne(id);
+    return tenant.overrides || { features: {}, limits: {} };
+  }
+
+  async updateOverrides(id: string, overrides: any) {
+    await this.findOne(id);
+    return this.tenantRepository.update(id, { overrides });
+  }
+
+  async removeOverrides(id: string) {
+    await this.findOne(id);
+    return this.tenantRepository.update(id, { overrides: undefined });
   }
 
   async getLimits(id: string) {
-      // Stub: in real app, fetch from pricing/billing module
-      console.log(`Fetching limits for tenant ${id}`);
-      return { contacts: 1000, emails: 5000, storage: '1GB' };
+    await this.findOne(id);
+    // Future: fetch from BillingModule
+    return { contacts: 1000, emails: 5000, storage: '1GB' };
   }
 
   async getUsage(id: string) {
-      // Stub: in real app, fetch from usage records
-      console.log(`Fetching usage for tenant ${id}`);
-      return { contacts: 150, emails: 1200, storage: '150MB' };
+    await this.findOne(id);
+    // Future: fetch from UsageModule
+    return { contacts: 150, emails: 1200, storage: '150MB' };
   }
 
   async remove(id: string): Promise<void> {

@@ -8,8 +8,9 @@ import {
   Zap, Bot, Phone, MessageSquare, Bell, BarChart3,
   HardDrive, Search, CreditCard, Settings, Store,
   Puzzle, Code, HammerIcon, ShieldCheck, Activity,
-  FileText, LogOut, ChevronDown, Building2,
+  FileText, LogOut, ChevronDown, Building2, Terminal, FileSearch
 } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -66,6 +67,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   return (
     <aside className="flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border">
@@ -141,16 +143,54 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* Bottom: Admin section */}
+      {/* Bottom: User & SuperAdmin section */}
       <div className="px-3 py-3 border-t border-sidebar-border space-y-0.5">
-        <Link href="/admin" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-          <ShieldCheck className="h-4 w-4" />
-          Admin Panel
+        {user?.role === 'SUPER_ADMIN' && (
+          <details className="group mb-2">
+            <summary className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-[10px] font-black uppercase tracking-widest text-brand hover:bg-brand/5 list-none select-none transition-all">
+              <ShieldCheck className="h-4 w-4" />
+              <span className="flex-1">SuperAdmin Command</span>
+              <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
+            </summary>
+            <ul className="mt-1 ml-7 space-y-0.5 pb-2">
+              {[
+                { label: 'Control Center', href: '/superadmin', icon: LayoutDashboard },
+                { label: 'Tenants', href: '/superadmin/tenants', icon: Building2 },
+                { label: 'Marketplace', href: '/superadmin/marketplace', icon: Store },
+                { label: 'Global Billing', href: '/superadmin/subscriptions', icon: CreditCard },
+                { label: 'System Health', href: '/superadmin/metrics', icon: Activity },
+                { label: 'Audit Logs', href: '/superadmin/logs/audit', icon: FileSearch },
+                { label: 'Broadcasts', href: '/superadmin/notifications', icon: Bell },
+                { label: 'Domain Events', href: '/superadmin/events', icon: Terminal },
+                { label: 'Infrastructure', href: '/superadmin/settings', icon: Settings },
+              ].map((sub) => (
+                <li key={sub.href}>
+                  <Link
+                    href={sub.href}
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all',
+                      pathname === sub.href ? 'bg-brand/10 text-brand' : 'text-sidebar-foreground/60 hover:text-brand hover:bg-brand/5'
+                    )}
+                  >
+                    <sub.icon className="h-3 w-3" />
+                    {sub.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+        <Link href="/settings/profile" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
+          <Settings className="h-4 w-4" />
+          My Account
         </Link>
-        <Link href="/logs" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors">
-          <FileText className="h-4 w-4" />
-          Logs
-        </Link>
+        <button 
+          onClick={() => logout()}
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500/70 hover:bg-red-500/5 hover:text-red-500 transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          Terminate Session
+        </button>
       </div>
     </aside>
   );

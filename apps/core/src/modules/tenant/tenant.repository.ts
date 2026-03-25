@@ -22,6 +22,10 @@ export class TenantRepository {
     return this.repository.findOne({ where: { slug } });
   }
 
+  async findByCustomDomain(domain: string): Promise<Tenant | null> {
+    return this.repository.findOne({ where: { customDomain: domain } });
+  }
+
   async create(data: Partial<Tenant>): Promise<Tenant> {
     const tenant = this.repository.create(data);
     return this.repository.save(tenant);

@@ -72,4 +72,38 @@ export class BillingService {
     });
     return record ? Number(record.quantity) : 0;
   }
+
+  // --- Global Management (SuperAdmin) ---
+
+  async getAllInvoices(options?: any) {
+    return this.invoiceRepo.find({
+      order: { createdAt: 'DESC' },
+      ...options,
+    });
+  }
+
+  async getAllSubscriptions(options?: any) {
+    return this.subscriptionRepo.find({
+      order: { createdAt: 'DESC' },
+      ...options,
+    });
+  }
+
+  async getGlobalUsage(metric: string = 'all'): Promise<any> {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    if (metric === 'all') {
+        const records = await this.usageRepo.find({ where: { periodStart: startOfMonth } as any });
+        return records.reduce((acc, r) => {
+            acc[r.metric] = (acc[r.metric] || 0) + Number(r.quantity);
+            return acc;
+        }, {} as Record<string, number>);
+    }
+
+    const records = await this.usageRepo.find({
+      where: { metric, periodStart: startOfMonth } as any,
+    });
+    return records.reduce((sum, r) => sum + Number(r.quantity), 0);
+  }
 }

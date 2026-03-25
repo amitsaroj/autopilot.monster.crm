@@ -1,107 +1,205 @@
-import { FileText, Plus, Search, Filter, Download, Send, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { 
+  FileText, 
+  Plus, 
+  Search, 
+  Filter, 
+  MoreVertical, 
+  DollarSign, 
+  Clock, 
+  CheckCircle2, 
+  XCircle,
+  AlertCircle,
+  Loader2,
+  ChevronRight,
+  Printer,
+  Share2,
+  Calendar,
+  Building2,
+  User
+} from 'lucide-react';
+import { quoteService, Quote, QuoteStatus } from '@/services/quote.service';
+import toast from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-const quotes = [
-  { id: 'QT-2024-001', deal: 'Enterprise License', client: 'TechCorp Inc', total: '$48,000', created: 'Oct 1', valid: 'Oct 31', status: 'Sent' },
-  { id: 'QT-2024-002', deal: 'CRM Pro Bundle', client: 'Acme Solutions', total: '$14,400', created: 'Sep 28', valid: 'Oct 28', status: 'Draft' },
-  { id: 'QT-2024-003', deal: 'Basic Onboarding', client: 'StartupXYZ', total: '$7,200', created: 'Sep 20', valid: 'Oct 20', status: 'Accepted' },
-  { id: 'QT-2024-004', deal: 'Healthcare Package', client: 'HealthFirst', total: '$28,000', created: 'Sep 15', valid: 'Oct 15', status: 'Expired' },
-];
-
-const statusStyle: Record<string, string> = {
-  Draft: 'bg-muted text-muted-foreground',
-  Sent: 'bg-blue-500/10 text-blue-400',
-  Accepted: 'bg-green-500/10 text-green-500',
-  Expired: 'bg-red-500/10 text-red-400',
-};
-
-const statusIcon: Record<string, typeof Clock> = {
-  Draft: Clock, Sent: Send, Accepted: CheckCircle, Expired: XCircle,
-};
-
 export default function QuotesPage() {
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState<string>('All');
+
+  const fetchQuotes = async () => {
+    setIsLoading(true);
+    try {
+      const res = await quoteService.getQuotes();
+      setQuotes((res as any).data.data || []);
+    } catch (error) {
+      toast.error('Failed to load quotes');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuotes();
+  }, []);
+
+  const statuses = ['All', ...Object.values(QuoteStatus)];
+
+  const filteredQuotes = quotes.filter(quote => {
+    const matchesSearch = quote.number.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         quote.notes?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = selectedStatus === 'All' || quote.status === selectedStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusColor = (status: QuoteStatus) => {
+    switch (status) {
+      case QuoteStatus.ACCEPTED: return "bg-emerald-50 text-emerald-600 border-emerald-100";
+      case QuoteStatus.DECLINED: return "bg-red-50 text-red-600 border-red-100";
+      case QuoteStatus.SENT: return "bg-blue-50 text-blue-600 border-blue-100";
+      case QuoteStatus.VIEWED: return "bg-indigo-50 text-indigo-600 border-indigo-100";
+      case QuoteStatus.EXPIRED: return "bg-gray-100 text-gray-500 border-gray-200";
+      default: return "bg-gray-50 text-gray-400 border-gray-100";
+    }
+  };
+
+  const StatusIcon = ({ status }: { status: QuoteStatus }) => {
+    switch (status) {
+      case QuoteStatus.ACCEPTED: return <CheckCircle2 className="w-3.5 h-3.5" />;
+      case QuoteStatus.DECLINED: return <XCircle className="w-3.5 h-3.5" />;
+      case QuoteStatus.SENT: return <Share2 className="w-3.5 h-3.5" />;
+      case QuoteStatus.VIEWED: return <Clock className="w-3.5 h-3.5" />;
+      case QuoteStatus.EXPIRED: return <AlertCircle className="w-3.5 h-3.5" />;
+      default: return <FileText className="w-3.5 h-3.5" />;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
+  const totalValue = filteredQuotes.reduce((sum, q) => sum + Number(q.total), 0);
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
+    <div className="max-w-7xl mx-auto py-8 px-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="page-title">Quotes</h1>
-          <p className="page-description">Proposals & quotes sent to prospects</p>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">Sales Quotes</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Track revenue generation and document approvals.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"><Download className="h-4 w-4" />Export</button>
-          <Link href="/crm/quotes/new" className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
-            <Plus className="h-4 w-4" /> New Quote
-          </Link>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: 'Total Value', value: '$97.6k', color: 'bg-[hsl(246,80%,60%)]/10 text-[hsl(246,80%,60%)]' },
-          { label: 'Accepted', value: '$7.2k', color: 'bg-green-500/10 text-green-500' },
-          { label: 'Pending', value: '$62.4k', color: 'bg-blue-500/10 text-blue-400' },
-          { label: 'Conversion Rate', value: '25%', color: 'bg-yellow-500/10 text-yellow-500' },
-        ].map((s) => (
-          <div key={s.label} className="stat-card">
-            <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
-            <p className={`text-2xl font-bold px-2 py-0.5 rounded-lg inline-block ${s.color}`}>{s.value}</p>
+        <div className="flex items-center gap-3">
+          <div className="hidden lg:flex flex-col items-end mr-6 pr-6 border-r border-gray-100 dark:border-border">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pipeline Value</span>
+            <span className="text-xl font-black text-indigo-600">${totalValue.toLocaleString()}</span>
           </div>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input placeholder="Search quotes..." className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
+          <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm transition shadow-xl shadow-indigo-500/20">
+            <Plus className="w-4 h-4" />
+            New Quote
+          </button>
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"><Filter className="h-4 w-4" />Filter</button>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Quote #</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Deal</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Client</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Total</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Created</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Valid Until</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {quotes.map((q) => {
-              const StatusIco = statusIcon[q.status];
-              return (
-                <tr key={q.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" />
-                      <Link href={`/crm/quotes/${q.id}`} className="font-mono text-xs font-semibold text-[hsl(246,80%,60%)] hover:underline">{q.id}</Link>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-medium text-foreground">{q.deal}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{q.client}</td>
-                  <td className="px-4 py-3 font-bold text-foreground">{q.total}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{q.created}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{q.valid}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 w-fit ${statusStyle[q.status]}`}>
-                      <StatusIco className="h-3 w-3" />{q.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <Link href={`/crm/quotes/${q.id}`} className="p-1.5 rounded hover:bg-muted transition-colors"><Eye className="h-3.5 w-3.5 text-muted-foreground" /></Link>
-                      <Link href={`/crm/quotes/${q.id}/send`} className="p-1.5 rounded hover:bg-muted transition-colors"><Send className="h-3.5 w-3.5 text-muted-foreground" /></Link>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="flex flex-col md:flex-row gap-6 mb-8">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by quote number or notes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-border bg-white dark:bg-card shadow-soft text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          />
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {statuses.map(status => (
+            <button
+              key={status}
+              onClick={() => setSelectedStatus(status)}
+              className={cn(
+                "px-6 py-4 rounded-2xl font-bold text-xs whitespace-nowrap transition border",
+                selectedStatus === status 
+                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
+                  : "bg-white dark:bg-card border-gray-100 dark:border-border text-gray-500 hover:border-indigo-200"
+              )}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredQuotes.map(quote => (
+          <Link 
+            key={quote.id}
+            href={`/crm/quotes/${quote.id}`}
+            className="group flex flex-col lg:flex-row lg:items-center gap-6 p-6 bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-border shadow-soft hover:shadow-xl hover:border-indigo-100 dark:hover:border-indigo-900/50 transition cursor-pointer"
+          >
+            <div className="flex items-center gap-4 lg:w-1/4">
+              <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-gray-900 dark:text-white group-hover:text-indigo-600 transition">
+                  {quote.number}
+                </h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                  Created {new Date(quote.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-8 flex-1">
+              <div className="flex items-center gap-2 min-w-[120px]">
+                <div className={cn(
+                  "px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-tighter flex items-center gap-1.5",
+                  getStatusColor(quote.status)
+                )}>
+                  <StatusIcon status={quote.status} />
+                  {quote.status}
+                </div>
+              </div>
+
+              <div className="hidden md:flex items-center gap-6">
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                  <User className="w-4 h-4 text-gray-300" />
+                  John Doe
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
+                  <Calendar className="w-4 h-4 text-gray-300" />
+                  Expires {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : 'N/A'}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between lg:justify-end lg:w-1/4 gap-6">
+              <div className="text-right">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Total Amount</p>
+                <div className="flex items-baseline justify-end gap-1">
+                  <span className="text-xl font-black text-gray-900 dark:text-white">${Number(quote.total).toLocaleString()}</span>
+                  <span className="text-[10px] font-black text-gray-400 uppercase">{quote.currency}</span>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-600 transition -mr-2" />
+            </div>
+          </Link>
+        ))}
+
+        {filteredQuotes.length === 0 && (
+          <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-border rounded-[40px] bg-gray-50/50">
+            <FileText className="w-12 h-12 mb-4 text-gray-200" />
+            <h3 className="text-lg font-black text-gray-400 mb-1">No Quotes Found</h3>
+            <p className="text-sm text-gray-400">Start by creating a professional quote for your active deals.</p>
+          </div>
+        )}
       </div>
     </div>
   );
