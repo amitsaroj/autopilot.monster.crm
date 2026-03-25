@@ -33,6 +33,18 @@ import { AdminIntegrationsModule } from './integrations/admin-integrations.modul
 import { AdminStorageModule } from './storage/admin-storage.module';
 import { AdminBackupsModule } from './backups/admin-backups.module';
 import { AdminRestoreModule } from './restore/admin-restore.module';
+import { AdminConfigModule } from './config/admin-config.module';
+import { AdminEnvironmentModule } from './environment/admin-environment.module';
+import { AdminSystemSettingsModule } from './system-settings/admin-system-settings.module';
+import { AdminEmailSettingsModule } from './email-settings/admin-email-settings.module';
+import { AdminSmsSettingsModule } from './sms-settings/admin-sms-settings.module';
+import { AdminWhatsAppSettingsModule } from './whatsapp-settings/admin-whatsapp-settings.module';
+import { AdminAISettingsModule } from './ai-settings/admin-ai-settings.module';
+import { AdminVoiceSettingsModule } from './voice-settings/admin-voice-settings.module';
+import { AdminSecuritySettingsModule } from './security-settings/admin-security-settings.module';
+import { AdminIpWhitelistModule } from './ip-whitelist/admin-ip-whitelist.module';
+import { AdminRateLimitModule } from './rate-limit/admin-rate-limit.module';
+import { AdminUsageRulesModule } from './usage-rules/admin-usage-rules.module';
 
 @Module({
   imports: [
@@ -66,6 +78,18 @@ import { AdminRestoreModule } from './restore/admin-restore.module';
     AdminStorageModule,
     AdminBackupsModule,
     AdminRestoreModule,
+    AdminConfigModule,
+    AdminEnvironmentModule,
+    AdminSystemSettingsModule,
+    AdminEmailSettingsModule,
+    AdminSmsSettingsModule,
+    AdminWhatsAppSettingsModule,
+    AdminAISettingsModule,
+    AdminVoiceSettingsModule,
+    AdminSecuritySettingsModule,
+    AdminIpWhitelistModule,
+    AdminRateLimitModule,
+    AdminUsageRulesModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
