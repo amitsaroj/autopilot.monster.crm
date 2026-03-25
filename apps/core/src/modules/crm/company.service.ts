@@ -1,31 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CompanyRepository } from './company.repository';
-import { CreateCompanyDto } from './dto/crm.dto';
 import { Company } from '../../database/entities/company.entity';
 
 @Injectable()
 export class CompanyService {
-  constructor(private readonly companyRepository: CompanyRepository) {}
+  constructor(private readonly repository: CompanyRepository) {}
 
-  async create(tenantId: string, dto: CreateCompanyDto): Promise<Company> {
-    return this.companyRepository.create(tenantId, dto);
+  async create(tenantId: string, data: Partial<Company>): Promise<Company> {
+    return this.repository.create(tenantId, data);
   }
 
   async findAll(tenantId: string): Promise<Company[]> {
-    return this.companyRepository.findAll(tenantId);
+    return this.repository.findAll(tenantId);
   }
 
-  async findOne(tenantId: string, id: string): Promise<Company> {
-    const company = await this.companyRepository.findById(tenantId, id);
-    if (!company) throw new NotFoundException('Company not found');
-    return company;
+  async findOne(tenantId: string, id: string): Promise<Company | null> {
+    return this.repository.findById(tenantId, id);
   }
 
-  async update(tenantId: string, id: string, dto: Partial<CreateCompanyDto>): Promise<Company> {
-    return this.companyRepository.update(tenantId, id, dto);
+  async update(tenantId: string, id: string, data: Partial<Company>): Promise<Company> {
+    return this.repository.update(tenantId, id, data);
   }
 
-  async remove(tenantId: string, id: string): Promise<void> {
-    await this.companyRepository.delete(tenantId, id);
+  async delete(tenantId: string, id: string): Promise<void> {
+    await this.repository.delete(tenantId, id);
   }
 }

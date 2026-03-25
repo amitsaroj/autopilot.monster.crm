@@ -4,8 +4,6 @@ import { AnalyticsService } from './analytics/analytics.service';
 import { AnalyticsController } from './analytics/analytics.controller';
 import { AuditLogService } from './logs/audit-log.service';
 import { AuditLogController } from './logs/audit-log.controller';
-import { AdminService } from './admin/admin.service';
-import { AdminController } from './admin/admin.controller';
 import { StorageService } from './storage/storage.service';
 import { StorageController } from './storage/storage.controller';
 import { SearchService } from './search/search.service';
@@ -23,7 +21,6 @@ import { PlatformSetting } from '../database/entities/platform-setting.entity';
   controllers: [
     AnalyticsController,
     AuditLogController,
-    AdminController,
     StorageController,
     SearchController,
     MarketplaceController,
@@ -33,14 +30,12 @@ import { PlatformSetting } from '../database/entities/platform-setting.entity';
   providers: [
     AnalyticsService,
     AuditLogService,
-    AdminService,
     StorageService,
     SearchService,
   ],
   exports: [
     AnalyticsService,
     AuditLogService,
-    AdminService,
     StorageService,
     SearchService,
   ],

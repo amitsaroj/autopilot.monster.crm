@@ -28,11 +28,11 @@ export class AuthController {
   @Public()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiOperation({ summary: 'Register a new user and tenant' })
   async register(
     @Body() dto: RegisterDto,
     @TenantId() tenantId: string,
-  ): Promise<{ userId: string }> {
+  ): Promise<{ user: any; tenant: any }> {
     return this.authService.register(dto, tenantId);
   }
 
@@ -119,19 +119,19 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('mfa/setup')
+  @Post('mfa/enable')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Setup MFA (generate secret)' })
-  async setupMfa(@CurrentUser() user: IRequestContext) {
+  async enableMfa(@CurrentUser() user: IRequestContext) {
     return this.authService.generateMfaSecret(user.userId, user.tenantId);
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('mfa/enable')
+  @Post('mfa/verify')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Enable MFA with token' })
-  async enableMfa(@CurrentUser() user: IRequestContext, @Body() dto: EnableMfaDto): Promise<void> {
+  @ApiOperation({ summary: 'Verify and activate MFA with token' })
+  async verifyMfa(@CurrentUser() user: IRequestContext, @Body() dto: EnableMfaDto): Promise<void> {
     return this.authService.enableMfa(user.userId, user.tenantId, dto.totpCode);
   }
 

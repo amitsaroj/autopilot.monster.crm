@@ -16,62 +16,123 @@ export class RbacController {
 
   @Get('permissions')
   @ApiOperation({ summary: 'Get all available permissions' })
-  findAllPermissions() {
-    return this.rbacService.findAllPermissions();
+  async findAllPermissions() {
+    const data = await this.rbacService.findAllPermissions();
+    return {
+      status: 200,
+      message: 'Permissions retrieved',
+      error: false,
+      data,
+    };
+  }
+  
+  @Post('permissions')
+  @ApiOperation({ summary: 'Create a new global permission' })
+  @Roles('SUPER_ADMIN')
+  async createPermission(@Body() data: any) {
+    const result = await this.rbacService.createPermission(data);
+    return {
+      status: 201,
+      message: 'Permission created',
+      error: false,
+      data: result,
+    };
   }
 
   @Post('roles')
   @ApiOperation({ summary: 'Create a custom role' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  createRole(@TenantId() tenantId: string, @Body() createRoleDto: CreateRoleDto) {
-    return this.rbacService.createRole(tenantId, createRoleDto);
+  async createRole(@TenantId() tenantId: string, @Body() createRoleDto: CreateRoleDto) {
+    const data = await this.rbacService.createRole(tenantId, createRoleDto);
+    return {
+      status: 201,
+      message: 'Role created',
+      error: false,
+      data,
+    };
   }
 
   @Get('roles')
   @ApiOperation({ summary: 'Get all roles for the tenant' })
-  findAllRoles(@TenantId() tenantId: string) {
-    return this.rbacService.findAllRoles(tenantId);
+  async findAllRoles(@TenantId() tenantId: string) {
+    const data = await this.rbacService.findAllRoles(tenantId);
+    return {
+      status: 200,
+      message: 'Roles retrieved',
+      error: false,
+      data,
+    };
   }
 
   @Get('roles/:id')
   @ApiOperation({ summary: 'Get role by ID' })
-  findRole(@TenantId() tenantId: string, @Param('id') id: string) {
-    return this.rbacService.findRole(tenantId, id);
+  async findRole(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.rbacService.findRole(tenantId, id);
+    return {
+      status: 200,
+      message: 'Role retrieved',
+      error: false,
+      data,
+    };
   }
 
   @Patch('roles/:id')
   @ApiOperation({ summary: 'Update role' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  updateRole(
+  async updateRole(
     @TenantId() tenantId: string,
     @Param('id') id: string,
     @Body() updateRoleDto: Partial<CreateRoleDto>,
   ) {
-    return this.rbacService.updateRole(tenantId, id, updateRoleDto);
+    const data = await this.rbacService.updateRole(tenantId, id, updateRoleDto);
+    return {
+      status: 200,
+      message: 'Role updated',
+      error: false,
+      data,
+    };
   }
 
   @Delete('roles/:id')
   @ApiOperation({ summary: 'Delete role' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  removeRole(@TenantId() tenantId: string, @Param('id') id: string) {
-    return this.rbacService.removeRole(tenantId, id);
+  async removeRole(@TenantId() tenantId: string, @Param('id') id: string) {
+    await this.rbacService.removeRole(tenantId, id);
+    return {
+      status: 200,
+      message: 'Role deleted',
+      error: false,
+      data: null,
+    };
   }
 
   @Post('assign')
   @ApiOperation({ summary: 'Assign role to user' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  assignRole(
+  async assignRole(
     @TenantId() tenantId: string,
     @CurrentUser() actor: IRequestContext,
     @Body() dto: RoleAssignmentDto,
   ) {
-    return this.rbacService.assignRole(tenantId, dto.userId, dto.roleId, actor.userId);
+    await this.rbacService.assignRole(tenantId, dto.userId, dto.roleId, actor.userId);
+    return {
+      status: 200,
+      message: 'Role assigned successfully',
+      error: false,
+      data: null,
+    };
   }
 
   @Post('revoke')
   @ApiOperation({ summary: 'Revoke role from user' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  revokeRole(@TenantId() tenantId: string, @Body() dto: RoleAssignmentDto) {
-    return this.rbacService.revokeRole(tenantId, dto.userId, dto.roleId);
+  async revokeRole(@TenantId() tenantId: string, @Body() dto: RoleAssignmentDto) {
+    await this.rbacService.revokeRole(tenantId, dto.userId, dto.roleId);
+    return {
+      status: 200,
+      message: 'Role revoked successfully',
+      error: false,
+      data: null,
+    };
   }
 }

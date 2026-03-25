@@ -94,24 +94,42 @@ export class AuthService {
     return tokens;
   }
 
-  async register(dto: RegisterDto, tenantId: string): Promise<{ userId: string }> {
-    const existing = await this.authRepo.findUserByEmail(dto.email, tenantId);
+  async register(dto: RegisterDto, _tenantId: string): Promise<{ user: any; tenant: any }> {
+    const existing = await this.authRepo.findUserByEmail(dto.email, '');
     if (existing !== null) {
       throw new ConflictException({ message: 'Email already registered', code: ERROR_CODES.CONFLICT });
     }
+
+    const slugBase = dto.tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = `${slugBase}-${uuidv4().split('-')[0]}`;
+
+    const tenant = await this.authRepo.createTenant({
+      name: dto.tenantName,
+      slug,
+      status: 'TRIAL' as any,
+    });
+
     const token = uuidv4();
     const user = await this.authRepo.createUser({
-      email: dto.email, passwordHash: dto.password,
-      firstName: dto.firstName, lastName: dto.lastName,
-      tenantId, status: UserStatus.PENDING_VERIFICATION,
+      email: dto.email,
+      passwordHash: dto.password,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      tenantId: tenant.id,
+      status: UserStatus.PENDING_VERIFICATION,
       verificationToken: token,
     });
+
     this.eventEmitter.emit(EVENT_NAMES.USER_REGISTERED, {
-      name: EVENT_NAMES.USER_REGISTERED, tenantId, actorId: user.id,
-      payload: { userId: user.id, email: user.email, token },
-      occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      name: EVENT_NAMES.USER_REGISTERED,
+      tenantId: tenant.id,
+      actorId: user.id,
+      payload: { userId: user.id, email: user.email, token, tenantId: tenant.id },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
-    return { userId: user.id };
+
+    return { user, tenant };
   }
 
   async refreshTokens(rawRefreshToken: string, tenantId: string, ipAddress: string): Promise<AuthTokens> {
@@ -247,9 +265,20 @@ export class AuthService {
   }
 
   private async generateTokens(user: UserEntity, _ipAddress: string): Promise<AuthTokens> {
+    const rolesWithPermissions = await this.authRepo.fetchUserRolesWithPermissions(user.id, user.tenantId);
+    
+    const roles = rolesWithPermissions.map((r) => r.name);
+    const permissions = Array.from(
+      new Set(rolesWithPermissions.flatMap((r) => r.permissions.map((p) => p.name)))
+    );
+
     const payload: JwtPayload = {
-      sub: user.id, email: user.email, tenantId: user.tenantId,
-      roles: [], permissions: [], planId: '',
+      sub: user.id,
+      email: user.email,
+      tenantId: user.tenantId,
+      roles,
+      permissions,
+      planId: '',
     };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn as any }),

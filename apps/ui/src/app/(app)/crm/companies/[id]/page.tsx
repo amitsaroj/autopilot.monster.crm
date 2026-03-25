@@ -1,148 +1,280 @@
-import { Building2, Globe, MapPin, Users, DollarSign, Phone, Mail, Edit, Plus, ExternalLink, TrendingUp } from 'lucide-react';
+'use client';
+
+import { useEffect, useState, use } from 'react';
+import { 
+  Building2, 
+  Globe, 
+  Phone, 
+  Briefcase, 
+  Tag, 
+  Clock, 
+  Save, 
+  ArrowLeft,
+  Loader2,
+  Trash2,
+  CheckCircle2,
+  MapPin,
+  TrendingUp,
+  Users,
+  ExternalLink
+} from 'lucide-react';
+import { companyService, Company } from '@/services/company.service';
+import toast from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
-const contacts = [
-  { name: 'Sarah Johnson', role: 'CTO', email: 'autopilot.monster@gmail.com', phone: '+1 555-234-5678', status: 'Active' },
-  { name: 'Mike Chen', role: 'VP Sales', email: 'autopilot.monster@gmail.com', phone: '+1 555-876-5432', status: 'Active' },
-  { name: 'Emily Davis', role: 'Procurement', email: 'autopilot.monster@gmail.com', phone: '+1 555-345-6789', status: 'Active' },
-];
-const deals = [
-  { name: 'Enterprise License', value: '$48,000', stage: 'Proposal', close: 'Oct 31' },
-  { name: 'Support Package', value: '$12,000', stage: 'Closed Won', close: 'Done' },
-];
+export default function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const router = useRouter();
+  const [company, setCompany] = useState<Company | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [formData, setFormData] = useState<Partial<Company>>({});
 
-export default function CompanyDetailPage() {
+  const fetchCompany = async () => {
+    setIsLoading(true);
+    try {
+      const res = await companyService.getCompany(id);
+      const data = (res as any).data.data;
+      setCompany(data);
+      setFormData(data);
+    } catch (error) {
+      toast.error('Failed to load company');
+      router.push('/crm/companies');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompany();
+  }, [id]);
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      await companyService.updateCompany(id, formData);
+      toast.success('Company updated');
+      fetchCompany();
+    } catch (error) {
+      toast.error('Failed to update company');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this company?')) return;
+    try {
+      await companyService.deleteCompany(id);
+      toast.success('Company deleted');
+      router.push('/crm/companies');
+    } catch (error) {
+      toast.error('Failed to delete company');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-[hsl(246,80%,60%)]/10 flex items-center justify-center text-2xl font-bold text-[hsl(246,80%,60%)]">T</div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">TechCorp Inc</h1>
-            <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1"><Globe className="h-3.5 w-3.5" />techcorp.com</span>
-              <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />San Francisco, USA</span>
-              <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-xs font-medium">Customer</span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link href="/crm/companies/1/edit" className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors">
-            <Edit className="h-4 w-4" /> Edit
-          </Link>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
-            <Plus className="h-4 w-4" /> Add Deal
+    <div className="max-w-5xl mx-auto py-8 px-4">
+      <div className="mb-8 flex items-center justify-between">
+        <Link 
+          href="/crm/companies" 
+          className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Companies
+        </Link>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleDelete}
+            className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition"
+            title="Delete Company"
+          >
+            <Trash2 className="w-5 h-5" />
+          </button>
+          <button 
+            type="submit"
+            form="company-form"
+            disabled={isSaving}
+            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-indigo-500/20"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Save Changes
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        {/* Left: Company Info */}
-        <div className="space-y-4">
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="text-sm font-semibold mb-4">Company Info</h2>
-            <dl className="space-y-3 text-sm">
-              {[
-                { label: 'Industry', value: 'SaaS / Software' },
-                { label: 'Company Size', value: '201–500 employees' },
-                { label: 'Founded', value: '2014' },
-                { label: 'Annual Revenue', value: '$12M–$50M' },
-                { label: 'HQ', value: 'San Francisco, CA' },
-                { label: 'Phone', value: '+1 (415) 555-0100' },
-                { label: 'LinkedIn', value: 'linkedin.com/company/techcorp' },
-              ].map((f) => (
-                <div key={f.label} className="flex items-start justify-between gap-2">
-                  <dt className="text-muted-foreground shrink-0">{f.label}</dt>
-                  <dd className="font-medium text-foreground text-right">{f.value}</dd>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Profile Card */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft p-8 text-center">
+            <div className="w-24 h-24 mx-auto rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-4xl font-black mb-6 shadow-xl shadow-indigo-500/30">
+              <Building2 className="w-10 h-10" />
+            </div>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
+              {company?.name}
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">{company?.industry || 'Unspecified Industry'}</p>
+            
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              {company?.tags?.map(tag => (
+                <span key={tag} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border">
+                  {tag}
+                </span>
               ))}
-            </dl>
+              <button className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/50">
+                + Add Tag
+              </button>
+            </div>
+
+            <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-border text-left">
+              {company?.website && (
+                <a 
+                  href={company.website.startsWith('http') ? company.website : `https://${company.website}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 transition"
+                >
+                  <Globe className="w-4 h-4" />
+                  {company.website}
+                  <ExternalLink className="w-3 h-3 ml-auto opacity-50" />
+                </a>
+              )}
+              {company?.phone && (
+                <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                  <Phone className="w-4 h-4" />
+                  {company.phone}
+                </div>
+              )}
+              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                <MapPin className="w-4 h-4" />
+                {company?.city ? `${company.city}, ${company.country}` : 'No Address'}
+              </div>
+            </div>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="text-sm font-semibold mb-3">Key Metrics</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Open Deals', value: '2', icon: TrendingUp, color: 'text-blue-400' },
-                { label: 'Revenue', value: '$60k', icon: DollarSign, color: 'text-green-400' },
-                { label: 'Contacts', value: '3', icon: Users, color: 'text-purple-400' },
-                { label: 'Activities', value: '28', icon: Phone, color: 'text-orange-400' },
-              ].map((m) => (
-                <div key={m.label} className="p-3 rounded-lg bg-muted/30 text-center">
-                  <p className="text-lg font-bold text-foreground">{m.value}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{m.label}</p>
-                </div>
-              ))}
+          <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-8 text-white shadow-2xl shadow-indigo-500/30">
+            <h3 className="font-bold flex items-center gap-2 mb-4">
+              <TrendingUp className="w-5 h-5 text-indigo-200" />
+              Intelligence
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-indigo-100">Revenue</span>
+                <span className="font-bold">{company?.annualRevenueRange || '-'}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-indigo-100">Company Size</span>
+                <span className="font-bold">{company?.sizeRange || '-'}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Tabs area */}
-        <div className="col-span-2 space-y-4">
-          {/* Contacts */}
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Contacts ({contacts.length})</h2>
-              <Link href="/crm/contacts/new" className="text-xs text-[hsl(246,80%,60%)] hover:underline flex items-center gap-1"><Plus className="h-3 w-3" /> Add Contact</Link>
-            </div>
-            <div className="divide-y divide-border">
-              {contacts.map((c) => (
-                <div key={c.name} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors">
-                  <div className="w-9 h-9 rounded-full bg-[hsl(246,80%,60%)]/20 flex items-center justify-center text-xs font-bold text-[hsl(246,80%,60%)]">{c.name.split(' ').map(n => n[0]).join('')}</div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{c.name}</p>
-                    <p className="text-xs text-muted-foreground">{c.role}</p>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{c.email}</span>
-                    <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{c.phone}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Edit Form */}
+        <div className="lg:col-span-2">
+          <form id="company-form" onSubmit={handleUpdate} className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden">
+            <div className="p-8 space-y-8">
+              <div>
+                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Company Name</label>
+                <input
+                  required
+                  value={formData.name || ''}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                />
+              </div>
 
-          {/* Deals */}
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <h2 className="text-sm font-semibold">Deals ({deals.length})</h2>
-              <Link href="/crm/deals/new" className="text-xs text-[hsl(246,80%,60%)] hover:underline flex items-center gap-1"><Plus className="h-3 w-3" /> Add Deal</Link>
-            </div>
-            <div className="divide-y divide-border">
-              {deals.map((d) => (
-                <div key={d.name} className="flex items-center gap-4 px-5 py-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">{d.name}</p>
-                    <p className="text-xs text-muted-foreground">Close: {d.close}</p>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${d.stage === 'Closed Won' ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-400'}`}>{d.stage}</span>
-                  <span className="text-sm font-bold text-foreground">{d.value}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Domain</label>
+                  <input
+                    value={formData.domain || ''}
+                    onChange={e => setFormData({ ...formData, domain: e.target.value })}
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    placeholder="example.com"
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Website</label>
+                  <input
+                    value={formData.website || ''}
+                    onChange={e => setFormData({ ...formData, website: e.target.value })}
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    placeholder="https://example.com"
+                  />
+                </div>
+              </div>
 
-          {/* Recent Activity */}
-          <div className="rounded-xl border border-border bg-card p-5">
-            <h2 className="text-sm font-semibold mb-4">Recent Activity</h2>
-            <div className="space-y-3">
-              {[
-                { action: 'Deal "Enterprise License" moved to Proposal', time: '2h ago', color: 'bg-blue-500' },
-                { action: 'Sarah Johnson sent contract for review', time: '1d ago', color: 'bg-green-500' },
-                { action: 'Call with Mike Chen — 24min', time: '2d ago', color: 'bg-purple-500' },
-                { action: 'New contact Emily Davis added', time: '3d ago', color: 'bg-orange-500' },
-              ].map((a, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${a.color}`} />
-                  <div>
-                    <p className="text-sm text-foreground">{a.action}</p>
-                    <p className="text-xs text-muted-foreground">{a.time}</p>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Industry</label>
+                  <input
+                    value={formData.industry || ''}
+                    onChange={e => setFormData({ ...formData, industry: e.target.value })}
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    placeholder="e.g. Technology"
+                  />
                 </div>
-              ))}
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Size Range</label>
+                  <select
+                    value={formData.sizeRange}
+                    onChange={e => setFormData({ ...formData, sizeRange: e.target.value })}
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
+                  >
+                    <option value="">Select Size...</option>
+                    <option value="1-10">1-10 Employees</option>
+                    <option value="11-50">11-50 Employees</option>
+                    <option value="51-200">51-200 Employees</option>
+                    <option value="201-500">201-500 Employees</option>
+                    <option value="501-1000">501-1000 Employees</option>
+                    <option value="1000+">1000+ Employees</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">City</label>
+                  <input
+                    value={formData.city || ''}
+                    onChange={e => setFormData({ ...formData, city: e.target.value })}
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Country</label>
+                  <input
+                    value={formData.country || ''}
+                    onChange={e => setFormData({ ...formData, country: e.target.value })}
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center gap-6 text-xs font-bold text-gray-400 border-t border-gray-100 dark:border-border">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Registered {new Date(company?.createdAt || '').toLocaleDateString()}
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Last Verified 2d ago
+                </div>
+              </div>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

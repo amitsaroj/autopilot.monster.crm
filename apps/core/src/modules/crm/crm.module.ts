@@ -9,6 +9,7 @@ import { FlowService } from './flow.service';
 import { LeadIntelligenceService } from './lead-intelligence.service';
 import { LeadService } from './lead.service';
 import { NotificationService } from './notification.service';
+
 import { Agent } from '../../database/entities/agent.entity';
 import { Flow } from '../../database/entities/flow.entity';
 import { Lead } from '../../database/entities/lead.entity';
@@ -21,6 +22,8 @@ import { Note } from '../../database/entities/note.entity';
 import { Product } from '../../database/entities/product.entity';
 import { Quote } from '../../database/entities/quote.entity';
 import { Pipeline } from '../../database/entities/pipeline.entity';
+import { Campaign } from '../../database/entities/campaign.entity';
+import { EmailMessage } from '../../database/entities/email-message.entity';
 
 import { ContactService } from './contact.service';
 import { ContactRepository } from './contact.repository';
@@ -28,12 +31,18 @@ import { CompanyService } from './company.service';
 import { CompanyRepository } from './company.repository';
 import { DealService } from './deal.service';
 import { DealRepository } from './deal.repository';
+import { PipelineService } from './pipeline.service';
+import { PipelineRepository } from './pipeline.repository';
 import {
   ActivityService,
   TaskCrmService,
   NoteService,
   ProductService,
   QuoteService,
+  CampaignCrmService,
+  AnalyticsCrmService,
+  EmailCrmService,
+  BulkCrmService,
 } from './crm-support.service';
 import {
   ActivityRepository,
@@ -41,6 +50,8 @@ import {
   NoteRepository,
   ProductRepository,
   QuoteRepository,
+  CampaignRepository,
+  EmailRepository,
 } from './crm-support.repository';
 import { VoiceModule } from '../voice/voice.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
@@ -60,6 +71,8 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
       Product,
       Quote,
       Pipeline,
+      Campaign,
+      EmailMessage,
     ]),
     forwardRef(() => WhatsappModule),
     forwardRef(() => VoiceModule),
@@ -79,6 +92,8 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     CompanyRepository,
     DealService,
     DealRepository,
+    PipelineService,
+    PipelineRepository,
     ActivityService,
     ActivityRepository,
     TaskCrmService,
@@ -89,6 +104,12 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     ProductRepository,
     QuoteService,
     QuoteRepository,
+    CampaignCrmService,
+    CampaignRepository,
+    AnalyticsCrmService,
+    EmailCrmService,
+    EmailRepository,
+    BulkCrmService,
   ],
   exports: [
     AgentService,
@@ -101,6 +122,7 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     ContactService,
     CompanyService,
     DealService,
+    PipelineService,
     ActivityService,
     TaskCrmService,
     NoteService,

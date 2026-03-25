@@ -34,6 +34,12 @@ export class Tenant {
   @Column({ type: 'jsonb', nullable: true })
   branding?: any;
 
+  @Column({ type: 'jsonb', nullable: true })
+  overrides?: {
+    features?: Record<string, boolean>;
+    limits?: Record<string, number>;
+  };
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 

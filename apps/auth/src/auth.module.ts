@@ -11,6 +11,9 @@ import { AuthService } from './auth.service';
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { SessionEntity } from './entities/session.entity';
 import { UserEntity } from './entities/user.entity';
+import { Tenant } from '@autopilot/core/database/entities/tenant.entity';
+import { Role } from '@autopilot/core/database/entities/role.entity';
+import { UserRole } from '@autopilot/core/database/entities/user-role.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -29,7 +32,7 @@ import { LocalStrategy } from './strategies/local.strategy';
         return { secret: jwt.secret, signOptions: { expiresIn: jwt.expiresIn as any } };
       },
     }),
-    TypeOrmModule.forFeature([UserEntity, SessionEntity, RefreshTokenEntity]),
+    TypeOrmModule.forFeature([UserEntity, SessionEntity, RefreshTokenEntity, Tenant, Role, UserRole]),
   ],
   controllers: [AuthController],
   providers: [

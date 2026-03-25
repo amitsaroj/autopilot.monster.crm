@@ -63,4 +63,8 @@ export class RbacService {
   async revokeRole(tenantId: string, userId: string, roleId: string): Promise<void> {
     await this.rbacRepository.revokeRole(tenantId, userId, roleId);
   }
+
+  async createPermission(data: any): Promise<Permission> {
+    return this.rbacRepository.createPermission(data);
+  }
 }

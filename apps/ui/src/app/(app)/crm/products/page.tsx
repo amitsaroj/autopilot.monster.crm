@@ -1,99 +1,169 @@
-import { Package, Plus, Search, Filter, Download, Upload, Tag, MoreHorizontal, DollarSign, Archive, TrendingUp } from 'lucide-react';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { 
+  Package, 
+  Plus, 
+  Search, 
+  Filter, 
+  MoreVertical, 
+  DollarSign, 
+  Tag, 
+  Layers, 
+  Archive,
+  Loader2,
+  ChevronRight,
+  ShoppingCart,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
+import { productService, Product, BillingType } from '@/services/product.service';
+import toast from 'react-hot-toast';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
-const products = [
-  { id: 1, name: 'CRM Enterprise', sku: 'CRM-ENT-001', category: 'License', price: '$4,800/yr', cost: '$800', margin: '83%', stock: '∞', status: 'Active' },
-  { id: 2, name: 'CRM Professional', sku: 'CRM-PRO-001', category: 'License', price: '$1,200/yr', cost: '$200', margin: '83%', stock: '∞', status: 'Active' },
-  { id: 3, name: 'Implementation Pack', sku: 'SVC-IMPL-001', category: 'Service', price: '$5,000', cost: '$2,000', margin: '60%', stock: '∞', status: 'Active' },
-  { id: 4, name: 'Priority Support', sku: 'SVC-SUP-001', category: 'Service', price: '$999/yr', cost: '$150', margin: '85%', stock: '∞', status: 'Active' },
-  { id: 5, name: 'API Access Add-on', sku: 'ADD-API-001', category: 'Add-on', price: '$299/mo', cost: '$40', margin: '87%', stock: '∞', status: 'Active' },
-  { id: 6, name: 'Legacy Basic Plan', sku: 'CRM-BSC-001', category: 'License', price: '$599/yr', cost: '$100', margin: '83%', stock: '∞', status: 'Archived' },
-];
-
 export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const res = await productService.getProducts();
+      setProducts((res as any).data.data || []);
+    } catch (error) {
+      toast.error('Failed to load products');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const categories = ['All', ...Array.from(new Set(products.map(p => p.category).filter(Boolean)))];
+
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         product.sku?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="page-header">
+    <div className="max-w-7xl mx-auto py-8 px-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
         <div>
-          <h1 className="page-title">Products & Services</h1>
-          <p className="page-description">Product catalog · 6 items</p>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">Product Catalog</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Manage your offerings and standardized pricebooks.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"><Upload className="h-4 w-4" />Import</button>
-          <button className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"><Download className="h-4 w-4" />Export</button>
-          <Link href="/crm/products/new" className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
-            <Plus className="h-4 w-4" /> New Product
-          </Link>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-card border border-gray-200 dark:border-border rounded-2xl font-bold text-sm hover:bg-gray-50 transition shadow-soft">
+            <Archive className="w-4 h-4" />
+            Export Pricebook
+          </button>
+          <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm transition shadow-xl shadow-indigo-500/20">
+            <Plus className="w-4 h-4" />
+            Add Product
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        {[
-          { label: 'Total Products', value: '6', icon: Package, color: 'text-blue-400' },
-          { label: 'Active', value: '5', icon: TrendingUp, color: 'text-green-400' },
-          { label: 'Avg Price', value: '$2.1k', icon: DollarSign, color: 'text-yellow-400' },
-          { label: 'Avg Margin', value: '82%', icon: Archive, color: 'text-purple-400' },
-        ].map((s) => (
-          <div key={s.label} className="stat-card flex items-center gap-4">
-            <div className={`p-3 rounded-lg bg-muted ${s.color}`}><s.icon className="h-5 w-5" /></div>
-            <div><p className="text-xl font-bold text-foreground">{s.value}</p><p className="text-xs text-muted-foreground">{s.label}</p></div>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input placeholder="Search products..." className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
+      <div className="flex flex-col md:flex-row gap-6 mb-8">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search by name or SKU..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-border bg-white dark:bg-card shadow-soft text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          />
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"><Filter className="h-4 w-4" />Filter</button>
-        <div className="ml-auto flex gap-2">
-          {['All', 'License', 'Service', 'Add-on'].map((t, i) => (
-            <button key={t} className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${i === 0 ? 'bg-[hsl(246,80%,60%)] border-transparent text-white' : 'border-border hover:bg-muted text-muted-foreground'}`}>{t}</button>
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {categories.map(cat => (
+            <button
+              key={cat as string}
+              onClick={() => setSelectedCategory(cat as string)}
+              className={cn(
+                "px-6 py-4 rounded-2xl font-bold text-xs whitespace-nowrap transition border",
+                selectedCategory === cat 
+                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
+                  : "bg-white dark:bg-card border-gray-100 dark:border-border text-gray-500 hover:border-indigo-200"
+              )}
+            >
+              {cat}
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground"><input type="checkbox" /></th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">SKU</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Price</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Cost</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Margin</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {products.map((p) => (
-              <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3"><input type="checkbox" /></td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-[hsl(246,80%,60%)]/10 flex items-center justify-center"><Package className="h-4 w-4 text-[hsl(246,80%,60%)]" /></div>
-                    <Link href={`/crm/products/${p.id}`} className="font-medium text-foreground hover:text-[hsl(246,80%,60%)]">{p.name}</Link>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map(product => (
+          <Link 
+            key={product.id}
+            href={`/crm/products/${product.id}`}
+            className="group block bg-white dark:bg-card rounded-3xl border border-gray-100 dark:border-border shadow-soft hover:shadow-xl hover:border-indigo-100 dark:hover:border-indigo-900/50 transition overflow-hidden"
+          >
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-indigo-500 transition">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div className={cn(
+                    "px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase",
+                    product.status === 'ACTIVE' ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400"
+                )}>
+                  {product.status}
+                </div>
+              </div>
+
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-1 group-hover:text-indigo-600 transition">
+                {product.name}
+              </h3>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+                SKU: {product.sku || 'N/A'} • {product.category || 'Standard'}
+              </p>
+
+              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-6 h-10">
+                {product.description || 'No description provided for this catalog item.'}
+              </p>
+
+              <div className="flex items-center justify-between pt-6 border-t border-gray-50 dark:border-border">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Price Point</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-xl font-black text-gray-900 dark:text-white">${Number(product.price).toLocaleString()}</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">{product.currency}</span>
                   </div>
-                </td>
-                <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{p.sku}</td>
-                <td className="px-4 py-3"><span className="px-2 py-0.5 bg-muted rounded-full text-xs">{p.category}</span></td>
-                <td className="px-4 py-3 font-semibold text-foreground">{p.price}</td>
-                <td className="px-4 py-3 text-muted-foreground">{p.cost}</td>
-                <td className="px-4 py-3 text-green-500 font-medium">{p.margin}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${p.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>{p.status}</span>
-                </td>
-                <td className="px-4 py-3">
-                  <Link href={`/crm/products/${p.id}/edit`} className="p-1 rounded hover:bg-muted transition-colors inline-flex"><MoreHorizontal className="h-4 w-4 text-muted-foreground" /></Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Billing</span>
+                  <span className="text-xs font-black text-indigo-600 dark:text-indigo-400">{product.billingType.replace('_', ' ')}</span>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+
+        {filteredProducts.length === 0 && (
+          <div className="col-span-full py-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-border rounded-[40px] bg-gray-50/50">
+            <ShoppingCart className="w-12 h-12 mb-4 text-gray-200" />
+            <h3 className="text-lg font-black text-gray-400 mb-1">Catalog Empty</h3>
+            <p className="text-sm text-gray-400">No products match your current search criteria.</p>
+          </div>
+        )}
       </div>
     </div>
   );

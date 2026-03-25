@@ -38,6 +38,11 @@ export class RegisterDto {
   @IsString()
   @MaxLength(100)
   lastName!: string;
+
+  @ApiProperty({ example: 'My Workspace' })
+  @IsString()
+  @MaxLength(100)
+  tenantName!: string;
 }
 
 export class RefreshTokenDto {

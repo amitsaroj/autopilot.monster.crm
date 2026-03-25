@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '@autopilot/auth';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD, APP_PIPE } from '@nestjs/core';
 
 // Config factories
@@ -41,6 +42,9 @@ import { RbacModule } from './modules/rbac/rbac.module';
 import { MonetizationModule } from './modules/monetization.module';
 import { NotificationModule } from './modules/notifications/notification.module';
 import { PlatformModule } from './modules/platform.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { UsersModule } from './modules/users/users.module';
+import { SocialModule } from './modules/social/social.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -68,6 +72,8 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
       ],
     }),
 
+    ScheduleModule.forRoot(),
+
     // Infrastructure
     DatabaseModule,
     LoggerModule,
@@ -88,6 +94,9 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     MonetizationModule,
     NotificationModule,
     PlatformModule,
+    UsersModule,
+    AdminModule,
+    SocialModule,
     AuthModule,
   ],
   providers: [
