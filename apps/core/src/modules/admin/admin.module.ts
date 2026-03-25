@@ -45,6 +45,11 @@ import { AdminSecuritySettingsModule } from './security-settings/admin-security-
 import { AdminIpWhitelistModule } from './ip-whitelist/admin-ip-whitelist.module';
 import { AdminRateLimitModule } from './rate-limit/admin-rate-limit.module';
 import { AdminUsageRulesModule } from './usage-rules/admin-usage-rules.module';
+import { AdminCostRulesModule } from './cost-rules/admin-cost-rules.module';
+import { AdminFeatureRulesModule } from './feature-rules/admin-feature-rules.module';
+import { AdminTenantOverrideModule } from './tenant-override/admin-tenant-override.module';
+import { AdminPlanOverrideModule } from './plan-override/admin-plan-override.module';
+import { AdminUserOverrideModule } from './user-override/admin-user-override.module';
 
 @Module({
   imports: [
@@ -90,6 +95,11 @@ import { AdminUsageRulesModule } from './usage-rules/admin-usage-rules.module';
     AdminIpWhitelistModule,
     AdminRateLimitModule,
     AdminUsageRulesModule,
+    AdminCostRulesModule,
+    AdminFeatureRulesModule,
+    AdminTenantOverrideModule,
+    AdminPlanOverrideModule,
+    AdminUserOverrideModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
