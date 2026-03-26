@@ -2,12 +2,11 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/apps/core",
-    "rootDir": "./src",
     "baseUrl": "./",
     "paths": {
-      "@autopilot/core": ["src/index.ts"],
+      "@autopilot/core": ["src/index"],
       "@autopilot/core/*": ["src/*"],
-      "@autopilot/auth": ["../auth/src/index.ts"],
+      "@autopilot/auth": ["../auth/src/index"],
       "@autopilot/auth/*": ["../auth/src/*"]
     }
   },

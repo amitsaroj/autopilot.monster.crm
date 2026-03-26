@@ -51,16 +51,16 @@ services:
     environment:
       - NODE_ENV=development
       - APP_PORT=3000
-      - DB_HOST=postgres
-      - DB_PORT=5432
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
       - DB_NAME=autopilot_monster
       - DB_USER=root
       - DB_PASSWORD=password
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT_INTERNAL:-6379}
       - REDIS_PASSWORD=password
-      - MINIO_ENDPOINT=minio
-      - MINIO_PORT=9000
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio}
+      - MINIO_PORT=${MINIO_PORT_INTERNAL:-9000}
       - MINIO_ACCESS_KEY=root
       - MINIO_SECRET_KEY=password123
     volumes:
