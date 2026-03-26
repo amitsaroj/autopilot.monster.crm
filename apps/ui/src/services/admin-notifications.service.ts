@@ -1,4 +1,4 @@
-import api from './lib/api/client';
+import api from '../lib/api/client';
 
 export const adminNotificationsService = {
   // Announcements (Banners/Global Messages)

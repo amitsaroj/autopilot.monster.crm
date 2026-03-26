@@ -33,7 +33,7 @@ import { adminEmailSettingsService } from '@/services/admin-email-settings.servi
 import { adminSmsSettingsService } from '@/services/admin-sms-settings.service';
 import { adminEnvironmentService } from '@/services/admin-environment.service';
 import { adminConfigService } from '@/services/admin-config.service';
-import { adminAISettingsService } from '@/services/admin-ai-settings.service';
+import { adminAiSettingsService } from '@/services/admin-ai-settings.service';
 import { adminVoiceSettingsService } from '@/services/admin-voice-settings.service';
 import { adminWhatsAppSettingsService } from '@/services/admin-whatsapp-settings.service';
 import { adminCostRulesService } from '@/services/admin-cost-rules.service';
@@ -72,7 +72,7 @@ export default function GlobalConfigurationDashboard() {
         adminSmsSettingsService.getSettings(),
         adminEnvironmentService.getEnv(),
         adminWhatsAppSettingsService.getSettings(),
-        adminAISettingsService.getSettings(),
+        adminAiSettingsService.getSettings(),
         adminVoiceSettingsService.getSettings(),
         adminCostRulesService.getSettings(),
         adminFeatureRulesService.getSettings(),
@@ -394,7 +394,7 @@ export default function GlobalConfigurationDashboard() {
                               type={showSecrets ? "text" : "password"}
                               className="w-full px-4 py-3 bg-muted/20 border border-border/20 rounded-xl font-bold text-sm focus:border-brand/40 outline-none pr-12"
                               defaultValue={aiSettings.openaiKey}
-                              onBlur={(e) => handleUpdate(adminAISettingsService, setAiSettings, { ...aiSettings, openaiKey: e.target.value }, 'ai_openai')}
+                              onBlur={(e) => handleUpdate(adminAiSettingsService, setAiSettings, { ...aiSettings, openaiKey: e.target.value }, 'ai_openai')}
                            />
                            <button onClick={() => setShowSecrets(!showSecrets)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                               {showSecrets ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -406,7 +406,7 @@ export default function GlobalConfigurationDashboard() {
                         <select 
                            className="w-full px-4 py-3 bg-muted/20 border border-border/20 rounded-xl font-bold text-sm focus:border-brand/40 outline-none"
                            defaultValue={aiSettings.defaultModel}
-                           onChange={(e) => handleUpdate(adminAISettingsService, setAiSettings, { ...aiSettings, defaultModel: e.target.value }, 'ai_model')}
+                           onChange={(e) => handleUpdate(adminAiSettingsService, setAiSettings, { ...aiSettings, defaultModel: e.target.value }, 'ai_model')}
                         >
                            <option value="gpt-4o">GPT-4o (Omni)</option>
                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
@@ -428,7 +428,7 @@ export default function GlobalConfigurationDashboard() {
                         <textarea 
                            className="w-full px-5 py-4 bg-muted/20 border border-border/20 rounded-2xl font-bold text-xs focus:border-brand/40 outline-none transition-all h-40 leading-relaxed"
                            defaultValue={aiSettings.platformRole}
-                           onBlur={(e) => handleUpdate(adminAISettingsService, setAiSettings, { ...aiSettings, platformRole: e.target.value }, 'ai_role')}
+                           onBlur={(e) => handleUpdate(adminAiSettingsService, setAiSettings, { ...aiSettings, platformRole: e.target.value }, 'ai_role')}
                         />
                      </div>
                   </div>

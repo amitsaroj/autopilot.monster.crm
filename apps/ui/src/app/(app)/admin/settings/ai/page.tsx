@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { adminAISettingsService } from '@/services/admin-ai-settings.service';
+import { adminAiSettingsService } from '@/services/admin-ai-settings.service';
 
 export default function AdminAISettingsPage() {
   const [settings, setSettings] = useState<any>(null);
@@ -14,7 +14,7 @@ export default function AdminAISettingsPage() {
 
   const loadSettings = async () => {
     try {
-      const response = await adminAISettingsService.getSettings();
+      const response = await adminAiSettingsService.getSettings();
       setSettings(response.data);
     } catch (error) {
       console.error('Failed to load AI settings', error);
@@ -27,7 +27,7 @@ export default function AdminAISettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await adminAISettingsService.updateSettings(settings);
+      await adminAiSettingsService.updateSettings(settings);
       alert('Global AI parameters updated.');
     } catch (error) {
       console.error('Failed to update AI settings', error);

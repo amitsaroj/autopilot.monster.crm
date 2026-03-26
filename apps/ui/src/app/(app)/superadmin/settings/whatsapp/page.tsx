@@ -11,7 +11,7 @@ import {
   ArrowRight,
   Cpu
 } from 'lucide-react';
-import { adminWhatsappSettingsService } from '@/services/admin-whatsapp-settings.service';
+import { adminWhatsAppSettingsService } from '@/services/admin-whatsapp-settings.service';
 
 export default function SuperAdminWhatsappSettingsPage() {
   const [settings, setSettings] = useState<any[]>([]);
@@ -24,7 +24,7 @@ export default function SuperAdminWhatsappSettingsPage() {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const res = await adminWhatsappSettingsService.findAll();
+      const res = await adminWhatsAppSettingsService.findAll();
       setSettings(res.data || []);
     } catch (err) {
       console.error(err);

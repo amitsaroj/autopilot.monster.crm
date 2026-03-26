@@ -1,4 +1,4 @@
-import api from './lib/api/client';
+import api from '../lib/api/client';
 
 export const adminEmailSettingsService = {
   getSettings: () => api.get('/admin/email-settings'),

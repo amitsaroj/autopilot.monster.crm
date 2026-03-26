@@ -154,6 +154,7 @@ bin/
 obj/
 .docusaurus/
 package-lock.json.tmp
+build_error.txt
 
 # Enhanced Environment & Security
 .env.development.local

@@ -1,6 +1,6 @@
 import api from '../lib/api/client';
 
-export const adminWhatsappSettingsService = {
+export const adminWhatsAppSettingsService = {
   getSettings: async () => {
     const response = await api.get('/admin/settings/whatsapp');
     return response.data;

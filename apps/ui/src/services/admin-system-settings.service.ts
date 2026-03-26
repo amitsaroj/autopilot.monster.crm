@@ -1,4 +1,4 @@
-import api from './lib/api/client';
+import api from '../lib/api/client';
 
 export const adminSystemSettingsService = {
   getSettings: () => api.get('/admin/system-settings'),

@@ -1,6 +1,10 @@
 import api from '../lib/api/client';
 
-export const adminAISettingsService = {
+export const adminAiSettingsService = {
+  getEnv: async () => {
+    const response = await api.get('/admin/settings/ai');
+    return response.data;
+  },
   getSettings: async () => {
     const response = await api.get('/admin/settings/ai');
     return response.data;
