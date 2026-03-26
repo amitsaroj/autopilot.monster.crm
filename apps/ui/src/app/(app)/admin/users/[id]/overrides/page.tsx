@@ -112,7 +112,7 @@ export default function AdminUserOverridePage() {
               </div>
               <div className="mt-12 p-8 bg-white/5 rounded-[2.5rem] border border-white/10">
                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-relaxed">
-                    Personal overrides take highest precedence in the authority chain (User > Tenant > Plan). These should only be used for system administrators or VIP accounts.
+                    Personal overrides take highest precedence in the authority chain (User &gt; Tenant &gt; Plan). These should only be used for system administrators or VIP accounts.
                  </p>
               </div>
            </div>
