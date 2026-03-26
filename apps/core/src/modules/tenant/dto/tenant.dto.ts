@@ -1,35 +1,48 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { IsString, IsOptional, IsUrl, IsEnum, MaxLength } from 'class-validator';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 export class UpdateBrandingDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'Acme Corp' })
   @IsString()
+  @MaxLength(100)
   @IsOptional()
   companyName?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'https://logo.com/image.png' })
   @IsUrl()
   @IsOptional()
   logoUrl?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: '#000000' })
   @IsString()
+  @MaxLength(7)
   @IsOptional()
   primaryColor?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: '#ffffff' })
   @IsString()
+  @MaxLength(7)
   @IsOptional()
   secondaryColor?: string;
-
-  @ApiPropertyOptional()
-  @IsString()
-  @IsOptional()
-  customDomain?: string;
 }
 
 export class VerifyDomainDto {
-  @ApiProperty()
+  @ApiProperty({ example: 'app.acme.com' })
   @IsString()
+  @MaxLength(255)
   domain!: string;
 }
+
+export class TenantFilterDto extends PaginationDto {
+  @ApiPropertyOptional({ example: 'ACTIVE' })
+  @IsEnum(['ACTIVE', 'TRIAL', 'SUSPENDED', 'DELETED'])
+  @IsOptional()
+  status?: string;
+
+  @ApiPropertyOptional({ example: 'Acme' })
+  @IsString()
+  @IsOptional()
+  search?: string;
+}
+

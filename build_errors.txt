@@ -1,0 +1,174 @@
+[96mapps/core/src/modules/admin/debug/admin-debug.service.ts[0m:[93m11[0m:[93m29[0m - [91merror[0m[90m TS2551: [0mProperty 'reset' does not exist on type 'Cache'. Did you mean 'set'?
+
+[7m11[0m     await this.cacheManager.reset();
+[7m  [0m [91m                            ~~~~~[0m
+
+  [96mnode_modules/cache-manager/dist/index.d.ts[0m:[93m54[0m:[93m5[0m
+    [7m54[0m     set: <T>(key: string, value: T, ttl?: number) => Promise<T>;
+    [7m  [0m [96m    ~~~[0m
+    'set' is declared here.
+[96mapps/core/src/modules/ai/ai.controller.ts[0m:[93m57[0m:[93m41[0m - [91merror[0m[90m TS2554: [0mExpected 2-3 arguments, but got 1.
+
+[7m57[0m     const reply = await this.ragService.generate(prompt);
+[7m  [0m [91m                                        ~~~~~~~~[0m
+
+  [96mapps/core/src/modules/ai/rag.service.ts[0m:[93m141[0m:[93m48[0m
+    [7m141[0m   async generate(tenantId: string | undefined, prompt: string, options: any = {}) {
+    [7m   [0m [96m                                               ~~~~~~~~~~~~~~[0m
+    An argument for 'prompt' was not provided.
+[96mapps/core/src/modules/ai/ai.controller.ts[0m:[93m67[0m:[93m28[0m - [91merror[0m[90m TS2554: [0mExpected 3 arguments, but got 2.
+
+[7m67[0m     return this.ragService.analyze(dto.text, dto.task);
+[7m  [0m [91m                           ~~~~~~~[0m
+
+  [96mapps/core/src/modules/ai/rag.service.ts[0m:[93m152[0m:[93m61[0m
+    [7m152[0m   async analyze(tenantId: string | undefined, text: string, task: string) {
+    [7m   [0m [96m                                                            ~~~~~~~~~~~~[0m
+    An argument for 'task' was not provided.
+[96mapps/core/src/modules/sub-admin/ai/sub-admin-ai.controller.ts[0m:[93m1[0m:[93m50[0m - [91merror[0m[90m TS6133: [0m'Param' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                 ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/ai/sub-admin-ai.controller.ts[0m:[93m1[0m:[93m57[0m - [91merror[0m[90m TS6133: [0m'Patch' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                        ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/ai/sub-admin-ai.controller.ts[0m:[93m1[0m:[93m64[0m - [91merror[0m[90m TS6133: [0m'Delete' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                               ~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/ai/sub-admin-ai.service.ts[0m:[93m4[0m:[93m24[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../../database/entities/config.entity' or its corresponding type declarations.
+
+[7m4[0m import { Config } from '../../../database/entities/config.entity';
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/billing/sub-admin-billing.module.ts[0m:[93m5[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../billing/entities/subscription.entity' or its corresponding type declarations.
+
+[7m5[0m import { Subscription } from '../../billing/entities/subscription.entity';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/billing/sub-admin-billing.module.ts[0m:[93m6[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../billing/entities/invoice.entity' or its corresponding type declarations.
+
+[7m6[0m import { Invoice } from '../../billing/entities/invoice.entity';
+[7m [0m [91m                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/billing/sub-admin-billing.service.ts[0m:[93m4[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../billing/entities/subscription.entity' or its corresponding type declarations.
+
+[7m4[0m import { Subscription } from '../../billing/entities/subscription.entity';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/billing/sub-admin-billing.service.ts[0m:[93m5[0m:[93m25[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../billing/entities/invoice.entity' or its corresponding type declarations.
+
+[7m5[0m import { Invoice } from '../../billing/entities/invoice.entity';
+[7m [0m [91m                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/integrations/sub-admin-integrations.controller.ts[0m:[93m1[0m:[93m57[0m - [91merror[0m[90m TS6133: [0m'Patch' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                        ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/integrations/sub-admin-integrations.module.ts[0m:[93m5[0m:[93m24[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../../database/entities/config.entity' or its corresponding type declarations.
+
+[7m5[0m import { Config } from '../../../database/entities/config.entity';
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/integrations/sub-admin-integrations.service.ts[0m:[93m6[0m:[93m24[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../../database/entities/config.entity' or its corresponding type declarations.
+
+[7m6[0m import { Config } from '../../../database/entities/config.entity';
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/marketplace/sub-admin-marketplace.module.ts[0m:[93m5[0m:[93m24[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../admin/plugins/entities/plugin.entity' or its corresponding type declarations.
+
+[7m5[0m import { Plugin } from '../../admin/plugins/entities/plugin.entity';
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/marketplace/sub-admin-marketplace.service.ts[0m:[93m4[0m:[93m24[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../admin/plugins/entities/plugin.entity' or its corresponding type declarations.
+
+[7m4[0m import { Plugin } from '../../admin/plugins/entities/plugin.entity';
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/notifications/sub-admin-notifications.controller.ts[0m:[93m1[0m:[93m50[0m - [91merror[0m[90m TS6133: [0m'Param' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                 ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/notifications/sub-admin-notifications.controller.ts[0m:[93m1[0m:[93m57[0m - [91merror[0m[90m TS6133: [0m'Patch' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                        ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/notifications/sub-admin-notifications.controller.ts[0m:[93m1[0m:[93m64[0m - [91merror[0m[90m TS6133: [0m'Delete' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                               ~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/notifications/sub-admin-notifications.module.ts[0m:[93m5[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../notifications/entities/notification.entity' or its corresponding type declarations.
+
+[7m5[0m import { Notification } from '../../notifications/entities/notification.entity';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/notifications/sub-admin-notifications.service.ts[0m:[93m4[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../notifications/entities/notification.entity' or its corresponding type declarations.
+
+[7m4[0m import { Notification } from '../../notifications/entities/notification.entity';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/permissions/sub-admin-permissions.module.ts[0m:[93m5[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../rbac/entities/permission.entity' or its corresponding type declarations.
+
+[7m5[0m import { Permission } from '../../rbac/entities/permission.entity';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/permissions/sub-admin-permissions.service.ts[0m:[93m4[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../rbac/entities/permission.entity' or its corresponding type declarations.
+
+[7m4[0m import { Permission } from '../../rbac/entities/permission.entity';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/plugins/sub-admin-plugins.controller.ts[0m:[93m1[0m:[93m33[0m - [91merror[0m[90m TS6133: [0m'Body' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Delete } from '@nestjs/common';
+[7m [0m [91m                                ~~~~[0m
+[96mapps/core/src/modules/sub-admin/plugins/sub-admin-plugins.module.ts[0m:[93m5[0m:[93m24[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../admin/plugins/entities/plugin.entity' or its corresponding type declarations.
+
+[7m5[0m import { Plugin } from '../../admin/plugins/entities/plugin.entity';
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/plugins/sub-admin-plugins.service.ts[0m:[93m4[0m:[93m24[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../admin/plugins/entities/plugin.entity' or its corresponding type declarations.
+
+[7m4[0m import { Plugin } from '../../admin/plugins/entities/plugin.entity';
+[7m [0m [91m                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/roles/sub-admin-roles.controller.ts[0m:[93m1[0m:[93m57[0m - [91merror[0m[90m TS6133: [0m'Patch' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                        ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/roles/sub-admin-roles.module.ts[0m:[93m5[0m:[93m22[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../rbac/entities/role.entity' or its corresponding type declarations.
+
+[7m5[0m import { Role } from '../../rbac/entities/role.entity';
+[7m [0m [91m                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/roles/sub-admin-roles.service.ts[0m:[93m4[0m:[93m22[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../rbac/entities/role.entity' or its corresponding type declarations.
+
+[7m4[0m import { Role } from '../../rbac/entities/role.entity';
+[7m [0m [91m                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/usage/sub-admin-usage.module.ts[0m:[93m5[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../billing/entities/usage-record.entity' or its corresponding type declarations.
+
+[7m5[0m import { UsageRecord } from '../../billing/entities/usage-record.entity';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/usage/sub-admin-usage.service.ts[0m:[93m4[0m:[93m29[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../billing/entities/usage-record.entity' or its corresponding type declarations.
+
+[7m4[0m import { UsageRecord } from '../../billing/entities/usage-record.entity';
+[7m [0m [91m                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/users/sub-admin-users.controller.ts[0m:[93m1[0m:[93m57[0m - [91merror[0m[90m TS6133: [0m'Patch' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                        ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/users/sub-admin-users.module.ts[0m:[93m5[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../../../auth/src/entities/user.entity' or its corresponding type declarations.
+
+[7m5[0m import { UserEntity } from '../../../../auth/src/entities/user.entity';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/users/sub-admin-users.service.ts[0m:[93m4[0m:[93m28[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../../../auth/src/entities/user.entity' or its corresponding type declarations.
+
+[7m4[0m import { UserEntity } from '../../../../auth/src/entities/user.entity';
+[7m [0m [91m                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/workflows/sub-admin-workflows.controller.ts[0m:[93m1[0m:[93m57[0m - [91merror[0m[90m TS6133: [0m'Patch' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+[7m [0m [91m                                                        ~~~~~[0m
+[96mapps/core/src/modules/sub-admin/workflows/sub-admin-workflows.module.ts[0m:[93m5[0m:[93m26[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../workflow/entities/workflow.entity' or its corresponding type declarations.
+
+[7m5[0m import { Workflow } from '../../workflow/entities/workflow.entity';
+[7m [0m [91m                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/sub-admin/workflows/sub-admin-workflows.service.ts[0m:[93m4[0m:[93m26[0m - [91merror[0m[90m TS2307: [0mCannot find module '../../workflow/entities/workflow.entity' or its corresponding type declarations.
+
+[7m4[0m import { Workflow } from '../../workflow/entities/workflow.entity';
+[7m [0m [91m                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mapps/core/src/modules/tenant-settings/config-orchestrator.service.ts[0m:[93m1[0m:[93m22[0m - [91merror[0m[90m TS6133: [0m'Logger' is declared but its value is never read.
+
+[7m1[0m import { Injectable, Logger } from '@nestjs/common';
+[7m [0m [91m                     ~~~~~~[0m
+[96mapps/core/src/modules/tenant-settings/tenant-settings.controller.ts[0m:[93m1[0m:[93m65[0m - [91merror[0m[90m TS6133: [0m'Query' is declared but its value is never read.
+
+[7m1[0m import { Controller, Get, Post, Body, Param, Delete, UseGuards, Query } from '@nestjs/common';
+[7m [0m [91m                                                                ~~~~~[0m
+
+Found 39 error(s).
+

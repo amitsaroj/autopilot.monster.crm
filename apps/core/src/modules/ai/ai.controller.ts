@@ -33,8 +33,8 @@ export class AiController {
 
   @Post('generate')
   @ApiOperation({ summary: 'Generate text completion' })
-  async generate(@Body() dto: GenerateDto) {
-    return this.ragService.generate(dto.prompt, dto.options);
+  async generate(@TenantId() tenantId: string, @Body() dto: GenerateDto) {
+    return this.ragService.generate(tenantId, dto.prompt, dto.options);
   }
 
   @Post('chat')
@@ -51,10 +51,8 @@ export class AiController {
         conversationId = conv.id;
     }
 
-    await this.chatService.addMessage(tenantId, conversationId, 'USER', dto.message);
-    
     const prompt = context ? `Context: ${context}\n\nUser: ${dto.message}` : dto.message;
-    const reply = await this.ragService.generate(prompt);
+    const reply = await this.ragService.generate(tenantId, prompt);
     
     await this.chatService.addMessage(tenantId, conversationId, 'ASSISTANT', reply!);
     
@@ -63,8 +61,8 @@ export class AiController {
 
   @Post('analyze')
   @ApiOperation({ summary: 'Analyze text' })
-  async analyze(@Body() dto: AnalyzeDto) {
-    return this.ragService.analyze(dto.text, dto.task);
+  async analyze(@TenantId() tenantId: string, @Body() dto: AnalyzeDto) {
+    return this.ragService.analyze(tenantId, dto.text, dto.task);
   }
 
   @Get('models')

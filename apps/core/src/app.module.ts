@@ -45,6 +45,9 @@ import { PlatformModule } from './modules/platform.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { UsersModule } from './modules/users/users.module';
 import { SocialModule } from './modules/social/social.module';
+import { SubAdminModule } from './modules/sub-admin/sub-admin.module';
+import { TenantSettingsModule } from './modules/tenant-settings/tenant-settings.module';
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -97,7 +100,10 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     UsersModule,
     AdminModule,
     SocialModule,
+    SubAdminModule,
     AuthModule,
+    TenantSettingsModule,
+    SchedulerModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

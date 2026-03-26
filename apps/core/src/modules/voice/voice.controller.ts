@@ -18,7 +18,7 @@ export class VoiceController {
   async initiateCall(@TenantId() tenantId: string, @Body() dto: CallDto) {
     // We'd typically get the host from config or request to build the WSS URL
     const wssUrl = `wss://api.autopilot.monster/voice/stream?tenantId=${tenantId}`;
-    const sid = await this.twilioService.initiateOutboundCall(dto.to, wssUrl);
+    const sid = await this.twilioService.initiateOutboundCall(tenantId, dto.to, wssUrl);
     return { success: true, callSid: sid };
   }
 

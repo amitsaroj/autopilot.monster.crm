@@ -6,6 +6,8 @@
 
 # ─── Dependencies ───────────────────────────────────────────
 node_modules/
+node_modules_*/
+vendor/
 .pnp
 .pnp.js
 .yarn/install-state.gz

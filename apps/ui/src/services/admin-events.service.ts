@@ -5,4 +5,8 @@ export const adminEventsService = {
     const response = await api.get('/admin/events/definitions');
     return response.data;
   },
+  findAll: async () => {
+    const response = await api.get('/admin/events/definitions');
+    return response.data;
+  },
 };

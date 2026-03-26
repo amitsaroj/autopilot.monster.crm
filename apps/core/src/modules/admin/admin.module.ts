@@ -50,6 +50,10 @@ import { AdminFeatureRulesModule } from './feature-rules/admin-feature-rules.mod
 import { AdminTenantOverrideModule } from './tenant-override/admin-tenant-override.module';
 import { AdminPlanOverrideModule } from './plan-override/admin-plan-override.module';
 import { AdminUserOverrideModule } from './user-override/admin-user-override.module';
+import { AdminLogsViewerModule } from './logs-viewer/admin-logs-viewer.module';
+import { AdminErrorLogsModule } from './error-logs/admin-error-logs.module';
+import { AdminDebugModule } from './debug/admin-debug.module';
+import { AdminInternalModule } from './internal/admin-internal.module';
 
 @Module({
   imports: [
@@ -100,6 +104,10 @@ import { AdminUserOverrideModule } from './user-override/admin-user-override.mod
     AdminTenantOverrideModule,
     AdminPlanOverrideModule,
     AdminUserOverrideModule,
+    AdminLogsViewerModule,
+    AdminErrorLogsModule,
+    AdminDebugModule,
+    AdminInternalModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

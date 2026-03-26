@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
-import { UpdateBrandingDto, VerifyDomainDto } from './dto/tenant.dto';
+import { UpdateBrandingDto, VerifyDomainDto, TenantFilterDto } from './dto/tenant.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import { Roles, CurrentUser } from '../../common/decorators';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
@@ -19,13 +19,7 @@ export class TenantController {
   @ApiOperation({ summary: 'Get current workspace settings' })
   @UseGuards(JwtAuthGuard, TenantGuard)
   async getMe(@CurrentUser() user: IRequestContext) {
-    const data = await this.tenantService.findOne(user.tenantId);
-    return {
-      status: 200,
-      message: 'Workspace settings retrieved',
-      error: false,
-      data,
-    };
+    return this.tenantService.findOne(user.tenantId);
   }
 
   @Patch('settings/workspace')
@@ -33,13 +27,7 @@ export class TenantController {
   @Roles('TENANT_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
   async updateMe(@CurrentUser() user: IRequestContext, @Body() dto: Partial<CreateTenantDto>) {
-    const data = await this.tenantService.update(user.tenantId, dto);
-    return {
-      status: 200,
-      message: 'Workspace settings updated',
-      error: false,
-      data,
-    };
+    return this.tenantService.update(user.tenantId, dto);
   }
 
   @Post('settings/workspace/verify-domain')
@@ -47,13 +35,7 @@ export class TenantController {
   @Roles('TENANT_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
   async verifyDomain(@CurrentUser() user: IRequestContext, @Body() dto: VerifyDomainDto) {
-    const data = await this.tenantService.verifyDomain(user.tenantId, dto.domain);
-    return {
-      status: 200,
-      message: 'Domain verification triggered',
-      error: false,
-      data,
-    };
+    return this.tenantService.verifyDomain(user.tenantId, dto.domain);
   }
 
   @Post('settings/workspace/branding')
@@ -61,13 +43,7 @@ export class TenantController {
   @Roles('TENANT_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
   async setupBranding(@CurrentUser() user: IRequestContext, @Body() dto: UpdateBrandingDto) {
-    const data = await this.tenantService.updateBranding(user.tenantId, dto);
-    return {
-      status: 200,
-      message: 'Branding updated',
-      error: false,
-      data,
-    };
+    return this.tenantService.updateBranding(user.tenantId, dto);
   }
 
   // --- Admin / Tenants ---
@@ -76,14 +52,8 @@ export class TenantController {
   @ApiOperation({ summary: 'Get all tenants' })
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  async findAll() {
-    const data = await this.tenantService.findAll();
-    return {
-      status: 200,
-      message: 'All tenants retrieved',
-      error: false,
-      data,
-    };
+  async findAll(@Query() filter: TenantFilterDto) {
+    return this.tenantService.findAll(filter);
   }
 
   @Post('admin/tenants')
@@ -91,13 +61,7 @@ export class TenantController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async create(@Body() createTenantDto: CreateTenantDto) {
-    const data = await this.tenantService.create(createTenantDto);
-    return {
-      status: 201,
-      message: 'Tenant created',
-      error: false,
-      data,
-    };
+    return this.tenantService.create(createTenantDto);
   }
 
   @Get('admin/tenants/:id')
@@ -105,13 +69,7 @@ export class TenantController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findOne(@Param('id') id: string) {
-    const data = await this.tenantService.findOne(id);
-    return {
-      status: 200,
-      message: 'Tenant retrieved',
-      error: false,
-      data,
-    };
+    return this.tenantService.findOne(id);
   }
 
   @Patch('admin/tenants/:id')
@@ -119,13 +77,7 @@ export class TenantController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async update(@Param('id') id: string, @Body() updateTenantDto: Partial<CreateTenantDto>) {
-    const data = await this.tenantService.update(id, updateTenantDto);
-    return {
-      status: 200,
-      message: 'Tenant updated',
-      error: false,
-      data,
-    };
+    return this.tenantService.update(id, updateTenantDto);
   }
 
   @Post('admin/tenants/:id/suspend')
@@ -133,13 +85,7 @@ export class TenantController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async suspend(@Param('id') id: string) {
-    const data = await this.tenantService.suspend(id);
-    return {
-      status: 200,
-      message: 'Tenant suspended',
-      error: false,
-      data,
-    };
+    return this.tenantService.suspend(id);
   }
 
   @Post('admin/tenants/:id/activate')
@@ -147,27 +93,16 @@ export class TenantController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async activate(@Param('id') id: string) {
-    const data = await this.tenantService.activate(id);
-    return {
-      status: 200,
-      message: 'Tenant activated',
-      error: false,
-      data,
-    };
+    return this.tenantService.activate(id);
   }
 
   @Delete('admin/tenants/:id')
   @ApiOperation({ summary: 'Soft delete tenant' })
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
-    await this.tenantService.remove(id);
-    return {
-      status: 200,
-      message: 'Tenant deleted',
-      error: false,
-      data: null,
-    };
+    return this.tenantService.remove(id);
   }
 
   @Get('admin/tenants/:id/overrides')
@@ -175,13 +110,7 @@ export class TenantController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getOverrides(@Param('id') id: string) {
-    const data = await this.tenantService.getOverrides(id);
-    return {
-      status: 200,
-      message: 'Tenant overrides retrieved',
-      error: false,
-      data,
-    };
+    return this.tenantService.getOverrides(id);
   }
 
   @Post('admin/tenants/:id/overrides')
@@ -189,26 +118,16 @@ export class TenantController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async updateOverrides(@Param('id') id: string, @Body() overrides: any) {
-    const data = await this.tenantService.updateOverrides(id, overrides);
-    return {
-      status: 200,
-      message: 'Tenant overrides updated',
-      error: false,
-      data,
-    };
+    return this.tenantService.updateOverrides(id, overrides);
   }
 
   @Delete('admin/tenants/:id/overrides')
   @ApiOperation({ summary: 'Remove tenant overrides' })
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async removeOverrides(@Param('id') id: string) {
-    await this.tenantService.removeOverrides(id);
-    return {
-      status: 200,
-      message: 'Tenant overrides removed',
-      error: false,
-      data: null,
-    };
+    return this.tenantService.removeOverrides(id);
   }
 }
+

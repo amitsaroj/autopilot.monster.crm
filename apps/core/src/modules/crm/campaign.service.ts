@@ -39,7 +39,7 @@ export class CampaignService {
         // Format: wss://<domain>/voice/stream?tenantId=<id>&agentId=<id>&leadId=<id>
         const wssUrl = `${appUrl.replace('https', 'wss')}/voice/stream?tenantId=${tenantId}&agentId=${agentId}&leadId=${leadId}`;
 
-        const callSid = await this.twilioService.initiateOutboundCall(lead.phone, wssUrl);
+        const callSid = await this.twilioService.initiateOutboundCall(tenantId, lead.phone, wssUrl);
         results.push({ leadId, status: 'initiated', callSid });
 
         this.logger.log(`Call initiated for lead ${leadId}: ${callSid}`);

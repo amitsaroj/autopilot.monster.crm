@@ -8,19 +8,36 @@ import OpenAI from 'openai';
 const mammoth = require('mammoth'); // For DOCX
 const pdfParse = require('pdf-parse');
 
+import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+
 @Injectable()
 export class RagService {
   private readonly logger = new Logger(RagService.name);
   private qdrant: QdrantClient;
-  private openai: OpenAI;
+  private openaiClients: Map<string, OpenAI> = new Map();
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private configOrchestrator: ConfigOrchestratorService,
+  ) {
     this.qdrant = new QdrantClient({
       url: this.configService.get('qdrant.url') || 'http://localhost:6333',
     });
-    this.openai = new OpenAI({
-      apiKey: this.configService.get('OPENAI_API_KEY') || 'mock-api-key',
+  }
+
+  private async getOpenAIClient(tenantId?: string): Promise<OpenAI> {
+    const cacheKey = tenantId || 'platform';
+    if (this.openaiClients.has(cacheKey)) {
+      return this.openaiClients.get(cacheKey)!;
+    }
+
+    const apiKey = await this.configOrchestrator.get(tenantId || '', 'openai_key');
+    const client = new OpenAI({
+      apiKey: apiKey || this.configService.get('OPENAI_API_KEY') || 'mock-api-key',
     });
+
+    this.openaiClients.set(cacheKey, client);
+    return client;
   }
 
   async processFileAndIndex(
@@ -65,10 +82,11 @@ export class RagService {
     }
 
     // 4. Batch Embed & Upsert
+    const openai = await this.getOpenAIClient(tenantId);
     const points = [];
     for (let i = 0; i < chunks.length; i++) {
       try {
-        const embeddingResponse = await this.openai.embeddings.create({
+        const embeddingResponse = await openai.embeddings.create({
           model: 'text-embedding-3-small',
           input: chunks[i],
         });
@@ -100,8 +118,9 @@ export class RagService {
 
   async queryKnowledgeBase(tenantId: string, query: string, limit = 4) {
     const collectionName = this.getCollectionName(tenantId);
+    const openai = await this.getOpenAIClient(tenantId);
     try {
-      const embeddingResponse = await this.openai.embeddings.create({
+      const embeddingResponse = await openai.embeddings.create({
         model: 'text-embedding-3-small',
         input: query,
       });
@@ -119,9 +138,10 @@ export class RagService {
     }
   }
 
-  async generate(prompt: string, options: any = {}) {
+  async generate(tenantId: string | undefined, prompt: string, options: any = {}) {
     this.logger.log(`Generating text for prompt: ${prompt.slice(0, 50)}...`);
-    const response = await this.openai.chat.completions.create({
+    const openai = await this.getOpenAIClient(tenantId);
+    const response = await openai.chat.completions.create({
       model: options.model || 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       temperature: options.temperature || 0.7,
@@ -129,10 +149,11 @@ export class RagService {
     return response.choices[0].message.content;
   }
 
-  async analyze(text: string, task: string) {
+  async analyze(tenantId: string | undefined, text: string, task: string) {
     this.logger.log(`Analyzing text for task: ${task}`);
+    const openai = await this.getOpenAIClient(tenantId);
     const prompt = `Task: ${task}\n\nText: ${text}\n\nProvide the analysis in JSON format.`;
-    const response = await this.openai.chat.completions.create({
+    const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [{ role: 'system', content: 'You are an AI data analyst.' }, { role: 'user', content: prompt }],
       response_format: { type: 'json_object' },

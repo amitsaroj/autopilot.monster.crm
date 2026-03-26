@@ -5,6 +5,10 @@ export const adminAISettingsService = {
     const response = await api.get('/admin/settings/ai');
     return response.data;
   },
+  findAll: async () => {
+    const response = await api.get('/admin/settings/ai');
+    return response.data;
+  },
   updateSettings: async (settings: any) => {
     const response = await api.post('/admin/settings/ai', settings);
     return response.data;
