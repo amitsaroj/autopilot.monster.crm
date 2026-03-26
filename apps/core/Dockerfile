@@ -15,6 +15,7 @@ RUN npm install --legacy-peer-deps
 
 # Copy the core app and any shared libs
 COPY apps/core ./apps/core
+COPY apps/auth ./apps/auth
 COPY libs ./libs
 
 # Expose the API port

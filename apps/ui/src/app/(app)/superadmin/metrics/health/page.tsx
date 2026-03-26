@@ -29,8 +29,8 @@ export default function SuperAdminHealthPage() {
   const loadHealth = async () => {
     try {
       setLoading(true);
-      const res = await adminHealthService.check();
-      setHealth(res.data);
+      const res = await adminHealthService.getHealth();
+      setHealth(res);
     } catch (err) {
       console.error(err);
     } finally {

@@ -1,0 +1,37 @@
+import { Repository } from 'typeorm';
+import { RefreshTokenEntity } from './entities/refresh-token.entity';
+import { SessionEntity } from './entities/session.entity';
+import { UserEntity, UserStatus } from './entities/user.entity';
+import { Tenant } from '@autopilot/core/database/entities/tenant.entity';
+import { Role } from '@autopilot/core/database/entities/role.entity';
+import { UserRole } from '@autopilot/core/database/entities/user-role.entity';
+export declare class AuthRepository {
+    private readonly userRepo;
+    private readonly tokenRepo;
+    private readonly sessionRepo;
+    private readonly tenantRepo;
+    private readonly roleRepo;
+    private readonly userRoleRepo;
+    constructor(userRepo: Repository<UserEntity>, tokenRepo: Repository<RefreshTokenEntity>, sessionRepo: Repository<SessionEntity>, tenantRepo: Repository<Tenant>, roleRepo: Repository<Role>, userRoleRepo: Repository<UserRole>);
+    findUserByEmail(email: string, tenantId: string): Promise<UserEntity | null>;
+    findUserById(id: string, tenantId: string): Promise<UserEntity | null>;
+    createUser(data: Partial<UserEntity>): Promise<UserEntity>;
+    createTenant(data: Partial<Tenant>): Promise<Tenant>;
+    findTenantById(id: string): Promise<Tenant | null>;
+    updateUser(id: string, tenantId: string, data: Partial<UserEntity>): Promise<void>;
+    incrementFailedAttempts(id: string, tenantId: string): Promise<void>;
+    resetFailedAttempts(id: string, tenantId: string): Promise<void>;
+    lockUser(id: string, tenantId: string, until: Date): Promise<void>;
+    saveRefreshToken(userId: string, tenantId: string, rawToken: string, expiresAt: Date, ipAddress?: string): Promise<void>;
+    findValidRefreshToken(userId: string, tenantId: string): Promise<RefreshTokenEntity[]>;
+    revokeRefreshToken(id: string, tenantId: string): Promise<void>;
+    revokeAllUserTokens(userId: string, tenantId: string): Promise<void>;
+    createSession(data: Partial<SessionEntity>): Promise<SessionEntity>;
+    deactivateSession(id: string, tenantId: string): Promise<void>;
+    deactivateAllUserSessions(userId: string, tenantId: string): Promise<void>;
+    findActiveSessions(userId: string, tenantId: string): Promise<SessionEntity[]>;
+    updateUserStatus(id: string, tenantId: string, status: UserStatus): Promise<void>;
+    findUserByVerificationToken(token: string): Promise<UserEntity | null>;
+    findUserByResetToken(token: string): Promise<UserEntity | null>;
+    fetchUserRolesWithPermissions(userId: string, tenantId: string): Promise<Role[]>;
+}

@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/apps/core",
+    "rootDir": "./src",
     "baseUrl": "./",
     "paths": {
       "@autopilot/core": ["src/index.ts"],

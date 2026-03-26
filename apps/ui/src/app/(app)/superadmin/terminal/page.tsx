@@ -13,7 +13,8 @@ import {
   Terminal,
   Send,
   Trash2,
-  Play
+  Play,
+  RefreshCw
 } from 'lucide-react';
 import { adminDebugService } from '@/services/admin-debug.service';
 

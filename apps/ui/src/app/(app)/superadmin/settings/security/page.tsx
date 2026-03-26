@@ -26,8 +26,8 @@ export default function SuperAdminSecuritySettingsPage() {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const res = await adminSecuritySettingsService.findAll();
-      setSettings(res.data || []);
+      const res = await adminSecuritySettingsService.getSettings();
+      setSettings(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error(err);
     } finally {

@@ -1,24 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# ============================================================
-# AutopilotMonster CRM — Development Launcher (Staging/Alt)
-# Runs Frontend (3001) and Backend (4001) in Docker
-# ============================================================
+set -euo pipefail
 
-set -e
-
-echo "🚀 Starting AutopilotMonster CRM in STAGING/ALT mode..."
-
-# Different ports for staging/alt env to allow parallel running
-export API_PORT=${API_PORT:-4001}
-export UI_PORT=${UI_PORT:-3001}
-export NODE_ENV=staging
-
-echo "📡 API Gateway: http://localhost:$API_PORT"
-echo "💻 UI Frontend: http://localhost:$UI_PORT"
-
-# Ensure we are in the root directory
+# Always run from repository root
 cd "$(dirname "$0")"
 
-# Run docker-compose with a different project name
-docker compose -p autopilot-staging up --build
+export NODE_ENV="${NODE_ENV:-staging}"
+export API_PORT="${API_PORT:-4400}"
+export UI_PORT="${UI_PORT:-3300}"
+export POSTGRES_PORT="${POSTGRES_PORT:-5432}"
+export REDIS_PORT="${REDIS_PORT:-6379}"
+export MINIO_API_PORT="${MINIO_API_PORT:-9000}"
+export MINIO_CONSOLE_PORT="${MINIO_CONSOLE_PORT:-9001}"
+export ADMINER_PORT="${ADMINER_PORT:-8080}"
+export APP_PORT=3000
+export APP_URL="${APP_URL:-http://localhost:${API_PORT}}"
+export NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT}}"
+
+# Optionally load dedicated staging values
+if [ -f ".env.staging" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source ".env.staging"
+  set +a
+fi
+
+echo "Starting AutopilotMonster CRM in staging docker mode"
+echo "Backend: http://localhost:${API_PORT}"
+echo "Frontend: http://localhost:${UI_PORT}"
+
+# Continuous/staging-like mode: detached containers with restart behavior from compose defaults
+docker compose -p autopilot-staging up -d --build
+docker compose -p autopilot-staging ps

@@ -26,8 +26,8 @@ export default function SuperAdminVoiceSettingsPage() {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const res = await adminVoiceSettingsService.findAll();
-      setSettings(res.data || []);
+      const res = await adminVoiceSettingsService.getSettings();
+      setSettings(Array.isArray(res) ? res : []);
     } catch (err) {
       console.error(err);
     } finally {
