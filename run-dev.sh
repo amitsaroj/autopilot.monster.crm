@@ -17,11 +17,11 @@ export REDIS_PORT="${REDIS_PORT:-6379}"
 export MINIO_API_PORT="${MINIO_API_PORT:-9000}"
 export MINIO_CONSOLE_PORT="${MINIO_CONSOLE_PORT:-9001}"
 export ADMINER_PORT="${ADMINER_PORT:-8080}"
-export DB_HOST="${DB_HOST:-host.docker.internal}"
+export DB_HOST="${DB_HOST:-postgres}"
 export DB_PORT="${DB_PORT:-5432}"
-export REDIS_HOST="${REDIS_HOST:-host.docker.internal}"
+export REDIS_HOST="${REDIS_HOST:-redis}"
 export REDIS_PORT_INTERNAL="${REDIS_PORT_INTERNAL:-6379}"
-export MINIO_ENDPOINT="${MINIO_ENDPOINT:-host.docker.internal}"
+export MINIO_ENDPOINT="${MINIO_ENDPOINT:-minio}"
 export MINIO_PORT_INTERNAL="${MINIO_PORT_INTERNAL:-9000}"
 
 echo "Starting AutopilotMonster CRM in local development mode"
@@ -32,11 +32,9 @@ echo "Redis: localhost:${REDIS_PORT}"
 echo "MinIO API: localhost:${MINIO_API_PORT}"
 echo "Adminer: http://localhost:${ADMINER_PORT}"
 
-# Reuse shared infra from staging project and start only dev API
-echo "Ensuring shared infra is up (postgres, redis, minio, adminer)..."
-docker compose -p autopilot-staging up -d postgres redis minio adminer
-echo "Starting dev API container without duplicate infra..."
-docker compose -p autopilot-dev up -d --build --no-deps api
+# Start all dev services under one project for shared networking
+echo "Ensuring all services are up (postgres, redis, minio, adminer, api)..."
+docker compose -p autopilot-dev up -d --build --no-deps api postgres redis minio adminer
 
 # Install dependencies if missing
 if [ ! -d "node_modules" ]; then
