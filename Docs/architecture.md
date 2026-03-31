@@ -48,12 +48,23 @@ Pattern: Modular NestJS Monorepo with Shared Core
 ## 2. NestJS App Structure
 
 ```
-apps/
-├── core/               ← Main API (port 3000)
+backend/
+├── core/               ← Main API (port 3000) — auth + all business modules
 │   ├── src/
 │   │   ├── app.module.ts
 │   │   ├── main.ts
 │   │   ├── modules/
+│   │   │   ├── auth/           ← Auth module (merged into core)
+│   │   │   │   ├── auth.module.ts
+│   │   │   │   ├── auth.controller.ts
+│   │   │   │   ├── auth.service.ts
+│   │   │   │   ├── auth.repository.ts
+│   │   │   │   ├── mfa.service.ts
+│   │   │   │   ├── dto/
+│   │   │   │   ├── entities/
+│   │   │   │   ├── guards/
+│   │   │   │   ├── strategies/
+│   │   │   │   └── interfaces/
 │   │   │   ├── crm/
 │   │   │   ├── billing/
 │   │   │   ├── pricing/
@@ -77,7 +88,7 @@ apps/
 │   │   │   └── backup/
 │   │   ├── common/
 │   │   │   ├── guards/
-│   │   │   │   ├── auth.guard.ts
+│   │   │   │   ├── jwt-auth.guard.ts
 │   │   │   │   ├── tenant.guard.ts
 │   │   │   │   ├── role.guard.ts
 │   │   │   │   ├── permission.guard.ts
@@ -101,27 +112,12 @@ apps/
 │   │   │       └── validation.pipe.ts
 │   │   └── shared/
 │   │       ├── database/
-│   │       │   ├── database.module.ts
-│   │       │   └── base-tenant.repository.ts
 │   │       ├── cache/
-│   │       │   └── cache.module.ts
 │   │       ├── queue/
-│   │       │   └── queue.module.ts
 │   │       ├── event-bus/
-│   │       │   └── event-bus.module.ts
 │   │       ├── storage/
-│   │       │   └── storage.module.ts
 │   │       ├── mailer/
-│   │       │   └── mailer.module.ts
 │   │       └── config/
-│   │           └── config.module.ts
-│
-├── auth/               ← Auth service (port 3001)
-│   └── src/
-│       ├── auth/
-│       ├── users/
-│       ├── sessions/
-│       └── mfa/
 │
 └── ui/                 ← Next.js frontend (port 3010)
     └── src/
@@ -325,8 +321,7 @@ SMTP_FROM=noreply@autopilot.monster
 
 ```yaml
 services:
-  core:          # NestJS API — port 3000
-  auth:          # Auth service — port 3001
+  core:          # NestJS API (auth + all modules) — port 3000
   ui:            # Next.js — port 3010
   postgres:      # PostgreSQL 15 — port 5432
   redis:         # Redis 7 — port 6379
