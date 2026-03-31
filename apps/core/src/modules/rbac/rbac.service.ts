@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { RbacRepository } from './rbac.repository';
-import { CreateRoleDto } from './dto/create-role.dto';
+import { CreateRoleDto, RoleFilterDto, PermissionFilterDto } from './dto/create-role.dto';
 import { Role } from '../../database/entities/role.entity';
 import { Permission } from '../../database/entities/permission.entity';
+import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
 
 @Injectable()
 export class RbacService {
@@ -17,8 +18,23 @@ export class RbacService {
     });
   }
 
-  async findAllRoles(tenantId: string): Promise<Role[]> {
-    return this.rbacRepository.findAll(tenantId);
+  async findAllRoles(tenantId: string, filter: RoleFilterDto): Promise<IPaginatedResult<Role>> {
+    const [data, total] = await this.rbacRepository.findAllPaginated(tenantId, filter);
+    const page = filter.page || 1;
+    const limit = filter.limit || 10;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        nextPage: page < totalPages ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null,
+      },
+    };
   }
 
   async findRole(tenantId: string, id: string): Promise<Role> {
@@ -29,8 +45,23 @@ export class RbacService {
     return role;
   }
 
-  async findAllPermissions(): Promise<Permission[]> {
-    return this.rbacRepository.findPermissions();
+  async findAllPermissions(filter: PermissionFilterDto): Promise<IPaginatedResult<Permission>> {
+    const [data, total] = await this.rbacRepository.findPermissions(filter);
+    const page = filter.page || 1;
+    const limit = filter.limit || 20;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        nextPage: page < totalPages ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null,
+      },
+    };
   }
 
   async updateRole(

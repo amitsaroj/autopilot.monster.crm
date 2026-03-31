@@ -1,41 +1,44 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { 
   Building2, 
-  ShieldCheck, 
-  Zap, 
+  ChevronRight, 
+  Globe, 
+  Activity, 
+  Users, 
   Settings, 
-  ArrowLeft,
-  Save,
-  Trash2,
+  CreditCard, 
   Plus,
-  Info
+  Search,
+  MoreVertical,
+  ShieldCheck,
+  Mail,
+  Zap,
+  Lock,
+  ArrowRight
 } from 'lucide-react';
 import { adminTenantsService } from '@/services/admin-tenants.service';
+import { adminUsersService } from '@/services/admin-users.service';
 
-export default function TenantDetailsPage() {
-  const { id } = useParams();
-  const router = useRouter();
+export default function SuperAdminTenantDetailsPage({ params }: { params: { id: string } }) {
   const [tenant, setTenant] = useState<any>(null);
-  const [overrides, setOverrides] = useState<any>({});
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (id) loadData();
-  }, [id]);
+    loadData();
+  }, [params.id]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [tenantRes, overridesRes] = await Promise.all([
-        adminTenantsService.findOne(id as string),
-        adminTenantsService.getOverrides(id as string)
+      const [tenantRes, usersRes] = await Promise.all([
+        adminTenantsService.findOne(params.id),
+        adminUsersService.findAll() // For now just finding all and filtering
       ]);
       setTenant(tenantRes.data);
-      setOverrides(overridesRes.data || {});
+      setUsers(usersRes.data.filter((u: any) => u.tenantId === params.id));
     } catch (err) {
       console.error(err);
     } finally {
@@ -43,174 +46,120 @@ export default function TenantDetailsPage() {
     }
   };
 
-  const handleSaveOverrides = async () => {
-    try {
-      setSaving(true);
-      await adminTenantsService.updateOverrides(id as string, overrides);
-      // Success toast or notification
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleRemoveOverrides = async () => {
-    if (!confirm('Are you sure you want to remove all overrides for this tenant?')) return;
-    try {
-      setSaving(true);
-      await adminTenantsService.removeOverrides(id as string);
-      setOverrides({});
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) return <div className="p-8 animate-pulse text-muted-foreground uppercase tracking-widest font-black text-xs">Initializing Secure Connection...</div>;
-  if (!tenant) return <div className="p-8 text-red-500 font-bold">Tenant not found</div>;
-
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-10 animate-fade-in pb-20 text-foreground">
+      {/* Breadcrumbs */}
+      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
+         <Globe className="h-3 w-3" />
+         <span>Registry</span>
+         <ChevronRight className="h-3 w-3" />
+         <span className="text-foreground">{tenant?.name || 'Loading Entity...'}</span>
+      </div>
+
       {/* Header */}
-      <div className="page-header border-b border-border/10 pb-6">
-        <div className="flex items-center gap-4">
-           <button 
-            onClick={() => router.back()}
-            className="p-2 rounded-xl hover:bg-muted/50 border border-border/30 transition-all group"
-           >
-              <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-           </button>
-           <div>
-              <h1 className="page-title font-black text-3xl tracking-tighter">{tenant.name}</h1>
-              <p className="page-description text-muted-foreground font-medium uppercase tracking-widest text-[10px] mt-1">Tenant ID: {tenant.id}</p>
-           </div>
+      <div className="page-header border-b border-border/10 pb-8">
+        <div>
+          <h1 className="page-title font-black text-4xl tracking-tighter">{tenant?.name}</h1>
+          <p className="page-description text-muted-foreground font-medium uppercase tracking-widest text-[11px] mt-1">Tenant ID: {tenant?.id}</p>
         </div>
-        <div className="flex items-center gap-3">
-           <button 
-            onClick={handleRemoveOverrides}
-            className="flex items-center gap-2 px-4 py-2 border border-red-500/30 text-red-500 rounded-xl hover:bg-red-500/10 transition-all font-bold text-sm"
-           >
-              <Trash2 className="h-4 w-4" />
-              Reset Overrides
-           </button>
-           <button 
-            onClick={handleSaveOverrides}
-            disabled={saving}
-            className="flex items-center gap-2 px-6 py-2 bg-brand text-white rounded-xl hover:opacity-90 disabled:opacity-50 transition-all font-bold shadow-lg shadow-brand/20 text-sm"
-           >
-              <Save className="h-4 w-4" />
-              {saving ? 'Syncing...' : 'Save Configuration'}
-           </button>
+        <div className="flex gap-4">
+           <button className="flex items-center gap-2 px-8 py-3 bg-brand text-white rounded-2xl hover:opacity-90 transition-all font-black shadow-2xl shadow-brand/30 text-[10px] uppercase tracking-widest">
+            <Lock className="h-4 w-4" />
+            Suspend Entity
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: Metadata */}
-        <div className="lg:col-span-1 space-y-6">
-           <div className="rounded-2xl border border-border/30 bg-card/20 backdrop-blur-xl p-6 shadow-xl">
-              <h3 className="text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-2">
-                 <Building2 className="h-4 w-4 text-brand" />
-                 Tenant Metadata
-              </h3>
-              <div className="space-y-4">
-                 {[
-                   { label: 'Slug', value: tenant.slug },
-                   { label: 'Status', value: tenant.status, color: tenant.status === 'ACTIVE' ? 'text-green-500' : 'text-red-500' },
-                   { label: 'Current Plan', value: tenant.planId || 'Free' },
-                   { label: 'Created At', value: new Date(tenant.createdAt).toLocaleDateString() },
-                 ].map((item) => (
-                   <div key={item.label}>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{item.label}</p>
-                      <p className={`text-sm font-bold tracking-tight ${item.color || 'text-foreground'}`}>{item.value}</p>
-                   </div>
-                 ))}
-              </div>
-           </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+         {/* Main Details */}
+         <div className="lg:col-span-8 space-y-10">
+            {/* User List */}
+            <div className="rounded-[2.5rem] border border-border/30 bg-card/20 backdrop-blur-xl overflow-hidden shadow-2xl">
+               <div className="px-10 py-8 border-b border-border/10 flex items-center justify-between bg-muted/10">
+                  <h2 className="text-sm font-black uppercase tracking-widest flex items-center gap-3">
+                     <Users className="h-5 w-5 text-brand" />
+                     Associated Personnel
+                  </h2>
+                  <button className="p-2 rounded-xl hover:bg-brand/10 text-brand transition-all border border-transparent hover:border-brand/20">
+                     <Plus className="h-4 w-4" />
+                  </button>
+               </div>
+               <table className="w-full border-collapse">
+                  <tbody className="divide-y divide-border/10 font-bold">
+                     {users.length === 0 ? (
+                        <tr>
+                           <td className="px-10 py-20 text-center text-muted-foreground uppercase tracking-widest font-black text-[10px]">No personnel detected in this vector</td>
+                        </tr>
+                     ) : (
+                        users.map((user) => (
+                           <tr key={user.id} className="hover:bg-muted/10 transition-colors group">
+                              <td className="px-10 py-6">
+                                 <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center text-brand font-black text-xs">
+                                       {user.firstName?.[0]}{user.lastName?.[0]}
+                                    </div>
+                                    <div>
+                                       <p className="text-sm font-black tracking-tighter group-hover:text-brand transition-colors">{user.firstName} {user.lastName}</p>
+                                       <p className="text-[10px] text-muted-foreground uppercase tracking-widest flex items-center gap-1">
+                                          <Mail className="h-2 w-2" />
+                                          {user.email}
+                                       </p>
+                                    </div>
+                                 </div>
+                              </td>
+                              <td className="px-10 py-6 text-right">
+                                 <span className="px-3 py-1 bg-brand/10 text-brand border border-brand/20 rounded-lg text-[9px] font-black uppercase tracking-widest">{user.role}</span>
+                              </td>
+                           </tr>
+                        ))
+                     )}
+                  </tbody>
+               </table>
+            </div>
+         </div>
 
-           <div className="rounded-2xl border border-border/30 bg-card/20 backdrop-blur-xl p-6 shadow-xl border-l-4 border-l-brand">
-              <h3 className="text-sm font-black uppercase tracking-widest mb-4 flex items-center gap-2">
-                 <Info className="h-4 w-4 text-brand" />
-                 Override Protocol
-              </h3>
-              <p className="text-xs text-muted-foreground/80 leading-relaxed font-medium">
-                 Manual overrides take precedence over Plan restrictions. Use this to grant specific features or increase limits for high-value accounts without changing their base plan.
-              </p>
-           </div>
-        </div>
+         {/* Sidebar Stats */}
+         <div className="lg:col-span-4 space-y-8">
+            <div className="bg-card/20 backdrop-blur-xl rounded-[3rem] border border-border/30 p-10 shadow-xl border-t-8 border-t-brand">
+               <h3 className="text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-3">
+                  <CreditCard className="h-5 w-5 text-brand" />
+                  Billing Context
+               </h3>
+               <div className="space-y-6">
+                  <div className="p-5 rounded-2xl bg-muted/10 border border-border/10">
+                     <p className="text-[8px] font-black text-muted-foreground/40 uppercase mb-1">Active Plan</p>
+                     <p className="text-sm font-black text-foreground uppercase tracking-widest">{tenant?.planId || 'ENTERPRISE-L7'}</p>
+                  </div>
+                  <div className="flex items-center justify-between p-5 rounded-2xl bg-brand/10 border border-brand/20">
+                     <span className="text-[10px] font-black uppercase tracking-widest text-brand">Next Disbursement</span>
+                     <span className="text-xs font-black text-brand tracking-tighter">$1,482.00</span>
+                  </div>
+               </div>
+            </div>
 
-        {/* Right: Overrides Management */}
-        <div className="lg:col-span-2 space-y-8">
-           {/* Features Overrides */}
-           <div className="rounded-2xl border border-border/30 bg-card/20 backdrop-blur-xl p-8 shadow-xl">
-              <div className="flex items-center justify-between mb-8">
-                 <h2 className="text-xl font-black tracking-tighter flex items-center gap-3">
-                    <Zap className="h-6 w-6 text-brand" />
-                    Feature Overrides
-                 </h2>
-                 <button className="text-[10px] border border-border/50 px-3 py-1 rounded-full font-black uppercase tracking-widest hover:border-brand/40 hover:text-brand transition-all">
-                    Add Explicit Rule
-                 </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 {['ai_chat', 'custom_domain', 'white_label', 'api_access', 'audit_logs'].map((feature) => (
-                    <div key={feature} className="flex items-center justify-between p-4 rounded-xl border border-border/20 bg-muted/10 group hover:border-brand/20 transition-all">
-                       <div>
-                          <p className="text-sm font-bold uppercase tracking-tighter group-hover:text-brand transition-colors">{feature.replace('_', ' ')}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">Explicitly enabled for this tenant</p>
-                       </div>
-                       <div className="flex items-center h-6">
-                          <input 
-                            type="checkbox" 
-                            className="w-10 h-5 bg-muted/50 checked:bg-brand appearance-none rounded-full border border-border/50 relative cursor-pointer before:content-[''] before:absolute before:w-4 before:h-4 before:bg-white before:rounded-full before:top-0.5 before:left-0.5 checked:before:left-5 before:transition-all"
-                            checked={overrides.features?.[feature] === true}
-                            onChange={(e) => {
-                               const newFeatures = { ...overrides.features, [feature]: e.target.checked };
-                               setOverrides({ ...overrides, features: newFeatures });
-                            }}
-                          />
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-
-           {/* Limits Overrides */}
-           <div className="rounded-2xl border border-border/30 bg-card/20 backdrop-blur-xl p-8 shadow-xl">
-              <div className="flex items-center justify-between mb-8">
-                 <h2 className="text-xl font-black tracking-tighter flex items-center gap-3">
-                    <ShieldCheck className="h-6 w-6 text-brand" />
-                    Resource Limits
-                 </h2>
-              </div>
-
-              <div className="space-y-6">
-                 {['max_users', 'max_contacts', 'max_storage_gb', 'max_api_requests'].map((limit) => (
-                    <div key={limit} className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl border border-border/20 bg-muted/10">
-                       <div>
-                          <p className="text-sm font-bold uppercase tracking-tighter">{limit.replace('_', ' ')}</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">Set explicit resource quota</p>
-                       </div>
-                       <div className="flex items-center gap-3">
-                          <input 
-                            type="number" 
-                            className="w-32 px-3 py-2 bg-background/50 border border-border/50 rounded-lg text-sm font-black focus:border-brand/40 transition-all outline-none"
-                            placeholder="Plan Default"
-                            value={overrides.limits?.[limit] || ''}
-                            onChange={(e) => {
-                               const newLimits = { ...overrides.limits, [limit]: parseInt(e.target.value) || undefined };
-                               setOverrides({ ...overrides, limits: newLimits });
-                            }}
-                          />
-                          <span className="text-[10px] font-black text-muted-foreground uppercase opacity-40">Units</span>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
+            <div className="bg-card/20 backdrop-blur-xl rounded-[3rem] border border-border/30 p-10 shadow-xl border-t-8 border-t-purple-500">
+               <h3 className="text-sm font-black uppercase tracking-widest mb-6 flex items-center gap-3">
+                  <Activity className="h-5 w-5 text-purple-500" />
+                  Telemetry
+               </h3>
+               <div className="space-y-4 text-foreground">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                     <span className="text-muted-foreground/60">Concurrent Sessions</span>
+                     <span>42</span>
+                  </div>
+                  <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden">
+                     <div className="h-full bg-purple-500 rounded-full w-[42%]" />
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest pt-2">
+                     <span className="text-muted-foreground/60">Storage Manifest</span>
+                     <span>84%</span>
+                  </div>
+                  <div className="h-1.5 bg-muted/20 rounded-full overflow-hidden">
+                     <div className="h-full bg-purple-500 rounded-full w-[84%]" />
+                  </div>
+               </div>
+            </div>
+         </div>
       </div>
     </div>
   );

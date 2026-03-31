@@ -16,12 +16,15 @@ import {
   Settings,
   Terminal,
   FileSearch,
-  Server
+  Server,
+  Clock
 } from 'lucide-react';
 import { adminMetricsService } from '@/services/admin-metrics.service';
+import { adminEnvironmentService } from '@/services/admin-environment.service';
 
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState<any>(null);
+  const [envData, setEnvData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,8 +34,12 @@ export default function SuperAdminDashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await adminMetricsService.getStats();
-      setStats(res.data);
+      const [metricsRes, envRes] = await Promise.all([
+        adminMetricsService.getStats(),
+        adminEnvironmentService.getEnv()
+      ]);
+      setStats(metricsRes.data);
+      setEnvData(envRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -48,13 +55,13 @@ export default function SuperAdminDashboard() {
     { label: 'Forensics', href: '/superadmin/logs/audit', icon: FileSearch, desc: 'Immutable audit trails' },
     { label: 'Broadcasts', href: '/superadmin/notifications', icon: Bell, desc: 'Platform-wide announcements' },
     { label: 'Protocols', href: '/superadmin/events', icon: Terminal, desc: 'Domain event registry' },
-    { label: 'Infrastructure', href: '/superadmin/settings', icon: Settings, desc: 'Global platform configuration' },
+    { label: 'Global Config', href: '/superadmin/settings', icon: Settings, desc: 'L7 platform orchestration' },
   ];
 
   const quickStats = [
-    { label: 'Global Tenants', value: stats?.tenants || '...', icon: Building2, color: 'text-blue-500' },
-    { label: 'Active Agents', value: stats?.users || '...', icon: Users, color: 'text-purple-500' },
-    { label: 'Contract Volume', value: stats?.activeSubscriptions || '...', icon: CreditCard, color: 'text-emerald-500' },
+    { label: 'Global Tenants', value: stats?.tenants || '0', icon: Building2, color: 'text-blue-500' },
+    { label: 'System Uptime', value: envData ? `${Math.floor(envData.uptime / 3600)}h ${Math.floor((envData.uptime % 3600) / 60)}m` : '...', icon: Clock, color: 'text-purple-500' },
+    { label: 'Contract Volume', value: stats?.activeSubscriptions || '0', icon: CreditCard, color: 'text-emerald-500' },
     { label: 'Gross Revenue', value: `$${(stats?.totalRevenue || 0).toLocaleString()}`, icon: Zap, color: 'text-brand' },
   ];
 

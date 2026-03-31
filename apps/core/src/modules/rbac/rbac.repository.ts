@@ -32,8 +32,42 @@ export class RbacRepository extends BaseRepository<Role> {
     return this.userRoleRepository.find({ where: { tenantId, userId } });
   }
 
-  async findPermissions(): Promise<Permission[]> {
-    return this.permissionRepository.find();
+  async findAllPaginated(tenantId: string, filter: any = {}): Promise<[Role[], number]> {
+    const { page = 1, limit = 10, search } = filter;
+    const query = this.roleRepository.createQueryBuilder('role')
+      .where('role.tenantId = :tenantId', { tenantId });
+
+    if (search) {
+      query.andWhere('(role.name ILIKE :search OR role.description ILIKE :search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('role.created_at', 'DESC');
+
+    return query.getManyAndCount();
+  }
+
+  async findPermissions(filter: any = {}): Promise<[Permission[], number]> {
+    const { page = 1, limit = 20, search } = filter;
+    const query = this.permissionRepository.createQueryBuilder('permission');
+
+    if (search) {
+      query.andWhere('(permission.name ILIKE :search OR permission.description ILIKE :search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('permission.module', 'ASC')
+      .addOrderBy('permission.name', 'ASC');
+
+    return query.getManyAndCount();
   }
 
   async findPermissionsByIds(ids: string[]): Promise<Permission[]> {

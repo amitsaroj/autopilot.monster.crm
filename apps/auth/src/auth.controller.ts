@@ -3,7 +3,7 @@ import { Public } from '@autopilot/core/common/decorators/public.decorator';
 import { TenantId } from '@autopilot/core/common/decorators/tenant-id.decorator';
 import type { IRequestContext } from '@autopilot/core/common/interfaces/request-context.interface';
 import { Controller, Post, Body, Get, UseGuards, HttpCode, HttpStatus, Ip, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
 import {
@@ -29,6 +29,9 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user and tenant' })
+  @ApiResponse({ status: 201, description: 'User and tenant successfully created' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 409, description: 'Email already exists' })
   async register(
     @Body() dto: RegisterDto,
     @TenantId() tenantId: string,
@@ -40,6 +43,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email + password' })
+  @ApiResponse({ status: 200, description: 'Successfully logged in, returns tokens' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials or account locked' })
   async login(
     @Body() dto: LoginDto,
     @TenantId() tenantId: string,
@@ -52,6 +57,8 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({ status: 200, description: 'Tokens successfully refreshed' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   async refresh(
     @Body() dto: RefreshTokenDto,
     @TenantId() tenantId: string,
@@ -65,6 +72,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout' })
+  @ApiResponse({ status: 204, description: 'Successfully logged out' })
   async logout(@CurrentUser() user: IRequestContext, @Body() dto: LogoutDto): Promise<void> {
     return this.authService.logout(user.userId, user.tenantId, dto.allSessions ?? false);
   }
@@ -74,6 +82,8 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change password' })
+  @ApiResponse({ status: 204, description: 'Password successfully changed' })
+  @ApiResponse({ status: 401, description: 'Invalid current password' })
   async changePassword(
     @CurrentUser() user: IRequestContext,
     @Body() dto: ChangePasswordDto,
@@ -90,6 +100,7 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user context' })
+  @ApiResponse({ status: 200, description: 'Returns current user session details' })
   me(@CurrentUser() user: IRequestContext): IRequestContext {
     return user;
   }
@@ -98,6 +109,7 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset link' })
+  @ApiResponse({ status: 200, description: 'Reset link sent if email exists' })
   async forgotPassword(@Body() dto: ForgotPasswordDto, @TenantId() tenantId: string): Promise<void> {
     return this.authService.forgotPassword(dto.email, tenantId);
   }
@@ -106,6 +118,8 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset password using token' })
+  @ApiResponse({ status: 200, description: 'Password successfully reset' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
     return this.authService.resetPassword(dto.token, dto.newPassword);
   }
@@ -114,6 +128,8 @@ export class AuthController {
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify email using token' })
+  @ApiResponse({ status: 200, description: 'Email successfully verified' })
+  @ApiResponse({ status: 400, description: 'Invalid token' })
   async verifyEmail(@Body() dto: VerifyEmailDto): Promise<void> {
     return this.authService.verifyEmail(dto.token);
   }
@@ -122,6 +138,7 @@ export class AuthController {
   @Post('mfa/enable')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Setup MFA (generate secret)' })
+  @ApiResponse({ status: 200, description: 'Returns MFA secret and QR code URL' })
   async enableMfa(@CurrentUser() user: IRequestContext) {
     return this.authService.generateMfaSecret(user.userId, user.tenantId);
   }
@@ -131,6 +148,8 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Verify and activate MFA with token' })
+  @ApiResponse({ status: 200, description: 'MFA successfully activated' })
+  @ApiResponse({ status: 401, description: 'Invalid TOTP code' })
   async verifyMfa(@CurrentUser() user: IRequestContext, @Body() dto: EnableMfaDto): Promise<void> {
     return this.authService.enableMfa(user.userId, user.tenantId, dto.totpCode);
   }
@@ -140,6 +159,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Disable MFA' })
+  @ApiResponse({ status: 200, description: 'MFA successfully disabled' })
   async disableMfa(@CurrentUser() user: IRequestContext): Promise<void> {
     return this.authService.disableMfa(user.userId, user.tenantId);
   }
@@ -148,6 +168,7 @@ export class AuthController {
   @Get('sessions')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List active sessions' })
+  @ApiResponse({ status: 200, description: 'Returns list of active user sessions' })
   async getSessions(@CurrentUser() user: IRequestContext) {
     return this.authService.getSessions(user.userId, user.tenantId);
   }
@@ -157,7 +178,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke a specific session' })
+  @ApiResponse({ status: 200, description: 'Session successfully revoked' })
   async revokeSession(@CurrentUser() user: IRequestContext, @Param('id') sessionId: string): Promise<void> {
     return this.authService.revokeSession(user.userId, user.tenantId, sessionId);
   }
 }
+

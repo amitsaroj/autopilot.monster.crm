@@ -1,5 +1,18 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => 'mock-uuid'),
+}));
+
+jest.mock('otplib', () => ({
+  authenticator: {
+    generateSecret: jest.fn(() => 'mock-secret'),
+    keyuri: jest.fn(() => 'mock-uri'),
+    verify: jest.fn(() => true),
+  },
+}));
+
+
 import { AuthService } from '../../src/auth.service';
 import { UserStatus } from '../../src/entities/user.entity';
 
@@ -29,6 +42,7 @@ const mockRepo = {
   saveRefreshToken: jest.fn(),
   createTenant: jest.fn(),
   findTenantById: jest.fn(),
+  fetchUserRolesWithPermissions: jest.fn(),
 };
 
 const mockJwtService = {
@@ -151,6 +165,63 @@ describe('AuthService', () => {
       mockRepo.findUserByEmail.mockResolvedValue(lockedUser);
       await expect(
         service.validateCredentials('autopilot.monster@gmail.com', 'pw', 'tenant-001'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  // ─── login ─────────────────────────────────────────────────────────────────
+  describe('login', () => {
+    it('should return tokens on valid credentials', async () => {
+      mockUser.validatePassword = jest.fn().mockResolvedValue(true);
+      mockRepo.findUserByEmail.mockResolvedValue(mockUser);
+      mockRepo.fetchUserRolesWithPermissions.mockResolvedValue([]);
+      
+      const result = await service.login(
+        { email: 'autopilot.monster@gmail.com', password: 'Password1!' },
+        'tenant-001',
+        '127.0.0.1',
+      );
+
+      expect(result.accessToken).toBe('mock-token');
+      expect(mockEventEmitter.emit).toHaveBeenCalledWith('user.login', expect.anything());
+    });
+
+    it('should throw UnauthorizedException on invalid credentials', async () => {
+      mockUser.validatePassword = jest.fn().mockResolvedValue(false);
+      mockRepo.findUserByEmail.mockResolvedValue(mockUser);
+      
+      await expect(
+        service.login({ email: 'test@test.com', password: 'wrong' }, 't1', 'ip'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should require MFA code if enabled', async () => {
+       const mfaUser = { ...mockUser, isMfaEnabled: true, mfaSecret: 'secret' };
+       mfaUser.validatePassword = jest.fn().mockResolvedValue(true);
+       mockRepo.findUserByEmail.mockResolvedValue(mfaUser);
+       
+       await expect(
+         service.login({ email: 'mfa@test.com', password: 'pw' }, 't1', 'ip'),
+       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  // ─── refreshTokens ─────────────────────────────────────────────────────────
+  describe('refreshTokens', () => {
+    it('should return new tokens for valid refresh token', async () => {
+      mockJwtService.verify.mockReturnValue({ sub: 'user-001', email: 'test@test.com' });
+      mockRepo.findUserById.mockResolvedValue(mockUser);
+      mockRepo.fetchUserRolesWithPermissions.mockResolvedValue([]);
+
+      const result = await service.refreshTokens('valid-refresh-token', 'tenant-001', '127.0.0.1');
+      
+      expect(result.accessToken).toBe('mock-token');
+    });
+
+    it('should throw UnauthorizedException for invalid token', async () => {
+      mockJwtService.verify.mockImplementation(() => { throw new Error('invalid'); });
+      await expect(
+        service.refreshTokens('bad-token', 't1', 'ip'),
       ).rejects.toThrow(UnauthorizedException);
     });
   });

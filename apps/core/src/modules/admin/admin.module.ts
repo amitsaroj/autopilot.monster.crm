@@ -33,6 +33,27 @@ import { AdminIntegrationsModule } from './integrations/admin-integrations.modul
 import { AdminStorageModule } from './storage/admin-storage.module';
 import { AdminBackupsModule } from './backups/admin-backups.module';
 import { AdminRestoreModule } from './restore/admin-restore.module';
+import { AdminConfigModule } from './config/admin-config.module';
+import { AdminEnvironmentModule } from './environment/admin-environment.module';
+import { AdminSystemSettingsModule } from './system-settings/admin-system-settings.module';
+import { AdminEmailSettingsModule } from './email-settings/admin-email-settings.module';
+import { AdminSmsSettingsModule } from './sms-settings/admin-sms-settings.module';
+import { AdminWhatsAppSettingsModule } from './whatsapp-settings/admin-whatsapp-settings.module';
+import { AdminAISettingsModule } from './ai-settings/admin-ai-settings.module';
+import { AdminVoiceSettingsModule } from './voice-settings/admin-voice-settings.module';
+import { AdminSecuritySettingsModule } from './security-settings/admin-security-settings.module';
+import { AdminIpWhitelistModule } from './ip-whitelist/admin-ip-whitelist.module';
+import { AdminRateLimitModule } from './rate-limit/admin-rate-limit.module';
+import { AdminUsageRulesModule } from './usage-rules/admin-usage-rules.module';
+import { AdminCostRulesModule } from './cost-rules/admin-cost-rules.module';
+import { AdminFeatureRulesModule } from './feature-rules/admin-feature-rules.module';
+import { AdminTenantOverrideModule } from './tenant-override/admin-tenant-override.module';
+import { AdminPlanOverrideModule } from './plan-override/admin-plan-override.module';
+import { AdminUserOverrideModule } from './user-override/admin-user-override.module';
+import { AdminLogsViewerModule } from './logs-viewer/admin-logs-viewer.module';
+import { AdminErrorLogsModule } from './error-logs/admin-error-logs.module';
+import { AdminDebugModule } from './debug/admin-debug.module';
+import { AdminInternalModule } from './internal/admin-internal.module';
 
 @Module({
   imports: [
@@ -66,6 +87,27 @@ import { AdminRestoreModule } from './restore/admin-restore.module';
     AdminStorageModule,
     AdminBackupsModule,
     AdminRestoreModule,
+    AdminConfigModule,
+    AdminEnvironmentModule,
+    AdminSystemSettingsModule,
+    AdminEmailSettingsModule,
+    AdminSmsSettingsModule,
+    AdminWhatsAppSettingsModule,
+    AdminAISettingsModule,
+    AdminVoiceSettingsModule,
+    AdminSecuritySettingsModule,
+    AdminIpWhitelistModule,
+    AdminRateLimitModule,
+    AdminUsageRulesModule,
+    AdminCostRulesModule,
+    AdminFeatureRulesModule,
+    AdminTenantOverrideModule,
+    AdminPlanOverrideModule,
+    AdminUserOverrideModule,
+    AdminLogsViewerModule,
+    AdminErrorLogsModule,
+    AdminDebugModule,
+    AdminInternalModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],

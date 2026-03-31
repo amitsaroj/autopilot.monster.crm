@@ -1,4 +1,3 @@
-
 # ============================================================
 # AUTOPILOT MONSTER CRM — .gitignore
 # Stack: Next.js · NestJS · Turborepo · TypeScript · Prisma · Docker
@@ -6,6 +5,8 @@
 
 # ─── Dependencies ───────────────────────────────────────────
 node_modules/
+node_modules_*/
+vendor/
 .pnp
 .pnp.js
 .yarn/install-state.gz
@@ -142,3 +143,56 @@ apps/ui/dist
 
 # ─── NestJS Specific ────────────────────────────────────────
 dist/
+
+# ─── ADDITIONAL PROFESSIONAL PATTERNS (NEW) ──────────────────
+# (No existing patterns were removed; only adding missing industry norms)
+
+# Refined build artifacts
+dist-*/
+target/
+bin/
+obj/
+.docusaurus/
+package-lock.json.tmp
+build_error.txt
+
+# Enhanced Environment & Security
+.env.development.local
+.env.test.local
+.env.production.local
+*.crt
+*.pfx
+.secret*
+
+# Advanced Logging & Databases
+access.log
+error.log
+prisma/*.db
+prisma/*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# Additional Tool Caches
+.prettiercache
+.biome_cache/
+.vitest/
+.swc/
+Icon?
+
+# Extended IDE Support
+!.vscode/tasks.json
+!.vscode/*.code-snippets
+*.iws
+*.sublime-project
+*.sublime-workspace
+.netrwhist
+
+# Modern Package Managers
+bun.lockb
+
+# Recursive Deep Clean for Monorepos
+apps/**/dist/
+apps/**/.next/
+apps/**/out/
+apps/**/node_modules/
+apps/**/.turbo/

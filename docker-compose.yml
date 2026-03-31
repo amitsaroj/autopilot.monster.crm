@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: autopilot_monster
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -21,7 +21,7 @@ services:
     image: redis:7-alpine
     command: ["redis-server", "--requirepass", "password"]
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redisdata:/data
 
@@ -32,8 +32,8 @@ services:
       MINIO_ROOT_USER: root
       MINIO_ROOT_PASSWORD: password123
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - miniodata:/data
 
@@ -47,36 +47,47 @@ services:
       redis:
         condition: service_started
     ports:
-      - "4000:3000"
+      - "${API_PORT:-4000}:3000"
     environment:
       - NODE_ENV=development
       - APP_PORT=3000
-      - DB_HOST=postgres
-      - DB_PORT=5432
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
       - DB_NAME=autopilot_monster
       - DB_USER=root
       - DB_PASSWORD=password
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT_INTERNAL:-6379}
       - REDIS_PASSWORD=password
-      - MINIO_ENDPOINT=minio
-      - MINIO_PORT=9000
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-minio}
+      - MINIO_PORT=${MINIO_PORT_INTERNAL:-9000}
       - MINIO_ACCESS_KEY=root
       - MINIO_SECRET_KEY=password123
     volumes:
       - ./apps/core:/app/apps/core
+      - ./apps/auth:/app/apps/auth
       - ./libs:/app/libs
 
   ui:
     build:
       context: .
       dockerfile: apps/ui/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT:-4000}}
     depends_on:
       - api
     ports:
-      - "3000:3001"
+      - "${UI_PORT:-3000}:3001"
     environment:
-      - NEXT_PUBLIC_API_URL=http://api:3000
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:${API_PORT:-4000}}
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    depends_on:
+      - postgres
 
 volumes:
   pgdata:

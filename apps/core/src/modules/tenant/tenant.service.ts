@@ -2,6 +2,8 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { TenantRepository } from './tenant.repository';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { Tenant } from '../../database/entities/tenant.entity';
+import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
+import { TenantFilterDto } from './dto/tenant.dto';
 
 @Injectable()
 export class TenantService {
@@ -15,8 +17,23 @@ export class TenantService {
     return this.tenantRepository.create(createTenantDto);
   }
 
-  async findAll(): Promise<Tenant[]> {
-    return this.tenantRepository.findAll();
+  async findAll(filter: TenantFilterDto): Promise<IPaginatedResult<Tenant>> {
+    const [data, total] = await this.tenantRepository.findAll(filter);
+    const page = filter.page || 1;
+    const limit = filter.limit || 10;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages,
+        nextPage: page < totalPages ? page + 1 : null,
+        prevPage: page > 1 ? page - 1 : null,
+      },
+    };
   }
 
   async findOne(id: string): Promise<Tenant> {

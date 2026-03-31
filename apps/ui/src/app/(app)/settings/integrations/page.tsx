@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Search, Filter, CheckCircle2, Link as LinkIcon, AlertCircle, ArrowUpRight, Blocks, Webhook } from 'lucide-react';
 import Link from 'next/link';
+import ConfigureIntegrationModal from '@/components/settings/ConfigureIntegrationModal';
 
 type Integration = {
   id: string;
@@ -35,6 +36,7 @@ const categoryColors: Record<string, string> = {
 export default function IntegrationsPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [configIntegration, setConfigIntegration] = useState<Integration | null>(null);
 
   const categories = ['All', 'Communication', 'AI', 'Payment', 'CRM', 'E-commerce'];
 
@@ -140,15 +142,24 @@ export default function IntegrationsPage() {
 
               {/* Action Button */}
               {app.status === 'Connected' ? (
-                <button className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                <button 
+                  onClick={() => setConfigIntegration(app)}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
                   Configure
                 </button>
               ) : app.status === 'Authentication Error' ? (
-                <button className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1">
+                <button 
+                   onClick={() => setConfigIntegration(app)}
+                   className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
+                >
                   Reconnect
                 </button>
               ) : (
-                <button className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+                <button 
+                   onClick={() => setConfigIntegration(app)}
+                   className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
+                >
                   Install <ArrowUpRight className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -173,6 +184,17 @@ export default function IntegrationsPage() {
 
       </div>
 
+      {configIntegration && (
+        <ConfigureIntegrationModal 
+          integration={configIntegration} 
+          onClose={() => setConfigIntegration(null)}
+          onSaved={() => {
+            // In a real app, you might want to refresh the status
+            console.log('Integration saved');
+            setConfigIntegration(null);
+          }}
+        />
+      )}
     </div>
   );
 }

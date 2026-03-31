@@ -4,9 +4,9 @@
     "outDir": "../../dist/apps/core",
     "baseUrl": "./",
     "paths": {
-      "@autopilot/core": ["src/index.ts"],
+      "@autopilot/core": ["src/index"],
       "@autopilot/core/*": ["src/*"],
-      "@autopilot/auth": ["../auth/src/index.ts"],
+      "@autopilot/auth": ["../auth/src/index"],
       "@autopilot/auth/*": ["../auth/src/*"]
     }
   },

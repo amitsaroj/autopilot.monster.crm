@@ -10,8 +10,26 @@ export class TenantRepository {
     private readonly repository: Repository<Tenant>,
   ) {}
 
-  async findAll(): Promise<Tenant[]> {
-    return this.repository.find();
+  async findAll(filter: any): Promise<[Tenant[], number]> {
+    const { page = 1, limit = 10, status, search } = filter;
+    const query = this.repository.createQueryBuilder('tenant');
+
+    if (status) {
+      query.andWhere('tenant.status = :status', { status });
+    }
+
+    if (search) {
+      query.andWhere('(tenant.name ILIKE :search OR tenant.slug ILIKE :search)', {
+        search: `%${search}%`,
+      });
+    }
+
+    query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('tenant.created_at', 'DESC');
+
+    return query.getManyAndCount();
   }
 
   async findById(id: string): Promise<Tenant | null> {

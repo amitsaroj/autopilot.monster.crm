@@ -14,7 +14,7 @@ export default function AdminNotificationsPage() {
 
   const loadHistory = async () => {
     try {
-      const response = await adminNotificationsService.getHistory();
+      const response = await adminNotificationsService.getBroadcastHistory();
       setHistory(response.data);
     } catch (error) {
       console.error('Failed to load history', error);
@@ -26,7 +26,7 @@ export default function AdminNotificationsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await adminNotificationsService.broadcast(form);
+      await adminNotificationsService.sendBroadcast(form);
       alert('Broadcast initiated!');
       setForm({ title: '', message: '', type: 'INFO' });
       loadHistory();

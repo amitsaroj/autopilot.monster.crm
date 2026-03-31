@@ -2,28 +2,46 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import twilio from 'twilio';
 
+import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+
 @Injectable()
 export class TwilioService {
   private readonly logger = new Logger(TwilioService.name);
-  private client!: twilio.Twilio;
-  private readonly twilioNumber: string;
+  private clients: Map<string, twilio.Twilio> = new Map();
 
-  constructor(private configService: ConfigService) {
-    const accountSid = this.configService.get('TWILIO_ACCOUNT_SID') || 'ACmock';
-    const authToken = this.configService.get('TWILIO_AUTH_TOKEN') || 'mocktoken';
-    this.twilioNumber = this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890';
+  constructor(
+    private configService: ConfigService,
+    private configOrchestrator: ConfigOrchestratorService,
+  ) {}
 
-    // We only initialize the real client if credentials match a real SID pattern, to prevent crash on mock dev.
-    if (accountSid.startsWith('AC') && accountSid.length === 34) {
-      this.client = twilio(accountSid, authToken);
-    } else {
-      this.logger.warn('Twilio loaded with mock credentials. API calls will fail.');
+  private async getClient(tenantId: string): Promise<{ client: twilio.Twilio; from: string }> {
+    if (this.clients.has(tenantId)) {
+      return { 
+        client: this.clients.get(tenantId)!, 
+        from: await this.configOrchestrator.get(tenantId, 'twilio_phone_number') || this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890' 
+      };
     }
+
+    const accountSid = await this.configOrchestrator.get(tenantId, 'twilio_account_sid') || this.configService.get('TWILIO_ACCOUNT_SID') || 'ACmock';
+    const authToken = await this.configOrchestrator.get(tenantId, 'twilio_auth_token') || this.configService.get('TWILIO_AUTH_TOKEN') || 'mocktoken';
+    const from = await this.configOrchestrator.get(tenantId, 'twilio_phone_number') || this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890';
+
+    let client: twilio.Twilio;
+    if (accountSid.startsWith('AC') && accountSid.length === 34) {
+      client = twilio(accountSid, authToken);
+    } else {
+      this.logger.warn(`Tenant ${tenantId} Twilio loaded with mock credentials.`);
+      client = twilio('AC' + '0'.repeat(32), '0'.repeat(32)); // Fake but valid format for constructor
+    }
+
+    this.clients.set(tenantId, client);
+    return { client, from };
   }
 
-  async initiateOutboundCall(to: string, wssUrl: string) {
-    this.logger.log(`Initiating stream call to ${to}`);
+  async initiateOutboundCall(tenantId: string, to: string, wssUrl: string) {
+    this.logger.log(`Initiating stream call to ${to} for tenant ${tenantId}`);
 
+    const { client, from } = await this.getClient(tenantId);
     const twiml = new twilio.twiml.VoiceResponse();
     // Connect to our NestJS WebSocket Gateway
     const connect = twiml.connect();
@@ -32,11 +50,10 @@ export class TwilioService {
     });
 
     try {
-      if (!this.client) throw new Error('Twilio client not initialized');
-      const call = await this.client.calls.create({
+      const call = await client.calls.create({
         twiml: twiml.toString(),
         to,
-        from: this.twilioNumber,
+        from,
         record: true,
       });
       return call.sid;
