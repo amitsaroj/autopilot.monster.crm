@@ -1,133 +1,81 @@
-# Autopilot Monster CRM Enterprise
+# Autopilot Monster CRM | Enterprise Monorepo
 
-An enterprise-grade, highly cohesive Customer Relationship Management (CRM) platform powered by AI and robust multi-tenant architecture. Engineered for scalability, absolute data isolation at the tenant level, and fault-tolerant cloud-native deployment.
+Welcome to the **Autopilot Monster CRM**—a next-generation, AI-driven Customer Relationship Management platform. Engineered utilizing 50-year veteran principles of modular monolith architecture, strict domain-driven design (DDD), and event-driven asynchronous processing. This platform guarantees complete tenant isolation, fault-tolerant infrastructure, and scalable cloud-native deployments.
 
----
+## 🌟 The Complete Feature Ecosystem
 
-## 🏗 Executive Architecture Overview
+Our platform is not just a CRM; it is a meticulously crafted suite of business administration, communication, and artificial intelligence tools.
 
-Autopilot Monster CRM represents the pinnacle of modern modular monolith design. Built upon a tightly coupled yet domain-driven backend, this repository houses both the **Next.js Frontend** and the **NestJS Backend**, orchestrated by Docker Compose for a frictionless developer experience and seamless continuous integration pipeline.
+### 🏢 1. Tenant & Master Admin Management
+- **Strict Multi-Tenancy:** 100% data isolation utilizing UUID `targetId` parameters bound dynamically across every TypeORM repository. Cross-pollination of tenant data is physically impossible.
+- **Admin Dashboard:** Master administrative overrides, global settings, and usage/cost rules monitoring.
+- **Tenant Self-Service:** Full tenant lifecycle control, tenant-specific UI branding, custom domains, and standalone workspace provisioning.
 
-The backend leverages strict Dependency Injection (DI) and robust object-relational mapping (TypeORM) targeting PostgreSQL, heavily utilizing an asynchronous Event-Driven Architecture (EDA) to decouple heavy computational workloads such as AI generation tasks and bulk CRM imports.
+### 🔐 2. Advanced Security & Access Control
+- **Authentication:** Zero-trust architecture. Public routes are explicitly whitelisted. JWT tokens validate short-lived sessions, reinforced by hardware-level IP black-listing and active session tracking.
+- **Time-Based MFA:** Two-factor authentication enforced natively for all administrative users utilizing time-based OTPs, generated securely on-device.
+- **Granular RBAC:** Role-Based Access Control mapped via dynamic permissions dictionaries. Custom roles define access down to the HTTP method and entity level.
 
-### Technology Stack
-*   **API Layer (Backend):** NestJS, TypeScript, TypeORM, Swagger API, Passport (JWT/MFA).
-*   **Client Layer (Frontend):** Next.js (Standalone builds).
-*   **Primary Datastore:** PostgreSQL 15 (Relational Data, JSONB extensions).
-*   **Caching & Queueing:** Redis 7.
-*   **Vector Database (AI):** Qdrant (RAG, Semantic Search).
-*   **Object Storage:** MinIO (S3-Compatible Document Storage).
+### 💼 3. Complete CRM Suite
+- **Lead Ingestion Pipeline:** CSV bulk uploading powered by streaming parsers. Lead deduplication logic and automated AI-powered tagging.
+- **Contacts & Companies:** Fully relational data graphs linking individual professionals to corporate entities, tracking complete multi-channel interaction history.
+- **Deal Kanban Boards:** Drag-and-drop React-based pipeline progression. Real-time deal valuation and pipeline-stage transitions.
+- **Financial Objects:** Full tracking of Products, Invoices, Payments, and Quotes with multi-currency abstractions.
 
----
+### 🤖 4. Autonomous AI Agents & Omnichannel Communication
+- **Agent Provisioning:** Customizable AI Personas tied to specific tenants.
+- **RAG & Vector Memory:** Powered by Qdrant. Upload enterprise documents directly into MinIO storage, vectorized and injected dynamically into prompt contexts.
+- **Twilio Voice & SMS:** Bidirectional calling arrays, intelligent routing, and SMS broadcasting.
+- **WhatsApp Meta Integration:** Automated WhatsApp business flows and deep integration with CRM contact activity logs.
 
-## 🔥 Enterprise Feature Matrix
-
-### 1. Robust Multi-Tenancy
-Data isolation is guaranteed at the repository and middleware levels. A custom `TenantGuard` and strict `TenantId` extraction ensures zero cross-tenant contamination. Every query implicitly scopes to the authenticated user's workspace context.
-
-### 2. Advanced Authentication & RBAC
-*   JWT-based access and refresh token rotation mechanisms.
-*   Time-based One-Time Password (TOTP) Multi-Factor Authentication (MFA).
-*   Granular Role-Based Access Control (RBAC) linking roles to highly specific feature permissions.
-*   Brute-force lockout and session termination parameters.
-
-### 3. CRM Domain Core
-*   **Lead & Contact Management:** Bulk imports, deduplication.
-*   **Sales Pipelines & Deals:** Kanban-style board endpoints, stage progressions.
-*   **Quotes & Products:** Complex object linkages and financial tracking.
-
-### 4. AI & Automations
-*   Fully integrated semantic search and Retrieval-Augmented Generation (RAG) powered by Qdrant.
-*   Omnichannel Campaign Management (Voice & WhatsApp).
-*   Visual Automation Flow execution.
+### 📊 5. Analytics & Background Processing
+- **Event-Driven Architecture:** Relies on Redis queues and NestJS Event emitters. Heavy lifting (bulk email, lead scoring, PDF generation) never blocks the HTTP thread.
+- **System Activity & Audit Logs:** Every write mutation is captured and retained in append-only audit tables for compliance.
+- **Live Dashboards:** Aggregated metrics built flawlessly on the Next.js presentation layer.
 
 ---
 
-## 🛠 Local Environment Setup (Dockerized)
+## 🏗 Infrastructure Topology
 
-This repository is built for instant booting utilizing immutable infrastructure. We rely on Docker and Docker Compose to emulate the exact topology used in production.
+We utilize Docker Compose natively to mirror the precise topology of our targeted AWS/Vercel production environments.
 
-### Step 1: Environment Provisioning
-Initialize your local environment variables in both application boundaries.
+1.  **Vercel / AWS Amplify (Frontend Client):** Headless Next.js 14 frontend utilizing Server-Side Rendering (SSR) and Edge networks.
+2.  **AWS Fargate / ECS (Backend API):** NestJS 10 backend running on Alpine Linux Node containers, connected to an internal VPC.
+3.  **Amazon RDS (PostgreSQL 15):** The single source of truth for relational state.
+4.  **Amazon ElastiCache (Redis 7):** Job queue states, pub/sub mechanisms, and token blacklisting.
+5.  **Amazon S3 (MinIO Local):** Highly available object storage for avatars, CSV uploads, and RAG document repositories.
+6.  **Qdrant Cloud (Vector DB):** 1536-dimensional embeddings storage for GPT-4 integrations.
 
-**Backend (`backend/.env`):**
-```properties
-# System
-NODE_ENV=development
-APP_PORT=8000
-APP_HOST=0.0.0.0
+---
 
-# Database
-DB_HOST=postgres
-DB_PORT=5432
-DB_USER=root
-DB_PASSWORD=password
-DB_NAME=autopilot_monster
-DB_SYNCHRONIZE=true # Use strictly in local/dev; switch to Migrations in prod.
+## 🛠 Project Workspace Structure
 
-# External Services
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_PASSWORD=password
-
-MINIO_ENDPOINT=minio
-MINIO_PORT=9000
-MINIO_ACCESS_KEY=root
-MINIO_SECRET_KEY=password123
-
-# Security
-JWT_SECRET=super_secret_key_123_456
-JWT_EXPIRES_IN=1h
-JWT_REFRESH_SECRET=super_refresh_secret
-JWT_REFRESH_EXPIRES_IN=7d
-```
-
-**Frontend (`frontend/.env`):**
-```properties
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
-### Step 2: Bootstrapping the Platform
-We leverage a flat `src/` directory structure built flawlessly utilizing parallel Docker builds. 
-
-Run the container orchestrator from the project root:
 ```bash
-docker compose up --build -d
+autopilot.monster.crm/
+├── backend/               # NestJS 10 (TypeScript, TypeORM, Swagger)
+│   ├── Dockerfile         # Production AWS Target (Standalone build)
+│   ├── src/               # Flat, modular domain logic
+│   └── package.json
+├── frontend/              # Next.js 14 (App Router, Tailwind, Framer Motion)
+│   ├── Dockerfile         # Standalone Client Target
+│   ├── src/               # UI Components, Hooks, API generated services
+│   └── package.json
+├── docker-compose.yml     # Local unified orchestration matrix
+└── .env.example           # Secure parameter injection templates
 ```
 
-### Step 3: Verification
-*   **API & Swagger Documentation:** `http://localhost:8000`
-*   **Next.js Frontend Client:** `http://localhost:3000`
-*   **Adminer (Database Admin):** `http://localhost:8080`
-*   **MinIO Console:** `http://localhost:9001`
+## 🚀 Getting Started
 
----
+To launch the entire enterprise stack on your local machine:
 
-## 🛡 API Usage & Authorization Strictness
-
-The Swagger UI located at the root API URL acts as the authoritative live contract for the platform. 
-
-The API employs a strict Zero-Trust model:
-1.  **Public Routes:** Extremely restricted (e.g., `POST /api/v1/auth/register`, `POST /api/v1/auth/login`).
-2.  **Global Authorization:** All other routes require a valid `Bearer Token` passed in the `Authorization` header, coupled closely with the `x-tenant-id` header indicating workspace context.
-3.  **To Authenticate via Swagger:** Register a user, log in to retrieve the `accessToken`, and attach it to the `Authorize` (Padlock) button at the top of the UI.
-
----
-
-## 🚀 Deployment Strategy (Production)
-
-The platform has been optimized to separate volatile, horizontally scalable stateless layers (Frontend/Backend) from heavily persistent data stores (PostgreSQL/Redis).
-
-### Backend (AWS Deployment)
-The backend container (`backend/Dockerfile` using `node:20-alpine`) is production-hardened. It suppresses `devDependencies`, restricts payload injection, and utilizes global unhandled exception filters (`AllExceptionsFilter`). Deploy this image to AWS Elastic Container Service (ECS) Fargate or Elastic Beanstalk. Ensure `DB_SYNCHRONIZE=false` and use structured TypeORM migrations.
-
-### Frontend (Vercel Deployment)
-The Next.js application utilizes the Vercel-specific standalone output tracer. Deploy directly to Vercel targeting the `frontend` root directory and inject production environment variables representing the public-facing AWS backend load balancer URL.
-
----
-
-## 🧠 Engineering Tenets
-
-1.  **Explicit > Implicit:** If a guard blocks a route, it must be universally applied or beautifully bypassed (via `Reflector` mechanisms).
-2.  **Silent Failures are Anti-patterns:** Global exception filters sanitize client responses while rigorously logging stack traces strictly to application monitors.
-3.  **Separation of Concerns:** Controllers handle HTTP bindings. Services manage business logic. Repositories manage disk operations. Modularity is not an option; it's the fundamental baseline.
+1. Copy `.env` files into both `frontend/` and `backend/`.
+2. Ensure Docker Engine is running on your host.
+3. Execute the orchestrator:
+   ```bash
+   docker compose up --build -d
+   ```
+4. **Access the Modules:**
+   - Next.js Platform: `http://localhost:3000`
+   - Master Swagger API: `http://localhost:8000`
+   - Adminer DB Console: `http://localhost:8080`
+   - MinIO Storage Console: `http://localhost:9001`
