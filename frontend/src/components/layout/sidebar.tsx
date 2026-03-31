@@ -11,6 +11,7 @@ import {
   FileText, LogOut, ChevronDown, Building2, Terminal, FileSearch
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useSidebar } from '@/hooks/use-sidebar';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -68,10 +69,24 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { isOpen, close } = useSidebar();
 
   return (
-    <aside className="flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border">
-      {/* Logo */}
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
+      
+      <aside className={cn(
+        "fixed inset-y-0 left-0 z-50 flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border transition-transform duration-300 md:relative md:translate-x-0",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
         <div className="w-8 h-8 rounded-lg bg-[hsl(var(--brand))] flex items-center justify-center">
           <span className="text-white text-sm font-black">AM</span>
@@ -192,6 +207,7 @@ export function Sidebar() {
           Terminate Session
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
