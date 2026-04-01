@@ -1,8 +1,8 @@
 terraform {
   backend "s3" {
-    bucket         = "your-unique-terraform-state-bucket" # Change this!
-    key            = "terraform.tfstate"
-    region         = "ap-south-1"
+    # Isko khali chhodein, workflow isse bhar dega
+    key    = "terraform.tfstate"
+    region = "ap-south-1"
   }
   required_providers {
     aws = {
