@@ -46,16 +46,16 @@ export class MonetizationController {
   @ApiOperation({ summary: 'Upgrade subscription' })
   @UseGuards(JwtAuthGuard, TenantGuard)
   upgrade(@TenantId() tenantId: string, @Body() dto: { planId: string }) {
-      console.log(`Tenant ${tenantId} upgrading to ${dto.planId}`);
-      return { message: 'Upgrade initiated', url: '#' };
+    console.log(`Tenant ${tenantId} upgrading to ${dto.planId}`);
+    return { message: 'Upgrade initiated', url: '#' };
   }
 
   @Post('portal')
   @ApiOperation({ summary: 'Get billing portal URL' })
   @UseGuards(JwtAuthGuard, TenantGuard)
   getPortal(@TenantId() tenantId: string) {
-      console.log(`Tenant ${tenantId} accessing billing portal`);
-      return { url: '#' };
+    console.log(`Tenant ${tenantId} accessing billing portal`);
+    return { url: '#' };
   }
 
   // --- Management (SuperAdmin) ---

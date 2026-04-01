@@ -23,7 +23,17 @@ import { ContactService } from './contact.service';
 import { CompanyService } from './company.service';
 import { DealService } from './deal.service';
 import { PipelineService } from './pipeline.service';
-import { ActivityService, TaskCrmService, NoteService, ProductService, QuoteService, CampaignCrmService, AnalyticsCrmService, EmailCrmService, BulkCrmService } from './crm-support.service';
+import {
+  ActivityService,
+  TaskCrmService,
+  NoteService,
+  ProductService,
+  QuoteService,
+  CampaignCrmService,
+  AnalyticsCrmService,
+  EmailCrmService,
+  BulkCrmService,
+} from './crm-support.service';
 import { CreateContactDto, CreateCompanyDto, CreateDealDto } from './dto/crm.dto';
 import { TenantId, Roles } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -99,7 +109,6 @@ export class CrmController {
     return this.flowService.remove(tenantId, id);
   }
 
-
   // --- Bulk Campaigns ---
   // --- Contacts ---
   @Get('contacts')
@@ -144,7 +153,11 @@ export class CrmController {
   @Put('contacts/:id')
   @ApiOperation({ summary: 'Update contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async updateContact(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: Partial<CreateContactDto>) {
+  async updateContact(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateContactDto>,
+  ) {
     const data = await this.contactService.update(tenantId, id, dto);
     return {
       status: 200,
@@ -210,7 +223,11 @@ export class CrmController {
   @Put('companies/:id')
   @ApiOperation({ summary: 'Update company' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async updateCompany(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: Partial<CreateCompanyDto>) {
+  async updateCompany(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateCompanyDto>,
+  ) {
     const data = await this.companyService.update(tenantId, id, dto);
     return {
       status: 200,
@@ -290,7 +307,11 @@ export class CrmController {
   @Put('deals/:id')
   @ApiOperation({ summary: 'Update deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async updateDeal(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: Partial<CreateDealDto>) {
+  async updateDeal(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateDealDto>,
+  ) {
     const data = await this.dealService.update(tenantId, id, dto);
     return {
       status: 200,
@@ -872,8 +893,9 @@ export class CrmController {
     @TenantId() tenantId: string,
     @Body() body: { entityType: 'lead' | 'contact'; data: any[] },
   ) {
-    const service = body.entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
-    await Promise.all(body.data.map(item => service.create(tenantId, item)));
+    const service =
+      body.entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
+    await Promise.all(body.data.map((item) => service.create(tenantId, item)));
     return {
       status: 200,
       message: `Successfully imported ${body.data.length} ${body.entityType}s`,
@@ -889,7 +911,8 @@ export class CrmController {
     @TenantId() tenantId: string,
     @Param('entityType') entityType: 'lead' | 'contact',
   ) {
-    const service = entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
+    const service =
+      entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
     const data = await service.findAll(tenantId);
     const csv = this.csvService.generateCsv(data);
     return {

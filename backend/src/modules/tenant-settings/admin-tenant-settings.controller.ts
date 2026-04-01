@@ -21,7 +21,10 @@ export class AdminTenantSettingsController {
 
   @Post()
   @ApiOperation({ summary: 'Update or create an integration setting for a tenant' })
-  async update(@Param('tenantId') tenantId: string, @Body() data: { key: string; value: any; group?: string }) {
+  async update(
+    @Param('tenantId') tenantId: string,
+    @Body() data: { key: string; value: any; group?: string },
+  ) {
     const result = await this.service.updateSetting(tenantId, data);
     return { status: 200, message: 'Tenant setting updated', error: false, data: result };
   }

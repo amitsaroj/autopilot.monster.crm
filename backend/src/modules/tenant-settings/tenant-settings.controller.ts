@@ -22,7 +22,10 @@ export class TenantSettingsController {
 
   @Post()
   @ApiOperation({ summary: 'Update or create an integration setting' })
-  async update(@CurrentUser() user: IRequestContext, @Body() data: { key: string; value: any; group?: string }) {
+  async update(
+    @CurrentUser() user: IRequestContext,
+    @Body() data: { key: string; value: any; group?: string },
+  ) {
     const result = await this.service.updateSetting(user.tenantId, data);
     return { status: 200, message: 'Integration setting updated', error: false, data: result };
   }

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -41,10 +41,10 @@ api.interceptors.response.use(
         try {
           const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
           const { accessToken } = response.data.data;
-          
+
           localStorage.setItem('access_token', accessToken);
           api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
-          
+
           return api(originalRequest);
         } catch (refreshError) {
           // Refresh failed, logout user

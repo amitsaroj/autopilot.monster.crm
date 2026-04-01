@@ -16,7 +16,7 @@ export class SearchController {
   async search(
     @TenantId() tenantId: string,
     @Query('q') query: string,
-    @Query('collection') collection: string = 'all'
+    @Query('collection') collection: string = 'all',
   ) {
     return this.searchService.search(tenantId, collection, query);
   }
@@ -24,7 +24,7 @@ export class SearchController {
   @Post('reindex')
   @ApiOperation({ summary: 'Trigger reindexing for a collection' })
   async reindex(@TenantId() tenantId: string, @Body() body: { collection: string }) {
-      console.log(`Reindexing ${body.collection} for ${tenantId}`);
-      return { success: true };
+    console.log(`Reindexing ${body.collection} for ${tenantId}`);
+    return { success: true };
   }
 }

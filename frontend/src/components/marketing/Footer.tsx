@@ -48,7 +48,7 @@ export default function MarketingFooter() {
   return (
     <footer className="relative overflow-hidden border-t border-gray-200 dark:border-white/[0.06] bg-gray-50 dark:bg-[#060a14]">
       {/* Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+      {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" /> */}
 
       <div className="max-w-7xl mx-auto px-6 pt-20 pb-12">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">

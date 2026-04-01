@@ -20,7 +20,7 @@ export class AdminAuditLogsController {
   async findAll(
     @Query('tenantId') tenantId?: string,
     @Query('userId') userId?: string,
-    @Query('action') action?: string
+    @Query('action') action?: string,
   ) {
     const data = await this.adminAuditLogsService.findAll({ tenantId, userId, action });
     return {

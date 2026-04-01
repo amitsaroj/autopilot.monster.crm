@@ -1,4 +1,12 @@
-import { Controller, Post, Delete, UseGuards, UploadedFile, UseInterceptors, Param } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Delete,
+  UseGuards,
+  UploadedFile,
+  UseInterceptors,
+  Param,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { StorageService } from './storage.service';
@@ -16,10 +24,7 @@ export class StorageController {
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a file' })
-  async upload(
-    @TenantId() tenantId: string,
-    @UploadedFile() file: Express.Multer.File
-  ) {
+  async upload(@TenantId() tenantId: string, @UploadedFile() file: Express.Multer.File) {
     return this.storageService.upload(tenantId, file.buffer, file.originalname, file.mimetype);
   }
 
