@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY}/autopilot-api:latest
+    env_file:
+      - .env.production
+    expose:
+      - 8000
+    depends_on:
+      - redis
+      - qdrant
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-password}"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_prod_data:/data
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_prod_data:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  redis_prod_data:
+  qdrant_prod_data:

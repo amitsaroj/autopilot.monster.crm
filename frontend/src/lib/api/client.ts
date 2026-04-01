@@ -9,7 +9,13 @@ const api = axios.create({
 
 // Request interceptor for Auth and Tenant headers
 api.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+  const extractCookie = (name: string) => {
+    if (typeof window === 'undefined') return null;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+  };
+  
+  const token = extractCookie('access_token');
   const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
 
   if (token) {
@@ -35,27 +41,40 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+      const extractCookie = (name: string) => {
+        if (typeof window === 'undefined') return null;
+        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+      };
+      
+      const refreshToken = extractCookie('refresh_token');
 
       if (refreshToken) {
         try {
           const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
           const { accessToken } = response.data.data;
 
-          localStorage.setItem('access_token', accessToken);
+          document.cookie = `access_token=${accessToken}; path=/; max-age=86400; samesite=strict; secure`;
           api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
           return api(originalRequest);
         } catch (refreshError) {
           // Refresh failed, logout user
           if (typeof window !== 'undefined') {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
+            document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
+            document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
             localStorage.removeItem('user');
             window.location.href = '/login';
           }
         }
       }
+    }
+
+    if (error.response?.status === 403) {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/403';
+      }
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

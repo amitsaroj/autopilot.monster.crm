@@ -6,6 +6,9 @@ import {
   UploadedFile,
   UseInterceptors,
   Param,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
@@ -23,8 +26,19 @@ export class StorageController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload a file' })
-  async upload(@TenantId() tenantId: string, @UploadedFile() file: Express.Multer.File) {
+  @ApiOperation({ summary: 'Upload a file safely' })
+  async upload(
+    @TenantId() tenantId: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({ fileType: '.(png|jpeg|jpg|pdf|csv|doc|docx|mp4|mp3|wav)' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
     return this.storageService.upload(tenantId, file.buffer, file.originalname, file.mimetype);
   }
 

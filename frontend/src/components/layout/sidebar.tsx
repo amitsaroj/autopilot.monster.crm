@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { usePermission } from '@/hooks/use-permission';
 
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -70,6 +71,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { isOpen, close } = useSidebar();
+  const { hasAnyPermission } = usePermission();
 
   return (
     <>
@@ -100,6 +102,11 @@ export function Sidebar() {
       <nav className="flex-1 overflow-y-auto py-4 scrollbar-hide">
         <ul className="space-y-0.5 px-3">
           {navItems.map((item) => {
+            // Simplified dynamic permission check: If resource matches a prominent route, ensure read/view
+            const resource = item.href ? item.href.replace('/', '') : item.label.toLowerCase();
+            const hide = !hasAnyPermission([`${resource}:read`, `${resource}:view`, `${resource}:manage`, 'admin:manage']) && !['dashboard', 'inbox', 'notifications', 'search', 'profile'].includes(resource);
+            if (hide) return null;
+
             if ('children' in item && item.children) {
               const isActive = item.children.some((c) => pathname.startsWith(c.href));
               return (

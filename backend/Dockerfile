@@ -19,6 +19,9 @@ COPY src/ ./src/
 # Compile the application (nest build -> dist/main.js)
 RUN npm run build
 
+# Remove development dependencies
+RUN npm prune --production
+
 # ---
 # Production Image
 # ---
@@ -34,5 +37,6 @@ COPY --from=builder /app/dist ./dist
 
 EXPOSE 8000
 
-# Start backend entrypoint
-CMD ["node", "dist/main.js"]
+# Copy startup sequence allowing automated prestart (seed execution)
+COPY package*.json ./
+CMD ["npm", "run", "start"]
