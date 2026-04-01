@@ -46,7 +46,7 @@ const footerSections = [
 
 export default function MarketingFooter() {
   return (
-    <footer className="relative border-t border-gray-200 dark:border-white/[0.06] bg-gray-50 dark:bg-[#060a14]">
+    <footer className="relative overflow-hidden border-t border-gray-200 dark:border-white/[0.06] bg-gray-50 dark:bg-[#060a14]">
       {/* Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
 
