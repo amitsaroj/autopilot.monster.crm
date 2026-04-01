@@ -20,10 +20,25 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
-
-      - name: Terraform Apply
+          
+      # --- AUTOMATIC S3 BUCKET CREATION ---
+      - name: Bootstrap S3 Bucket
         run: |
-          terraform init
+          BUCKET_NAME="autopilot-monster-state-${{ github.repository_owner }}"
+          if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+            echo "Bucket does not exist. Creating..."
+            aws s3api create-bucket --bucket "$BUCKET_NAME" --region ap-south-1 --create-bucket-configuration LocationConstraint=ap-south-1
+            aws s3api put-bucket-versioning --bucket "$BUCKET_NAME" --versioning-configuration Status=Enabled
+          else
+            echo "Bucket already exists."
+          fi
+          echo "BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
+
+      # --- TERRAFORM INIT WITH DYNAMIC BACKEND ---
+      - name: Terraform Init & Apply
+        run: |
+          # Hum yahan backend config ko override kar rahe hain
+          terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
           terraform apply -auto-approve
           echo "INSTANCE_ID=$(terraform output -raw instance_id)" >> $GITHUB_ENV
 
