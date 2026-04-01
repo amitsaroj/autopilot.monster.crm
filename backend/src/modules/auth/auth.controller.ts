@@ -2,7 +2,18 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import type { IRequestContext } from '../../common/interfaces/request-context.interface';
-import { Controller, Post, Body, Get, UseGuards, HttpCode, HttpStatus, Ip, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Ip,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
@@ -110,7 +121,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset link', security: [] })
   @ApiResponse({ status: 200, description: 'Reset link sent if email exists' })
-  async forgotPassword(@Body() dto: ForgotPasswordDto, @TenantId() tenantId: string): Promise<void> {
+  async forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+    @TenantId() tenantId: string,
+  ): Promise<void> {
     return this.authService.forgotPassword(dto.email, tenantId);
   }
 
@@ -179,7 +193,10 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke a specific session' })
   @ApiResponse({ status: 200, description: 'Session successfully revoked' })
-  async revokeSession(@CurrentUser() user: IRequestContext, @Param('id') sessionId: string): Promise<void> {
+  async revokeSession(
+    @CurrentUser() user: IRequestContext,
+    @Param('id') sessionId: string,
+  ): Promise<void> {
     return this.authService.revokeSession(user.userId, user.tenantId, sessionId);
   }
 }

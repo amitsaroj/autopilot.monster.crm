@@ -52,9 +52,13 @@ export class AdminFeatureFlagsController {
   @ApiOperation({ summary: 'Override feature flag for a tenant' })
   async updateTenantFlag(
     @Param('tenantId') tenantId: string,
-    @Body() body: { key: string; enabled: boolean }
+    @Body() body: { key: string; enabled: boolean },
   ) {
-    const data = await this.adminFeatureFlagsService.updateTenantFlag(tenantId, body.key, body.enabled);
+    const data = await this.adminFeatureFlagsService.updateTenantFlag(
+      tenantId,
+      body.key,
+      body.enabled,
+    );
     return {
       status: 200,
       message: 'Tenant feature flag updated',

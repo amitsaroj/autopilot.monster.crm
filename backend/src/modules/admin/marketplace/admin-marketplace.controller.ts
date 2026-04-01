@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminMarketplaceService } from './admin-marketplace.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles } from '../../../common/decorators';
+import { CreatePluginDto, UpdatePluginDto } from './admin-marketplace.dto';
 
 @ApiTags('Admin / Marketplace & Plugins')
 @ApiBearerAuth()
@@ -21,14 +22,14 @@ export class AdminMarketplaceController {
 
   @Post('plugins')
   @ApiOperation({ summary: 'Create a new global plugin' })
-  async create(@Body() dto: any) {
+  async create(@Body() dto: CreatePluginDto) {
     const data = await this.marketplaceService.create(dto);
     return { status: 201, message: 'Plugin created', error: false, data };
   }
 
   @Put('plugins/:id')
   @ApiOperation({ summary: 'Update a global plugin' })
-  async update(@Param('id') id: string, @Body() dto: any) {
+  async update(@Param('id') id: string, @Body() dto: UpdatePluginDto) {
     const data = await this.marketplaceService.update(id, dto);
     return { status: 200, message: 'Plugin updated', error: false, data };
   }

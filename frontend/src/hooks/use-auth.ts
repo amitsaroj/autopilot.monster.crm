@@ -45,10 +45,11 @@ export const useAuth = create<AuthState>()(
           mfaPendingPassword: null,
         });
         if (typeof window !== 'undefined') {
-          localStorage.setItem('access_token', response.accessToken);
-          localStorage.setItem('refresh_token', response.refreshToken);
+          document.cookie = `access_token=${response.accessToken}; path=/; max-age=86400; samesite=strict; secure`;
+          document.cookie = `refresh_token=${response.refreshToken}; path=/; max-age=604800; samesite=strict; secure`;
           if (response.tenant?.id) {
             localStorage.setItem('tenant_id', response.tenant.id);
+            document.cookie = `tenant_id=${response.tenant.id}; path=/; max-age=86400; samesite=strict; secure`;
           }
         }
       },
@@ -69,10 +70,11 @@ export const useAuth = create<AuthState>()(
             mfaPendingPassword: null,
           });
           if (typeof window !== 'undefined') {
-            localStorage.setItem('access_token', authData.accessToken);
-            localStorage.setItem('refresh_token', authData.refreshToken);
+            document.cookie = `access_token=${authData.accessToken}; path=/; max-age=86400; samesite=strict; secure`;
+            document.cookie = `refresh_token=${authData.refreshToken}; path=/; max-age=604800; samesite=strict; secure`;
             if (authData.tenant?.id) {
               localStorage.setItem('tenant_id', authData.tenant.id);
+              document.cookie = `tenant_id=${authData.tenant.id}; path=/; max-age=86400; samesite=strict; secure`;
             }
           }
         } catch (error: any) {
@@ -134,9 +136,10 @@ export const useAuth = create<AuthState>()(
           mfaPendingPassword: null,
         });
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
           localStorage.removeItem('tenant_id');
+          document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
+          document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
+          document.cookie = 'tenant_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
         }
       },
     }),
@@ -145,8 +148,6 @@ export const useAuth = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         tenant: state.tenant,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
         mfaPendingEmail: state.mfaPendingEmail,
         mfaPendingPassword: state.mfaPendingPassword,

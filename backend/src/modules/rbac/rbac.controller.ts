@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RbacService } from './rbac.service';
 import { CreateRoleDto, RoleFilterDto, PermissionFilterDto } from './dto/create-role.dto';
@@ -19,7 +31,7 @@ export class RbacController {
   async findAllPermissions(@Query() filter: PermissionFilterDto) {
     return this.rbacService.findAllPermissions(filter);
   }
-  
+
   @Post('permissions')
   @ApiOperation({ summary: 'Create a new global permission' })
   @Roles('SUPER_ADMIN')

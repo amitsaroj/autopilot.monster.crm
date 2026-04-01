@@ -20,7 +20,7 @@ export class AdminApiLogsController {
   async findAll(
     @Query('tenantId') tenantId?: string,
     @Query('method') method?: string,
-    @Query('statusCode') statusCode?: number
+    @Query('statusCode') statusCode?: number,
   ) {
     const data = await this.adminApiLogsService.findAll({ tenantId, method, statusCode });
     return {

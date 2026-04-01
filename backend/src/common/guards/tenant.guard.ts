@@ -44,6 +44,9 @@ export class TenantGuard implements CanActivate {
       });
     }
 
+    // Force verified tenant ID onto headers to prevent bypasses in downstream logic
+    request.headers[HEADERS.TENANT_ID] = jwtTenantId;
+
     return true;
   }
 }

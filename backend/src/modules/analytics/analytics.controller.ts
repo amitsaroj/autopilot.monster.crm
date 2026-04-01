@@ -18,12 +18,12 @@ export class AnalyticsController {
     const contacts = await this.analyticsService.getMetrics(tenantId, 'contacts_total', 'DAILY');
     const deals = await this.analyticsService.getMetrics(tenantId, 'deals_value', 'DAILY');
     const calls = await this.analyticsService.getMetrics(tenantId, 'calls_total', 'DAILY');
-    
+
     return {
       contacts: contacts[0]?.value || 0,
       deals: deals[0]?.value || 0,
       calls: calls[0]?.value || 0,
-      period: 'last_24h'
+      period: 'last_24h',
     };
   }
 
@@ -32,7 +32,7 @@ export class AnalyticsController {
   async getMetrics(
     @TenantId() tenantId: string,
     @Query('name') name: string,
-    @Query('period') period: string = 'DAILY'
+    @Query('period') period: string = 'DAILY',
   ) {
     return this.analyticsService.getMetrics(tenantId, name, period);
   }

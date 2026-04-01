@@ -40,7 +40,11 @@ export class WorkflowController {
   @Patch(':id')
   @ApiOperation({ summary: 'Update workflow' })
   @Roles('TENANT_ADMIN')
-  update(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: Partial<CreateWorkflowDto>) {
+  update(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: Partial<CreateWorkflowDto>,
+  ) {
     return this.workflowService.update(tenantId, id, dto);
   }
 

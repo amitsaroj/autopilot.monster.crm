@@ -1,0 +1,90 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'docker-compose.prod.yml'
+      - 'nginx/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Lint Codebase
+        working-directory: ./backend
+        run: npm run lint:check
+
+      - name: Build Codebase
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/autopilot-api:latest
+
+      - name: SSH and Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "Starting deployment sequence..."
+            cd /opt/autopilot-monster
+            
+            # Pull latest infrastructure code (nginx, docker-compose.prod.yml)
+            git pull origin main
+            
+            # Log into GHCR via Docker
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull newly pushed image
+            docker-compose -f docker-compose.prod.yml pull api
+            
+            # Restart target deployment
+            docker-compose -f docker-compose.prod.yml up -d
+            
+            # Clean up dangling images to ensure EC2 storage remains healthy
+            docker image prune -f
+            
+            # SELF-HEALING & HEALTH VERIFICATION
+            echo "Waiting for API Container to warm up..."
+            sleep 15
+            if curl -s -f http://localhost/api/v1/health | grep -q '"status":"ok"'; then
+              echo "Health API Reached successfully. Production is active."
+            else
+              echo "API Unreachable! Tailing logs for forensics..."
+              docker logs autopilot-monster-api-1
+              exit 1
+            fi
+            
+            # Run SEED script after deploy
+            docker-compose -f docker-compose.prod.yml exec -T api npm run seed
+            echo "Deployment Pipeline Completed successfully."

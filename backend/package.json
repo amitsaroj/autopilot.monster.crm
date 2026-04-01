@@ -16,6 +16,7 @@
     "dev:core": "nest start --watch",
     "dev:ui": "npm run dev --workspace=apps/ui",
     "dev:all": "concurrently --names \"BACKEND,FRONTEND\" --prefix-colors \"blue.bold,magenta.bold\" \"nest start --watch\" \"npm run dev --workspace=apps/ui\"",
+    "prestart": "npm run seed",
     "start": "node dist/main",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:all": "turbo run typecheck",
@@ -29,7 +30,8 @@
     "test:core": "jest --testPathPattern=src",
     "migrate:run": "typeorm migration:run -d src/database/data-source.ts",
     "migrate:revert": "typeorm migration:revert -d src/database/data-source.ts",
-    "migrate:generate": "typeorm migration:generate -d src/database/data-source.ts"
+    "migrate:generate": "typeorm migration:generate -d src/database/data-source.ts",
+    "seed": "ts-node src/scripts/seed.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",

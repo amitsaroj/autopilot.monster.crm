@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SocialService } from './social.service';
 import { SocialPost } from '../../database/entities/social-post.entity';
@@ -24,10 +16,7 @@ export class SocialController {
   @Post('schedule')
   @ApiOperation({ summary: 'Schedule a new social media post' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async schedulePost(
-    @TenantId() tenantId: string,
-    @Body() body: Partial<SocialPost>,
-  ) {
+  async schedulePost(@TenantId() tenantId: string, @Body() body: Partial<SocialPost>) {
     const post = await this.socialService.schedulePost(tenantId, body);
     return {
       status: 201,
@@ -53,10 +42,7 @@ export class SocialController {
   @Delete('posts/:id')
   @ApiOperation({ summary: 'Delete a scheduled post' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async deletePost(
-    @TenantId() tenantId: string,
-    @Param('id') id: string,
-  ) {
+  async deletePost(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.socialService.deletePost(tenantId, id);
     return {
       status: 200,

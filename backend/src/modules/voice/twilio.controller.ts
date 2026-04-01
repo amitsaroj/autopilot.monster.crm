@@ -1,8 +1,12 @@
-import { Controller, Post, Req, Res, Headers } from '@nestjs/common';
+import { UseGuards, Controller, Post, Req, Res, Headers } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { TwilioService } from './twilio.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { TenantGuard } from '../../common/guards/tenant.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 @Controller('v1/voice/twilio')
 export class TwilioController {
   constructor(private readonly twilioService: TwilioService) {}

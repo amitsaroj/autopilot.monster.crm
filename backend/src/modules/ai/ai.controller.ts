@@ -42,20 +42,20 @@ export class AiController {
   async chat(@TenantId() tenantId: string, @Body() dto: ChatDto) {
     let context = '';
     if (dto.useRag) {
-        context = await this.ragService.queryKnowledgeBase(tenantId, dto.message);
+      context = await this.ragService.queryKnowledgeBase(tenantId, dto.message);
     }
-    
+
     let conversationId = dto.conversationId;
     if (!conversationId) {
-        const conv = await this.chatService.create(tenantId, { title: dto.message.slice(0, 30) });
-        conversationId = conv.id;
+      const conv = await this.chatService.create(tenantId, { title: dto.message.slice(0, 30) });
+      conversationId = conv.id;
     }
 
     const prompt = context ? `Context: ${context}\n\nUser: ${dto.message}` : dto.message;
     const reply = await this.ragService.generate(tenantId, prompt);
-    
+
     await this.chatService.addMessage(tenantId, conversationId, 'ASSISTANT', reply!);
-    
+
     return { reply, conversationId };
   }
 
@@ -80,10 +80,7 @@ export class AiController {
   @Post('knowledge-base/upload')
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload and index document' })
-  async uploadDocument(
-    @TenantId() tenantId: string,
-    @UploadedFile() file: Express.Multer.File
-  ) {
+  async uploadDocument(@TenantId() tenantId: string, @UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('File is required');
     }

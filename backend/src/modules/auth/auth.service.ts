@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
+import * as bcrypt from 'bcryptjs';
 
 import { AuthRepository } from './auth.repository';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
@@ -143,6 +144,19 @@ export class AuthService {
     if (user === null || !user.isActive) {
       throw new UnauthorizedException({ code: ERROR_CODES.UNAUTHORIZED });
     }
+
+    const validTokens = await this.authRepo.findValidRefreshToken(user.id, tenantId);
+    let tokenMatched = false;
+    for (const valid of validTokens) {
+      if (await bcrypt.compare(rawRefreshToken, valid.tokenHash)) {
+        tokenMatched = true;
+        break;
+      }
+    }
+    if (!tokenMatched) {
+      throw new UnauthorizedException({ message: 'Refresh token revoked or invalid', code: ERROR_CODES.TOKEN_EXPIRED });
+    }
+
     return this.generateTokens(user, ipAddress);
   }
 
@@ -217,6 +231,7 @@ export class AuthService {
   async generateMfaSecret(userId: string, tenantId: string) {
     const user = await this.authRepo.findUserById(userId, tenantId);
     if (!user) throw new BadRequestException('User not found');
+    if (user.isMfaEnabled) throw new ConflictException('MFA is already enabled. Disable it first to generate a new secret.');
 
     const secret = this.mfaService.generateSecret();
     const qrCodeUrl = this.mfaService.generateQrCodeUrl(user.email, 'Autopilot Monster', secret);
@@ -281,9 +296,33 @@ export class AuthService {
       planId: '',
     };
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn as any }),
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.refreshSecret, expiresIn: this.jwtConfig.refreshExpiresIn as any }),
+      this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn as any, issuer: 'autopilot.monster', audience: 'autopilot.monster.user' }),
+      this.jwtService.signAsync(payload, { secret: this.jwtConfig.refreshSecret, expiresIn: this.jwtConfig.refreshExpiresIn as any, issuer: 'autopilot.monster', audience: 'autopilot.monster.user' }),
     ]);
+
+    // Calculate generic valid expiry for the token (assumes refreshExpiresIn is in seconds if number, or ms if string, 7 days default)
+    let expiryTime = 7 * 24 * 3600 * 1000;
+    if (typeof this.jwtConfig.refreshExpiresIn === 'number') {
+      expiryTime = this.jwtConfig.refreshExpiresIn * 1000;
+    } else if (typeof this.jwtConfig.refreshExpiresIn === 'string' && this.jwtConfig.refreshExpiresIn.endsWith('d')) {
+      expiryTime = parseInt(this.jwtConfig.refreshExpiresIn) * 24 * 3600 * 1000;
+    }
+    const refreshExpiresAt = new Date(Date.now() + expiryTime);
+
+    // Persist refresh token securely
+    await this.authRepo.saveRefreshToken(user.id, user.tenantId, refreshToken, refreshExpiresAt, _ipAddress);
+    
+    // Create accompanying session
+    await this.authRepo.createSession({
+      userId: user.id,
+      tenantId: user.tenantId,
+      ipAddress: _ipAddress,
+      userAgent: 'Standard Session',
+      isActive: true,
+      expiresAt: refreshExpiresAt,
+      lastActivityAt: new Date()
+    });
+
     return { accessToken, refreshToken, expiresIn: 900, tokenType: 'Bearer' };
   }
 }

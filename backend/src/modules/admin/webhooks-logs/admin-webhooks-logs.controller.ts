@@ -20,7 +20,7 @@ export class AdminWebhooksLogsController {
   async findAll(
     @Query('tenantId') tenantId?: string,
     @Query('webhookId') webhookId?: string,
-    @Query('status') status?: string
+    @Query('status') status?: string,
   ) {
     const data = await this.adminWebhooksLogsService.findAll({ tenantId, webhookId, status });
     return {

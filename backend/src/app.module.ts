@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from './modules/auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { MultiLevelThrottlerGuard } from './common/guards/multi-throttler.guard';
 
 // Config factories
 import { CacheModule } from './cache/cache.module';
@@ -12,6 +14,8 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PlanGuard } from './common/guards/plan.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
+import { PermissionGuard } from './common/guards/permission.guard';
+import { FeatureGuard } from './common/guards/feature.guard';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -77,6 +81,14 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
 
     ScheduleModule.forRoot(),
 
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const t = config.get<{ ttl: number; limit: number }>('throttle')!;
+        return [{ ttl: t.ttl * 1000, limit: t.limit }]; // v6 expects ms
+      },
+    }),
+
     // Infrastructure
     DatabaseModule,
     LoggerModule,
@@ -115,10 +127,13 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
 
-    // === Global Guards (order: JWT → Tenant → Roles → Plan) ===
+    // === Global Guards (order: Throttler -> JWT → Tenant → Roles → Permissions → Features → Plan) ===
+    { provide: APP_GUARD, useClass: MultiLevelThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: TenantGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: PermissionGuard },
+    { provide: APP_GUARD, useClass: FeatureGuard },
     { provide: APP_GUARD, useClass: PlanGuard },
 
     // === Global Validation Pipe ===
