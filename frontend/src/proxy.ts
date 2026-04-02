@@ -5,7 +5,7 @@ const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-passwor
 const marketingRoutes = [
   '/pricing', '/features', '/contact', '/about', '/services', '/product', 
   '/legal', '/resources', '/company', '/blog', '/careers', '/cookies', 
-  '/docs', '/partners', '/privacy', '/security', '/sla', '/terms'
+  '/docs', '/partners', '/privacy', '/security', '/sla', '/terms', '/demo'
 ];
 
 export function proxy(request: NextRequest) {

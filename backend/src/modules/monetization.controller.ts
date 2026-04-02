@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete, Headers, Req, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard, TenantGuard, RolesGuard } from '../common/guards';
+import { JwtAuthGuard, TenantGuard, RolesGuard, WsJwtGuard } from '../common/guards';
 import { PricingService } from './pricing/pricing.service';
 import { BillingService } from './billing/billing.service';
 import { TenantId, Roles } from '../common/decorators';
@@ -45,17 +45,23 @@ export class MonetizationController {
   @Post('upgrade')
   @ApiOperation({ summary: 'Upgrade subscription' })
   @UseGuards(JwtAuthGuard, TenantGuard)
-  upgrade(@TenantId() tenantId: string, @Body() dto: { planId: string }) {
-    console.log(`Tenant ${tenantId} upgrading to ${dto.planId}`);
-    return { message: 'Upgrade initiated', url: '#' };
+  upgrade(@TenantId() tenantId: string, @Body() dto: { planId: string; billingCycle: 'MONTHLY' | 'ANNUAL' }) {
+    return this.billingService.createCheckoutSession(tenantId, dto.planId, dto.billingCycle);
   }
 
   @Post('portal')
   @ApiOperation({ summary: 'Get billing portal URL' })
   @UseGuards(JwtAuthGuard, TenantGuard)
   getPortal(@TenantId() tenantId: string) {
-    console.log(`Tenant ${tenantId} accessing billing portal`);
-    return { url: '#' };
+    return this.billingService.createPortalSession(tenantId);
+  }
+
+  @Post('webhook')
+  @ApiOperation({ summary: 'Stripe Webhook' })
+  async handleWebhook(@Body() _body: any, @Headers('stripe-signature') sig: string, @Req() req: any) {
+    if (!sig) throw new BadRequestException('Missing signature');
+    const rawBody = req.rawBody;
+    return this.billingService.handleWebhook(sig, rawBody);
   }
 
   // --- Management (SuperAdmin) ---

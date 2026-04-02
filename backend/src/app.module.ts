@@ -34,6 +34,7 @@ import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
 import { EventBusModule } from './events/event-bus.module';
 import { StorageModule } from './storage/storage.module';
+import { EmailModule } from './shared/email/email.module';
 
 // Business Modules
 import { AiModule } from './modules/ai/ai.module';
@@ -97,6 +98,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     QueueModule,
     EventBusModule,
     StorageModule,
+    EmailModule,
 
     // Business Modules
     AiModule,

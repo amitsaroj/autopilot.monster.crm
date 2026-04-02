@@ -19,6 +19,7 @@ import { UserEntity, UserStatus } from './entities/user.entity';
 import { AuthTokens } from './interfaces/auth-tokens.interface';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { MfaService } from './mfa.service';
+import { EmailService } from '../../shared/email/email.service';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -33,6 +34,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
     private readonly mfaService: MfaService,
+    private readonly emailService: EmailService,
   ) {
     const cfg = this.configService.get<JwtConfig>('jwt');
     if (cfg === undefined) throw new Error('JWT config missing');
@@ -130,6 +132,8 @@ export class AuthService {
       correlationId: uuidv4(),
     });
 
+    await this.emailService.sendWelcomeEmail(user.email, user.firstName || 'User');
+
     return { user, tenant };
   }
 
@@ -196,6 +200,8 @@ export class AuthService {
       payload: { userId: user.id, email: user.email, token },
       occurredAt: new Date().toISOString(), correlationId: uuidv4(),
     });
+
+    await this.emailService.sendPasswordResetEmail(user.email, token);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

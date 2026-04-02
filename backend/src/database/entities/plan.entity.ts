@@ -41,6 +41,12 @@ export class Plan {
   @Column({ name: 'sort_order', default: 0 })
   sortOrder!: number;
 
+  @Column({ name: 'stripe_price_id_monthly', nullable: true })
+  stripePriceIdMonthly?: string;
+
+  @Column({ name: 'stripe_price_id_annual', nullable: true })
+  stripePriceIdAnnual?: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

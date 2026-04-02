@@ -31,6 +31,10 @@ export interface AppConfig {
     privateKey: string;
     callbackUrl: string;
   };
+  stripe: {
+    secretKey: string;
+    webhookSecret: string;
+  };
 }
 
 export const appConfig = registerAs(
@@ -65,6 +69,10 @@ export const appConfig = registerAs(
       keyId: process.env['APPLE_KEY_ID'] ?? '',
       privateKey: process.env['APPLE_PRIVATE_KEY'] ?? '',
       callbackUrl: process.env['APPLE_CALLBACK_URL'] ?? 'http://localhost:8000/api/v1/auth/apple/callback',
+    },
+    stripe: {
+      secretKey: process.env['STRIPE_SECRET_KEY'] ?? '',
+      webhookSecret: process.env['STRIPE_WEBHOOK_SECRET'] ?? '',
     },
   }),
 );

@@ -84,10 +84,10 @@ async function seed() {
 
     // 4. PLANS, FEATURES, LIMITS
     const plansData = [
-      { name: 'Free', slug: 'FREE', priceMonthly: 0, priceAnnual: 0, limitContacts: 100, limitUsers: 1, limitAiTokens: 1000, features: ['crm', 'analytics'] },
-      { name: 'Starter', slug: 'STARTER', priceMonthly: 29, priceAnnual: 290, limitContacts: 1000, limitUsers: 5, limitAiTokens: 50000, features: ['crm', 'analytics', 'workflow', 'whatsapp'] },
-      { name: 'Pro', slug: 'PRO', priceMonthly: 99, priceAnnual: 990, limitContacts: 10000, limitUsers: 20, limitAiTokens: 500000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins'] },
-      { name: 'Enterprise', slug: 'ENTERPRISE', priceMonthly: 499, priceAnnual: 4990, limitContacts: -1, limitUsers: -1, limitAiTokens: -1, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'marketplace'] },
+      { name: 'Free', slug: 'FREE', priceMonthly: 0, priceAnnual: 0, limitContacts: 100, limitUsers: 1, limitAiTokens: 1000, features: ['crm', 'analytics'], stripePriceIdMonthly: null, stripePriceIdAnnual: null },
+      { name: 'Starter', slug: 'STARTER', priceMonthly: 29, priceAnnual: 290, limitContacts: 1000, limitUsers: 5, limitAiTokens: 50000, features: ['crm', 'analytics', 'workflow', 'whatsapp'], stripePriceIdMonthly: 'price_starter_monthly_placeholder', stripePriceIdAnnual: 'price_starter_annual_placeholder' },
+      { name: 'Pro', slug: 'PRO', priceMonthly: 99, priceAnnual: 990, limitContacts: 10000, limitUsers: 20, limitAiTokens: 500000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins'], stripePriceIdMonthly: 'price_pro_monthly_placeholder', stripePriceIdAnnual: 'price_pro_annual_placeholder' },
+      { name: 'Enterprise', slug: 'ENTERPRISE', priceMonthly: 499, priceAnnual: 4990, limitContacts: -1, limitUsers: -1, limitAiTokens: -1, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'marketplace'], stripePriceIdMonthly: 'price_ent_monthly_placeholder', stripePriceIdAnnual: 'price_ent_annual_placeholder' },
     ];
 
     for (const pd of plansData) {
@@ -100,6 +100,8 @@ async function seed() {
           priceAnnual: pd.priceAnnual,
           currency: 'USD',
           status: 'ACTIVE',
+          stripePriceIdMonthly: pd.stripePriceIdMonthly as string,
+          stripePriceIdAnnual: pd.stripePriceIdAnnual as string,
         });
         await planRepo.save(plan);
         console.log(`Created Plan: ${pd.name}`);
@@ -124,6 +126,9 @@ async function seed() {
     const usersToCreate = [
       { email: 'superadmin@autopilotmonster.com', role: 'SUPER_ADMIN', firstName: 'Super', lastName: 'Admin' },
       { email: 'admin@autopilotmonster.com', role: 'ADMIN', firstName: 'System', lastName: 'Admin' },
+      { email: 'manager@autopilotmonster.com', role: 'MANAGER', firstName: 'Sales', lastName: 'Manager' },
+      { email: 'user@autopilotmonster.com', role: 'USER', firstName: 'Staff', lastName: 'Member' },
+      { email: 'agent@autopilotmonster.com', role: 'AGENT', firstName: 'Support', lastName: 'Agent' },
     ];
 
     for (const ud of usersToCreate) {
