@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/health', '/mfa'];
-const marketingRoutes = ['/', '/pricing', '/features', '/contact', '/about'];
+const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/health', '/mfa', '/401', '/403'];
+const marketingRoutes = [
+  '/pricing', '/features', '/contact', '/about', '/services', '/product', 
+  '/legal', '/resources', '/company', '/blog', '/careers', '/cookies', 
+  '/docs', '/partners', '/privacy', '/security', '/sla', '/terms'
+];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value;
   const { pathname } = request.nextUrl;
 
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || marketingRoutes.includes(pathname) || pathname.startsWith('/public/');
+  const isMarketingRoute = pathname === '/' || marketingRoutes.some(route => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || isMarketingRoute || pathname.startsWith('/public/');
 
   // Protect internal routes
   if (!isPublicRoute && !token) {

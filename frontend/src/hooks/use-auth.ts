@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService, AuthResponse } from '../services/auth.service';
+import { setToken, removeToken } from '../lib/auth';
 
 interface AuthState {
   user: any | null;
@@ -44,14 +45,7 @@ export const useAuth = create<AuthState>()(
           mfaPendingEmail: null,
           mfaPendingPassword: null,
         });
-        if (typeof window !== 'undefined') {
-          document.cookie = `access_token=${response.accessToken}; path=/; max-age=86400; samesite=strict; secure`;
-          document.cookie = `refresh_token=${response.refreshToken}; path=/; max-age=604800; samesite=strict; secure`;
-          if (response.tenant?.id) {
-            localStorage.setItem('tenant_id', response.tenant.id);
-            document.cookie = `tenant_id=${response.tenant.id}; path=/; max-age=86400; samesite=strict; secure`;
-          }
-        }
+        setToken(response.accessToken, response.refreshToken, response.tenant?.id);
       },
 
       login: async (data: any) => {
@@ -69,14 +63,7 @@ export const useAuth = create<AuthState>()(
             mfaPendingEmail: null,
             mfaPendingPassword: null,
           });
-          if (typeof window !== 'undefined') {
-            document.cookie = `access_token=${authData.accessToken}; path=/; max-age=86400; samesite=strict; secure`;
-            document.cookie = `refresh_token=${authData.refreshToken}; path=/; max-age=604800; samesite=strict; secure`;
-            if (authData.tenant?.id) {
-              localStorage.setItem('tenant_id', authData.tenant.id);
-              document.cookie = `tenant_id=${authData.tenant.id}; path=/; max-age=86400; samesite=strict; secure`;
-            }
-          }
+          setToken(authData.accessToken, authData.refreshToken, authData.tenant?.id);
         } catch (error: any) {
           const message = error.response?.data?.message;
           if (message === 'MFA code required') {
@@ -135,12 +122,7 @@ export const useAuth = create<AuthState>()(
           mfaPendingEmail: null,
           mfaPendingPassword: null,
         });
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('tenant_id');
-          document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
-          document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
-          document.cookie = 'tenant_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
-        }
+        removeToken();
       },
     }),
     {

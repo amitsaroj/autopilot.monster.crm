@@ -13,7 +13,12 @@ import {
   Ip,
   Param,
   Delete,
+  Req,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
+import type { AppConfig } from '../../config/app.config';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
@@ -29,12 +34,19 @@ import {
   EnableMfaDto,
 } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { FacebookAuthGuard } from './guards/facebook-auth.guard';
+import { GithubAuthGuard } from './guards/github-auth.guard';
+import { AppleAuthGuard } from './guards/apple-auth.guard';
 import type { AuthTokens } from './interfaces/auth-tokens.interface';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Public()
   @Post('register')
@@ -198,5 +210,79 @@ export class AuthController {
     @Param('id') sessionId: string,
   ): Promise<void> {
     return this.authService.revokeSession(user.userId, user.tenantId, sessionId);
+  }
+
+  // ─── OAuth ────────────────────────────────────────────────────────────────
+
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  @ApiOperation({ summary: 'Login with Google' })
+  async googleLogin(): Promise<void> {}
+
+  @Public()
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  async googleCallback(@Req() req: any, @Res() res: Response, @Ip() ip: string): Promise<void> {
+    const user = await this.authService.validateOAuthUser(req.user);
+    const tokens = await this.authService.oauthLogin(user, ip);
+    this.redirectWithTokens(res, tokens);
+  }
+
+  @Public()
+  @UseGuards(FacebookAuthGuard)
+  @Get('facebook')
+  @ApiOperation({ summary: 'Login with Facebook' })
+  async facebookLogin(): Promise<void> {}
+
+  @Public()
+  @UseGuards(FacebookAuthGuard)
+  @Get('facebook/callback')
+  @ApiOperation({ summary: 'Facebook OAuth callback' })
+  async facebookCallback(@Req() req: any, @Res() res: Response, @Ip() ip: string): Promise<void> {
+    const user = await this.authService.validateOAuthUser(req.user);
+    const tokens = await this.authService.oauthLogin(user, ip);
+    this.redirectWithTokens(res, tokens);
+  }
+
+  @Public()
+  @UseGuards(GithubAuthGuard)
+  @Get('github')
+  @ApiOperation({ summary: 'Login with GitHub' })
+  async githubLogin(): Promise<void> {}
+
+  @Public()
+  @UseGuards(GithubAuthGuard)
+  @Get('github/callback')
+  @ApiOperation({ summary: 'GitHub OAuth callback' })
+  async githubCallback(@Req() req: any, @Res() res: Response, @Ip() ip: string): Promise<void> {
+    const user = await this.authService.validateOAuthUser(req.user);
+    const tokens = await this.authService.oauthLogin(user, ip);
+    this.redirectWithTokens(res, tokens);
+  }
+
+  @Public()
+  @UseGuards(AppleAuthGuard)
+  @Get('apple')
+  @ApiOperation({ summary: 'Login with Apple' })
+  async appleLogin(): Promise<void> {}
+
+  @Public()
+  @UseGuards(AppleAuthGuard)
+  @Post('apple/callback') // Apple callback is usually a POST request
+  @ApiOperation({ summary: 'Apple OAuth callback' })
+  async appleCallback(@Req() req: any, @Res() res: Response, @Ip() ip: string): Promise<void> {
+    const user = await this.authService.validateOAuthUser(req.user);
+    const tokens = await this.authService.oauthLogin(user, ip);
+    this.redirectWithTokens(res, tokens);
+  }
+
+  private redirectWithTokens(res: Response, tokens: AuthTokens): void {
+    const appCfg = this.configService.get<AppConfig>('app');
+    const frontendUrl = appCfg?.frontendUrl || 'http://localhost:3000';
+    res.redirect(
+      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+    );
   }
 }

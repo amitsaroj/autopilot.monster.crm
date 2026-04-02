@@ -16,8 +16,16 @@ import { Role } from '../../database/entities/role.entity';
 import { UserRole } from '../../database/entities/user-role.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { FacebookAuthGuard } from './guards/facebook-auth.guard';
+import { GithubAuthGuard } from './guards/github-auth.guard';
+import { AppleAuthGuard } from './guards/apple-auth.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+import { GithubStrategy } from './strategies/github.strategy';
+import { AppleStrategy } from './strategies/apple.strategy';
 import { MfaService } from './mfa.service';
 
 @Module({
@@ -42,8 +50,16 @@ import { MfaService } from './mfa.service';
     MfaService,
     JwtStrategy,
     LocalStrategy,
+    GoogleStrategy,
+    FacebookStrategy,
+    GithubStrategy,
+    AppleStrategy,
     JwtAuthGuard,
     LocalAuthGuard,
+    GoogleAuthGuard,
+    FacebookAuthGuard,
+    GithubAuthGuard,
+    AppleAuthGuard,
   ],
   exports: [AuthService, JwtAuthGuard, TypeOrmModule],
 })
