@@ -15,6 +15,11 @@ Project: autopilot.monster.crm
 - Recovery codes provided on setup.
 - Enforced optional or mandatory at the tenant level.
 
+### 1.3 Social Login (OAuth2)
+- Supports Google, GitHub, Facebook, and Apple.
+- Automatic account linking via verified email.
+- New accounts automatically onboarded to a dedicated tenant.
+
 ---
 
 ## 2. API Security
@@ -33,6 +38,11 @@ Strict rate limits applied globally per tenant/IP to prevent abuse:
 ### 2.3 CORS & Headers
 - Helmet.js applied for secure HTTP headers (HSTS, NoSniff, XSS Filter).
 - CORS strictly limited to allowed frontend domains (`app.autopilot.monster`).
+
+### 2.4 Zero Trust Implementation
+- **Edge Layer**: Next.js Middleware verifies session cookies before serving components.
+- **API Layer**: NestJS Guards (Auth, Tenant, Role, Plan, Limit) intercept every request.
+- **DB Layer**: Repository patterns automatically inject `tenantId` into every query.
 
 ---
 
