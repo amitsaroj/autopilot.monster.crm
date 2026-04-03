@@ -785,19 +785,21 @@ const defaultJobOptions: JobsOptions = {
 All API responses follow this format:
 
 ```typescript
-// Success
+// Success Response
 {
-  "success": true,
-  "data": { ... },
-  "meta": {
-    "page": 1,
-    "perPage": 20,
-    "total": 284,
-    "totalPages": 15
-  }
+  "status": 200,
+  "message": "Resource retrieved successfully",
+  "error": false,
+  "data": { ... }
 }
 
-// Error
+// Error Response
+{
+  "status": 400,
+  "message": "Invalid input data",
+  "error": true,
+  "data": null
+}
 {
   "success": false,
   "error": {

@@ -18,7 +18,7 @@ export const AppDataSource = new DataSource({
   password: dbCfg.password,
   ssl: dbCfg.ssl,
   logging: dbCfg.logging,
-  synchronize: false,
+  synchronize: true,
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   migrationsTableName: 'migrations',

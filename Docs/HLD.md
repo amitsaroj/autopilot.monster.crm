@@ -115,9 +115,12 @@ Features:
 - session table
 - RBAC
 - permission matrix
+- Multi-Factor Authentication (MFA/TOTP)
+- Social Login (Google, GitHub, Facebook, Apple)
 - tenant guard
 - plan guard
 - feature guard
+- Zero Trust (Edge, API, DB layers)
 
 Security layers:
 
@@ -315,19 +318,18 @@ Sections:
 
 
 dashboard
-crm
-billing
-workflow
-ai
-voice
-whatsapp
-analytics
-admin
-settings
-logs
-marketplace
-plugins
-storage
+crm (Contacts, Companies, Deals, Pipelines)
+billing (Plans, Invoices, Usage)
+workflow (Automations, Logs)
+ai (Chat, Agents, Knowledge Base)
+voice (Calls, Transcripts, Campaigns)
+whatsapp (Inbox, Flow Builder, Broadcast)
+analytics (Business Intelligence)
+admin (SuperAdmin Control Center)
+settings (Tenant, User, Workspace)
+logs (Audit, System)
+marketplace (Plugins, Extensions)
+storage (Cloud Assets)
 
 
 Layout:

@@ -31,6 +31,7 @@ const footerSections = [
       { label: 'Security', href: '/security' },
       { label: 'Integrations', href: '/product/integrations' },
       { label: 'Changelog', href: '/blog' },
+      { label: 'Demo Access', href: '/demo' },
     ],
   },
   {

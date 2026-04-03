@@ -18,6 +18,14 @@ export enum UserStatus {
   PENDING_VERIFICATION = 'pending_verification',
 }
 
+export enum AuthProvider {
+  LOCAL = 'local',
+  GOOGLE = 'google',
+  FACEBOOK = 'facebook',
+  GITHUB = 'github',
+  APPLE = 'apple',
+}
+
 /**
  * UserEntity — core user record, scoped to a tenant.
  * Does NOT extend BaseEntity to avoid TypeORM find() where-clause type issues
@@ -53,8 +61,20 @@ export class UserEntity {
   @Index()
   email!: string;
 
-  @Column({ name: 'password_hash', type: 'varchar', length: 255, select: false })
-  passwordHash!: string;
+  @Column({ name: 'password_hash', type: 'varchar', length: 255, select: false, nullable: true })
+  passwordHash?: string;
+
+  @Column({
+    type: 'enum',
+    enum: AuthProvider,
+    default: AuthProvider.LOCAL,
+  })
+  @Index()
+  provider!: AuthProvider;
+
+  @Column({ name: 'provider_id', type: 'varchar', length: 255, nullable: true })
+  @Index()
+  providerId?: string;
 
   @Column({ name: 'first_name', type: 'varchar', length: 100 })
   firstName!: string;
@@ -105,12 +125,13 @@ export class UserEntity {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword(): Promise<void> {
-    if (this.passwordHash !== undefined && !this.passwordHash.startsWith('$2')) {
+    if (this.passwordHash && !this.passwordHash.startsWith('$2')) {
       this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
     }
   }
 
   async validatePassword(password: string): Promise<boolean> {
+    if (!this.passwordHash) return false;
     return bcrypt.compare(password, this.passwordHash);
   }
 

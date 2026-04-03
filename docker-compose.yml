@@ -52,6 +52,7 @@ services:
       - DB_HOST=postgres
       - REDIS_HOST=redis
       - MINIO_ENDPOINT=minio
+      - DB_SYNCHRONIZE=true
 
   ui:
     build:

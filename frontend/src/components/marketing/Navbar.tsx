@@ -20,8 +20,8 @@ const navLinks = [
       // { label: 'Voice AI', href: '/builder/voice-flows' },
       // { label: 'Campaigns', href: '/crm/campaigns' },
       // { label: 'Knowledge Base', href: '/ai/knowledge-base' },
-      { label: 'Call Logs', href: '/voice/logs' },
-      { label: 'Analytics', href: '/analytics/voice' },
+      // { label: 'Call Logs', href: '/voice/logs' },
+      // { label: 'Analytics', href: '/analytics/voice' },
     ]
   },
   { label: 'Services', href: '/services' },

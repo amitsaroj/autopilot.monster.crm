@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
 import { SessionEntity } from './entities/session.entity';
-import { UserEntity, UserStatus } from './entities/user.entity';
+import { UserEntity, UserStatus, AuthProvider } from './entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Role } from '../../database/entities/role.entity';
 import { UserRole } from '../../database/entities/user-role.entity';
@@ -33,7 +33,7 @@ export class AuthRepository {
 
   // ─── User ─────────────────────────────────────────────────────────────────
 
-  async findUserByEmail(email: string, tenantId: string): Promise<UserEntity | null> {
+  async findUserByEmail(email: string, tenantId?: string): Promise<UserEntity | null> {
     const whereClause: any = { email };
     if (tenantId) {
       whereClause.tenantId = tenantId;
@@ -55,6 +55,12 @@ export class AuthRepository {
     });
   }
 
+  async findUserByProvider(provider: AuthProvider, providerId: string): Promise<UserEntity | null> {
+    return this.userRepo.findOne({
+      where: { provider, providerId },
+    });
+  }
+
   async findUserById(id: string, tenantId: string): Promise<UserEntity | null> {
     return this.userRepo.findOne({ where: { id, tenantId } });
   }
@@ -73,12 +79,15 @@ export class AuthRepository {
     return this.tenantRepo.findOne({ where: { id } });
   }
 
-  async updateUser(id: string, tenantId: string, data: Partial<UserEntity>): Promise<void> {
+  async updateUser(id: string, tenantId: string, data: Partial<UserEntity>): Promise<UserEntity> {
     // Cast required: TypeORM's _QueryDeepPartialEntity struggles with jsonb Record<string, unknown>
     await this.userRepo.update(
       { id, tenantId },
       data as Parameters<typeof this.userRepo.update>[1],
     );
+    const updated = await this.userRepo.findOne({ where: { id, tenantId } });
+    if (!updated) throw new Error('User not found after update');
+    return updated;
   }
 
   async incrementFailedAttempts(id: string, tenantId: string): Promise<void> {

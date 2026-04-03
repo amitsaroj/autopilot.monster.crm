@@ -3,7 +3,6 @@
 import { Search, Bell, Moon, Sun, Settings, ChevronDown, Command, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSidebar } from '@/hooks/use-sidebar';
-import { cn } from '@/lib/utils';
 
 export function Header({ title }: { title?: string }) {
   const { theme, setTheme } = useTheme();

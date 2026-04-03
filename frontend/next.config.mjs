@@ -4,7 +4,10 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   images: {
-    domains: ['localhost', 'cdn.autopilot.monster'],
+    remotePatterns: [
+      { protocol: 'http', hostname: 'localhost' },
+      { protocol: 'https', hostname: 'cdn.autopilot.monster' }
+    ],
     formats: ['image/avif', 'image/webp'],
   },
   async rewrites() {

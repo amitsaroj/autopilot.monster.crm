@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { PlatformSetting } from '../../database/entities/platform-setting.entity';
+import { MonetizationModule } from '../monetization.module';
 
 import { AdminUsersModule } from './users/admin-users.module';
 import { AdminRolesModule } from './roles/admin-roles.module';
@@ -58,6 +59,7 @@ import { AdminInternalModule } from './internal/admin-internal.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([PlatformSetting]),
+    MonetizationModule,
     AdminUsersModule,
     AdminRolesModule,
     AdminPermissionsModule,

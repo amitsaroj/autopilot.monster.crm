@@ -19,6 +19,7 @@ import { UserEntity, UserStatus } from './entities/user.entity';
 import { AuthTokens } from './interfaces/auth-tokens.interface';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { MfaService } from './mfa.service';
+import { EmailService } from '../../shared/email/email.service';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -33,6 +34,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
     private readonly mfaService: MfaService,
+    private readonly emailService: EmailService,
   ) {
     const cfg = this.configService.get<JwtConfig>('jwt');
     if (cfg === undefined) throw new Error('JWT config missing');
@@ -130,6 +132,8 @@ export class AuthService {
       correlationId: uuidv4(),
     });
 
+    await this.emailService.sendWelcomeEmail(user.email, user.firstName || 'User');
+
     return { user, tenant };
   }
 
@@ -196,6 +200,8 @@ export class AuthService {
       payload: { userId: user.id, email: user.email, token },
       occurredAt: new Date().toISOString(), correlationId: uuidv4(),
     });
+
+    await this.emailService.sendPasswordResetEmail(user.email, token);
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -277,6 +283,65 @@ export class AuthService {
   async revokeSession(userId: string, tenantId: string, sessionId: string) {
     console.log(`Revoking session ${sessionId} for user ${userId} in tenant ${tenantId}`);
     await this.authRepo.deactivateSession(sessionId, tenantId);
+  }
+
+  async validateOAuthUser(profile: any): Promise<UserEntity> {
+    const { email, firstName, lastName, provider, providerId, avatarUrl } = profile;
+
+    // 1. Try to find user by providerId
+    let user = await this.authRepo.findUserByProvider(provider, providerId);
+    if (user) return user;
+
+    // 2. Try to find user by email
+    user = await this.authRepo.findUserByEmail(email, undefined);
+    if (user) {
+      // Link the provider info to existing user
+      return this.authRepo.updateUser(user.id, user.tenantId, { provider, providerId });
+    }
+
+    // 3. Create a new user and tenant
+    const tenantName = `${firstName}'s CRM`;
+    const slugBase = tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slug = `${slugBase}-${uuidv4().split('-')[0]}`;
+
+    const tenant = await this.authRepo.createTenant({
+      name: tenantName,
+      slug,
+      status: 'TRIAL' as any,
+    });
+
+    user = await this.authRepo.createUser({
+      email,
+      firstName,
+      lastName,
+      avatarUrl,
+      tenantId: tenant.id,
+      provider,
+      providerId,
+      status: UserStatus.ACTIVE, // OAuth users are pre-verified via provider
+      emailVerifiedAt: new Date(),
+    });
+
+    this.eventEmitter.emit(EVENT_NAMES.USER_REGISTERED, {
+      name: EVENT_NAMES.USER_REGISTERED,
+      tenantId: tenant.id,
+      actorId: user.id,
+      payload: { userId: user.id, email: user.email, provider, tenantId: tenant.id },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+
+    return user;
+  }
+
+  async oauthLogin(user: UserEntity, ipAddress: string): Promise<AuthTokens> {
+    const tokens = await this.generateTokens(user, ipAddress);
+    this.eventEmitter.emit(EVENT_NAMES.USER_LOGIN, {
+      name: EVENT_NAMES.USER_LOGIN, tenantId: user.tenantId, actorId: user.id,
+      payload: { userId: user.id, email: user.email, provider: user.provider },
+      occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+    });
+    return tokens;
   }
 
   private async generateTokens(user: UserEntity, _ipAddress: string): Promise<AuthTokens> {
