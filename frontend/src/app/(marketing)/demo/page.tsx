@@ -59,7 +59,7 @@ export default function DemoPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] pt-32 pb-20 px-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#0b0f19] pt-32 pb-20 px-6 relative overflow-hidden transition-colors duration-500">
       {/* Background Orbs */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px] -z-10 animate-pulse" />
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px] -z-10" />
@@ -71,10 +71,10 @@ export default function DemoPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-4 duration-700">
             <Key className="w-3.5 h-3.5" /> Demo Environment Access
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white animate-in fade-in slide-in-from-top-6 duration-1000">
-             Explore the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Persona View</span>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-gray-900 dark:text-white animate-in fade-in slide-in-from-top-6 duration-1000">
+             Explore the <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">Persona View</span>
           </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-500 dark:text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed">
             Select a role below to explore the CRM from different perspectives. Each account is pre-seeded with sample data and unique permission levels.
           </p>
         </div>
@@ -86,17 +86,17 @@ export default function DemoPage() {
                     <Key className="w-6 h-6" />
                 </div>
                 <div>
-                    <h3 className="text-white font-bold text-lg">Global Demo Password</h3>
-                    <p className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Shared across all demo accounts</p>
+                    <h3 className="text-gray-900 dark:text-white font-bold text-lg">Global Demo Password</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-semibold">Shared across all demo accounts</p>
                 </div>
             </div>
             
             <button 
                 onClick={() => copyToClipboard('SecureP@ssw0rd!', 'Password')}
-                className="w-full md:w-auto px-6 py-3 bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 group/btn"
+                className="w-full md:w-auto px-6 py-3 bg-gray-50 dark:bg-white/[0.05] hover:bg-gray-100 dark:hover:bg-white/[0.1] border border-gray-200 dark:border-white/10 rounded-xl flex items-center justify-center gap-3 transition-all active:scale-95 group/btn shadow-sm"
             >
-                <code className="text-indigo-400 font-mono font-bold tracking-tight">SecureP@ssw0rd!</code>
-                {copied === 'Password' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500 group-hover/btn:text-white" />}
+                <code className="text-indigo-600 dark:text-indigo-400 font-mono font-bold tracking-tight">SecureP@ssw0rd!</code>
+                {copied === 'Password' ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover/btn:text-indigo-500 dark:group-hover/btn:text-white" />}
             </button>
         </div>
 
@@ -105,7 +105,7 @@ export default function DemoPage() {
           {demoUsers.map((user, idx) => (
             <div 
               key={user.role} 
-              className="group p-8 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all duration-500 relative flex flex-col justify-between animate-in fade-in slide-in-from-bottom-8"
+              className="group p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.05] hover:bg-white dark:hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all duration-500 relative flex flex-col justify-between animate-in fade-in slide-in-from-bottom-8 shadow-sm hover:shadow-xl"
               style={{ animationDelay: `${idx * 100}ms` }}
             >
                {/* Background Glow Overlay */}
@@ -124,8 +124,8 @@ export default function DemoPage() {
                       </div>
                    </div>
 
-                   <h3 className="text-xl font-bold text-white mb-3 group-hover:text-indigo-400 transition-colors">{user.role} Account</h3>
-                   <p className="text-sm text-gray-500 leading-relaxed mb-6">
+                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors">{user.role} Account</h3>
+                   <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-6">
                      {user.description}
                    </p>
                </div>
@@ -146,7 +146,7 @@ export default function DemoPage() {
 
                    <Link 
                       href="/login" 
-                      className="w-full py-4 px-6 rounded-xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-indigo-500 hover:text-white transition-all duration-300 drop-shadow-xl"
+                      className="w-full py-4 px-6 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-bold flex items-center justify-center gap-2 hover:bg-indigo-600 dark:hover:bg-indigo-500 hover:text-white transition-all duration-300 drop-shadow-xl"
                     >
                       Login Persona <ArrowRight className="w-4 h-4" />
                    </Link>
@@ -159,11 +159,11 @@ export default function DemoPage() {
               <div className="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400">
                   <ExternalLink className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-bold text-white">Need a Custom Demo?</h3>
-              <p className="text-sm text-gray-500 px-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Need a Custom Demo?</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 px-4">
                   Contact our sales team for a custom tailored sandbox environment with your own dataset.
               </p>
-              <Link href="/contact" className="text-indigo-400 font-bold hover:text-indigo-300 transition-colors flex items-center gap-2">
+              <Link href="/contact" className="text-indigo-600 dark:text-indigo-400 font-bold hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors flex items-center gap-2">
                   Speak to Sales <ArrowRight className="w-4 h-4" />
               </Link>
           </div>

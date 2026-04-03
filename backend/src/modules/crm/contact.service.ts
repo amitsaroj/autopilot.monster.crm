@@ -22,7 +22,7 @@ export class ContactService {
   }
 
   async update(tenantId: string, id: string, dto: Partial<CreateContactDto>): Promise<Contact> {
-    return this.contactRepository.update(tenantId, id, dto);
+    return this.contactRepository.updateWithTenant(tenantId, id, dto);
   }
 
   async remove(tenantId: string, id: string): Promise<void> {

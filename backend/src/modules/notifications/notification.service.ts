@@ -22,7 +22,7 @@ export class NotificationService {
     return this.repo.findAll(tid);
   }
   async markAsRead(tid: string, id: string) {
-    return this.repo.update(tid, id, { status: 'READ' } as any);
+    return this.repo.updateWithTenant(tid, id, { status: 'READ' } as any);
   }
 
   async readAll(tid: string) {

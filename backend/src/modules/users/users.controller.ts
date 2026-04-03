@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto, InviteUserDto } from './dto/users.dto';
@@ -81,6 +81,76 @@ export class UsersController {
       message: 'Invitation sent successfully',
       error: false,
       data,
+    };
+  }
+
+  // --- Team Groups ---
+  @Get('groups')
+  @ApiOperation({ summary: 'Get all team groups' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getGroups(@TenantId() tenantId: string) {
+    const data = await this.usersService.findAllGroups(tenantId);
+    return {
+      status: 200,
+      message: 'Team groups retrieved',
+      error: false,
+      data,
+    };
+  }
+
+  @Post('groups')
+  @ApiOperation({ summary: 'Create team group' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async createGroup(@TenantId() tenantId: string, @Body() dto: any) {
+    const data = await this.usersService.createGroup(tenantId, dto);
+    return {
+      status: 201,
+      message: 'Team group created',
+      error: false,
+      data,
+    };
+  }
+
+  @Get('groups/:id')
+  @ApiOperation({ summary: 'Get team group details' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getGroup(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.usersService.findOneGroup(id, tenantId);
+    return {
+      status: 200,
+      message: 'Team group retrieved',
+      error: false,
+      data,
+    };
+  }
+
+  @Patch('groups/:id')
+  @ApiOperation({ summary: 'Update team group' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async updateGroup(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: any,
+  ) {
+    const data = await this.usersService.updateGroup(id, tenantId, dto);
+    return {
+      status: 200,
+      message: 'Team group updated',
+      error: false,
+      data,
+    };
+  }
+
+  @Delete('groups/:id')
+  @ApiOperation({ summary: 'Delete team group' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async removeGroup(@TenantId() tenantId: string, @Param('id') id: string) {
+    await this.usersService.removeGroup(id, tenantId);
+    return {
+      status: 200,
+      message: 'Team group deleted',
+      error: false,
+      data: null,
     };
   }
 }

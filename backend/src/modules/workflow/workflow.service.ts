@@ -30,7 +30,7 @@ export class WorkflowService {
 
   async update(tenantId: string, id: string, dto: Partial<CreateWorkflowDto>): Promise<Flow> {
     await this.findOne(tenantId, id);
-    return this.workflowRepo.update(tenantId, id, dto);
+    return this.workflowRepo.updateWithTenant(tenantId, id, dto);
   }
 
   async remove(tenantId: string, id: string): Promise<void> {

@@ -37,8 +37,9 @@ async function bootstrap(): Promise<void> {
   app.use(compression());
 
   // CORS
+  const isProd = appCfg.nodeEnv === 'production';
   app.enableCors({
-    origin: [appCfg.url, appCfg.frontendUrl],
+    origin: isProd ? [appCfg.url, appCfg.frontendUrl] : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [

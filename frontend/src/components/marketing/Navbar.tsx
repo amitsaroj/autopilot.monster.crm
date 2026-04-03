@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuth } from '@/hooks/use-auth';
 
 const navLinks = [
   {
@@ -17,11 +18,6 @@ const navLinks = [
       { label: 'Workflows', href: '/product/workflow' },
       { label: 'Analytics', href: '/product/analytics' },
       { label: 'Marketplace', href: '/product/marketplace' },
-      // { label: 'Voice AI', href: '/builder/voice-flows' },
-      // { label: 'Campaigns', href: '/crm/campaigns' },
-      // { label: 'Knowledge Base', href: '/ai/knowledge-base' },
-      // { label: 'Call Logs', href: '/voice/logs' },
-      // { label: 'Analytics', href: '/analytics/voice' },
     ]
   },
   { label: 'Services', href: '/services' },
@@ -31,6 +27,7 @@ const navLinks = [
 ];
 
 export default function MarketingNavbar() {
+  const { isAuthenticated, user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -113,15 +110,26 @@ export default function MarketingNavbar() {
         {/* Auth Buttons + Theme Toggle */}
         <div className="hidden lg:flex items-center gap-3">
           <ThemeToggle variant="marketing" />
-          <Link href="/login" className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-            Log in
-          </Link>
-          <Link
-            href="/register"
-            className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Start Free
-          </Link>
+          {isAuthenticated ? (
+            <Link
+              href={user?.role === 'SUPER_ADMIN' ? '/superadmin' : '/admin'}
+              className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
+            >
+              <LayoutDashboard className="w-4 h-4" /> Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className="px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-500 hover:to-purple-500 transition-all shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Start Free
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Toggle */}
@@ -163,8 +171,19 @@ export default function MarketingNavbar() {
                 )
               )}
               <div className="pt-4 border-t border-gray-200 dark:border-white/[0.06] flex flex-col gap-3">
-                <Link href="/login" className="text-sm text-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Log in</Link>
-                <Link href="/register" className="text-sm text-center py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold">Start Free</Link>
+                {isAuthenticated ? (
+                  <Link 
+                    href={user?.role === 'SUPER_ADMIN' ? '/superadmin' : '/admin'} 
+                    className="text-sm text-center py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
+                  >
+                    <LayoutDashboard className="w-4 h-4" /> Go to Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" className="text-sm text-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">Log in</Link>
+                    <Link href="/register" className="text-sm text-center py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold">Start Free</Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

@@ -40,7 +40,7 @@ export class ConversationService {
       content,
     } as any);
     await this.messageRepo.save(msg);
-    await this.repo.update(tid, cid, { lastMessageAt: new Date() } as any);
+    await this.repo.updateWithTenant(tid, cid, { lastMessageAt: new Date() } as any);
     return msg;
   }
 

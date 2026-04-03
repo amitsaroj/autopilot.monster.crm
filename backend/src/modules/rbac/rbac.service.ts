@@ -78,7 +78,7 @@ export class RbacService {
     if (updateRoleDto.name) role.name = updateRoleDto.name;
     if (updateRoleDto.description) role.description = updateRoleDto.description;
 
-    return this.rbacRepository.update(tenantId, id, role);
+    return this.rbacRepository.updateWithTenant(tenantId, id, role);
   }
 
   async removeRole(tenantId: string, id: string): Promise<void> {

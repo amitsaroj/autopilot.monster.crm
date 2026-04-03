@@ -68,7 +68,7 @@ export class ProductService {
     return this.repo.findById(tid, id);
   }
   update(tid: string, id: string, dto: any) {
-    return this.repo.update(tid, id, dto);
+    return this.repo.updateWithTenant(tid, id, dto);
   }
   remove(tid: string, id: string) {
     return this.repo.delete(tid, id);
@@ -88,7 +88,7 @@ export class QuoteService {
     return this.repo.findById(tid, id);
   }
   update(tid: string, id: string, dto: any) {
-    return this.repo.update(tid, id, dto);
+    return this.repo.updateWithTenant(tid, id, dto);
   }
   remove(tid: string, id: string) {
     return this.repo.delete(tid, id);
@@ -108,7 +108,7 @@ export class CampaignCrmService {
     return this.repo.findById(tid, id);
   }
   update(tid: string, id: string, dto: any) {
-    return this.repo.update(tid, id, dto);
+    return this.repo.updateWithTenant(tid, id, dto);
   }
   remove(tid: string, id: string) {
     return this.repo.delete(tid, id);
@@ -180,7 +180,7 @@ export class EmailCrmService {
   }
 
   async markAsRead(tid: string, id: string) {
-    return this.repo.update(tid, id, { isRead: true });
+    return this.repo.updateWithTenant(tid, id, { isRead: true });
   }
 
   remove(tid: string, id: string) {

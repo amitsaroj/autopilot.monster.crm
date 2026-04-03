@@ -19,7 +19,7 @@ export class SocialService {
   }
 
   async updatePost(tenantId: string, id: string, data: Partial<SocialPost>): Promise<SocialPost> {
-    return this.repository.update(tenantId, id, data);
+    return this.repository.updateWithTenant(tenantId, id, data);
   }
 
   async deletePost(tenantId: string, id: string): Promise<void> {

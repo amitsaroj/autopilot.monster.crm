@@ -11,7 +11,7 @@ COPY tsconfig.json ./
 COPY nest-cli.json ./
 
 # Install dependencies cleanly
-RUN npm install
+RUN npm install -f
 
 # Copy source code
 COPY src/ ./src/

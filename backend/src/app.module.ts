@@ -53,6 +53,7 @@ import { SocialModule } from './modules/social/social.module';
 import { SubAdminModule } from './modules/sub-admin/sub-admin.module';
 import { TenantSettingsModule } from './modules/tenant-settings/tenant-settings.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
+import { SupportModule } from './modules/support/support.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -118,6 +119,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     AuthModule,
     TenantSettingsModule,
     SchedulerModule,
+    SupportModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===
