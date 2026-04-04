@@ -104,8 +104,16 @@
   - description: Fixed the frontend router to dynamically decode JWT and route superadmin -> /superadmin, admin -> /admin, user -> /dashboard.
   - completed_at: 2026-04-04
 
-## IN_PROGRESS
-- [ ] Git push all code
+- [x] Git push all code
   - id: TASK-006
   - description: Push all pending changes to the remote repository.
   - started_at: 2026-04-04
+  - completed_at: 2026-04-04
+
+- [x] Upgrade AWS Backend Deployment
+  - id: TASK-007
+  - description: Scaling EC2 to t3.medium, implementing Docker Compose orchestration, Neon DB integration, and configuring SSL for api.autopilot.monster.
+  - started_at: 2026-04-04
+  - completed_at: 2026-04-04
+
+## IN_PROGRESS

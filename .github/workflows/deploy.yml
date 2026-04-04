@@ -20,7 +20,15 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
-          
+
+      # --- GHCR LOGIN ---
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       # --- AUTOMATIC S3 BUCKET CREATION ---
       - name: Bootstrap S3 Bucket
         run: |
@@ -35,30 +43,53 @@ jobs:
           echo "BUCKET_NAME=$BUCKET_NAME" >> $GITHUB_ENV
 
       # --- TERRAFORM INIT WITH DYNAMIC BACKEND ---
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+          terraform_wrapper: false
+
       - name: Terraform Init & Apply
         run: |
-          # Hum yahan backend config ko override kar rahe hain
           terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
           terraform apply -auto-approve
           echo "INSTANCE_ID=$(terraform output -raw instance_id)" >> $GITHUB_ENV
 
-      - name: Build and Push Docker
+      # --- BUILD & PUSH DOCKER IMAGE ---
+      - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
           tags: ghcr.io/${{ github.repository }}/api:latest
 
+      # --- UPLOAD CONFIG FILES TO S3 ---
+      - name: Sync Config to S3
+        run: |
+          aws s3 cp docker-compose.prod.yml s3://${{ env.BUCKET_NAME }}/deploy/docker-compose.prod.yml
+          aws s3 cp nginx/nginx.conf s3://${{ env.BUCKET_NAME }}/deploy/nginx/nginx.conf
+          aws s3 cp backend/.env.production s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production
+
+      # --- DEPLOY VIA SSM ---
       - name: Deploy via SSM
         run: |
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           aws ssm send-command \
             --instance-ids "${{ env.INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}",
-              "sudo docker pull ghcr.io/${{ github.repository }}/api:latest",
-              "sudo docker stop api || true",
-              "sudo docker rm api || true",
-              "sudo docker run -d --name api -p 80:80 ghcr.io/${{ github.repository }}/api:latest"
-            ]' \
-            --region ap-south-1
+            --parameters "commands=[
+              \"sudo mkdir -p /home/ubuntu/app/nginx /home/ubuntu/app/backend /home/ubuntu/app/certbot/conf /home/ubuntu/app/certbot/www\",
+              \"sudo chown -R ubuntu:ubuntu /home/ubuntu/app\",
+              \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/docker-compose.prod.yml /home/ubuntu/app/docker-compose.prod.yml\",
+              \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/nginx/nginx.conf /home/ubuntu/app/nginx/nginx.conf\",
+              \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production /home/ubuntu/app/backend/.env.production\",
+              \"cd /home/ubuntu/app\",
+              \"echo GITHUB_REPOSITORY=${REPO_LOWER} > .env\",
+              \"sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}\",
+              \"sudo docker compose -f docker-compose.prod.yml pull\",
+              \"sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate\",
+              \"echo 'Deployment complete. Services running:'\",
+              \"sudo docker compose -f docker-compose.prod.yml ps\"
+            ]" \
+            --region ap-south-1 \
+            --output text

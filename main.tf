@@ -16,6 +16,11 @@ resource "aws_iam_role_policy_attachment" "ssm_attach" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
+resource "aws_iam_role_policy_attachment" "s3_read" {
+  role       = aws_iam_role.ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+}
+
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "autopilot-ssm-profile"
   role = aws_iam_role.ssm_role.name
@@ -24,7 +29,13 @@ resource "aws_iam_instance_profile" "ssm_profile" {
 # 2. Security Group
 resource "aws_security_group" "sg" {
   name        = "autopilot-sg"
-  description = "Allow HTTP"
+  description = "Allow HTTP and HTTPS"
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   ingress {
     from_port   = 80
     to_port     = 80
@@ -42,17 +53,38 @@ resource "aws_security_group" "sg" {
 # 3. EC2 Instance
 resource "aws_instance" "app_server" {
   ami                  = "ami-0dee22c13ea7a9a67" # Ubuntu 24.04 ap-south-1
-  instance_type        = "t2.micro"
+  instance_type        = "t3.medium"
   iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
   vpc_security_group_ids = [aws_security_group.sg.id]
 
+  root_block_device {
+    volume_size = 30
+    volume_type = "gp3"
+  }
+
   user_data = <<-EOF
               #!/bin/bash
-              sudo apt-get update
-              sudo apt-get install -y docker.io docker-compose
+              sudo apt-get update -y
+              sudo apt-get install -y docker.io docker-compose-plugin awscli
+              sudo systemctl enable docker
               sudo systemctl start docker
               sudo usermod -aG docker ubuntu
               EOF
 
+
   tags = { Name = "Autopilot-Backend" }
+}
+
+# 4. Elastic IP for Static Access
+resource "aws_eip" "lb" {
+  instance = aws_instance.app_server.id
+  domain   = "vpc"
+}
+
+output "public_ip" {
+  value = aws_eip.lb.public_ip
+}
+
+output "instance_id" {
+  value = aws_instance.app_server.id
 }
