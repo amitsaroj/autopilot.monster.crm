@@ -1,65 +1,117 @@
-import { Lock, Shield, Smartphone, AlertTriangle, LogOut, Save, Check } from 'lucide-react';
+"use client";
 
-const sessions = [
-  { device: 'Chrome on macOS', ip: '203.0.113.42', location: 'Bengaluru, IN', last: 'Now', current: true },
-  { device: 'Safari on iPhone', ip: '203.0.113.55', location: 'Mumbai, IN', last: '2h ago', current: false },
-];
+import { useState } from "react";
+import { Lock, Save, Loader2, ShieldCheck, KeyRound } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api/client";
 
-export default function SettingsPasswordPage() {
+export default function SecurityPasswordPage() {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.newPassword !== formData.confirmPassword) {
+      return toast.error("New vault phrases do not match");
+    }
+    
+    setLoading(true);
+    try {
+      await api.post("/auth/change-password", {
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      });
+      toast.success("Security Vault phrase rotated successfully");
+      setFormData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to rotate Security Vault phrase");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
+    <div className="space-y-6 animate-in fade-in duration-500 max-w-3xl pb-20">
       <div>
-        <h1 className="page-title">Password & Security</h1>
-        <p className="page-description">Manage your password, 2FA, and active sessions</p>
+        <h1 className="text-3xl font-black tracking-tight text-white uppercase">Vault Security Rotation</h1>
+        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mt-1">Manage infrastructure access keys and authentication primitives</p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h2 className="text-sm font-semibold flex items-center gap-2"><Lock className="h-4 w-4 text-[hsl(246,80%,60%)]" />Change Password</h2>
-        {[
-          { label: 'Current Password', id: 'cur' },
-          { label: 'New Password', id: 'new' },
-          { label: 'Confirm New Password', id: 'confirm' },
-        ].map((f) => (
-          <div key={f.id}>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">{f.label}</label>
-            <input type="password" className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
+      <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] p-8 md:p-10 shadow-2xl flex flex-col md:flex-row items-center gap-8 group">
+        <div className="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-4xl font-black text-emerald-400 shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500">
+          <ShieldCheck className="w-10 h-10" />
+        </div>
+        <div className="text-center md:text-left">
+          <p className="text-2xl font-black text-white uppercase tracking-tighter">
+            Zero Trust Enabled
+          </p>
+          <p className="text-xs text-gray-500 font-medium leading-relaxed mt-2 max-w-lg">
+            Your identity artifacts are protected by AES-256 encryption. We recommend rotating your Vault keys every 90 days to maintain maximum tenant compliance.
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] p-8 md:p-10 shadow-2xl space-y-8">
+        <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+          <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
+            <KeyRound className="w-5 h-5" />
           </div>
-        ))}
-        <div className="flex gap-2 flex-wrap text-xs text-muted-foreground">
-          {['8+ characters', 'Uppercase letter', 'Number', 'Special character'].map((r) => (
-            <span key={r} className="flex items-center gap-1 px-2 py-0.5 bg-muted rounded-full"><Check className="h-2.5 w-2.5 text-green-500" />{r}</span>
-          ))}
+          <h2 className="text-lg font-black text-white uppercase tracking-tighter">Phrase Rotation</h2>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"><Save className="h-4 w-4" />Update Password</button>
-      </div>
+        
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-2">Current Identity Phrase</label>
+            <input 
+              type="password" 
+              required
+              value={formData.currentPassword}
+              onChange={(e) => setFormData({...formData, currentPassword: e.target.value})}
+              className="w-full bg-white/[0.02] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-widest" 
+            />
+          </div>
+          
+          <div className="space-y-3">
+            <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-2">New Identity Phrase</label>
+            <input 
+              type="password" 
+              required
+              minLength={8}
+              value={formData.newPassword}
+              onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+              className="w-full bg-white/[0.02] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-widest" 
+            />
+            <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-2">Require: 8+ Chars, 1 Target Int, 1 Special Glyph</p>
+          </div>
+          
+          <div className="space-y-3">
+            <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-2">Confirm Identity Phrase</label>
+            <input 
+              type="password" 
+              required
+              minLength={8}
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+              className="w-full bg-white/[0.02] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-widest" 
+            />
+          </div>
+        </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold flex items-center gap-2"><Smartphone className="h-4 w-4 text-[hsl(246,80%,60%)]" />Two-Factor Authentication</h2>
-          <span className="px-2 py-0.5 bg-red-500/10 text-red-400 text-xs rounded-full">Disabled</span>
+        <div className="pt-6 border-t border-white/5">
+          <button 
+            type="submit"
+            disabled={loading}
+            className="flex items-center justify-center gap-3 w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            Compile Rotation Schema
+          </button>
         </div>
-        <p className="text-sm text-muted-foreground">Add extra security by requiring a code from your authenticator app when signing in.</p>
-        <button className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"><Shield className="h-4 w-4" />Enable 2FA</button>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h2 className="text-sm font-semibold flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-[hsl(246,80%,60%)]" />Active Sessions</h2>
-        <div className="space-y-3">
-          {sessions.map((s) => (
-            <div key={s.device} className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground">{s.device}</p>
-                  {s.current && <span className="px-1.5 py-0.5 bg-green-500/10 text-green-500 text-xs rounded">Current</span>}
-                </div>
-                <p className="text-xs text-muted-foreground mt-0.5">{s.ip} · {s.location} · {s.last}</p>
-              </div>
-              {!s.current && <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"><LogOut className="h-3 w-3" />Revoke</button>}
-            </div>
-          ))}
-        </div>
-        <button className="text-xs text-red-400 hover:underline">Revoke all other sessions</button>
-      </div>
+      </form>
     </div>
   );
 }

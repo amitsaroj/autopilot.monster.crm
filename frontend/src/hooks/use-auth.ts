@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService, AuthResponse } from '../services/auth.service';
 import { setToken, removeToken } from '../lib/auth';
+import api from '../lib/api/client';
 
 interface AuthState {
   user: any | null;
@@ -15,7 +16,7 @@ interface AuthState {
   mfaPendingPassword?: string | null;
 
   setAuth: (response: AuthResponse) => void;
-  login: (data: any) => Promise<void>;
+  login: (data: any) => Promise<any>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   clearAuth: () => void;
@@ -53,9 +54,31 @@ export const useAuth = create<AuthState>()(
         try {
           const response = await authService.login(data);
           const authData = (response as any).data;
+          
+          // First set tokens so the api request uses them
+          setToken(authData.accessToken, authData.refreshToken, authData.tenant?.id);
+          
+          let userData = authData.user;
+          let tenantData = authData.tenant || null;
+          
+          // If the backend didn't return user info directly, fetch it
+          if (!userData) {
+            const userResponse = await api.get('/users/me');
+            // Handle doublely nested data from interceptors
+            userData = userResponse.data?.data?.data || userResponse.data?.data || userResponse.data;
+            tenantData = { id: userData.tenantId };
+          }
+          
+          try {
+            const payload = JSON.parse(atob(authData.accessToken.split('.')[1]));
+            userData.roles = payload.roles || [];
+          } catch (e) {
+            userData.roles = [];
+          }
+          
           set({
-            user: authData.user,
-            tenant: authData.tenant || null,
+            user: userData,
+            tenant: tenantData,
             accessToken: authData.accessToken,
             refreshToken: authData.refreshToken,
             isAuthenticated: true,
@@ -63,7 +86,8 @@ export const useAuth = create<AuthState>()(
             mfaPendingEmail: null,
             mfaPendingPassword: null,
           });
-          setToken(authData.accessToken, authData.refreshToken, authData.tenant?.id);
+          
+          return userData;
         } catch (error: any) {
           const message = error.response?.data?.message;
           if (message === 'MFA code required') {

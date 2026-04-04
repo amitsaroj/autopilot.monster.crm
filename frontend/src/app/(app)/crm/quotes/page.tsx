@@ -1,45 +1,47 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { 
-  FileText, 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  DollarSign, 
-  Clock, 
-  CheckCircle2, 
-  XCircle,
-  AlertCircle,
-  Loader2,
-  ChevronRight,
-  Printer,
-  Share2,
-  Calendar,
-  Building2,
-  User
-} from 'lucide-react';
-import { quoteService, Quote, QuoteStatus } from '@/services/quote.service';
-import toast from 'react-hot-toast';
-import { cn } from '@/lib/utils';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { Plus, Search, Trash2, Edit2, Loader2, FileText, DollarSign, Clock, CheckCircle2, ChevronRight, User, Building2 } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api/client";
+
+interface Quote {
+  id: string;
+  number: string;
+  total: number;
+  currency: string;
+  status: string;
+  validUntil?: string;
+  contact?: { firstName: string; lastName: string };
+  company?: { name: string };
+  createdAt: string;
+}
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('All');
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    number: `QT-${Math.floor(1000 + Math.random() * 9000)}`,
+    total: 0,
+    currency: "USD",
+    status: "DRAFT",
+    validUntil: "",
+  });
 
   const fetchQuotes = async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const res = await quoteService.getQuotes();
-      setQuotes((res as any).data.data || []);
-    } catch (error) {
-      toast.error('Failed to load quotes');
+      const res = await api.get("/crm/quotes");
+      if (res.data?.data) {
+        setQuotes(res.data.data);
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to synchronize financial artifacts");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -47,160 +49,201 @@ export default function QuotesPage() {
     fetchQuotes();
   }, []);
 
-  const statuses = ['All', ...Object.values(QuoteStatus)];
-
-  const filteredQuotes = quotes.filter(quote => {
-    const matchesSearch = quote.number.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         quote.notes?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = selectedStatus === 'All' || quote.status === selectedStatus;
-    return matchesSearch && matchesStatus;
-  });
-
-  const getStatusColor = (status: QuoteStatus) => {
-    switch (status) {
-      case QuoteStatus.ACCEPTED: return "bg-emerald-50 text-emerald-600 border-emerald-100";
-      case QuoteStatus.DECLINED: return "bg-red-50 text-red-600 border-red-100";
-      case QuoteStatus.SENT: return "bg-blue-50 text-blue-600 border-blue-100";
-      case QuoteStatus.VIEWED: return "bg-indigo-50 text-indigo-600 border-indigo-100";
-      case QuoteStatus.EXPIRED: return "bg-gray-100 text-gray-500 border-gray-200";
-      default: return "bg-gray-50 text-gray-400 border-gray-100";
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingId) {
+        await api.put(`/crm/quotes/${editingId}`, formData);
+        toast.success("Financial artifact mutated");
+      } else {
+        await api.post("/crm/quotes", formData);
+        toast.success("Financial artifact initialized");
+      }
+      setIsModalOpen(false);
+      fetchQuotes();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Configuration failed");
     }
   };
 
-  const StatusIcon = ({ status }: { status: QuoteStatus }) => {
-    switch (status) {
-      case QuoteStatus.ACCEPTED: return <CheckCircle2 className="w-3.5 h-3.5" />;
-      case QuoteStatus.DECLINED: return <XCircle className="w-3.5 h-3.5" />;
-      case QuoteStatus.SENT: return <Share2 className="w-3.5 h-3.5" />;
-      case QuoteStatus.VIEWED: return <Clock className="w-3.5 h-3.5" />;
-      case QuoteStatus.EXPIRED: return <AlertCircle className="w-3.5 h-3.5" />;
-      default: return <FileText className="w-3.5 h-3.5" />;
+  const handleDelete = async (id: string) => {
+    if (!confirm("Confirm dissolution of financial artifact?")) return;
+    try {
+      await api.delete(`/crm/quotes/${id}`);
+      toast.success("Artifact dissolved");
+      fetchQuotes();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Dissolution failed");
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
+  const openCreate = () => {
+    setEditingId(null);
+    setFormData({ 
+      number: `QT-${Math.floor(1000 + Math.random() * 9000)}`, 
+      total: 0, 
+      currency: "USD", 
+      status: "DRAFT",
+      validUntil: "" 
+    });
+    setIsModalOpen(true);
+  };
 
-  const totalValue = filteredQuotes.reduce((sum, q) => sum + Number(q.total), 0);
+  const filteredQuotes = quotes.filter((q) => 
+    q.number.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">Sales Quotes</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Track revenue generation and document approvals.</p>
+           <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+                 Financial Orchestration Active
+              </span>
+           </div>
+           <h1 className="text-3xl font-black text-white tracking-tight text-sans">Quote Intelligence</h1>
+           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Manage financial artifacts, revenue proposals & approval cycles</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden lg:flex flex-col items-end mr-6 pr-6 border-r border-gray-100 dark:border-border">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Pipeline Value</span>
-            <span className="text-xl font-black text-indigo-600">${totalValue.toLocaleString()}</span>
+        <button onClick={openCreate} className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2 group">
+           <Plus className="w-4 h-4" /> Initialize Artifact
+        </button>
+      </div>
+
+      <div className="flex items-center gap-4">
+         <div className="w-full md:max-w-md p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4 group focus-within:border-indigo-500/30 transition-all shadow-inner">
+            <Search className="w-5 h-5 text-gray-500 group-focus-within:text-indigo-400" />
+            <input 
+               type="text" 
+               placeholder="Search financial artifact number..."
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-600 font-medium"
+            />
+         </div>
+      </div>
+
+      {loading ? (
+        <div className="flex h-[40vh] items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        </div>
+      ) : (
+        <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] shadow-2xl overflow-hidden backdrop-blur-sm">
+          <div className="overflow-x-auto text-sans">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/[0.01]">
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Artifact Identity</th>
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Stakeholder Lattice</th>
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Approval Phase</th>
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Revenue Vector</th>
+                  <th className="p-6 text-right text-[10px] font-black tracking-widest uppercase text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filteredQuotes.map((quote) => (
+                  <tr key={quote.id} className="hover:bg-white/[0.01] transition-colors group">
+                    <td className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-xs uppercase shadow-inner group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                          QT
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-white uppercase tracking-tight">{quote.number}</p>
+                          <p className="text-[10px] font-bold text-gray-500">ID: {quote.id.slice(0,8)}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-6">
+                       <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-[10px] font-black text-white uppercase tracking-widest">
+                             <User className="w-3.5 h-3.5 text-gray-500" /> {quote.contact ? `${quote.contact.firstName} ${quote.contact.lastName}` : 'Standalone'}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                             <Building2 className="w-3.5 h-3.5 text-gray-600" /> {quote.company?.name || 'No Lattice'}
+                          </div>
+                       </div>
+                    </td>
+                    <td className="p-6">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                        quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                        quote.status === 'DRAFT' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                      }`}>
+                        {quote.status}
+                      </span>
+                    </td>
+                    <td className="p-6">
+                      <div className="text-sm font-black text-white tracking-widest">${quote.total.toLocaleString()}</div>
+                      <div className="text-[10px] font-bold text-indigo-500/60 uppercase">{quote.currency}</div>
+                    </td>
+                    <td className="p-6 text-right space-x-2">
+                       <button onClick={() => handleDelete(quote.id)} className="p-2.5 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                          <Trash2 className="w-4 h-4" />
+                       </button>
+                       <button className="p-2.5 rounded-xl text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                          <ChevronRight className="w-4 h-4" />
+                       </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredQuotes.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-20 text-center text-gray-500 font-black text-xs uppercase tracking-widest">
+                       No financial artifacts detected currently.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm transition shadow-xl shadow-indigo-500/20">
-            <Plus className="w-4 h-4" />
-            New Quote
-          </button>
         </div>
-      </div>
+      )}
 
-      <div className="flex flex-col md:flex-row gap-6 mb-8">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by quote number or notes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-border bg-white dark:bg-card shadow-soft text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
-          />
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {statuses.map(status => (
-            <button
-              key={status}
-              onClick={() => setSelectedStatus(status)}
-              className={cn(
-                "px-6 py-4 rounded-2xl font-bold text-xs whitespace-nowrap transition border",
-                selectedStatus === status 
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                  : "bg-white dark:bg-card border-gray-100 dark:border-border text-gray-500 hover:border-indigo-200"
-              )}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {filteredQuotes.map(quote => (
-          <Link 
-            key={quote.id}
-            href={`/crm/quotes/${quote.id}`}
-            className="group flex flex-col lg:flex-row lg:items-center gap-6 p-6 bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-border shadow-soft hover:shadow-xl hover:border-indigo-100 dark:hover:border-indigo-900/50 transition cursor-pointer"
-          >
-            <div className="flex items-center gap-4 lg:w-1/4">
-              <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition">
-                <FileText className="w-6 h-6" />
+      {/* Artifact Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-xl p-8 rounded-[40px] bg-[#0b0f19] border border-white/10 shadow-2xl animate-in zoom-in-95">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
+              <FileText className="w-6 h-6 text-indigo-500" /> {editingId ? "Reconfigure Artifact" : "Initialize Artifact"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Serial Identity</label>
+                   <input required type="text" value={formData.number} onChange={(e) => setFormData({...formData, number: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40 tracking-widest" />
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Revenue Target (Total)</label>
+                   <div className="relative">
+                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                      <input required type="number" value={formData.total} onChange={(e) => setFormData({...formData, total: Number(e.target.value)})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40" />
+                   </div>
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Lifecycle phase</label>
+                   <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40 appearance-none cursor-pointer">
+                      <option value="DRAFT" className="bg-[#0b0f19]">Incipient (Draft)</option>
+                      <option value="SENT" className="bg-[#0b0f19]">Transmitted (Sent)</option>
+                      <option value="ACCEPTED" className="bg-[#0b0f19]">Materialized (Accepted)</option>
+                      <option value="DECLINED" className="bg-[#0b0f19]">Rescinded (Declined)</option>
+                   </select>
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Expiration Vector</label>
+                   <input type="date" value={formData.validUntil} onChange={(e) => setFormData({...formData, validUntil: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40" />
+                 </div>
               </div>
-              <div>
-                <h3 className="text-sm font-black text-gray-900 dark:text-white group-hover:text-indigo-600 transition">
-                  {quote.number}
-                </h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                  Created {new Date(quote.createdAt).toLocaleDateString()}
-                </p>
+              <div className="pt-6 border-t border-white/5 flex gap-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-white/[0.02] border-white/5 border hover:bg-white/[0.05] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Abort</button>
+                <button type="submit" className="flex-1 py-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20">Execute Provisioning</button>
               </div>
-            </div>
-
-            <div className="flex items-center gap-8 flex-1">
-              <div className="flex items-center gap-2 min-w-[120px]">
-                <div className={cn(
-                  "px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-tighter flex items-center gap-1.5",
-                  getStatusColor(quote.status)
-                )}>
-                  <StatusIcon status={quote.status} />
-                  {quote.status}
-                </div>
-              </div>
-
-              <div className="hidden md:flex items-center gap-6">
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                  <User className="w-4 h-4 text-gray-300" />
-                  John Doe
-                </div>
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                  <Calendar className="w-4 h-4 text-gray-300" />
-                  Expires {quote.validUntil ? new Date(quote.validUntil).toLocaleDateString() : 'N/A'}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between lg:justify-end lg:w-1/4 gap-6">
-              <div className="text-right">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Total Amount</p>
-                <div className="flex items-baseline justify-end gap-1">
-                  <span className="text-xl font-black text-gray-900 dark:text-white">${Number(quote.total).toLocaleString()}</span>
-                  <span className="text-[10px] font-black text-gray-400 uppercase">{quote.currency}</span>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-600 transition -mr-2" />
-            </div>
-          </Link>
-        ))}
-
-        {filteredQuotes.length === 0 && (
-          <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-border rounded-[40px] bg-gray-50/50">
-            <FileText className="w-12 h-12 mb-4 text-gray-200" />
-            <h3 className="text-lg font-black text-gray-400 mb-1">No Quotes Found</h3>
-            <p className="text-sm text-gray-400">Start by creating a professional quote for your active deals.</p>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

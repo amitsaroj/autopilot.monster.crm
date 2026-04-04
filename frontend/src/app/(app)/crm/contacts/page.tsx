@@ -1,321 +1,247 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { 
-  Users, 
-  Search, 
-  Plus, 
-  Filter, 
-  MoreVertical, 
-  Mail, 
-  Phone, 
-  Link as LinkIcon,
-  Loader2,
-  ChevronRight,
-  UserPlus,
-  Tag,
-  CheckCircle2,
-  Upload,
-  Download
-} from 'lucide-react';
-import { contactService, Contact } from '@/services/contact.service';
-import { bulkService } from '@/services/bulk.service';
-import { importExportService } from '@/services/import-export.service';
-import { BulkActionBar } from '@/components/crm/BulkActionBar';
-import { CsvImportModal } from '@/components/crm/CsvImportModal';
-import toast from 'react-hot-toast';
-import { cn } from '@/lib/utils';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { Plus, Search, Trash2, Edit2, Loader2, User, Mail, Phone, Building2 } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api/client";
 
-const STATUS_COLORS = {
-  LEAD: 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800/50',
-  PROSPECT: 'bg-yellow-50 text-yellow-700 border-yellow-100 dark:bg-yellow-900/20 dark:text-yellow-300 dark:border-yellow-800/50',
-  CUSTOMER: 'bg-green-50 text-green-700 border-green-100 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800/50',
-  CHURNED: 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800/50',
-};
+interface Company {
+  id: string;
+  name: string;
+}
+
+interface Contact {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  companyId?: string;
+  company?: Company;
+  status: string;
+  createdAt: string;
+}
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    companyId: "",
+  });
 
-  const fetchContacts = async () => {
-    setIsLoading(true);
+  const fetchData = async () => {
+    setLoading(true);
     try {
-      const res = await contactService.getContacts();
-      setContacts((res as any).data.data || []);
-    } catch (error) {
-      toast.error('Failed to load contacts');
+      const [contactRes, companyRes] = await Promise.all([
+        api.get("/crm/contacts"),
+        api.get("/crm/companies"),
+      ]);
+      if (contactRes.data?.data) setContacts(contactRes.data.data);
+      if (companyRes.data?.data) setCompanies(companyRes.data.data);
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to synchronize node data");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchContacts();
+    fetchData();
   }, []);
 
-  const filteredContacts = contacts.filter(contact => {
-    const matchesSearch = 
-      contact.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'ALL' || contact.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedIds.length} contacts?`)) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await bulkService.delete('contact', selectedIds);
-      toast.success('Contacts deleted successfully');
-      setSelectedIds([]);
-      fetchContacts();
-    } catch (error) {
-      toast.error('Failed to delete contacts');
+      if (editingId) {
+        await api.put(`/crm/contacts/${editingId}`, formData);
+        toast.success("Identity node mutated");
+      } else {
+        await api.post("/crm/contacts", formData);
+        toast.success("Identity node injected");
+      }
+      setIsModalOpen(false);
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Node injection failed");
     }
   };
 
-  const handleBulkUpdateStatus = async (status: string) => {
+  const handleDelete = async (id: string) => {
+    if (!confirm("Confirm erasure of identity node?")) return;
     try {
-      await bulkService.updateStatus('contact', selectedIds, status);
-      toast.success('Status updated successfully');
-      setSelectedIds([]);
-      fetchContacts();
-    } catch (error) {
-      toast.error('Failed to update status');
+      await api.delete(`/crm/contacts/${id}`);
+      toast.success("Identity erased");
+      fetchData();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Erasure failed");
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const res = await importExportService.exportData('contact');
-      const csv = (res as any).data.data;
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('hidden', '');
-      a.setAttribute('href', url);
-      a.setAttribute('download', `contacts_export_${new Date().getTime()}.csv`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      toast.success('Contacts exported successfully');
-    } catch (error) {
-      toast.error('Failed to export contacts');
-    }
+  const openCreate = () => {
+    setEditingId(null);
+    setFormData({ firstName: "", lastName: "", email: "", phone: "", companyId: "" });
+    setIsModalOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
+  const openEdit = (contact: Contact) => {
+    setEditingId(contact.id);
+    setFormData({
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      email: contact.email,
+      phone: contact.phone || "",
+      companyId: contact.companyId || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const filteredContacts = contacts.filter((c) => 
+    (c.firstName + " " + c.lastName).toLowerCase().includes(search.toLowerCase()) ||
+    c.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 relative">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">Contacts</h1>
-          <p className="text-gray-500 dark:text-gray-400">Manage your leads and customers efficiently.</p>
+           <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+                 Identity Observer Active
+              </span>
+           </div>
+           <h1 className="text-3xl font-black text-white tracking-tight text-sans">Contact Intelligence</h1>
+           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Manage human identity artifacts and account blocks</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-card border border-gray-100 dark:border-white/5 text-gray-700 dark:text-white rounded-2xl font-bold text-sm transition hover:bg-gray-50"
-          >
-            <Upload className="w-4 h-4" />
-            Import
-          </button>
-          <button 
-            onClick={handleExport}
-            className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-card border border-gray-100 dark:border-white/5 text-gray-700 dark:text-white rounded-2xl font-bold text-sm transition hover:bg-gray-50"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm transition shadow-xl shadow-indigo-500/20">
-            <Plus className="w-4 h-4" />
-            Add Contact
-          </button>
-        </div>
+        <button onClick={openCreate} className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+           <Plus className="w-4 h-4" /> Provision Identity Node
+        </button>
       </div>
 
-      <div className="bg-white dark:bg-card/50 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-border shadow-soft overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-border bg-gray-50/30 flex flex-col lg:flex-row gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search contacts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-300 dark:border-input bg-white/50 dark:bg-background/50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
+      <div className="flex items-center gap-4">
+         <div className="w-full md:max-w-md p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4 group focus-within:border-indigo-500/30 transition-all shadow-inner">
+            <Search className="w-5 h-5 text-gray-500 group-focus-within:text-indigo-400" />
+            <input 
+               type="text" 
+               placeholder="Search identity artifact..."
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-600 font-medium"
             />
-          </div>
-          <div className="flex items-center gap-3">
-            <select 
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 rounded-xl border border-gray-300 dark:border-input bg-white/50 dark:bg-background/50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="LEAD">Leads</option>
-              <option value="PROSPECT">Prospects</option>
-              <option value="CUSTOMER">Customers</option>
-              <option value="CHURNED">Churned</option>
-            </select>
-            <button className="p-2 border border-gray-300 dark:border-input rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-              <Filter className="w-4 h-4 text-gray-500" />
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 dark:bg-card/50 border-b border-gray-200 dark:border-border">
-                <th className="px-6 py-4 w-10">
-                  <div 
-                    onClick={() => setSelectedIds(selectedIds.length === filteredContacts.length ? [] : filteredContacts.map(c => c.id))}
-                    className={cn(
-                      "w-5 h-5 rounded border-2 cursor-pointer flex items-center justify-center transition",
-                      selectedIds.length === filteredContacts.length ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-300"
-                    )}
-                  >
-                    {selectedIds.length === filteredContacts.length && selectedIds.length > 0 && <CheckCircle2 className="w-3 h-3" />}
-                  </div>
-                </th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Company & Title</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tags</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-border whitespace-nowrap">
-              {filteredContacts.length > 0 ? filteredContacts.map((contact) => (
-                <tr 
-                  key={contact.id} 
-                  className={cn(
-                    "hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition group",
-                    selectedIds.includes(contact.id) ? "bg-indigo-50/50 dark:bg-indigo-900/10" : ""
-                  )}
-                >
-                  <td className="px-6 py-4">
-                    <div 
-                      onClick={() => toggleSelect(contact.id)}
-                      className={cn(
-                        "w-5 h-5 rounded border-2 cursor-pointer flex items-center justify-center transition",
-                        selectedIds.includes(contact.id) ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-300 opacity-0 group-hover:opacity-100"
-                      )}
-                    >
-                      {selectedIds.includes(contact.id) && <CheckCircle2 className="w-3 h-3" />}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-sm border border-indigo-100 dark:border-indigo-800/50">
-                        {contact.firstName[0]}{contact.lastName[0]}
-                      </div>
-                      <div>
-                        <Link 
-                          href={`/crm/contacts/${contact.id}`}
-                          className="text-sm font-bold text-gray-900 dark:text-white hover:text-indigo-600 transition"
-                        >
-                          {contact.firstName} {contact.lastName}
-                        </Link>
-                        <div className="flex items-center gap-3 mt-0.5 text-[10px] text-gray-400">
-                          <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {contact.email}</span>
-                          {contact.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {contact.phone}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <p className="text-gray-900 dark:text-white font-medium">{contact.jobTitle || '-'}</p>
-                    <p className="text-xs text-gray-500">{contact.companyId ? 'Associated Company' : 'Individual'}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={cn(
-                      "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border",
-                      STATUS_COLORS[contact.status as keyof typeof STATUS_COLORS]
-                    )}>
-                      {contact.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-1">
-                      {contact.tags?.slice(0, 2).map(tag => (
-                        <span key={tag} className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-[9px] font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
-                          {tag}
-                        </span>
-                      ))}
-                      {contact.tags?.length > 2 && <span className="text-[9px] text-gray-400">+{contact.tags.length - 2}</span>}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
-                      <Link 
-                        href={`/crm/contacts/${contact.id}`}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-400 hover:text-indigo-600 transition"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </Link>
-                      <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-400 transition">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-2 text-gray-400">
-                      <Users className="w-12 h-12 opacity-20" />
-                      <p className="text-sm font-medium">No contacts found building your first sequence?</p>
-                      <button 
-                        onClick={() => fetchContacts()}
-                        className="text-xs text-indigo-600 hover:underline font-bold"
-                      >
-                        Refresh list
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+         </div>
       </div>
 
-      <BulkActionBar 
-        selectedCount={selectedIds.length}
-        entityType="contact"
-        onClear={() => setSelectedIds([])}
-        onDelete={handleBulkDelete}
-        onUpdateStatus={handleBulkUpdateStatus}
-      />
+      {loading ? (
+        <div className="flex h-[40vh] items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+           {filteredContacts.map((contact) => {
+             const thisCompany = companies.find((c) => c.id === contact.companyId) || contact.company;
+             return (
+             <div key={contact.id} className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all group flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-indigo-500/5 transition-colors pointer-events-none" />
+                
+                <div>
+                   <div className="flex justify-between items-start mb-6">
+                      <div className="w-14 h-14 rounded-[20px] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-2xl text-xl font-black uppercase">
+                         {contact.firstName[0]}
+                      </div>
+                      <div className="flex gap-2">
+                         <button onClick={() => openEdit(contact)} className="p-2 rounded-xl text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                            <Edit2 className="w-4 h-4" />
+                         </button>
+                         <button onClick={() => handleDelete(contact.id)} className="p-2 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                            <Trash2 className="w-4 h-4" />
+                         </button>
+                      </div>
+                   </div>
 
-      <CsvImportModal 
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onSuccess={fetchContacts}
-        entityType="contact"
-      />
+                   <h3 className="text-xl font-black text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight mb-2 leading-none">{contact.firstName} {contact.lastName}</h3>
+                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20 mb-6">
+                     Node Active
+                   </span>
+
+                   <div className="space-y-4 pt-4 border-t border-white/5">
+                      <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                         <Mail className="w-4 h-4 opacity-40 shrink-0" /> {contact.email}
+                      </div>
+                      {contact.phone && (
+                         <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                            <Phone className="w-4 h-4 opacity-40 shrink-0" /> {contact.phone}
+                         </div>
+                      )}
+                      {thisCompany && (
+                         <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                            <Building2 className="w-4 h-4 opacity-40 shrink-0" /> {thisCompany.name}
+                         </div>
+                      )}
+                   </div>
+                </div>
+             </div>
+           )})}
+           {filteredContacts.length === 0 && (
+             <div className="col-span-1 md:col-span-2 lg:col-span-3 py-20 text-center text-sans">
+                 <p className="text-gray-500 font-black text-xs uppercase tracking-widest">No identity artifacts found.</p>
+             </div>
+           )}
+        </div>
+      )}
+
+      {/* Identity Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-xl p-8 rounded-[40px] bg-[#0b0f19] border border-white/10 shadow-2xl animate-in zoom-in-95">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
+              <User className="w-6 h-6 text-indigo-500" /> {editingId ? "Reconfigure Identity" : "Generate Identity"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Given Designation</label>
+                   <input required type="text" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40" />
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Surname Designation</label>
+                   <input required type="text" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40" />
+                 </div>
+                 <div className="col-span-2 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Network Vector (Email)</label>
+                   <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40" />
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Comm Channel</label>
+                   <input type="text" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40 tracking-widest" />
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Bind to Lattice (Company)</label>
+                   <select value={formData.companyId} onChange={(e) => setFormData({...formData, companyId: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40 appearance-none cursor-pointer">
+                      <option value="" className="bg-[#0b0f19]">Standalone Node</option>
+                      {companies.map(c => (
+                         <option key={c.id} value={c.id} className="bg-[#0b0f19]">{c.name}</option>
+                      ))}
+                   </select>
+                 </div>
+              </div>
+              <div className="pt-6 border-t border-white/5 flex gap-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-white/[0.02] border-white/5 border hover:bg-white/[0.05] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Abort</button>
+                <button type="submit" className="flex-1 py-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20">Execute Injection</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

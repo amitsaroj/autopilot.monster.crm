@@ -1,5 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, Index, OneToMany } from 'typeorm';
 import { Contact } from './contact.entity';
+import { Activity } from './activity.entity';
+import { Deal } from './deal.entity';
+import { Note } from './note.entity';
 
 @Entity('companies')
 export class Company {
@@ -44,6 +47,15 @@ export class Company {
 
   @OneToMany(() => Contact, (contact) => contact.company)
   contacts!: Contact[];
+
+  @OneToMany(() => Activity, (activity) => activity.company)
+  activities!: Activity[];
+
+  @OneToMany(() => Deal, (deal) => deal.company)
+  deals!: Deal[];
+
+  @OneToMany(() => Note, (note) => note.company)
+  notes!: Note[];
 
   @Column()
   @Index()

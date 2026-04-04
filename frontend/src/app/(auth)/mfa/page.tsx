@@ -23,13 +23,21 @@ export default function MfaPage() {
 
     setIsLoading(true);
     try {
-      await login({ 
+      const user = await login({ 
         email: mfaPendingEmail, 
         password: mfaPendingPassword, 
         mfaCode: code 
       });
       toast.success('MFA Verified!');
-      router.push('/dashboard');
+      
+      const roles = user?.roles || [];
+      if (roles.includes('SUPER_ADMIN')) {
+        router.push('/superadmin');
+      } else if (roles.includes('ADMIN')) {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Invalid MFA code');
     } finally {

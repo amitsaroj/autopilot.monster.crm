@@ -1,5 +1,7 @@
-import { Entity, Column, Index } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Deal } from './deal.entity';
+import { Contact } from './contact.entity';
 
 export enum QuoteStatus {
   DRAFT = 'DRAFT',
@@ -19,8 +21,16 @@ export class Quote extends BaseEntity {
   @Column({ name: 'deal_id', type: 'uuid', nullable: true })
   dealId?: string;
 
+  @ManyToOne(() => Deal, (deal) => deal.quotes, { nullable: true })
+  @JoinColumn({ name: 'deal_id' })
+  deal?: Deal;
+
   @Column({ name: 'contact_id', type: 'uuid', nullable: true })
   contactId?: string;
+
+  @ManyToOne(() => Contact, (contact) => contact.quotes, { nullable: true })
+  @JoinColumn({ name: 'contact_id' })
+  contact?: Contact;
 
   @Column({
     type: 'enum',

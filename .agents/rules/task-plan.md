@@ -73,3 +73,59 @@ GLOBAL TASK MANAGEMENT RULES:
 
 14. The file MUST remain clean, readable, and consistent.
     No extra logs, comments, or debug text allowed.
+
+
+
+GLOBAL TASK PERSISTENCE RULES:
+
+1. The file /tasks/TASKS.md is a PERMANENT LOG.
+   The agent MUST NEVER overwrite, reset, or delete existing content.
+
+2. The agent MUST ALWAYS:
+   - Read existing TASKS.md
+   - Append or update content WITHOUT removing previous tasks
+
+3. The agent MUST NOT:
+   - rewrite the entire file
+   - delete old tasks
+   - truncate content
+   - recreate the file if it already exists
+
+4. When adding a new task:
+   - Append it under ## PLANNED
+   - DO NOT remove or modify previous tasks
+
+5. When updating task status:
+   - Move the SAME task entry between sections
+   - Do NOT recreate or duplicate the task
+
+6. COMPLETED tasks MUST remain forever in the file.
+   They act as historical logs.
+
+7. Task IDs MUST be strictly incremental:
+   - Find the last TASK-ID in the file
+   - Create next ID (no reset)
+
+8. If multiple agents are used:
+   - Each agent MUST respect existing structure
+   - MUST NOT reformat or restructure the file
+
+9. The agent MUST preserve:
+   - formatting
+   - section order
+   - existing timestamps
+   - completed history
+
+10. File updates MUST be minimal:
+    - Only change the relevant task block
+    - No global formatting changes
+
+11. If TASKS.md is missing:
+    - Create it ONCE with base structure
+    - Never recreate again
+
+12. The agent MUST treat TASKS.md as:
+    - single source of truth
+    - append-only history system
+
+13. Under NO condition should previous task data be lost.

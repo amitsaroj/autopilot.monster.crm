@@ -1,5 +1,7 @@
-import { Entity, Column, Index } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
+import { Contact } from './contact.entity';
+import { Deal } from './deal.entity';
 
 export enum TaskPriority {
   HIGH = 'HIGH',
@@ -26,8 +28,16 @@ export class Task extends BaseEntity {
   @Column({ name: 'contact_id', type: 'uuid', nullable: true })
   contactId?: string;
 
+  @ManyToOne(() => Contact, (contact) => contact.tasks, { nullable: true })
+  @JoinColumn({ name: 'contact_id' })
+  contact?: Contact;
+
   @Column({ name: 'deal_id', type: 'uuid', nullable: true })
   dealId?: string;
+
+  @ManyToOne(() => Deal, (deal) => deal.tasks, { nullable: true })
+  @JoinColumn({ name: 'deal_id' })
+  deal?: Deal;
 
   @Column({ name: 'assignee_id', type: 'uuid', nullable: true })
   assigneeId?: string;

@@ -36,7 +36,15 @@ function CallbackContent() {
           });
           
           toast.success('Successfully logged in!');
-          router.push('/dashboard');
+          
+          const roles = userData?.roles || [];
+          if (roles.includes('SUPER_ADMIN')) {
+            router.push('/superadmin');
+          } else if (roles.includes('ADMIN')) {
+            router.push('/admin');
+          } else {
+            router.push('/dashboard');
+          }
         } catch (error) {
           console.error('OAuth Callback Error:', error);
           toast.error('Authentication failed. Please try again.');

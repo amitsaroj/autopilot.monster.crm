@@ -1,9 +1,13 @@
-import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Contact } from './contact.entity';
 import { Company } from './company.entity';
 import { Pipeline } from './pipeline.entity';
 import { PipelineStage } from './pipeline-stage.entity';
+import { Quote } from './quote.entity';
+import { Activity } from './activity.entity';
+import { Task } from './task.entity';
+import { Note } from './note.entity';
 
 export enum DealStatus {
   OPEN = 'OPEN',
@@ -84,4 +88,16 @@ export class Deal extends BaseEntity {
   @Column()
   @Index()
   tenantId!: string;
+
+  @OneToMany(() => Quote, (quote) => quote.deal)
+  quotes!: Quote[];
+
+  @OneToMany(() => Activity, (activity) => activity.deal)
+  activities!: Activity[];
+
+  @OneToMany(() => Task, (task) => task.deal)
+  tasks!: Task[];
+
+  @OneToMany(() => Note, (note) => note.deal)
+  notes!: Note[];
 }

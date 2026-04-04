@@ -25,6 +25,10 @@ import { Pipeline } from '../../database/entities/pipeline.entity';
 import { PipelineStage } from '../../database/entities/pipeline-stage.entity';
 import { Campaign } from '../../database/entities/campaign.entity';
 import { EmailMessage } from '../../database/entities/email-message.entity';
+import { Tag } from '../../database/entities/tag.entity';
+import { Segment } from '../../database/entities/segment.entity';
+import { CustomField } from '../../database/entities/custom-field.entity';
+import { DealHistory } from '../../database/entities/deal-history.entity';
 
 import { ContactService } from './contact.service';
 import { ContactRepository } from './contact.repository';
@@ -34,6 +38,8 @@ import { DealService } from './deal.service';
 import { DealRepository } from './deal.repository';
 import { PipelineService } from './pipeline.service';
 import { PipelineRepository } from './pipeline.repository';
+import { CrmAutomationService } from './services/crm-automation.service';
+import { LeadConversionService } from './services/lead-conversion.service';
 import {
   ActivityService,
   TaskCrmService,
@@ -44,6 +50,9 @@ import {
   AnalyticsCrmService,
   EmailCrmService,
   BulkCrmService,
+  TagService,
+  SegmentService,
+  CustomFieldService,
 } from './crm-support.service';
 import {
   ActivityRepository,
@@ -53,6 +62,9 @@ import {
   QuoteRepository,
   CampaignRepository,
   EmailRepository,
+  TagRepository,
+  SegmentRepository,
+  CustomFieldRepository,
 } from './crm-support.repository';
 import { VoiceModule } from '../voice/voice.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
@@ -75,6 +87,10 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
       PipelineStage,
       Campaign,
       EmailMessage,
+      Tag,
+      Segment,
+      CustomField,
+      DealHistory,
     ]),
     forwardRef(() => WhatsappModule),
     forwardRef(() => VoiceModule),
@@ -112,6 +128,14 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     EmailCrmService,
     EmailRepository,
     BulkCrmService,
+    TagService,
+    TagRepository,
+    SegmentService,
+    SegmentRepository,
+    CustomFieldService,
+    CustomFieldRepository,
+    CrmAutomationService,
+    LeadConversionService,
   ],
   exports: [
     AgentService,
@@ -130,6 +154,11 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     NoteService,
     ProductService,
     QuoteService,
+    TagService,
+    SegmentService,
+    CustomFieldService,
+    LeadConversionService,
+    CrmAutomationService,
   ],
 })
 export class CrmModule {}
