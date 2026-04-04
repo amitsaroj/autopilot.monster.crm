@@ -32,7 +32,7 @@
     "migrate:run": "typeorm migration:run -d src/database/data-source.ts",
     "migrate:revert": "typeorm migration:revert -d src/database/data-source.ts",
     "migrate:generate": "typeorm migration:generate -d src/database/data-source.ts",
-    "seed": "node -e \"require('child_process').execSync(process.env.NODE_ENV==='production'?'node dist/scripts/seed.js':'ts-node src/scripts/seed.ts',{stdio:'inherit'})\"",
+    "seed": "node dist/scripts/seed || ts-node src/scripts/seed",
     "seed:dev": "ts-node src/scripts/seed.ts",
     "seed:prod": "node dist/scripts/seed.js"
   },

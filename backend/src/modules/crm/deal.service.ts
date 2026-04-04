@@ -33,7 +33,7 @@ export class DealService {
   }
 
   async update(tenantId: string, id: string, data: Partial<Deal>): Promise<Deal> {
-    return this.repository.update(tenantId, id, data);
+    return this.repository.updateWithTenant(tenantId, id, data);
   }
 
   async remove(tenantId: string, id: string): Promise<void> {

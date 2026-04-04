@@ -75,7 +75,7 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
   }
 
   @SubscribeMessage('ping')
-  handlePing(client: Socket) {
+  handlePing(_client: Socket) {
     return { event: 'pong', data: new Date().toISOString() };
   }
 }

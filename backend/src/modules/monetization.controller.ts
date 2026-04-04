@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete, Headers, Req, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard, TenantGuard, RolesGuard, WsJwtGuard } from '../common/guards';
+import { JwtAuthGuard, TenantGuard, RolesGuard } from '../common/guards';
 import { PricingService } from './pricing/pricing.service';
 import { BillingService } from './billing/billing.service';
 import { TenantId, Roles } from '../common/decorators';

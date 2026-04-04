@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Build arguments for Vercel / Next.js
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 COPY package*.json ./
@@ -14,7 +14,7 @@ COPY next.config.mjs ./
 COPY postcss.config.js ./
 COPY tailwind.config.ts ./
 
-RUN npm install
+RUN npm install -f
 
 COPY src/ ./src/
 

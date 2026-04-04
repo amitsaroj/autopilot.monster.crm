@@ -3,8 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
-import { Subscription } from '../../database/entities/subscription.entity';
-import { Invoice } from '../../database/entities/invoice.entity';
+import { Subscription as SubscriptionEntity } from '../../database/entities/subscription.entity';
+import { Invoice as InvoiceEntity } from '../../database/entities/invoice.entity';
 import { Payment } from '../../database/entities/payment.entity';
 import { UsageRecord } from '../../database/entities/usage-record.entity';
 import { Plan } from '../../database/entities/plan.entity';
@@ -15,10 +15,10 @@ export class BillingService {
   private stripe: Stripe;
 
   constructor(
-    @InjectRepository(Subscription)
-    private readonly subscriptionRepo: Repository<Subscription>,
-    @InjectRepository(Invoice)
-    private readonly invoiceRepo: Repository<Invoice>,
+    @InjectRepository(SubscriptionEntity)
+    private readonly subscriptionRepo: Repository<SubscriptionEntity>,
+    @InjectRepository(InvoiceEntity)
+    private readonly invoiceRepo: Repository<InvoiceEntity>,
     @InjectRepository(Payment)
     private readonly paymentRepo: Repository<Payment>,
     @InjectRepository(UsageRecord)
@@ -113,21 +113,24 @@ export class BillingService {
     const stripeCustomerId = session.customer as string;
 
     const stripeSub = await this.stripe.subscriptions.retrieve(stripeSubscriptionId);
+    if (!stripeSub) return;
 
     let sub = await this.subscriptionRepo.findOne({ where: { tenantId } as any });
     if (!sub) {
-      sub = this.subscriptionRepo.create({ tenantId } as any);
+      sub = this.subscriptionRepo.create({ tenantId } as any) as any;
     }
 
-    sub.planId = planId;
-    sub.billingCycle = billingCycle as any;
-    sub.status = 'ACTIVE';
-    sub.stripeCustomerId = stripeCustomerId;
-    sub.stripeSubscriptionId = stripeSubscriptionId;
-    sub.currentPeriodStart = new Date(stripeSub.current_period_start * 1000);
-    sub.currentPeriodEnd = new Date(stripeSub.current_period_end * 1000);
+    if (sub) {
+        sub.planId = planId;
+        sub.billingCycle = billingCycle as any;
+        sub.status = 'ACTIVE';
+        sub.stripeCustomerId = stripeCustomerId;
+        sub.stripeSubscriptionId = stripeSubscriptionId;
+        sub.currentPeriodStart = new Date((stripeSub as any).current_period_start * 1000);
+        sub.currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
 
-    await this.subscriptionRepo.save(sub);
+        await this.subscriptionRepo.save(sub);
+    }
   }
 
   private async handleInvoicePaid(invoice: Stripe.Invoice) {
@@ -145,9 +148,9 @@ export class BillingService {
       createdAt: new Date(invoice.created * 1000),
     } as any);
 
-    const paymentIntentId = typeof invoice.payment_intent === 'string' 
-      ? invoice.payment_intent 
-      : (invoice.payment_intent as any)?.id;
+    const paymentIntentId = typeof (invoice as any).payment_intent === 'string' 
+      ? (invoice as any).payment_intent 
+      : ((invoice as any).payment_intent as any)?.id;
 
     await this.paymentRepo.save({
       tenantId: sub.tenantId,
@@ -165,7 +168,7 @@ export class BillingService {
     });
     if (!sub) return;
 
-    const statusMap: Record<string, Subscription['status']> = {
+    const statusMap: Record<string, SubscriptionEntity['status']> = {
       active: 'ACTIVE',
       past_due: 'PAST_DUE',
       unpaid: 'PAST_DUE',
@@ -175,8 +178,8 @@ export class BillingService {
     };
 
     sub.status = statusMap[stripeSub.status] || 'EXPIRED';
-    sub.currentPeriodStart = new Date(stripeSub.current_period_start * 1000);
-    sub.currentPeriodEnd = new Date(stripeSub.current_period_end * 1000);
+    sub.currentPeriodStart = new Date((stripeSub as any).current_period_start * 1000);
+    sub.currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
 
     if (stripeSub.status === 'canceled') {
         sub.cancelledAt = new Date();

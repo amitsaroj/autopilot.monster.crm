@@ -38,7 +38,7 @@ export abstract class BaseRepository<T extends { tenantId: string }> {
     return this.repository.save(entity) as unknown as Promise<T>;
   }
 
-  async update(tenantId: string, id: string, data: Partial<T>): Promise<T> {
+  async updateWithTenant(tenantId: string, id: string, data: Partial<T>): Promise<T> {
     await this.repository.update({ id, tenantId } as any, data as any);
     const updated = await this.findById(tenantId, id);
     if (!updated) throw new Error('Entity not found after update');

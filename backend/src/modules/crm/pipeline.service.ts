@@ -43,7 +43,7 @@ export class PipelineService {
   }
 
   async update(tenantId: string, id: string, data: Partial<Pipeline>): Promise<Pipeline> {
-    return this.repository.update(tenantId, id, data);
+    return this.repository.updateWithTenant(tenantId, id, data);
   }
 
   async remove(tenantId: string, id: string): Promise<void> {

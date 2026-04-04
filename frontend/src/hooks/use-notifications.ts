@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from './use-auth';
 
 export const useNotifications = () => {
-  const { user, token } = useAuth();
+  const { user, accessToken: token } = useAuth();
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
