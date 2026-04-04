@@ -53,7 +53,7 @@ resource "aws_security_group" "sg" {
 # 3. EC2 Instance
 resource "aws_instance" "app_server" {
   ami                  = "ami-0dee22c13ea7a9a67" # Ubuntu 24.04 ap-south-1
-  instance_type        = "t3.medium"
+  instance_type        = "t2.micro"
   iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
   vpc_security_group_ids = [aws_security_group.sg.id]
 
@@ -64,11 +64,19 @@ resource "aws_instance" "app_server" {
 
   user_data = <<-EOF
               #!/bin/bash
-              sudo apt-get update -y
-              sudo apt-get install -y docker.io docker-compose-plugin awscli
-              sudo systemctl enable docker
-              sudo systemctl start docker
-              sudo usermod -aG docker ubuntu
+              # Create 2GB swap to compensate for t2.micro 1GB RAM
+              fallocate -l 2G /swapfile
+              chmod 600 /swapfile
+              mkswap /swapfile
+              swapon /swapfile
+              echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
+              # Install Docker & tools
+              apt-get update -y
+              apt-get install -y docker.io docker-compose-plugin awscli
+              systemctl enable docker
+              systemctl start docker
+              usermod -aG docker ubuntu
               EOF
 
 
