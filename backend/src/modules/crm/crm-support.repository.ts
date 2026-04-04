@@ -8,6 +8,9 @@ import { Product } from '../../database/entities/product.entity';
 import { Quote } from '../../database/entities/quote.entity';
 import { Campaign } from '../../database/entities/campaign.entity';
 import { EmailMessage } from '../../database/entities/email-message.entity';
+import { Tag } from '../../database/entities/tag.entity';
+import { Segment } from '../../database/entities/segment.entity';
+import { CustomField } from '../../database/entities/custom-field.entity';
 import { BaseRepository } from '../../database/base.repository';
 
 @Injectable()
@@ -54,6 +57,27 @@ export class CampaignRepository extends BaseRepository<Campaign> {
 @Injectable()
 export class EmailRepository extends BaseRepository<EmailMessage> {
   constructor(@InjectRepository(EmailMessage) repo: Repository<EmailMessage>) {
+    super(repo);
+  }
+}
+
+@Injectable()
+export class TagRepository extends BaseRepository<Tag> {
+  constructor(@InjectRepository(Tag) repo: Repository<Tag>) {
+    super(repo);
+  }
+}
+
+@Injectable()
+export class SegmentRepository extends BaseRepository<Segment> {
+  constructor(@InjectRepository(Segment) repo: Repository<Segment>) {
+    super(repo);
+  }
+}
+
+@Injectable()
+export class CustomFieldRepository extends BaseRepository<CustomField> {
+  constructor(@InjectRepository(CustomField) repo: Repository<CustomField>) {
     super(repo);
   }
 }

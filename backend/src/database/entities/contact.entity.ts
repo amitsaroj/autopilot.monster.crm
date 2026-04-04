@@ -1,6 +1,11 @@
-import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { BaseEntity } from './base.entity';
 import { Company } from './company.entity';
+import { Deal } from './deal.entity';
+import { Activity } from './activity.entity';
+import { Task } from './task.entity';
+import { Note } from './note.entity';
+import { Quote } from './quote.entity';
 
 export enum ContactStatus {
   LEAD = 'LEAD',
@@ -83,4 +88,19 @@ export class Contact extends BaseEntity {
   @Column()
   @Index()
   tenantId!: string;
+
+  @OneToMany(() => Deal, (deal) => deal.contact)
+  deals!: Deal[];
+
+  @OneToMany(() => Activity, (activity) => activity.contact)
+  activities!: Activity[];
+
+  @OneToMany(() => Task, (task) => task.contact)
+  tasks!: Task[];
+
+  @OneToMany(() => Note, (note) => note.contact)
+  noteItems!: Note[];
+
+  @OneToMany(() => Quote, (quote) => quote.contact)
+  quotes!: Quote[];
 }

@@ -4,10 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import { Toaster as SonnerToaster } from 'sonner';
 import { Toaster } from 'react-hot-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NotificationListener } from './notification-listener';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -17,10 +18,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        {children}
+        {mounted ? children : <div style={{ visibility: 'hidden' }}>{children}</div>}
         <NotificationListener />
         <SonnerToaster position="top-right" richColors closeButton />
         <Toaster

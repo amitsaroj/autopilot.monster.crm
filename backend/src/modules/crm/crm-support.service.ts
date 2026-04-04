@@ -9,6 +9,9 @@ import {
   QuoteRepository, 
   CampaignRepository,
   EmailRepository,
+  TagRepository,
+  SegmentRepository,
+  CustomFieldRepository,
 } from './crm-support.repository';
 import { ContactRepository } from './contact.repository';
 import { DealRepository } from './deal.repository';
@@ -158,6 +161,37 @@ export class AnalyticsCrmService {
       count: leads.filter(l => l.status === s).length,
     }));
   }
+
+  async getRevenueTrend(tid: string) {
+    const deals = await this.dealRepo.findAll(tid);
+    // Group won deals by month
+    const wonDeals = deals.filter(d => d.stageId?.toLowerCase() === 'won');
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    return months.map((month, idx) => {
+       const monthlyDeals = wonDeals.filter(d => new Date(d.createdAt).getMonth() === idx);
+       return {
+          name: month,
+          revenue: monthlyDeals.reduce((sum, d) => sum + (Number(d.value) || 0), 0),
+       };
+    });
+  }
+
+  async getAgentPerformance(tid: string) {
+    const deals = await this.dealRepo.findAll(tid);
+    const owners = Array.from(new Set(deals.map(d => d.ownerId).filter(id => !!id)));
+    
+    return owners.map(ownerId => {
+       const userDeals = deals.filter(d => d.ownerId === ownerId);
+       const won = userDeals.filter(d => d.stageId?.toLowerCase() === 'won');
+       return {
+          ownerId,
+          totalDeals: userDeals.length,
+          wonValue: won.reduce((sum, d) => sum + (Number(d.value) || 0), 0),
+          winRate: userDeals.length > 0 ? (won.length / userDeals.length) * 100 : 0,
+       };
+    });
+  }
 }
 
 @Injectable()
@@ -203,5 +237,53 @@ export class BulkCrmService {
   async bulkDelete(tid: string, entityType: 'lead' | 'contact', ids: string[]) {
     const service = entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
     return Promise.all(ids.map(id => service.remove(tid, id)));
+  }
+}
+
+@Injectable()
+export class TagService {
+  constructor(private readonly repo: TagRepository) {}
+  create(tid: string, dto: any) {
+    return this.repo.create(tid, dto);
+  }
+  findAll(tid: string) {
+    return this.repo.findAll(tid);
+  }
+  remove(tid: string, id: string) {
+    return this.repo.delete(tid, id);
+  }
+}
+
+@Injectable()
+export class SegmentService {
+  constructor(private readonly repo: SegmentRepository) {}
+  create(tid: string, dto: any) {
+    return this.repo.create(tid, dto);
+  }
+  findAll(tid: string) {
+    return this.repo.findAll(tid);
+  }
+  remove(tid: string, id: string) {
+    return this.repo.delete(tid, id);
+  }
+}
+
+@Injectable()
+export class CustomFieldService {
+  constructor(private readonly repo: CustomFieldRepository) {}
+  create(tid: string, dto: any) {
+    return this.repo.create(tid, dto);
+  }
+  findAll(tid: string) {
+    return this.repo.findAll(tid);
+  }
+  findOne(tid: string, id: string) {
+    return this.repo.findById(tid, id);
+  }
+  update(tid: string, id: string, dto: any) {
+    return this.repo.updateWithTenant(tid, id, dto);
+  }
+  remove(tid: string, id: string) {
+    return this.repo.delete(tid, id);
   }
 }

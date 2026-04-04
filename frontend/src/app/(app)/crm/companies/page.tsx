@@ -1,36 +1,40 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { 
-  Building2, 
-  Plus, 
-  Search, 
-  Loader2,
-  LayoutGrid,
-  List,
-  Filter,
-  Users2,
-  Sparkles
-} from 'lucide-react';
-import { CompanyListing } from '@/components/crm/CompanyListing';
-import { companyService } from '@/services/company.service';
-import toast from 'react-hot-toast';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { Plus, Search, Trash2, Edit2, Loader2, Globe, Building2, User } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api/client";
+
+interface Company {
+  id: string;
+  name: string;
+  website?: string;
+  industry?: string;
+}
 
 export default function CompaniesPage() {
-  const [companies, setCompanies] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    website: "",
+    industry: "",
+  });
 
   const fetchCompanies = async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const res = await companyService.getCompanies();
-      setCompanies((res as any).data.data || []);
-    } catch (error) {
-      toast.error('Failed to load companies');
+      const res = await api.get("/crm/companies");
+      if (res.data?.data) {
+        setCompanies(res.data.data);
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to synchronize lattice data");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -38,82 +42,169 @@ export default function CompaniesPage() {
     fetchCompanies();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this company?')) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      await companyService.deleteCompany(id);
-      toast.success('Company removed');
+      if (editingId) {
+        await api.put(`/crm/companies/${editingId}`, formData);
+        toast.success("Lattice block reconfigured");
+      } else {
+        await api.post("/crm/companies", formData);
+        toast.success("Lattice block initialized");
+      }
+      setIsModalOpen(false);
       fetchCompanies();
-    } catch (error) {
-      toast.error('Failed to delete company');
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Configuration failed");
     }
   };
 
-  const filteredCompanies = companies.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.industry?.toLowerCase().includes(searchQuery.toLowerCase())
+  const handleDelete = async (id: string) => {
+    if (!confirm("Confirm dissolution of lattice block?")) return;
+    try {
+      await api.delete(`/crm/companies/${id}`);
+      toast.success("Lattice dissolved");
+      fetchCompanies();
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Dissolution failed");
+    }
+  };
+
+  const openCreate = () => {
+    setEditingId(null);
+    setFormData({ name: "", website: "", industry: "" });
+    setIsModalOpen(true);
+  };
+
+  const openEdit = (company: Company) => {
+    setEditingId(company.id);
+    setFormData({
+      name: company.name,
+      website: company.website || "",
+      industry: company.industry || "",
+    });
+    setIsModalOpen(true);
+  };
+
+  const filteredCompanies = companies.filter((c) => 
+    c.name.toLowerCase().includes(search.toLowerCase()) || 
+    c.industry?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="max-w-7xl mx-auto py-12 px-4">
-      {/* Premium Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16">
-        <div className="max-w-md">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-4">
-            <Sparkles className="w-3 h-3" />
-            B2B Relationship Orchestration
-          </div>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Organization Command</h1>
-          <p className="text-gray-500 font-bold leading-relaxed px-1">Manage and scale your corporate relationships with AI-driven insights and organizational context.</p>
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+           <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+                 Market Lattices Active
+              </span>
+           </div>
+           <h1 className="text-3xl font-black text-white tracking-tight text-sans">Company Intelligence</h1>
+           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Monitor organizational entities and their operational domains</p>
         </div>
-
-        <div className="flex items-center gap-4">
-          <div className="p-8 bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-white/5 flex flex-col items-center min-w-[140px] shadow-soft">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Accounts</span>
-            <span className="text-3xl font-black text-gray-900 dark:text-white">{companies.length}</span>
-          </div>
-          <button className="h-[100px] px-8 bg-indigo-600 text-white rounded-[32px] font-black text-sm shadow-xl shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 group">
-            <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
-            Add Account
-          </button>
-        </div>
+        <button onClick={openCreate} className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2 group">
+           <Plus className="w-4 h-4" /> Initialize Lattice
+        </button>
       </div>
 
-      {/* Control Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-        <div className="relative max-w-md w-full group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search organizations..." 
-            className="w-full pl-16 pr-8 py-5 bg-white dark:bg-card border border-gray-100 dark:border-white/5 rounded-[24px] text-sm font-bold shadow-soft focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <button className="p-4 bg-white dark:bg-card border border-gray-100 dark:border-white/5 rounded-2xl text-gray-500 hover:text-indigo-600 transition">
-            <Filter className="w-5 h-5" />
-          </button>
-          <div className="flex bg-gray-50 dark:bg-white/5 p-1.5 rounded-2xl border border-gray-100 dark:border-white/5">
-            <button className="p-2.5 bg-white dark:bg-card rounded-xl text-indigo-600 shadow-sm transition">
-              <LayoutGrid className="w-5 h-5" />
-            </button>
-            <button className="p-2.5 text-gray-400 hover:text-gray-600 transition">
-              <List className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+      <div className="flex items-center gap-4">
+         <div className="w-full md:max-w-md p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4 group focus-within:border-indigo-500/30 transition-all shadow-inner">
+            <Search className="w-5 h-5 text-gray-500 group-focus-within:text-indigo-400" />
+            <input 
+               type="text" 
+               placeholder="Search lattice name or operational domain..."
+               value={search}
+               onChange={(e) => setSearch(e.target.value)}
+               className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-600 font-medium"
+            />
+         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 animate-pulse">
-          <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mb-4" />
-          <p className="text-sm font-black text-gray-400 uppercase tracking-widest">Orchestrating Accounts...</p>
+      {loading ? (
+        <div className="flex h-[40vh] items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
         </div>
       ) : (
-        <CompanyListing companies={filteredCompanies} onDelete={handleDelete} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+           {filteredCompanies.map((company) => (
+             <div key={company.id} className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all group flex flex-col justify-between relative overflow-hidden backdrop-blur-sm">
+                <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-indigo-500/5 transition-colors pointer-events-none" />
+                
+                <div>
+                   <div className="flex justify-between items-start mb-6">
+                      <div className="w-14 h-14 rounded-[20px] bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 group-hover:bg-indigo-500 group-hover:text-white group-hover:border-indigo-400 transition-all shadow-2xl">
+                         <Building2 className="w-6 h-6" />
+                      </div>
+                      <div className="flex gap-2">
+                         <button onClick={() => openEdit(company)} className="p-2 rounded-xl text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                            <Edit2 className="w-4 h-4" />
+                         </button>
+                         <button onClick={() => handleDelete(company.id)} className="p-2 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                            <Trash2 className="w-4 h-4" />
+                         </button>
+                      </div>
+                   </div>
+
+                   <h3 className="text-xl font-black text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight mb-2 leading-none">{company.name}</h3>
+                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/[0.03] text-gray-500 text-[9px] font-black uppercase tracking-widest border border-white/5 mb-6">
+                     Lattice Node
+                   </span>
+
+                   <div className="space-y-4 pt-4 border-t border-white/5">
+                      {company.website && (
+                        <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 text-[10px] text-indigo-400 font-black uppercase tracking-widest hover:text-indigo-300 transition-colors group/link">
+                           <Globe className="w-4 h-4 opacity-40 shrink-0 group-hover/link:opacity-100" /> {company.website.replace(/^https?:\/\//, '')}
+                        </a>
+                      )}
+                      {company.industry && (
+                        <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                           <User className="w-4 h-4 opacity-40 shrink-0" /> {company.industry}
+                        </div>
+                      )}
+                   </div>
+                </div>
+             </div>
+           ))}
+           {filteredCompanies.length === 0 && (
+             <div className="col-span-1 md:col-span-2 lg:col-span-3 py-20 text-center">
+                 <p className="text-gray-500 font-black text-xs uppercase tracking-widest">No lattice nodes detected currently.</p>
+             </div>
+           )}
+        </div>
+      )}
+
+      {/* Lattice Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-xl p-8 rounded-[40px] bg-[#0b0f19] border border-white/10 shadow-2xl animate-in zoom-in-95">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
+              <Building2 className="w-6 h-6 text-indigo-500" /> {editingId ? "Reconfigure Lattice" : "Initialize Lattice"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                 <div className="col-span-2 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Legal Designation</label>
+                   <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40" />
+                 </div>
+                 <div className="col-span-2 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Network Domain (Website)</label>
+                   <input type="text" value={formData.website} onChange={(e) => setFormData({...formData, website: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40 tracking-widest" placeholder="example.com" />
+                 </div>
+                 <div className="col-span-2 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Market Logic (Industry)</label>
+                   <input type="text" value={formData.industry} onChange={(e) => setFormData({...formData, industry: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40" />
+                 </div>
+              </div>
+              <div className="pt-6 border-t border-white/5 flex gap-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-white/[0.02] border-white/5 border hover:bg-white/[0.05] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Abort</button>
+                <button type="submit" className="flex-1 py-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20">Execute Provisioning</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

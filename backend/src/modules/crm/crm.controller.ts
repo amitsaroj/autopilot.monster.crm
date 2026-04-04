@@ -10,6 +10,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
@@ -33,6 +34,9 @@ import {
   AnalyticsCrmService,
   EmailCrmService,
   BulkCrmService,
+  TagService,
+  SegmentService,
+  CustomFieldService,
 } from './crm-support.service';
 import { CreateContactDto, CreateCompanyDto, CreateDealDto } from './dto/crm.dto';
 import { TenantId, Roles } from '../../common/decorators';
@@ -63,6 +67,9 @@ export class CrmController {
     private readonly analyticsService: AnalyticsCrmService,
     private readonly emailService: EmailCrmService,
     private readonly bulkService: BulkCrmService,
+    private readonly tagService: TagService,
+    private readonly segmentService: SegmentService,
+    private readonly customFieldService: CustomFieldService,
   ) {}
 
   // --- Agents ---
@@ -115,13 +122,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all contacts' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContacts(@TenantId() tenantId: string) {
-    const data = await this.contactService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Contacts retrieved',
-      error: false,
-      data,
-    };
+    return await this.contactService.findAll(tenantId);
   }
 
   @Post('contacts')
@@ -158,13 +159,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: Partial<CreateContactDto>,
   ) {
-    const data = await this.contactService.update(tenantId, id, dto);
-    return {
-      status: 200,
-      message: 'Contact updated',
-      error: false,
-      data,
-    };
+    return await this.contactService.update(tenantId, id, dto);
   }
 
   @Delete('contacts/:id')
@@ -172,12 +167,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async deleteContact(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.contactService.remove(tenantId, id);
-    return {
-      status: 200,
-      message: 'Contact deleted',
-      error: false,
-      data: null,
-    };
+    return { success: true };
   }
 
   // --- Companies ---
@@ -185,26 +175,14 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all companies' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCompanies(@TenantId() tenantId: string) {
-    const data = await this.companyService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Companies retrieved',
-      error: false,
-      data,
-    };
+    return await this.companyService.findAll(tenantId);
   }
 
   @Post('companies')
   @ApiOperation({ summary: 'Create company' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async createCompany(@TenantId() tenantId: string, @Body() dto: CreateCompanyDto) {
-    const data = await this.companyService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Company created successfully',
-      error: false,
-      data,
-    };
+    return await this.companyService.create(tenantId, dto);
   }
 
   @Get('companies/:id')
@@ -242,40 +220,24 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async deleteCompany(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.companyService.delete(tenantId, id);
-    return {
-      status: 200,
-      message: 'Company deleted',
-      error: false,
-      data: null,
-    };
+    return { success: true };
   }
+
 
   // --- Deals ---
 
   @Get('deals/board')
   @ApiOperation({ summary: 'Get deal board data (Kanban)' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async getDealBoard(@TenantId() tenantId: string, @Param('pipelineId') pipelineId: string) {
-    const data = await this.dealService.getBoard(tenantId, pipelineId);
-    return {
-      status: 200,
-      message: 'Deal board data retrieved',
-      error: false,
-      data,
-    };
+  async getDealBoard(@TenantId() tenantId: string, @Query('pipelineId') pipelineId: string) {
+    return await this.dealService.getBoard(tenantId, pipelineId);
   }
 
   @Get('deals')
   @ApiOperation({ summary: 'Get all deals' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getDeals(@TenantId() tenantId: string) {
-    const data = await this.dealService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Deals retrieved',
-      error: false,
-      data,
-    };
+    return await this.dealService.findAll(tenantId);
   }
 
   @Post('deals')
@@ -295,13 +257,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Get deal by ID' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getDeal(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.dealService.findOne(tenantId, id);
-    return {
-      status: 200,
-      message: 'Deal retrieved',
-      error: false,
-      data,
-    };
+    return await this.dealService.findOne(tenantId, id);
   }
 
   @Put('deals/:id')
@@ -312,13 +268,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: Partial<CreateDealDto>,
   ) {
-    const data = await this.dealService.update(tenantId, id, dto);
-    return {
-      status: 200,
-      message: 'Deal updated',
-      error: false,
-      data,
-    };
+    return await this.dealService.update(tenantId, id, dto);
   }
 
   @Delete('deals/:id')
@@ -326,12 +276,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async deleteDeal(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.dealService.remove(tenantId, id);
-    return {
-      status: 200,
-      message: 'Deal deleted',
-      error: false,
-      data: null,
-    };
+    return { success: true };
   }
 
   @Post('campaigns/start')
@@ -348,26 +293,14 @@ export class CrmController {
   @ApiOperation({ summary: 'Get recent CRM activities' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getActivities(@TenantId() tenantId: string) {
-    const data = await this.activityService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Activities retrieved',
-      error: false,
-      data,
-    };
+    return await this.activityService.findAll(tenantId);
   }
 
   @Post('activities')
   @ApiOperation({ summary: 'Log activity' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async createActivity(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.activityService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Activity logged successfully',
-      error: false,
-      data,
-    };
+    return await this.activityService.create(tenantId, dto);
   }
 
   // --- Tasks ---
@@ -457,52 +390,28 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all products' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getProducts(@TenantId() tenantId: string) {
-    const data = await this.productService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Products retrieved',
-      error: false,
-      data,
-    };
+    return await this.productService.findAll(tenantId);
   }
 
   @Post('products')
   @ApiOperation({ summary: 'Create product' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createProduct(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.productService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Product created successfully',
-      error: false,
-      data,
-    };
+    return await this.productService.create(tenantId, dto);
   }
 
   @Get('products/:id')
   @ApiOperation({ summary: 'Get product detail' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getProduct(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.productService.findOne(tenantId, id);
-    return {
-      status: 200,
-      message: 'Product details retrieved',
-      error: false,
-      data,
-    };
+    return await this.productService.findOne(tenantId, id);
   }
 
   @Put('products/:id')
   @ApiOperation({ summary: 'Update product' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async updateProduct(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
-    const data = await this.productService.update(tenantId, id, dto);
-    return {
-      status: 200,
-      message: 'Product updated',
-      error: false,
-      data,
-    };
+    return await this.productService.update(tenantId, id, dto);
   }
 
   @Delete('products/:id')
@@ -510,12 +419,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async deleteProduct(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.productService.remove(tenantId, id);
-    return {
-      status: 200,
-      message: 'Product deleted',
-      error: false,
-      data: null,
-    };
+    return { success: true };
   }
 
   // --- Quotes ---
@@ -523,52 +427,28 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all quotes' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getQuotes(@TenantId() tenantId: string) {
-    const data = await this.quoteService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Quotes retrieved',
-      error: false,
-      data,
-    };
+    return await this.quoteService.findAll(tenantId);
   }
 
   @Post('quotes')
   @ApiOperation({ summary: 'Create quote' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createQuote(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.quoteService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Quote created successfully',
-      error: false,
-      data,
-    };
+    return await this.quoteService.create(tenantId, dto);
   }
 
   @Get('quotes/:id')
   @ApiOperation({ summary: 'Get quote detail' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getQuote(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.quoteService.findOne(tenantId, id);
-    return {
-      status: 200,
-      message: 'Quote details retrieved',
-      error: false,
-      data,
-    };
+    return await this.quoteService.findOne(tenantId, id);
   }
 
   @Put('quotes/:id')
   @ApiOperation({ summary: 'Update quote' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async updateQuote(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
-    const data = await this.quoteService.update(tenantId, id, dto);
-    return {
-      status: 200,
-      message: 'Quote updated',
-      error: false,
-      data,
-    };
+    return await this.quoteService.update(tenantId, id, dto);
   }
 
   @Delete('quotes/:id')
@@ -576,12 +456,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async deleteQuote(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.quoteService.remove(tenantId, id);
-    return {
-      status: 200,
-      message: 'Quote deleted',
-      error: false,
-      data: null,
-    };
+    return { success: true };
   }
 
   // --- Leads ---
@@ -589,26 +464,14 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all leads' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getLeads(@TenantId() tenantId: string) {
-    const data = await this.leadService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Leads retrieved',
-      error: false,
-      data,
-    };
+    return await this.leadService.findAll(tenantId);
   }
 
   @Post('leads')
   @ApiOperation({ summary: 'Create lead' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createLead(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.leadService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Lead created successfully',
-      error: false,
-      data,
-    };
+    return await this.leadService.create(tenantId, dto);
   }
 
   @Post('leads/bulk')
@@ -928,51 +791,110 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all pipelines' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getPipelines(@TenantId() tenantId: string) {
-    const data = await this.pipelineService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Pipelines retrieved',
-      error: false,
-      data,
-    };
+    return await this.pipelineService.findAll(tenantId);
   }
 
   @Get('pipelines/default')
   @ApiOperation({ summary: 'Get default pipeline' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getDefaultPipeline(@TenantId() tenantId: string) {
-    const data = await this.pipelineService.findDefault(tenantId);
-    return {
-      status: 200,
-      message: 'Default pipeline retrieved',
-      error: false,
-      data,
-    };
+    return await this.pipelineService.findDefault(tenantId);
   }
 
   @Post('pipelines')
   @ApiOperation({ summary: 'Create pipeline' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createPipeline(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.pipelineService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Pipeline created',
-      error: false,
-      data,
-    };
+    return await this.pipelineService.create(tenantId, dto);
   }
 
   @Post('pipelines/:id/stages')
   @ApiOperation({ summary: 'Create pipeline stage' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createStage(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
-    const data = await this.pipelineService.createStage(tenantId, id, dto);
-    return {
-      status: 201,
-      message: 'Pipeline stage created',
-      error: false,
-      data,
-    };
+    return await this.pipelineService.createStage(tenantId, id, dto);
+  }
+
+  // --- Tags ---
+  @Get('tags')
+  @ApiOperation({ summary: 'Get all tags' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getTags(@TenantId() tenantId: string) {
+    return await this.tagService.findAll(tenantId);
+  }
+
+  @Post('tags')
+  @ApiOperation({ summary: 'Create tag' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async createTag(@TenantId() tenantId: string, @Body() dto: any) {
+    return await this.tagService.create(tenantId, dto);
+  }
+
+  @Delete('tags/:id')
+  @ApiOperation({ summary: 'Delete tag' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async deleteTag(@TenantId() tenantId: string, @Param('id') id: string) {
+    await this.tagService.remove(tenantId, id);
+    return { success: true };
+  }
+
+  // --- Segments ---
+  @Get('segments')
+  @ApiOperation({ summary: 'Get all segments' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getSegments(@TenantId() tenantId: string) {
+    return await this.segmentService.findAll(tenantId);
+  }
+
+  @Post('segments')
+  @ApiOperation({ summary: 'Create segment' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async createSegment(@TenantId() tenantId: string, @Body() dto: any) {
+    return await this.segmentService.create(tenantId, dto);
+  }
+
+  @Delete('segments/:id')
+  @ApiOperation({ summary: 'Delete segment' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async deleteSegment(@TenantId() tenantId: string, @Param('id') id: string) {
+    await this.segmentService.remove(tenantId, id);
+    return { success: true };
+  }
+
+  // --- Custom Fields ---
+  @Get('custom-fields')
+  @ApiOperation({ summary: 'Get all custom fields' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getCustomFields(@TenantId() tenantId: string) {
+    return await this.customFieldService.findAll(tenantId);
+  }
+
+  @Post('custom-fields')
+  @ApiOperation({ summary: 'Create custom field' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async createCustomField(@TenantId() tenantId: string, @Body() dto: any) {
+    return await this.customFieldService.create(tenantId, dto);
+  }
+
+  @Get('custom-fields/:id')
+  @ApiOperation({ summary: 'Get custom field detail' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getCustomField(@TenantId() tenantId: string, @Param('id') id: string) {
+    return await this.customFieldService.findOne(tenantId, id);
+  }
+
+  @Put('custom-fields/:id')
+  @ApiOperation({ summary: 'Update custom field' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async updateCustomField(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+    return await this.customFieldService.update(tenantId, id, dto);
+  }
+
+  @Delete('custom-fields/:id')
+  @ApiOperation({ summary: 'Delete custom field' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async deleteCustomField(@TenantId() tenantId: string, @Param('id') id: string) {
+    await this.customFieldService.remove(tenantId, id);
+    return { success: true };
   }
 }

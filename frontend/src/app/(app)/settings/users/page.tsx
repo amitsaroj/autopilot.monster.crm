@@ -1,215 +1,168 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { 
-  Users, 
-  Mail, 
-  UserPlus, 
-  Loader2, 
-  Search,
-  MoreVertical,
-  Shield,
-  CheckCircle2,
-  Clock,
-  UserCheck
-} from 'lucide-react';
-import { userService, User } from '@/services/user.service';
-import { rbacService, Role } from '@/services/rbac.service';
-import toast from 'react-hot-toast';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { Users, Mail, Loader2, UserPlus, Shield, MoreHorizontal, CheckCircle2, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import api from "@/lib/api/client";
+import Link from "next/link";
 
-export default function TeamPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [inviteData, setInviteData] = useState({ email: '', roleId: '' });
+interface TeamMember {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: string[];
+  status: string;
+  lastLogin: string | null;
+}
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [usersRes, rolesRes] = await Promise.all([
-        userService.getUsers(),
-        rbacService.getRoles()
-      ]);
-      setUsers((usersRes as any).data.data || []);
-      setRoles((rolesRes as any).data.data || []);
-    } catch (error) {
-      toast.error('Failed to load team data');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+export default function UsersSettingsPage() {
+  const [users, setUsers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
+    fetchUsers();
   }, []);
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchUsers = async () => {
     try {
-      await userService.inviteUser(inviteData);
-      toast.success('Invitation sent');
-      setIsInviteModalOpen(false);
-      setInviteData({ email: '', roleId: '' });
-      fetchData();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to send invitation');
+      const res = await api.get("/users");
+      if (res.data?.data) {
+        setUsers(res.data.data);
+      }
+    } catch (err) {
+      toast.error("Failed to sync identity matrix");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleDeactivate = async (id: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+      await api.patch(`/users/${id}`, { status: newStatus });
+      toast.success(`Identity status updated to ${newStatus}`);
+      fetchUsers();
+    } catch (err) {
+      toast.error("Failed to alter identity state");
+    }
+  };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 text-glow-indigo">Team Members</h1>
-          <p className="text-gray-500 dark:text-gray-400">Manage your team, roles, and access permissions.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white uppercase">Tenant Identities</h1>
+          <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mt-1">Manage access privileges and user nodes</p>
         </div>
-        <button 
-          onClick={() => setIsInviteModalOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition shadow-lg shadow-indigo-500/20"
+        <Link 
+          href="/settings/users/invite"
+          className="flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20"
         >
-          <UserPlus className="w-4 h-4" />
-          Invite Member
-        </button>
+          <UserPlus className="w-4 h-4" /> Provision Identity
+        </Link>
       </div>
 
-      <div className="bg-white dark:bg-card/50 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-border shadow-soft overflow-hidden">
-        <div className="p-4 border-b border-gray-200 dark:border-border bg-gray-50/30 flex items-center">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-input bg-white/50 dark:bg-background/50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
-            />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="p-6 rounded-3xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col justify-center relative overflow-hidden group">
+           <Users className="w-20 h-20 absolute -right-4 -bottom-4 text-indigo-500/20 group-hover:scale-110 transition-transform" />
+           <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest">Active Nodes</p>
+           <p className="text-3xl font-black text-white">{users.filter(u => u.status === 'ACTIVE').length}</p>
         </div>
+        <div className="p-6 rounded-3xl bg-[#0b0f19] border border-white/5 flex flex-col justify-center relative overflow-hidden group">
+           <Shield className="w-20 h-20 absolute -right-4 -bottom-4 text-white/5 group-hover:scale-110 transition-transform" />
+           <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Admins</p>
+           <p className="text-3xl font-black text-white">{users.filter(u => u.roles.includes('ADMIN') || u.roles.includes('TENANT_ADMIN')).length}</p>
+        </div>
+        <div className="p-6 rounded-3xl bg-[#0b0f19] border border-white/5 flex flex-col justify-center relative overflow-hidden group">
+           <Mail className="w-20 h-20 absolute -right-4 -bottom-4 text-white/5 group-hover:scale-110 transition-transform" />
+           <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Pending Sync</p>
+           <p className="text-3xl font-black text-white">{users.filter(u => u.status === 'PENDING').length}</p>
+        </div>
+      </div>
 
+      <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] shadow-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 dark:bg-card/50 border-b border-gray-200 dark:border-border">
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Member</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+              <tr className="border-b border-white/5 bg-white/[0.01]">
+                <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Identity Details</th>
+                <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Privilege Matrix</th>
+                <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Status</th>
+                <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Last Pulse</th>
+                <th className="p-6 text-right text-[10px] font-black tracking-widest uppercase text-gray-500">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-border whitespace-nowrap">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-sm border border-indigo-200/50">
-                        {user.firstName[0]}{user.lastName[0]}
+            <tbody className="divide-y divide-white/5">
+              {users.map((member) => (
+                <tr key={member.id} className="hover:bg-white/[0.01] transition-colors group">
+                  <td className="p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-black text-lg uppercase shadow-inner">
+                        {member.firstName?.[0] || member.email[0]}
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                          {user.firstName} {user.lastName}
-                          {user.email.includes('admin') && <Shield className="w-3 h-3 text-indigo-500" />}
-                        </p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
+                        <p className="text-sm font-black text-white uppercase tracking-tight">{member.firstName} {member.lastName}</p>
+                        <p className="text-[10px] font-bold text-gray-500">{member.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1.5">
-                      {user.roles?.map((role) => (
-                        <span key={role} className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/50">
-                          {role}
+                  <td className="p-6">
+                    <div className="flex gap-2">
+                      {member.roles.map(role => (
+                        <span key={role} className="px-2 py-1 rounded-md bg-white/[0.03] border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                          {role.replace('_', ' ')}
                         </span>
-                      )) || <span className="text-gray-400 text-xs italic">Member</span>}
+                      ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-400 transition">
-                      <MoreVertical className="w-4 h-4" />
+                  <td className="p-6">
+                    {member.status === 'ACTIVE' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
+                        <CheckCircle2 className="w-3 h-3" /> Active
+                      </span>
+                    ) : member.status === 'PENDING' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 text-amber-400 text-[9px] font-black uppercase tracking-widest border border-amber-500/20">
+                        Pending
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-red-500/10 text-red-400 text-[9px] font-black uppercase tracking-widest border border-red-500/20">
+                        <XCircle className="w-3 h-3" /> Disabled
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-6">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                      {member.lastLogin ? new Date(member.lastLogin).toLocaleDateString() : 'Never Segmented'}
+                    </span>
+                  </td>
+                  <td className="p-6 text-right">
+                    <button 
+                      onClick={() => handleDeactivate(member.id, member.status)}
+                      className="p-2 text-gray-500 hover:text-white hover:bg-white/[0.05] rounded-xl transition-all"
+                    >
+                      <MoreHorizontal className="w-5 h-5" />
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {users.length === 0 && (
+            <div className="p-12 text-center">
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">No subordinate identities provisioned</p>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Invite Modal */}
-      {isInviteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-card w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-border bg-gray-50/50 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-indigo-600" />
-                Invite Member
-              </h2>
-              <button onClick={() => setIsInviteModalOpen(false)} className="text-gray-400 hover:text-gray-600">×</button>
-            </div>
-            <form onSubmit={handleInvite} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1.5">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      required
-                      type="email"
-                      value={inviteData.email}
-                      onChange={e => setInviteData({ ...inviteData, email: e.target.value })}
-                      className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-input bg-white dark:bg-background text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                      placeholder="teammate@example.com"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1.5">Assign Role</label>
-                  <select
-                    required
-                    value={inviteData.roleId}
-                    onChange={e => setInviteData({ ...inviteData, roleId: e.target.value })}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-input bg-white dark:bg-background text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none"
-                  >
-                    <option value="">Select a role...</option>
-                    {roles.map(role => (
-                      <option key={role.id} value={role.id}>{role.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="mt-8 flex justify-end gap-3">
-                <button 
-                  type="button"
-                  onClick={() => setIsInviteModalOpen(false)}
-                  className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-900"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition shadow-lg shadow-indigo-500/20"
-                >
-                  Send Invitation
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

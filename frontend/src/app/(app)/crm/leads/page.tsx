@@ -1,51 +1,50 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { 
-  UserPlus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Zap, 
-  Clock, 
-  CheckCircle2, 
-  XCircle,
-  AlertCircle,
-  Loader2,
-  ChevronRight,
-  Upload,
-  Download,
-  Mail,
-  Phone,
-  BarChart3,
-  Star
-} from 'lucide-react';
-import { leadService, Lead, LeadStatus } from '@/services/lead.service';
-import { bulkService } from '@/services/bulk.service';
-import { importExportService } from '@/services/import-export.service';
-import { BulkActionBar } from '@/components/crm/BulkActionBar';
-import { CsvImportModal } from '@/components/crm/CsvImportModal';
-import toast from 'react-hot-toast';
-import { cn } from '@/lib/utils';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { Plus, Search, Trash2, Edit2, Loader2, Target, Filter, Rocket } from "lucide-react";
+import LeadConversionModal from "@/components/crm/LeadConversionModal";
+import { toast } from "sonner";
+import api from "@/lib/api/client";
+
+interface Lead {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  source?: string;
+  status: string;
+  score?: number;
+  createdAt: string;
+}
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState<string>('All');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    source: "Manual",
+    status: "NEW",
+  });
+  const [conversionLead, setConversionLead] = useState<Lead | null>(null);
 
   const fetchLeads = async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const res = await leadService.getLeads();
-      setLeads((res as any).data.data || []);
-    } catch (error) {
-      toast.error('Failed to load leads');
+      const res = await api.get("/crm/leads");
+      if (res.data?.data) {
+        setLeads(res.data.data);
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Failed to synchronize lead vectors");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -53,256 +52,239 @@ export default function LeadsPage() {
     fetchLeads();
   }, []);
 
-  const statuses = ['All', ...Object.values(LeadStatus)];
-
-  const filteredLeads = leads.filter(lead => {
-    const fullName = `${lead.firstName} ${lead.lastName || ''}`.toLowerCase();
-    const matchesSearch = fullName.includes(searchQuery.toLowerCase()) || 
-                         lead.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         lead.phone.includes(searchQuery);
-    const matchesStatus = selectedStatus === 'All' || lead.status === selectedStatus;
-    return matchesSearch && matchesStatus;
-  });
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-emerald-500 bg-emerald-50 border-emerald-100";
-    if (score >= 50) return "text-amber-500 bg-amber-50 border-amber-100";
-    return "text-red-500 bg-red-50 border-red-100";
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case LeadStatus.QUALIFIED: return "bg-emerald-50 text-emerald-600 border-emerald-100";
-      case LeadStatus.CONVERTED: return "bg-indigo-50 text-indigo-600 border-indigo-100";
-      case LeadStatus.NEW: return "bg-blue-50 text-blue-600 border-blue-100";
-      case LeadStatus.CONTACTED: return "bg-amber-50 text-amber-600 border-amber-100";
-      case LeadStatus.UNQUALIFIED: return "bg-gray-100 text-gray-500 border-gray-200";
-      default: return "bg-gray-50 text-gray-400 border-gray-100";
-    }
-  };
-
-  const toggleSelect = (id: string, e: React.MouseEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    e.stopPropagation();
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedIds.length} leads?`)) return;
     try {
-      await bulkService.delete('lead', selectedIds);
-      toast.success('Leads deleted successfully');
-      setSelectedIds([]);
+      if (editingId) {
+        await api.put(`/crm/leads/${editingId}`, formData);
+        toast.success("Lead vector reconfigured");
+      } else {
+        await api.post("/crm/leads", formData);
+        toast.success("Lead vector initialized");
+      }
+      setIsModalOpen(false);
       fetchLeads();
-    } catch (error) {
-      toast.error('Failed to delete leads');
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Vector initialization failed");
     }
   };
 
-  const handleBulkUpdateStatus = async (status: string) => {
+  const handleDelete = async (id: string) => {
+    if (!confirm("Confirm dissolution of lead vector?")) return;
     try {
-      await bulkService.updateStatus('lead', selectedIds, status);
-      toast.success('Status updated successfully');
-      setSelectedIds([]);
+      await api.delete(`/crm/leads/${id}`);
+      toast.success("Lead vector dissolved");
       fetchLeads();
-    } catch (error) {
-      toast.error('Failed to update status');
+    } catch (e: any) {
+      toast.error(e.response?.data?.message || "Dissolution failed");
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const res = await importExportService.exportData('lead');
-      const csv = (res as any).data.data;
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('hidden', '');
-      a.setAttribute('href', url);
-      a.setAttribute('download', `leads_export_${new Date().getTime()}.csv`);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      toast.success('Leads exported successfully');
-    } catch (error) {
-      toast.error('Failed to export leads');
-    }
+  const openCreate = () => {
+    setEditingId(null);
+    setFormData({ 
+      firstName: "", 
+      lastName: "", 
+      email: "", 
+      phone: "", 
+      source: "Manual", 
+      status: "NEW" 
+    });
+    setIsModalOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
+  const openEdit = (lead: Lead) => {
+    setEditingId(lead.id);
+    setFormData({
+      firstName: lead.firstName || "",
+      lastName: lead.lastName || "",
+      email: lead.email || "",
+      phone: lead.phone || "",
+      source: lead.source || "Manual",
+      status: lead.status || "NEW",
+    });
+    setIsModalOpen(true);
+  };
 
-  const averageScore = leads.length > 0 ? leads.reduce((sum, l) => sum + l.score, 0) / leads.length : 0;
+  const filteredLeads = leads.filter((l) => 
+    (l.firstName + " " + l.lastName).toLowerCase().includes(search.toLowerCase()) ||
+    l.email.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 relative">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+    <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-1 tracking-tight">Leads Engine</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">AI-driven prospect prioritization and conversion.</p>
+           <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                 Acquisition Engine Active
+              </span>
+           </div>
+           <h1 className="text-3xl font-black text-white tracking-tight text-sans">Lead Intelligence</h1>
+           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Monitor incoming vectors and acquisition sources</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden lg:flex flex-col items-end mr-6 pr-6 border-r border-gray-100 dark:border-border">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Lead Health</span>
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-              <span className="text-xl font-black text-gray-900 dark:text-white">{averageScore.toFixed(0)}%</span>
+        <button onClick={openCreate} className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-2 group">
+           <Plus className="w-4 h-4" /> Initialize Lead Vector
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+         <div className="md:col-span-3">
+            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4 group focus-within:border-emerald-500/30 transition-all shadow-inner">
+               <Search className="w-5 h-5 text-gray-500 group-focus-within:text-emerald-400" />
+               <input 
+                  type="text" 
+                  placeholder="Search vector email or identity artifact..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-600 font-medium"
+               />
             </div>
-          </div>
-          <button 
-            onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-card border border-gray-100 dark:border-white/5 text-gray-700 dark:text-white rounded-2xl font-bold text-sm transition hover:bg-gray-50"
-          >
-            <Upload className="w-4 h-4" />
-            Import
-          </button>
-          <button 
-            onClick={handleExport}
-            className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-card border border-gray-100 dark:border-white/5 text-gray-700 dark:text-white rounded-2xl font-bold text-sm transition hover:bg-gray-50"
-          >
-            <Download className="w-4 h-4" />
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm transition shadow-xl shadow-indigo-500/20">
-            <UserPlus className="w-4 h-4" />
-            Add Lead
-          </button>
-        </div>
+         </div>
+         <button className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-gray-400 hover:text-white hover:bg-white/[0.05] text-[10px] font-black uppercase tracking-widest transition-all">
+            <Filter className="w-4 h-4" /> Filter Stack
+         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 mb-8">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search by name, email, or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-100 dark:border-border bg-white dark:bg-card shadow-soft text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition"
-          />
+      {loading ? (
+        <div className="flex h-[40vh] items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-          {statuses.map(status => (
-            <button
-              key={status}
-              onClick={() => setSelectedStatus(status)}
-              className={cn(
-                "px-6 py-4 rounded-2xl font-bold text-xs whitespace-nowrap transition border",
-                selectedStatus === status 
-                  ? "bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                  : "bg-white dark:bg-card border-gray-100 dark:border-border text-gray-500 hover:border-indigo-200"
-              )}
-            >
-              {status}
-            </button>
-          ))}
+      ) : (
+        <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] shadow-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-white/5 bg-white/[0.01]">
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Vector Identity</th>
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Source Artifact</th>
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Current Phase</th>
+                  <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">Capture Date</th>
+                  <th className="p-6 text-right text-[10px] font-black tracking-widest uppercase text-gray-500">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filteredLeads.map((lead) => (
+                  <tr key={lead.id} className="hover:bg-white/[0.01] transition-colors group">
+                    <td className="p-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-black text-lg uppercase shadow-inner group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                          {lead.firstName?.[0] || 'L'}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-white uppercase tracking-tight">{lead.firstName} {lead.lastName}</p>
+                          <p className="text-[10px] font-bold text-gray-500">{lead.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-6">
+                      <span className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                        {lead.source}
+                      </span>
+                    </td>
+                    <td className="p-6">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                        lead.status === 'NEW' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                        lead.status === 'QUALIFIED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                      }`}>
+                        {lead.status}
+                      </span>
+                    </td>
+                    <td className="p-6">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        {new Date(lead.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="p-6 text-right space-x-2">
+                       <button 
+                         onClick={() => setConversionLead(lead)}
+                         className="p-2.5 rounded-xl text-emerald-500 hover:text-white hover:bg-emerald-500 transition-all opacity-0 group-hover:opacity-100"
+                         title="Convert to Contact"
+                       >
+                          <Rocket className="w-4 h-4" />
+                       </button>
+                       <button onClick={() => openEdit(lead)} className="p-2.5 rounded-xl text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                          <Edit2 className="w-4 h-4" />
+                       </button>
+                       <button onClick={() => handleDelete(lead.id)} className="p-2.5 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                          <Trash2 className="w-4 h-4" />
+                       </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredLeads.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-20 text-center text-gray-500 font-black text-xs uppercase tracking-widest">
+                       No lead vectors detected currently.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="space-y-4">
-        {filteredLeads.map(lead => (
-          <div key={lead.id} className="relative group">
-            <div 
-              onClick={(e) => toggleSelect(lead.id, e)}
-              className={cn(
-                "absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-lg border-2 cursor-pointer transition flex items-center justify-center bg-white",
-                selectedIds.includes(lead.id) ? "bg-indigo-600 border-indigo-600 text-white" : "border-gray-200 opacity-0 group-hover:opacity-100"
-              )}
-            >
-              {selectedIds.includes(lead.id) && <CheckCircle2 className="w-3 h-3" />}
-            </div>
-            
-            <Link 
-              href={`/crm/leads/${lead.id}`}
-              className={cn(
-                "flex flex-col lg:flex-row lg:items-center gap-6 p-6 bg-white dark:bg-card rounded-[32px] border transition cursor-pointer shadow-soft hover:shadow-xl hover:border-indigo-100 dark:hover:border-indigo-900/50",
-                selectedIds.includes(lead.id) ? "border-indigo-600 ring-2 ring-indigo-500/10" : "border-gray-100 dark:border-border"
-              )}
-            >
-              <div className="flex items-center gap-4 lg:w-1/4">
-                <div className="w-14 h-14 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <div className="overflow-hidden">
-                  <h3 className="text-sm font-black text-gray-900 dark:text-white truncate group-hover:text-indigo-600 transition">
-                    {lead.firstName} {lead.lastName}
-                  </h3>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 truncate">
-                    {lead.email || 'No email provided'}
-                  </p>
-                </div>
+      {/* Lead Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-xl p-8 rounded-[40px] bg-[#0b0f19] border border-white/10 shadow-2xl animate-in zoom-in-95">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
+              <Target className="w-6 h-6 text-emerald-500" /> {editingId ? "Reconfigure Vector" : "Initialize Vector"}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Given Designation</label>
+                   <input required type="text" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40" />
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Surname Designation</label>
+                   <input required type="text" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40" />
+                 </div>
+                 <div className="col-span-2 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Network Vector (Email)</label>
+                   <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40" />
+                 </div>
+                 <div className="col-span-2 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Comm Channel (Phone)</label>
+                   <input type="text" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40 tracking-widest" />
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Acquisition Source</label>
+                   <select value={formData.source} onChange={(e) => setFormData({...formData, source: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40 appearance-none cursor-pointer">
+                      <option value="Manual" className="bg-[#0b0f19]">Manual Pulse</option>
+                      <option value="Webform" className="bg-[#0b0f19]">Inbound Webform</option>
+                      <option value="API" className="bg-[#0b0f19]">Nexus API</option>
+                      <option value="Referral" className="bg-[#0b0f19]">Network Referral</option>
+                   </select>
+                 </div>
+                 <div className="col-span-1 space-y-2">
+                   <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Lifecycle Phase</label>
+                   <select value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})} className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40 appearance-none cursor-pointer">
+                      <option value="NEW" className="bg-[#0b0f19]">New Vector</option>
+                      <option value="QUALIFIED" className="bg-[#0b0f19]">Qualified Sequence</option>
+                      <option value="LOST" className="bg-[#0b0f19]">Fragmented</option>
+                   </select>
+                 </div>
               </div>
-
-              <div className="flex items-center gap-8 flex-1">
-                <div className="flex items-center gap-4 min-w-[140px]">
-                  <div className={cn(
-                    "w-12 h-12 rounded-xl border flex flex-col items-center justify-center shrink-0",
-                    getScoreColor(lead.score)
-                  )}>
-                    <span className="text-xs font-black">{lead.score}</span>
-                    <span className="text-[8px] font-black uppercase opacity-60">Score</span>
-                  </div>
-                  <div className={cn(
-                    "px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-tighter flex items-center gap-1.5",
-                    getStatusColor(lead.status as string)
-                  )}>
-                    {lead.status}
-                  </div>
-                </div>
-
-                <div className="hidden xl:flex items-center gap-6">
-                  <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                    <Phone className="w-4 h-4 text-gray-300" />
-                    {lead.phone}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                    <Clock className="w-4 h-4 text-gray-300" />
-                    Joined {new Date(lead.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
+              <div className="pt-6 border-t border-white/5 flex gap-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-white/[0.02] border-white/5 border hover:bg-white/[0.05] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Abort</button>
+                <button type="submit" className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20">Execute Provisioning</button>
               </div>
-
-              <div className="flex items-center justify-between lg:justify-end lg:w-1/4 gap-6">
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-card bg-gray-100 dark:bg-gray-800" />
-                  ))}
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-indigo-600 transition -mr-2" />
-              </div>
-            </Link>
+            </form>
           </div>
-        ))}
-
-        {filteredLeads.length === 0 && (
-          <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-border rounded-[40px] bg-gray-50/50">
-            <Zap className="w-12 h-12 mb-4 text-gray-200" />
-            <h3 className="text-lg font-black text-gray-400 mb-1">No Leads Found</h3>
-            <p className="text-sm text-gray-400">Start capturing leads to fuel your sales pipeline.</p>
-          </div>
-        )}
-      </div>
-
-      <BulkActionBar 
-        selectedCount={selectedIds.length}
-        entityType="lead"
-        onClear={() => setSelectedIds([])}
-        onDelete={handleBulkDelete}
-        onUpdateStatus={handleBulkUpdateStatus}
-      />
-
-      <CsvImportModal 
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
+        </div>
+      )}
+      {/* Lead Conversion Modal */}
+      <LeadConversionModal 
+        isOpen={!!conversionLead}
+        lead={conversionLead}
+        onClose={() => setConversionLead(null)}
         onSuccess={fetchLeads}
-        entityType="lead"
       />
     </div>
   );
