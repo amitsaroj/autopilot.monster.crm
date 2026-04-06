@@ -117,3 +117,8 @@
   - completed_at: 2026-04-04
 
 ## IN_PROGRESS
+
+- [ ] Fix Terraform and AWS Deployment Pipeline
+  - id: TASK-008
+  - description: Restore correct EC2 definition in main.tf, fix backend conflict, and add instance_id to outputs.tf to fix the deployment pipeline. Push into main branch.
+  - started_at: 2026-04-06
