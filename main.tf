@@ -53,7 +53,7 @@ resource "aws_security_group" "sg" {
 # 3. EC2 Instance
 resource "aws_instance" "app_server" {
   ami                  = "ami-0dee22c13ea7a9a67" # Ubuntu 24.04 ap-south-1
-  instance_type        = "t2.micro"
+  instance_type        = "t3.medium"
   iam_instance_profile = aws_iam_instance_profile.ssm_profile.name
   vpc_security_group_ids = [aws_security_group.sg.id]
 
