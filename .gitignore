@@ -61,6 +61,8 @@ prisma/.env
 *.log
 *.log.*
 logs/
+!backend/src/modules/logs/
+!backend/src/modules/sub-admin/logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
