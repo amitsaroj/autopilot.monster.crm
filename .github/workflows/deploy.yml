@@ -53,10 +53,17 @@ jobs:
         run: |
           terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
 
-          # Import existing resources if they exist (prevents "already exists" errors)
+          # Remove orphan state entries from old/conflicting resource names
+          terraform state rm aws_iam_role.autopilot_ssm_role 2>/dev/null || true
+          terraform state rm aws_security_group.autopilot_sg 2>/dev/null || true
+
+          # Import existing resources to avoid "already exists" errors
           terraform import aws_iam_role.ssm_role autopilot-ssm-role 2>/dev/null || true
           terraform import aws_iam_instance_profile.ssm_profile autopilot-ssm-profile 2>/dev/null || true
-          terraform import aws_security_group.sg $(aws ec2 describe-security-groups --filters "Name=group-name,Values=autopilot-sg" --query "SecurityGroups[0].GroupId" --output text --region ap-south-1 2>/dev/null) 2>/dev/null || true
+          SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=autopilot-sg" --query "SecurityGroups[0].GroupId" --output text --region ap-south-1 2>/dev/null)
+          if [ "$SG_ID" != "None" ] && [ -n "$SG_ID" ]; then
+            terraform import aws_security_group.sg "$SG_ID" 2>/dev/null || true
+          fi
 
           terraform apply -auto-approve
           echo "INSTANCE_ID=$(terraform output -raw instance_id)" >> $GITHUB_ENV
