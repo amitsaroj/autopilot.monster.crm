@@ -12,6 +12,7 @@ import { Server, WebSocket as WsWebSocket } from 'ws';
 
 import { RagService } from '../ai/rag.service';
 import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
+import { TwilioService } from './twilio.service';
 
 /**
  * Native WebSocket Server mapped to '/voice/stream'
@@ -31,6 +32,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     private configService: ConfigService,
     private ragService: RagService,
     private leadIntelligenceService: LeadIntelligenceService,
+    private twilioService: TwilioService,
   ) {}
 
   private sessions = new Map<
@@ -41,13 +43,13 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
       agentId: string;
       transcript: string;
       leadId?: string;
+      callSid?: string;
     }
   >();
 
   async handleConnection(client: WsWebSocket, request: any) {
     this.logger.log('Twilio Voice Client Connected to Gateway');
 
-    // Extract tenantId and agentId from query params (e.g., /voice/stream?tenantId=...&agentId=...)
     const parsedUrl = url.parse(request.url, true);
     const tenantId = (parsedUrl.query.tenantId as string) || 'default';
     const agentId = (parsedUrl.query.agentId as string) || 'default';
@@ -85,7 +87,12 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
         const msg = JSON.parse(data);
         if (msg.event === 'start') {
           streamSid = msg.start.streamSid;
-          this.logger.log(`Starting media stream: ${streamSid} for tenant: ${tenantId}`);
+          const callSid = msg.start.callSid;
+          
+          this.logger.log(`Starting media stream: ${streamSid} (Call: ${callSid}) for tenant: ${tenantId}`);
+
+          const session = this.sessions.get(client);
+          if (session) session.callSid = callSid;
 
           // Fetch Knowledge Base Context for this tenant
           const kbContext = await this.ragService.queryKnowledgeBase(
@@ -105,14 +112,13 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
             IDENTITY: You are Agent ID: ${agentId}. Keep responses under 2 sentences for natural flow.
           `;
 
-          // Send session setup with context to OpenAI
           const voice = (parsedUrl.query.voice as string) || 'shimmer';
 
           openaiWs.send(
             JSON.stringify({
               type: 'session.update',
               session: {
-                voice: voice, // dynamic voice selection (shimmer, alloy, echo, etc)
+                voice: voice,
                 instructions,
                 turn_detection: { type: 'server_vad' },
                 input_audio_format: 'g711_ulaw',
@@ -171,7 +177,27 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
   async handleDisconnect(client: WsWebSocket) {
     const session = this.sessions.get(client);
     if (session) {
-      this.logger.log(`Call ended for tenant ${session.tenantId}. Analyzing transcript...`);
+      this.logger.log(`Call ended for tenant ${session.tenantId}. Persisting data...`);
+      
+      // 1. Update VoiceCall record in DB
+      if (session.callSid) {
+        await this.twilioService.updateCallStatus(
+          session.callSid, 
+          'completed', 
+          undefined, // Duration handled by Twilio webhook typically, but we could estimate
+          undefined 
+        );
+        // We should also save the transcript to the VoiceCall entity
+        // Let's assume TwilioService can handle transcript update too
+        const call = await this.twilioService.getCall(session.tenantId, session.callSid);
+        if (call) {
+          call.transcript = session.transcript;
+          call.status = 'completed';
+          await this.twilioService.saveCall(call);
+        }
+      }
+
+      // 2. Run AI Analysis
       if (session.leadId && session.transcript) {
         await this.leadIntelligenceService.analyzeCallOutcome(
           session.tenantId,
@@ -179,6 +205,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
           session.transcript,
         );
       }
+      
       session.openaiWs.close();
       this.sessions.delete(client);
     }

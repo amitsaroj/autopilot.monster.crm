@@ -12,6 +12,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PlanGuard } from './common/guards/plan.guard';
+import { LimitGuard } from './common/guards/limit.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
@@ -54,6 +55,7 @@ import { SubAdminModule } from './modules/sub-admin/sub-admin.module';
 import { TenantSettingsModule } from './modules/tenant-settings/tenant-settings.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SupportModule } from './modules/support/support.module';
+import { MarketplaceModule } from './modules/marketplace/marketplace.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -120,6 +122,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     TenantSettingsModule,
     SchedulerModule,
     SupportModule,
+    MarketplaceModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===
@@ -139,6 +142,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     { provide: APP_GUARD, useClass: PermissionGuard },
     { provide: APP_GUARD, useClass: FeatureGuard },
     { provide: APP_GUARD, useClass: PlanGuard },
+    { provide: APP_GUARD, useClass: LimitGuard },
 
     // === Global Validation Pipe ===
     { provide: APP_PIPE, useClass: ValidationPipe },

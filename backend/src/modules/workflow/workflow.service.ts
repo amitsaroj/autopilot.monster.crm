@@ -48,26 +48,48 @@ export class WorkflowService {
   async triggerWorkflow(tenantId: string, eventName: string, payload: any) {
     this.logger.log(`Triggering workflow for event: ${eventName} (Tenant: ${tenantId})`);
 
-    // In production, fetch active workflows attached to this event from the DB
-    // e.g., const workflows = await this.db.workflows.find({ tenantId, trigger: eventName, active: true })
+    // Fetch active workflows for this tenant
+    const activeFlows = await this.workflowRepo.findActive(tenantId);
 
-    // Mock scheduling the execution
-    const workflowId = 'wkf_' + Math.random().toString(36).substring(7);
+    // Simple matching: in a real system we'd parse the 'definition' JSON 
+    // to find trigger nodes that match `eventName`. Here we do a basic check
+    // to see if the eventName string exists in the JSON stringified definition.
+    const matchedFlows = activeFlows.filter((flow: any) => {
+      try {
+        const defStr = JSON.stringify(flow.definition);
+        return defStr.includes(`"event":"${eventName}"`) || defStr.includes(`"trigger":"${eventName}"`);
+      } catch {
+        return false;
+      }
+    });
 
-    const job = await this.workflowQueue.add(
-      'execute-workflow',
-      {
-        workflowId,
-        tenantId,
-        eventName,
-        payload,
-      },
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 5000 },
-      },
-    );
+    if (matchedFlows.length === 0) {
+      this.logger.log(`No active workflows matched event: ${eventName}`);
+      return { success: true, executed: 0 };
+    }
 
-    return { success: true, jobId: job.id };
+    this.logger.log(`Found ${matchedFlows.length} matching workflow(s) for event: ${eventName}`);
+
+    for (const flow of matchedFlows) {
+      const executionId = 'exec_' + Math.random().toString(36).substring(7);
+
+      await this.workflowQueue.add(
+        'execute-workflow',
+        {
+          workflowId: flow.id,
+          executionId,
+          tenantId,
+          eventName,
+          payload,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 5000 },
+          removeOnComplete: true,
+        },
+      );
+    }
+
+    return { success: true, executed: matchedFlows.length };
   }
 }

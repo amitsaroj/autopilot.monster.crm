@@ -11,9 +11,13 @@ import { Flow } from '../../database/entities/flow.entity';
 import { WorkflowExecution } from '../../database/entities/workflow-execution.entity';
 
 import { WorkflowController } from './workflow.controller';
+import { EmailModule } from '../../shared/email/email.module';
+import { WhatsappModule } from '../whatsapp/whatsapp.module';
 
 @Module({
   imports: [
+    EmailModule,
+    WhatsappModule,
     TypeOrmModule.forFeature([Flow, WorkflowExecution]),
     BullModule.forRootAsync({
       imports: [ConfigModule],

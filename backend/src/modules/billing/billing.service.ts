@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import Stripe from 'stripe';
 import { Subscription as SubscriptionEntity } from '../../database/entities/subscription.entity';
 import { Invoice as InvoiceEntity } from '../../database/entities/invoice.entity';
@@ -9,9 +13,11 @@ import { Payment } from '../../database/entities/payment.entity';
 import { UsageRecord } from '../../database/entities/usage-record.entity';
 import { Plan } from '../../database/entities/plan.entity';
 import { AppConfig } from '../../config/app.config';
+import { EVENT_NAMES } from '../../events/event.constants';
 
 @Injectable()
 export class BillingService {
+  private readonly logger = new Logger(BillingService.name);
   private stripe: Stripe;
 
   constructor(
@@ -26,6 +32,8 @@ export class BillingService {
     @InjectRepository(Plan)
     private readonly planRepo: Repository<Plan>,
     private readonly configService: ConfigService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     const stripeConfig = this.configService.get<AppConfig['stripe']>('app.stripe');
     if (!stripeConfig?.secretKey) {
@@ -202,7 +210,21 @@ export class BillingService {
     return this.paymentRepo.find({ where: { tenantId } as any, order: { createdAt: 'DESC' } });
   }
 
-  async trackUsage(tenantId: string, metric: string, quantity: number) {
+   async trackUsage(tenantId: string, metric: string, quantity: number) {
+    // 1. Fast Path: Redis HINCRBY
+    const redisKey = `tenant:usage:${tenantId}`;
+    const store = (this.cacheManager as any).store;
+    const client = store?.client;
+    
+    if (client) {
+      await client.hincrby(redisKey, metric, quantity);
+    } else {
+      // Fallback to slow path if Redis is down
+      await this.syncUsageRecord(tenantId, metric, quantity);
+    }
+  }
+
+  private async syncUsageRecord(tenantId: string, metric: string, quantity: number) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -223,6 +245,70 @@ export class BillingService {
         periodEnd: endOfMonth,
       } as any);
       return this.usageRepo.save(newRecord);
+    }
+  }
+
+  /**
+   * The Flusher: Sync Redis counts to PostgreSQL every 5 minutes
+   */
+  @Cron(CronExpression.EVERY_5_MINUTES)
+  async syncUsageToDatabase() {
+    const store = (this.cacheManager as any).store;
+    const client = store?.client;
+    if (!client) return;
+
+    const keys = await client.keys('tenant:usage:*');
+    for (const key of keys) {
+      const tenantId = key.split(':').pop();
+      const usage = await client.hgetall(key);
+      
+      for (const [metric, quantityStr] of Object.entries(usage)) {
+        const quantity = parseInt(quantityStr as string, 10);
+        if (quantity > 0) {
+          await this.syncUsageRecord(tenantId, metric, quantity);
+          // Safely decrement in Redis only what we processed
+          await client.hincrby(key, metric, -quantity);
+        }
+      }
+    }
+  }
+
+  /**
+   * Stripe Metered Sync: Push final usage to Stripe every day at midnight
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async syncUsageToStripe() {
+    // In production, fetch overage from DB and call Stripe API
+    // Implementation details would depend on Stripe Product/Price IDs
+    console.log('Syncing usage to Stripe...');
+  }
+
+  /**
+   * Subscription Lifecycle: Check for expired subscriptions and auto-downgrade
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  async handleSubscriptionExpirations() {
+    this.logger.log('Checking for expired subscriptions...');
+    const now = new Date();
+    
+    const expiredSubs = await this.subscriptionRepo.find({
+      where: {
+        status: 'ACTIVE',
+        endDate: Between(new Date(0), now), // Simplified for TypeORM
+      } as any,
+    });
+
+    for (const sub of expiredSubs) {
+      this.logger.log(`Downgrading expired subscription for tenant ${sub.tenantId}`);
+      sub.status = 'EXPIRED'; // Or 'TRIAL' or whatever the logic dictates
+      await this.subscriptionRepo.save(sub);
+
+      // Emit event for other modules (e.g., to notify user)
+      this.eventEmitter.emit(EVENT_NAMES.SUBSCRIPTION_UPDATED, {
+        tenantId: sub.tenantId,
+        subscriptionId: sub.id,
+        status: 'EXPIRED',
+      });
     }
   }
 

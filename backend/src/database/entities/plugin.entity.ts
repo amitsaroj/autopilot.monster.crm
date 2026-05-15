@@ -34,6 +34,9 @@ export class Plugin extends BaseEntity {
   @Column({ nullable: true })
   category!: string;
 
+  @Column({ type: 'text', nullable: true })
+  code?: string;
+
   @OneToMany(() => TenantPlugin, (tenantPlugin) => tenantPlugin.plugin)
   tenantPlugins!: TenantPlugin[];
 }

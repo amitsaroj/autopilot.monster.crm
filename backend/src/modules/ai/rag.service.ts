@@ -9,6 +9,7 @@ const mammoth = require('mammoth'); // For DOCX
 const pdfParse = require('pdf-parse');
 
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { BillingService } from '../billing/billing.service';
 
 @Injectable()
 export class RagService {
@@ -19,6 +20,7 @@ export class RagService {
   constructor(
     private configService: ConfigService,
     private configOrchestrator: ConfigOrchestratorService,
+    private billingService: BillingService,
   ) {
     this.qdrant = new QdrantClient({
       url: this.configService.get('qdrant.url') || 'http://localhost:6333',
@@ -140,12 +142,36 @@ export class RagService {
 
   async generate(tenantId: string | undefined, prompt: string, options: any = {}) {
     this.logger.log(`Generating text for prompt: ${prompt.slice(0, 50)}...`);
+    
+    const primaryModel = options.model || 'gpt-4o';
+    const fallbackModel = 'gpt-4o-mini';
+
+    try {
+      return await this._generateInternal(tenantId, prompt, primaryModel, options);
+    } catch (err) {
+      this.logger.warn(`Primary model ${primaryModel} failed, trying fallback ${fallbackModel}`);
+      try {
+        return await this._generateInternal(tenantId, prompt, fallbackModel, options);
+      } catch (fallbackErr) {
+        this.logger.error('All LLM providers failed', fallbackErr);
+        throw fallbackErr;
+      }
+    }
+  }
+
+  private async _generateInternal(tenantId: string | undefined, prompt: string, model: string, options: any) {
     const openai = await this.getOpenAIClient(tenantId);
     const response = await openai.chat.completions.create({
-      model: options.model || 'gpt-4o',
+      model: model,
       messages: [{ role: 'user', content: prompt }],
       temperature: options.temperature || 0.7,
     });
+
+    const usage = response.usage;
+    if (usage && tenantId) {
+      await this.billingService.trackUsage(tenantId, 'ai_tokens', usage.total_tokens);
+    }
+
     return response.choices[0].message.content;
   }
 
@@ -158,6 +184,12 @@ export class RagService {
       messages: [{ role: 'system', content: 'You are an AI data analyst.' }, { role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
     });
+
+    const usage = response.usage;
+    if (usage && tenantId) {
+      await this.billingService.trackUsage(tenantId, 'ai_tokens', usage.total_tokens);
+    }
+
     return JSON.parse(response.choices[0].message.content || '{}');
   }
 
@@ -170,10 +202,13 @@ export class RagService {
   }
 
   async getUsage(tenantId: string) {
-    // Stub
+    const tokensUsed = await this.billingService.getUsage(tenantId, 'ai_tokens');
+    // Simplified cost calculation: $0.01 per 1k tokens (average)
+    const cost = (tokensUsed / 1000) * 0.01;
+    
     return {
-      tokensUsed: 15000,
-      cost: 0.45,
+      tokensUsed,
+      cost: Number(cost.toFixed(4)),
       tenantId,
     };
   }
