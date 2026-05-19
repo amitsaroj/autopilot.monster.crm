@@ -1,0 +1,7 @@
+- Tech stack summary (5–10 lines)
+- Folder structure
+- Env vars / config patterns
+- Auth pattern (JWT, httpOnly cookies)
+- DB pattern (TypeORM, tenant_id isolation)
+- Coding conventions
+- Current done vs pending list
