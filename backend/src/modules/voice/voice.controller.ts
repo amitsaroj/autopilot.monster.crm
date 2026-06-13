@@ -42,4 +42,25 @@ export class VoiceController {
     console.log('Transcribing audio', dto);
     return { text: 'Transcription logic would go here' };
   }
+
+  @Get('calls/:id/sentiment')
+  @ApiOperation({ summary: 'Extract sentiment and keywords from a completed call' })
+  async getSentiment(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.twilioService.extractSentimentStub(id, tenantId);
+  }
+
+  @Post('clone')
+  @ApiOperation({ summary: 'Create a voice clone from sample audio' })
+  async cloneVoice(@TenantId() tenantId: string, @Body() dto: { sampleUrl: string }) {
+    const voiceId = await this.twilioService.cloneVoiceStub(tenantId, dto.sampleUrl);
+    return { success: true, voiceId };
+  }
+
+  @Post('ivr-callback')
+  @ApiOperation({ summary: 'Twilio IVR webhook callback' })
+  async ivrCallback(@Body() body: Record<string, any>, @Res() res: Response) {
+    // Generate IVR or route call
+    const twiml = this.twilioService.generateIvrTwiml(body);
+    res.type('text/xml').send(twiml);
+  }
 }

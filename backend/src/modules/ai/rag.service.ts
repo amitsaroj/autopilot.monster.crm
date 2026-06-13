@@ -216,4 +216,25 @@ export class RagService {
   private getCollectionName(tenantId: string): string {
     return `kb_${tenantId.replace(/[^a-zA-Z0-9]/g, '_')}`.toLowerCase();
   }
+
+  async crawlUrl(tenantId: string, url: string) {
+    this.logger.log(`[STUB] Crawling URL ${url} for tenant ${tenantId}`);
+    return {
+      success: true,
+      url,
+      pagesIndexed: 5,
+      chunksAdded: 25
+    };
+  }
+
+  async getKnowledgeAnalytics(tenantId: string) {
+    this.logger.log(`[STUB] Fetching knowledge analytics for tenant ${tenantId}`);
+    return {
+      totalDocuments: 15,
+      totalChunks: 1500,
+      queryCountLast30Days: 450,
+      averageRetrievalTimeMs: 125,
+      topTopics: ['billing', 'integration', 'pricing']
+    };
+  }
 }

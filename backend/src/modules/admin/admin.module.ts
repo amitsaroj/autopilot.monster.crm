@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { SecurityService } from './security.service';
+import { SecurityController } from './security.controller';
 import { PlatformSetting } from '../../database/entities/platform-setting.entity';
+import { IpWhitelist, ConsentRecord } from '../../database/entities/security.entity';
 import { MonetizationModule } from '../monetization.module';
 
 import { AdminUsersModule } from './users/admin-users.module';
@@ -58,7 +61,7 @@ import { AdminInternalModule } from './internal/admin-internal.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PlatformSetting]),
+    TypeOrmModule.forFeature([PlatformSetting, IpWhitelist, ConsentRecord]),
     MonetizationModule,
     AdminUsersModule,
     AdminRolesModule,
@@ -111,8 +114,8 @@ import { AdminInternalModule } from './internal/admin-internal.module';
     AdminDebugModule,
     AdminInternalModule,
   ],
-  controllers: [AdminController],
-  providers: [AdminService],
-  exports: [AdminService],
+  controllers: [AdminController, SecurityController],
+  providers: [AdminService, SecurityService],
+  exports: [AdminService, SecurityService],
 })
 export class AdminModule {}

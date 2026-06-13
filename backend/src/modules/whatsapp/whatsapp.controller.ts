@@ -37,4 +37,16 @@ export class WhatsappController {
   async getTemplates(@TenantId() tenantId: string) {
     return this.whatsappService.getTemplates(tenantId);
   }
+
+  @Get('inbox/sla')
+  @ApiOperation({ summary: 'Get shared inbox SLA metrics' })
+  async getInboxSLA(@TenantId() tenantId: string) {
+    return this.whatsappService.calculateInboxSLA(tenantId);
+  }
+
+  @Get('flow-builder/nodes')
+  @ApiOperation({ summary: 'Get flow builder node definitions' })
+  async getFlowNodes(@TenantId() tenantId: string) {
+    return this.whatsappService.getFlowBuilderNodes(tenantId);
+  }
 }

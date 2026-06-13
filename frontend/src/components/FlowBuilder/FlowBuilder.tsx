@@ -13,7 +13,7 @@ import ReactFlow, {
   useEdgesState,
   Panel,
 } from 'reactflow';
-import 'reactflow/dist/style.css';
+import { ReactFlowStyles } from '../ReactFlowStyles';
 
 import { MessageNode } from './nodes/MessageNode';
 import { QuestionNode } from './nodes/QuestionNode';

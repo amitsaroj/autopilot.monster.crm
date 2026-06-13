@@ -13,7 +13,7 @@ import ReactFlow, {
   Node,
   Edge
 } from 'reactflow';
-import 'reactflow/dist/style.css';
+import { ReactFlowStyles } from '@/components/ReactFlowStyles';
 import { Save, Play, PlusCircle, MessageCircle, GitBranch, Zap } from 'lucide-react';
 
 const initialNodes = [

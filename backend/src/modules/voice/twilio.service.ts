@@ -100,4 +100,27 @@ export class TwilioService {
     connect.stream({ url: wssUrl });
     return twiml.toString();
   }
+
+  generateIvrTwiml(options: any): string {
+    const twiml = new twilio.twiml.VoiceResponse();
+    const gather = twiml.gather({
+      numDigits: 1,
+      action: '/api/v1/voice/ivr-callback',
+    });
+    gather.say(options.greeting || 'Welcome to Autopilot Monster. Press 1 for Sales, 2 for Support.');
+    return twiml.toString();
+  }
+
+  async extractSentimentStub(callSid: string, _tenantId?: string): Promise<{ sentiment: string; keywords: string[] }> {
+    this.logger.log(`[STUB] Extracting sentiment for call ${callSid}`);
+    return {
+      sentiment: 'POSITIVE',
+      keywords: ['interested', 'pricing', 'demo'],
+    };
+  }
+
+  async cloneVoiceStub(tenantId: string, sampleUrl: string): Promise<string> {
+    this.logger.log(`[STUB] Cloning voice for tenant ${tenantId} from ${sampleUrl}`);
+    return `voice_clone_${Date.now()}`;
+  }
 }

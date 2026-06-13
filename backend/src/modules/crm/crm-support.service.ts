@@ -28,7 +28,21 @@ export class ActivityService {
   async getCalendarEvents(tid: string) {
     const activities = await this.repo.findAll(tid);
     // Include Meetings, Calls, and Tasks that are tracked as activities
-    return activities.filter(a => ['MEETING', 'CALL', 'TASK'].includes(a.type));
+    const relevant = activities.filter(a => ['MEETING', 'CALL', 'TASK'].includes(a.type));
+    
+    return relevant.map(a => ({
+      id: a.id,
+      title: a.subject || `${a.type} Activity`,
+      type: a.type,
+      startTime: a.occurredAt,
+      endTime: new Date(new Date(a.occurredAt).getTime() + (a.durationMinutes || 60) * 60 * 1000),
+      status: a.outcome || 'PENDING',
+      ownerId: a.ownerId,
+      contactId: a.contactId,
+      dealId: a.dealId,
+      companyId: a.companyId,
+      description: a.description || ''
+    }));
   }
   remove(tid: string, id: string) {
     return this.repo.delete(tid, id);
@@ -212,10 +226,22 @@ export class EmailCrmService {
   }
 
   async sendEmail(tid: string, data: any) {
+    // Threading logic stub
+    const threadId = data.threadId || `thread_${Date.now()}`;
     return this.repo.create(tid, {
       ...data,
+      threadId,
       direction: 'OUTBOUND' as any,
     });
+  }
+
+  async parseIncomingEmail(_tid: string, rawEmail: string) {
+    // Parsing stub
+    return {
+      parsedContent: rawEmail.substring(0, 50),
+      extractedThreadId: `thread_${Date.now()}`,
+      sentiment: 'NEUTRAL'
+    };
   }
 
   async markAsRead(tid: string, id: string) {

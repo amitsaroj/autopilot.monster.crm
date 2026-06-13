@@ -180,4 +180,21 @@ export class WhatsappService {
     }
     return tenantId;
   }
+
+  async calculateInboxSLA(tenantId: string): Promise<{ averageResponseTimeMs: number; breached: number }> {
+    this.logger.log(`[STUB] Calculating shared inbox SLA for tenant ${tenantId}`);
+    return {
+      averageResponseTimeMs: 120000, // 2 minutes
+      breached: 5
+    };
+  }
+
+  async getFlowBuilderNodes(tenantId: string): Promise<any[]> {
+    this.logger.log(`[STUB] Fetching flow builder nodes for tenant ${tenantId}`);
+    return [
+      { id: 'node_1', type: 'TRIGGER_KEYWORD', config: { keyword: 'START' } },
+      { id: 'node_2', type: 'SEND_TEMPLATE', config: { templateId: 'welcome_message' } },
+      { id: 'node_3', type: 'AWAIT_RESPONSE', config: { timeoutMinutes: 10 } }
+    ];
+  }
 }

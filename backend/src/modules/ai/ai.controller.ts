@@ -112,6 +112,18 @@ export class AiController {
     return this.kbService.remove(tenantId, id);
   }
 
+  @Post('kb/crawl')
+  @ApiOperation({ summary: 'Crawl a URL to add to knowledge base' })
+  async crawlUrl(@TenantId() tenantId: string, @Body() dto: { url: string }) {
+    return this.ragService.crawlUrl(tenantId, dto.url);
+  }
+
+  @Get('kb/analytics')
+  @ApiOperation({ summary: 'Get knowledge base analytics' })
+  async getKbAnalytics(@TenantId() tenantId: string) {
+    return this.ragService.getKnowledgeAnalytics(tenantId);
+  }
+
   // --- Conversations ---
   @Get('chats')
   @ApiOperation({ summary: 'Get all conversations' })

@@ -9,6 +9,7 @@ import { FlowService } from './flow.service';
 import { LeadIntelligenceService } from './lead-intelligence.service';
 import { LeadService } from './lead.service';
 import { NotificationService } from './notification.service';
+import { OmnichannelService } from './omnichannel.service';
 
 import { Agent } from '../../database/entities/agent.entity';
 import { Flow } from '../../database/entities/flow.entity';
@@ -29,6 +30,8 @@ import { Tag } from '../../database/entities/tag.entity';
 import { Segment } from '../../database/entities/segment.entity';
 import { CustomField } from '../../database/entities/custom-field.entity';
 import { DealHistory } from '../../database/entities/deal-history.entity';
+import { Conversation } from '../../database/entities/conversation.entity';
+import { Message } from '../../database/entities/message.entity';
 
 import { ContactService } from './contact.service';
 import { ContactRepository } from './contact.repository';
@@ -40,6 +43,9 @@ import { PipelineService } from './pipeline.service';
 import { PipelineRepository } from './pipeline.repository';
 import { CrmAutomationService } from './services/crm-automation.service';
 import { LeadConversionService } from './services/lead-conversion.service';
+import { DuplicateDetectionService } from './duplicate-detection.service';
+import { DuplicateController } from './controllers/duplicate.controller';
+import { LeadScoringService } from './lead-scoring.service';
 import {
   ActivityService,
   TaskCrmService,
@@ -91,11 +97,13 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
       Segment,
       CustomField,
       DealHistory,
+      Conversation,
+      Message,
     ]),
     forwardRef(() => WhatsappModule),
     forwardRef(() => VoiceModule),
   ],
-  controllers: [CrmController],
+  controllers: [CrmController, DuplicateController],
   providers: [
     AgentService,
     FlowService,
@@ -136,6 +144,9 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     CustomFieldRepository,
     CrmAutomationService,
     LeadConversionService,
+    DuplicateDetectionService,
+    LeadScoringService,
+    OmnichannelService,
   ],
   exports: [
     AgentService,
@@ -159,6 +170,9 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     CustomFieldService,
     LeadConversionService,
     CrmAutomationService,
+    DuplicateDetectionService,
+    LeadScoringService,
+    OmnichannelService,
   ],
 })
 export class CrmModule {}

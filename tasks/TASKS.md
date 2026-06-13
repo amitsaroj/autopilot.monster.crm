@@ -112,6 +112,57 @@
   - started_at: 2026-04-04
   - completed_at: 2026-04-04
 
+- [x] Cat 1: Multi-Tenant SaaS Core Gaps
+  - id: TASK-019
+  - description: API keys per tenant entity/service, team management controller, enhanced feature flags, usage tracking integration
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+- [x] Cat 2: Billing & Subscription Gaps
+  - id: TASK-020
+  - description: PayPal, Razorpay integration stubs, wallet/credit system, coupon/discount entity, enhanced usage metering
+  - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+
+- [x] Cat 3: CRM System Gaps
+  - id: TASK-021
+  - description: Duplicate detection, enhanced import/export, calendar integration improvements
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+- [x] Cat 5: Lead Intelligence Gaps
+  - id: TASK-023
+  - description: Rule scoring engine, behavior scoring, auto-assignment, auto pipeline update
+  - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+- [x] Cat 7: Omni-Channel Messaging
+  - id: TASK-025
+  - description: SMS/email/web-chat/push unified conversation, channel fallback, cross-channel automation
+  - created_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+- [x] Cat 8: Automation Workflow Engine Gaps
+  - id: TASK-026
+  - description: Enhanced node types, recurring workflows, execution logs, workflow analytics
+  - created_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+- [x] Cat 9: AI Knowledge Base (RAG) Gaps
+  - id: TASK-027
+  - description: URL crawl, knowledge analytics, enhanced tenant isolation
+  - created_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+- [x] Cat 10: Analytics & Reports Gaps
+  - id: TASK-028
+  - description: PDF export, ROI reports, AI vs human comparison reports
+  - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+
 ## PLANNED
 
 - [ ] Fix Terraform and AWS Deployment Pipeline
@@ -119,6 +170,29 @@
   - description: Restore correct EC2 definition in main.tf, fix backend conflict, and add instance_id to outputs.tf to fix the deployment pipeline. Push into main branch.
   - created_at: 2026-04-06
 
+- [ ] Cat 12: Security & Compliance Gaps
+  - id: TASK-030
+  - description: IP whitelist, consent tracking, GDPR tools, encryption enhancements
+  - created_at: 2026-06-13
+
+- [ ] Cat 13: System & Infra Gaps
+  - id: TASK-031
+  - description: Backup service, monitoring dashboard, failover config, load balancing
+  - created_at: 2026-06-13
+
+- [ ] Cat 14: AI Engine Gaps
+  - id: TASK-032
+  - description: Prompt templates, model switch support, AI summarization service, streaming responses
+  - created_at: 2026-06-13
+
+- [ ] Cat 15: Marketplace / Extensions Gaps
+  - id: TASK-033
+  - description: Workflow templates, voice scripts, vendor onboarding, revenue share logic
+  - created_at: 2026-06-13
+
 ## IN_PROGRESS
 
-(No tasks currently in progress)
+- [ ] Cat 11: API & Developer Platform
+  - id: TASK-029
+  - description: OAuth provider, webhooks management UI, API usage logs dashboard
+  - started_at: 2026-06-13

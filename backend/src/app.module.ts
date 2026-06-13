@@ -56,6 +56,7 @@ import { TenantSettingsModule } from './modules/tenant-settings/tenant-settings.
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SupportModule } from './modules/support/support.module';
 import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { DeveloperModule } from './modules/developer/developer.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -123,6 +124,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     SchedulerModule,
     SupportModule,
     MarketplaceModule,
+    DeveloperModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===
