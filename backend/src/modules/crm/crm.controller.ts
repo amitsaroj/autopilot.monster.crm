@@ -80,10 +80,46 @@ export class CrmController {
     return this.agentService.findAll(tenantId);
   }
 
+  @Get('agents/templates')
+  @ApiOperation({ summary: 'Get all AI agent templates' })
+  getAgentTemplates() {
+    return this.agentService.getTemplates();
+  }
+
+  @Post('agents/templates/:templateId/deploy')
+  @ApiOperation({ summary: 'Deploy a new AI agent from template' })
+  deployAgent(@TenantId() tenantId: string, @Param('templateId') templateId: string) {
+    return this.agentService.createFromTemplate(tenantId, templateId);
+  }
+
+  @Post('agents/templates/:templateId/install')
+  @ApiOperation({ summary: 'Install a new AI agent from template' })
+  installAgent(@TenantId() tenantId: string, @Param('templateId') templateId: string) {
+    return this.agentService.createFromTemplate(tenantId, templateId);
+  }
+
+  @Get('agents/:id')
+  @ApiOperation({ summary: 'Get a specific AI agent by ID' })
+  getAgent(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.agentService.findOne(tenantId, id);
+  }
+
   @Post('agents')
   @ApiOperation({ summary: 'Create a new AI agent' })
   createAgent(@TenantId() tenantId: string, @Body() data: any) {
     return this.agentService.create(tenantId, data);
+  }
+
+  @Patch('agents/:id')
+  @ApiOperation({ summary: 'Update an AI agent' })
+  updateAgent(@TenantId() tenantId: string, @Param('id') id: string, @Body() data: any) {
+    return this.agentService.update(tenantId, id, data);
+  }
+
+  @Delete('agents/:id')
+  @ApiOperation({ summary: 'Delete an AI agent' })
+  deleteAgent(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.agentService.remove(tenantId, id);
   }
 
   // --- Flows ---

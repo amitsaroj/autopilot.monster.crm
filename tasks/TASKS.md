@@ -170,29 +170,48 @@
   - description: Restore correct EC2 definition in main.tf, fix backend conflict, and add instance_id to outputs.tf to fix the deployment pipeline. Push into main branch.
   - created_at: 2026-04-06
 
-- [ ] Cat 12: Security & Compliance Gaps
+- [x] Cat 11: API & Developer Platform
+  - id: TASK-029
+  - description: OAuth provider, webhooks management UI, API usage logs dashboard
+  - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+- [x] Cat 12: Security & Compliance Gaps
   - id: TASK-030
   - description: IP whitelist, consent tracking, GDPR tools, encryption enhancements
   - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
 
-- [ ] Cat 13: System & Infra Gaps
+- [x] Cat 13: System & Infra Gaps
   - id: TASK-031
   - description: Backup service, monitoring dashboard, failover config, load balancing
   - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
 
-- [ ] Cat 14: AI Engine Gaps
+- [x] Cat 14: AI Engine Gaps
   - id: TASK-032
   - description: Prompt templates, model switch support, AI summarization service, streaming responses
   - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
 
-- [ ] Cat 15: Marketplace / Extensions Gaps
+- [x] Cat 15: Marketplace / Extensions Gaps
   - id: TASK-033
   - description: Workflow templates, voice scripts, vendor onboarding, revenue share logic
   - created_at: 2026-06-13
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+- [x] Fix Terraform and AWS Deployment Pipeline
+  - id: TASK-008
+  - description: Restore correct EC2 definition in main.tf, fix backend conflict, and add instance_id to outputs.tf to fix the deployment pipeline. Push into main branch.
+  - created_at: 2026-04-06
+  - started_at: 2026-06-13
+  - completed_at: 2026-06-13
+
+## PLANNED
 
 ## IN_PROGRESS
-
-- [ ] Cat 11: API & Developer Platform
-  - id: TASK-029
-  - description: OAuth provider, webhooks management UI, API usage logs dashboard
-  - started_at: 2026-06-13

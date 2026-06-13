@@ -74,10 +74,10 @@ resource "aws_security_group" "sg" {
   }
 }
 
-# 3. EC2 Instance (t3.micro - Free Tier eligible in ap-south-1)
+# 3. EC2 Instance (t3.medium - Scaling upgrade in ap-south-1)
 resource "aws_instance" "app_server" {
   ami                    = "ami-0dee22c13ea7a9a67" # Ubuntu 24.04 LTS ap-south-1
-  instance_type          = "t3.micro"
+  instance_type          = "t3.medium"
   iam_instance_profile   = aws_iam_instance_profile.ssm_profile.name
   vpc_security_group_ids = [aws_security_group.sg.id]
 
@@ -118,15 +118,4 @@ resource "aws_eip" "lb" {
   domain   = "vpc"
 }
 
-# Outputs (required by deploy.yml)
-output "public_ip" {
-  value = aws_eip.lb.public_ip
-}
 
-output "elastic_ip" {
-  value = aws_eip.lb.public_ip
-}
-
-output "instance_id" {
-  value = aws_instance.app_server.id
-}

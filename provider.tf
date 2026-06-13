@@ -1,5 +1,6 @@
 terraform {
   backend "s3" {
+    bucket = "autopilot-monster-state-placeholder"
     key    = "terraform.tfstate"
     region = "ap-south-1"
   }

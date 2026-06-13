@@ -151,4 +151,86 @@ export class MarketplaceService {
       throw new Error(`Plugin execution error: ${err.message}`);
     }
   }
+
+  private vendors: Map<string, {
+    tenantId: string;
+    companyName: string;
+    contactEmail: string;
+    stripeAccountId?: string;
+    revenueShareRate: number;
+    balance: number;
+    payouts: any[];
+  }> = new Map();
+
+  async onboardVendor(tenantId: string, details: { companyName: string; contactEmail: string; stripeAccountId?: string }) {
+    this.logger.log(`Onboarding vendor for tenant ${tenantId}`);
+    const vendor = {
+      tenantId,
+      companyName: details.companyName,
+      contactEmail: details.contactEmail,
+      stripeAccountId: details.stripeAccountId || `acct_sim_${Date.now()}`,
+      revenueShareRate: 0.70,
+      balance: 0.00,
+      payouts: []
+    };
+    this.vendors.set(tenantId, vendor);
+    return vendor;
+  }
+
+  async getVendorDetails(tenantId: string) {
+    let vendor = this.vendors.get(tenantId);
+    if (!vendor) {
+      return {
+        tenantId,
+        onboarded: false,
+        balance: 0.00,
+        revenueShareRate: 0.70,
+        payouts: []
+      };
+    }
+    return {
+      ...vendor,
+      onboarded: true
+    };
+  }
+
+  async recordPurchase(_tenantId: string, appId: string, amount: number) {
+    const plugin = await this.getAppById(appId);
+    const vendorTenantId = plugin.author || 'system-platform'; 
+    const vendor = this.vendors.get(vendorTenantId);
+
+    const platformShare = amount * 0.30;
+    const vendorShare = amount * 0.70;
+
+    if (vendor) {
+      vendor.balance += vendorShare;
+      this.logger.log(`Credited vendor ${vendorTenantId} with $${vendorShare.toFixed(2)} (Platform share: $${platformShare.toFixed(2)})`);
+    } else {
+      this.logger.log(`Purchase of $${amount} recorded. No custom vendor found.`);
+    }
+
+    return {
+      success: true,
+      appId,
+      amount,
+      vendorShare: vendor ? vendorShare : 0,
+      platformShare
+    };
+  }
+
+  async getRevenueReport(tenantId: string) {
+    const vendor = this.vendors.get(tenantId);
+    if (!vendor) {
+      return {
+        totalEarnings: 0,
+        currentBalance: 0,
+        payouts: []
+      };
+    }
+    return {
+      totalEarnings: vendor.balance,
+      currentBalance: vendor.balance,
+      payouts: vendor.payouts
+    };
+  }
 }
