@@ -215,3 +215,10 @@
 ## PLANNED
 
 ## IN_PROGRESS
+
+## COMPLETED
+- [x] Implement Dev Pipeline Orchestration improvements
+  - id: TASK-034
+  - description: Auto-resuming the latest pipeline run, skip stage options, and Ollama model prompt tuning in ollama-pipeline.sh
+  - started_at: 2026-06-14
+  - completed_at: 2026-06-14
