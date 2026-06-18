@@ -25,6 +25,11 @@ export class ActivityService {
   findAll(tid: string) {
     return this.repo.findAll(tid);
   }
+  async getCalendarEvents(tid: string) {
+    const activities = await this.repo.findAll(tid);
+    // Include Meetings, Calls, and Tasks that are tracked as activities
+    return activities.filter(a => ['MEETING', 'CALL', 'TASK'].includes(a.type));
+  }
   remove(tid: string, id: string) {
     return this.repo.delete(tid, id);
   }

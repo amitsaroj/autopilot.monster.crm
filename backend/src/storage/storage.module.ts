@@ -2,10 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { StorageService } from './storage.service';
+import { StorageController } from './storage.controller';
 import type { MinioConfig } from '../config/minio.config';
 
 @Module({
   imports: [ConfigModule],
+  controllers: [StorageController],
   providers: [
     StorageService,
     {

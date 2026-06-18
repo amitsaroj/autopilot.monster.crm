@@ -1,8 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import twilio from 'twilio';
 
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { VoiceCall } from '../../database/entities/voice-call.entity';
 
 @Injectable()
 export class TwilioService {
@@ -12,6 +15,8 @@ export class TwilioService {
   constructor(
     private configService: ConfigService,
     private configOrchestrator: ConfigOrchestratorService,
+    @InjectRepository(VoiceCall)
+    private readonly voiceCallRepo: Repository<VoiceCall>,
   ) {}
 
   private async getClient(tenantId: string): Promise<{ client: twilio.Twilio; from: string }> {
@@ -43,11 +48,8 @@ export class TwilioService {
 
     const { client, from } = await this.getClient(tenantId);
     const twiml = new twilio.twiml.VoiceResponse();
-    // Connect to our NestJS WebSocket Gateway
     const connect = twiml.connect();
-    connect.stream({
-      url: wssUrl, // e.g., wss://api.autopilot.com/voice/stream
-    });
+    connect.stream({ url: wssUrl });
 
     try {
       const call = await client.calls.create({
@@ -56,6 +58,18 @@ export class TwilioService {
         from,
         record: true,
       });
+
+      // Persist Call Record
+      const voiceCall = this.voiceCallRepo.create({
+        tenantId,
+        sid: call.sid,
+        from,
+        to,
+        direction: 'OUTBOUND',
+        status: 'INITIATED',
+      });
+      await this.voiceCallRepo.save(voiceCall);
+
       return call.sid;
     } catch (err) {
       this.logger.error('Failed to initiate outbound call', err);
@@ -63,13 +77,27 @@ export class TwilioService {
     }
   }
 
+  async getCall(tenantId: string, sid: string): Promise<VoiceCall | null> {
+    return this.voiceCallRepo.findOne({ where: { tenantId, sid } });
+  }
+
+  async updateCallStatus(sid: string, status: string, duration?: number, recordingUrl?: string) {
+    await this.voiceCallRepo.update({ sid }, { 
+      status, 
+      durationSeconds: duration, 
+      recordingUrl 
+    });
+  }
+
+  async saveCall(call: VoiceCall): Promise<VoiceCall> {
+    return this.voiceCallRepo.save(call);
+  }
+
   generateIncomingStreamingTwiml(wssUrl: string): string {
     const twiml = new twilio.twiml.VoiceResponse();
     twiml.say({ voice: 'Polly.Amy' }, 'Hello. Please hold while I connect you to an agent.');
     const connect = twiml.connect();
-    connect.stream({
-      url: wssUrl, // e.g. wss://api.autopilot.com/voice/stream
-    });
+    connect.stream({ url: wssUrl });
     return twiml.toString();
   }
 }

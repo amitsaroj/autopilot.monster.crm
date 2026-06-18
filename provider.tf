@@ -1,6 +1,5 @@
 terraform {
   backend "s3" {
-    # Isko khali chhodein, workflow isse bhar dega
     key    = "terraform.tfstate"
     region = "ap-south-1"
   }

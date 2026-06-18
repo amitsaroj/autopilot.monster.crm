@@ -10,8 +10,14 @@ import { Message } from '../../database/entities/message.entity';
 import { KnowledgeBaseService, KnowledgeBaseRepository } from './knowledge-base.service';
 import { ConversationService, ConversationRepository } from './conversation.service';
 
+import { MonetizationModule } from '../monetization.module';
+
 @Module({
-  imports: [ConfigModule, TypeOrmModule.forFeature([KnowledgeBase, Conversation, Message])],
+  imports: [
+    ConfigModule,
+    MonetizationModule,
+    TypeOrmModule.forFeature([KnowledgeBase, Conversation, Message])
+  ],
   controllers: [AiController],
   providers: [
     RagService,

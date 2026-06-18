@@ -7,6 +7,7 @@ import {
   MemoryHealthIndicator,
   DiskHealthIndicator,
   MicroserviceHealthIndicator,
+  HttpHealthIndicator,
 } from '@nestjs/terminus';
 import { Transport } from '@nestjs/microservices';
 
@@ -19,6 +20,7 @@ export class HealthController {
     private readonly memory: MemoryHealthIndicator,
     private readonly disk: DiskHealthIndicator,
     private readonly microservice: MicroserviceHealthIndicator,
+    private readonly http: HttpHealthIndicator,
   ) {}
 
   @Get()
@@ -29,6 +31,7 @@ export class HealthController {
       () => this.db.pingCheck('database'),
       () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024),
       () => this.disk.checkStorage('disk', { path: '/', thresholdPercent: 0.9 }),
+      () => this.http.pingCheck('qdrant', process.env.QDRANT_URL || 'http://localhost:6333'),
       () => this.microservice.pingCheck('redis', {
         transport: Transport.REDIS,
         options: { host: process.env.REDIS_HOST || 'localhost', port: parseInt(process.env.REDIS_PORT || '6379') },

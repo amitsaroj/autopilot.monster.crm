@@ -2,7 +2,7 @@ name: Auto Deploy to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches: [ prod ]
 
 jobs:
   deploy:
@@ -52,8 +52,31 @@ jobs:
       - name: Terraform Init & Apply
         run: |
           terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
-          terraform apply -auto-approve
+
+          # Step 1: Remove old orphan state entries (different resource names pointing to same AWS resources)
+          # These were left from a previous broken main.tf and cause race conditions on apply
+          terraform state rm aws_iam_role.autopilot_ssm_role 2>/dev/null || true
+          terraform state rm aws_iam_role_policy_attachment.autopilot_ssm_attach 2>/dev/null || true
+          terraform state rm aws_security_group.autopilot_sg 2>/dev/null || true
+
+          # Step 2: Remove current broken state for ssm_role since it was partially destroyed
+          terraform state rm aws_iam_role.ssm_role 2>/dev/null || true
+          terraform state rm aws_iam_role_policy_attachment.ssm_attach 2>/dev/null || true
+          terraform state rm aws_iam_role_policy_attachment.s3_read 2>/dev/null || true
+          terraform state rm aws_iam_instance_profile.ssm_profile 2>/dev/null || true
+
+          # Step 3: Re-import existing AWS resources into clean state
+          terraform import aws_iam_role.ssm_role autopilot-ssm-role 2>/dev/null || true
+          terraform import aws_iam_instance_profile.ssm_profile autopilot-ssm-profile 2>/dev/null || true
+          SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=autopilot-sg" --query "SecurityGroups[0].GroupId" --output text --region ap-south-1 2>/dev/null)
+          if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
+            terraform import aws_security_group.sg "$SG_ID" 2>/dev/null || true
+          fi
+
+          # Step 4: Apply with full refresh
+          terraform apply -auto-approve -refresh=true
           echo "INSTANCE_ID=$(terraform output -raw instance_id)" >> $GITHUB_ENV
+          echo "ELASTIC_IP=$(terraform output -raw elastic_ip)" >> $GITHUB_ENV
 
       # --- BUILD & PUSH DOCKER IMAGE ---
       - name: Build and Push Docker Image

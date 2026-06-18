@@ -25,9 +25,23 @@ services:
     expose:
       - 8000
     depends_on:
+      - db
       - redis
       - qdrant
     restart: always
+    networks:
+      - autopilot_net
+
+  db:
+    image: postgres:15-alpine
+    container_name: autopilot_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: crm
+    volumes:
+      - pg_prod_data:/var/lib/postgresql/data
+    restart: unless-stopped
     networks:
       - autopilot_net
 
@@ -65,5 +79,6 @@ networks:
     driver: bridge
 
 volumes:
+  pg_prod_data:
   redis_prod_data:
   qdrant_prod_data:

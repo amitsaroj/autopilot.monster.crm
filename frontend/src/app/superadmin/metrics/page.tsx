@@ -25,7 +25,7 @@ export default function SystemMetricsPage() {
 
   const fetchHealth = async () => {
     try {
-      const res = await fetch('/api/v1/admin/health');
+      const res = await fetch('/api/v1/admin/metrics/health');
       const json = await res.json();
       if (json.data) setHealth(json.data);
     } catch (e) {

@@ -79,4 +79,14 @@ export class ConfigOrchestratorService {
       businessAccountId: await this.get(tenantId, 'whatsapp_business_account_id'),
     };
   }
+
+  /**
+   * Reverse lookup: find tenant by config value
+   */
+  async findTenantByConfig(key: string, value: string): Promise<string | null> {
+    const setting = await this.tenantSettingRepo.findOne({
+      where: { key, value }
+    });
+    return setting ? setting.tenantId : null;
+  }
 }

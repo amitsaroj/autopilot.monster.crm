@@ -20,10 +20,10 @@ export class SocialSchedulerService {
 
     for (const post of pendingPosts) {
       try {
-        this.logger.log(`Fulfilling post ${post.id} for platform ${post.platform}`);
+        this.logger.log(`Publishing post ${post.id} to ${post.platform}`);
         
-        // MOCK EXTERNAL API CALL
-        await new Promise(resolve => setTimeout(resolve, 500)); 
+        // Dispatch to platform-specific publisher
+        await this.publishToExternalPlatform(post);
 
         await this.socialService.updatePost(post.tenantId, post.id, {
           status: SocialPostStatus.POSTED,
@@ -37,6 +37,93 @@ export class SocialSchedulerService {
           failReason: error?.message || 'Unknown error',
         });
       }
+    }
+  }
+
+  private async publishToExternalPlatform(post: any): Promise<void> {
+    const platform = post.platform;
+    this.logger.debug(`Dispatching to ${platform} API for post ${post.id}`);
+
+    switch (platform) {
+      case 'FACEBOOK':
+      case 'INSTAGRAM': {
+        const pageToken = process.env.FACEBOOK_PAGE_TOKEN;
+        const pageId = process.env.FACEBOOK_PAGE_ID;
+        if (!pageToken || !pageId) {
+          this.logger.warn(`Facebook/Instagram credentials not configured — skipping publish for post ${post.id}`);
+          return;
+        }
+        const res = await fetch(`https://graph.facebook.com/v17.0/${pageId}/feed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: post.content,
+            access_token: pageToken,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`Facebook API error: ${err}`);
+        }
+        break;
+      }
+
+      case 'TWITTER': {
+        const bearerToken = process.env.TWITTER_BEARER_TOKEN;
+        if (!bearerToken) {
+          this.logger.warn(`Twitter credentials not configured — skipping publish for post ${post.id}`);
+          return;
+        }
+        const res = await fetch('https://api.twitter.com/2/tweets', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${bearerToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: post.content }),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`Twitter API error: ${err}`);
+        }
+        break;
+      }
+
+      case 'LINKEDIN': {
+        const accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
+        const authorUrn = process.env.LINKEDIN_AUTHOR_URN;
+        if (!accessToken || !authorUrn) {
+          this.logger.warn(`LinkedIn credentials not configured — skipping publish for post ${post.id}`);
+          return;
+        }
+        const res = await fetch('https://api.linkedin.com/v2/ugcPosts', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+            'X-Restli-Protocol-Version': '2.0.0',
+          },
+          body: JSON.stringify({
+            author: authorUrn,
+            lifecycleState: 'PUBLISHED',
+            specificContent: {
+              'com.linkedin.ugc.ShareContent': {
+                shareCommentary: { text: post.content },
+                shareMediaCategory: 'NONE',
+              },
+            },
+            visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`LinkedIn API error: ${err}`);
+        }
+        break;
+      }
+
+      default:
+        this.logger.warn(`Unsupported platform: ${platform}`);
     }
   }
 }

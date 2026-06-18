@@ -17,20 +17,24 @@ export class WhatsappController {
   async sendMessage(@TenantId() tenantId: string, @Body() dto: SendWhatsappDto) {
     console.log(`Sending WhatsApp for tenant ${tenantId}`);
     const wabaId = dto.wabaId || 'default-waba-id';
-    return this.whatsappService.sendTextMessage(dto.to, dto.message, wabaId);
+    return this.whatsappService.sendTextMessage(dto.to, dto.message, wabaId, tenantId);
   }
 
   @Get('messages')
   @ApiOperation({ summary: 'Get WhatsApp message history' })
   async getMessages(@TenantId() tenantId: string) {
-    console.log(`Fetching messages for ${tenantId}`);
-    return [];
+    return this.whatsappService.getMessages(tenantId);
+  }
+
+  @Get('conversations')
+  @ApiOperation({ summary: 'Get list of active WhatsApp conversations' })
+  async getConversations(@TenantId() tenantId: string) {
+    return this.whatsappService.getConversations(tenantId);
   }
 
   @Get('templates')
   @ApiOperation({ summary: 'Get WhatsApp message templates' })
   async getTemplates(@TenantId() tenantId: string) {
-    console.log(`Fetching templates for ${tenantId}`);
-    return [];
+    return this.whatsappService.getTemplates(tenantId);
   }
 }

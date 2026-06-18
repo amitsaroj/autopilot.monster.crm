@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 
 import {
-  UseGuards,
   Controller,
   Get,
   Post,
@@ -15,11 +14,9 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
 import { WhatsappService } from './whatsapp.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { TenantGuard } from '../../common/guards/tenant.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
+import { Public } from '../../common/decorators';
 
-@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+@Public()
 @Controller('v1/whatsapp/webhook')
 export class MetaWebhookController {
   private readonly appSecret: string;
