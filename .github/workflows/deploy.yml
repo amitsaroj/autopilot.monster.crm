@@ -87,6 +87,7 @@ jobs:
               \"echo GITHUB_REPOSITORY=${REPO_LOWER} > .env\",
               \"sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}\",
               \"sudo docker compose -f docker-compose.prod.yml pull\",
+              \"sudo docker compose -f docker-compose.prod.yml run --rm api npm run migrate:prod\",
               \"sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate\",
               \"echo 'Deployment complete. Services running:'\",
               \"sudo docker compose -f docker-compose.prod.yml ps\"

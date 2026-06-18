@@ -9,9 +9,11 @@ import {
   Delete,
   Body,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Response } from 'express';
 
 import { RagService } from './rag.service';
 import { KnowledgeBaseService } from './knowledge-base.service';
@@ -51,12 +53,51 @@ export class AiController {
       conversationId = conv.id;
     }
 
+    await this.chatService.addMessage(tenantId, conversationId, 'USER', dto.message);
+
     const prompt = context ? `Context: ${context}\n\nUser: ${dto.message}` : dto.message;
     const reply = await this.ragService.generate(tenantId, prompt);
 
-    await this.chatService.addMessage(tenantId, conversationId, 'ASSISTANT', reply!);
+    await this.chatService.addMessage(tenantId, conversationId, 'ASSISTANT', reply ?? '');
 
     return { reply, conversationId };
+  }
+
+  @Post('chat/stream')
+  @ApiOperation({ summary: 'Stream chat with AI (SSE)' })
+  async streamChat(
+    @TenantId() tenantId: string,
+    @Body() dto: ChatDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    let context = '';
+    if (dto.useRag) {
+      context = await this.ragService.queryKnowledgeBase(tenantId, dto.message);
+    }
+
+    let conversationId = dto.conversationId;
+    if (!conversationId) {
+      const conv = await this.chatService.create(tenantId, { title: dto.message.slice(0, 30) });
+      conversationId = conv.id;
+    }
+
+    await this.chatService.addMessage(tenantId, conversationId, 'USER', dto.message);
+
+    const prompt = context ? `Context: ${context}\n\nUser: ${dto.message}` : dto.message;
+    let fullReply = '';
+
+    for await (const chunk of this.ragService.streamGenerate(tenantId, prompt)) {
+      fullReply += chunk;
+      res.write(`data: ${JSON.stringify({ chunk, conversationId })}\n\n`);
+    }
+
+    await this.chatService.addMessage(tenantId, conversationId, 'ASSISTANT', fullReply);
+    res.write(`data: ${JSON.stringify({ done: true, conversationId })}\n\n`);
+    res.end();
   }
 
   @Post('analyze')
@@ -121,7 +162,7 @@ export class AiController {
 
   @Get('chats/:id/messages')
   @ApiOperation({ summary: 'Get conversation history' })
-  async getMessages(@Param('id') id: string) {
-    return this.chatService.getMessages(id);
+  async getMessages(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.chatService.getMessages(tenantId, id);
   }
 }

@@ -38,6 +38,55 @@ export class WorkflowService {
     await this.workflowRepo.delete(tenantId, id);
   }
 
+  async activate(tenantId: string, id: string): Promise<Flow> {
+    await this.findOne(tenantId, id);
+    return this.workflowRepo.updateWithTenant(tenantId, id, { isPublished: true });
+  }
+
+  async deactivate(tenantId: string, id: string): Promise<Flow> {
+    await this.findOne(tenantId, id);
+    return this.workflowRepo.updateWithTenant(tenantId, id, { isPublished: false });
+  }
+
+  async duplicate(tenantId: string, id: string): Promise<Flow> {
+    const source = await this.findOne(tenantId, id);
+    return this.workflowRepo.create(tenantId, {
+      name: `${source.name} (Copy)`,
+      type: source.type,
+      definition: source.definition,
+      description: source.description,
+      isPublished: false,
+    });
+  }
+
+  async getExecution(tenantId: string, executionId: string) {
+    const execution = await this.workflowRepo.findExecutionById(tenantId, executionId);
+    if (!execution) throw new NotFoundException('Execution not found');
+    return execution;
+  }
+
+  getTriggerTypes() {
+    return [
+      { key: 'DEAL_WON', label: 'Deal Won' },
+      { key: 'DEAL_LOST', label: 'Deal Lost' },
+      { key: 'LEAD_CREATED', label: 'Lead Created' },
+      { key: 'CONTACT_CREATED', label: 'Contact Created' },
+      { key: 'WEBHOOK', label: 'Inbound Webhook' },
+      { key: 'SCHEDULE', label: 'Scheduled' },
+    ];
+  }
+
+  getActionTypes() {
+    return [
+      { key: 'SEND_EMAIL', label: 'Send Email' },
+      { key: 'SEND_WHATSAPP', label: 'Send WhatsApp' },
+      { key: 'CREATE_TASK', label: 'Create Task' },
+      { key: 'UPDATE_DEAL', label: 'Update Deal' },
+      { key: 'AI_CHAT', label: 'AI Chat' },
+      { key: 'DELAY', label: 'Delay' },
+    ];
+  }
+
   async getExecutions(tenantId: string) {
     return this.workflowRepo.findExecutions(tenantId);
   }

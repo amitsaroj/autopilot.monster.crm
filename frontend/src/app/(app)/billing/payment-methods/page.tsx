@@ -1,13 +1,52 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import { CreditCard, Plus, CheckCircle2, MoreVertical, Building } from 'lucide-react';
 import Link from 'next/link';
 
+import { billingService, PaymentMethod } from '@/services/billing.service';
+import { StripeCardSetup } from '@/components/billing/stripe-card-setup';
+
 export default function PaymentMethodsPage() {
+  const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showCardForm, setShowCardForm] = useState(false);
+
+  const loadMethods = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await billingService.listPaymentMethods();
+      setMethods(res.data.data ?? []);
+    } catch {
+      setError('Failed to load payment methods');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadMethods();
+  }, []);
+
+  const handleAdd = () => {
+    setShowCardForm(true);
+    setError(null);
+  };
+
+  const handleSetDefault = async (id: string) => {
+    await billingService.setDefaultPaymentMethod(id);
+    await loadMethods();
+  };
+
+  const handleRemove = async (id: string) => {
+    await billingService.removePaymentMethod(id);
+    await loadMethods();
+  };
+
   return (
     <div className="space-y-8 animate-fade-in max-w-4xl">
-      
-      {/* Header */}
       <div className="border-b border-border pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -18,98 +57,102 @@ export default function PaymentMethodsPage() {
           <h1 className="text-2xl font-bold text-foreground">Payment Methods</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage your credit cards and billing information.</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm rounded-lg transition-colors shadow-sm">
+        <button
+          onClick={handleAdd}
+          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm rounded-lg transition-colors shadow-sm"
+        >
           <Plus className="w-4 h-4" /> Add Payment Method
         </button>
       </div>
 
+      {error && <p className="text-sm text-amber-700">{error}</p>}
+
+      {showCardForm && (
+        <div className="bg-card border rounded-xl p-6">
+          <h2 className="text-lg font-semibold mb-4">Add Payment Method</h2>
+          <StripeCardSetup
+            onComplete={() => {
+              setShowCardForm(false);
+              void loadMethods();
+            }}
+            onCancel={() => setShowCardForm(false)}
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Saved Cards */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground">Saved Cards</h2>
-          
-          {/* Card 1 (Default) */}
-          <div className="bg-card border border-[hsl(246,80%,60%)] rounded-xl p-5 shadow-sm relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[hsl(246,80%,60%)]/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
-            
-            <div className="flex items-start justify-between relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-10 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0">
-                  <span className="font-black text-slate-800 italic tracking-tighter">VISA</span>
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-foreground">Visa ending in 4242</h3>
-                    <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase tracking-wider">Default</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-0.5">Expires 12/26</p>
-                </div>
-              </div>
-              <button className="p-1.5 text-muted-foreground hover:bg-muted rounded-md transition-colors">
-                <MoreVertical className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="mt-5 pt-4 border-t border-border flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-              Your active subscription is billed to this card.
-            </div>
-          </div>
 
-          {/* Card 2 */}
-          <div className="bg-card border border-border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-            <div className="flex items-start justify-between relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-10 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0">
-                  <span className="font-bold text-slate-800 tracking-tighter">Mastercard</span>
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          ) : methods.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No payment methods on file.</p>
+          ) : (
+            methods.map((method) => (
+              <div
+                key={method.id}
+                className={`bg-card border rounded-xl p-5 shadow-sm ${method.isDefault ? 'border-[hsl(246,80%,60%)]' : 'border-border'}`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-10 bg-slate-100 rounded border border-slate-200 flex items-center justify-center shrink-0">
+                      <CreditCard className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground capitalize">
+                          {method.brand} ending in {method.lastFour}
+                        </h3>
+                        {method.isDefault && (
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">Default</span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        Expires {method.expMonth}/{method.expYear}
+                      </p>
+                    </div>
+                  </div>
+                  <button className="p-1.5 text-muted-foreground hover:bg-muted rounded-md">
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-foreground">Mastercard ending in 8812</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">Expires 08/25</p>
+                <div className="mt-5 pt-4 border-t border-border flex items-center justify-between text-sm">
+                  {!method.isDefault && (
+                    <button onClick={() => handleSetDefault(method.id)} className="text-primary hover:underline font-medium">
+                      Make Default
+                    </button>
+                  )}
+                  {method.isDefault && (
+                    <span className="flex items-center gap-2 text-muted-foreground">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      Active subscription billing card
+                    </span>
+                  )}
+                  <button onClick={() => handleRemove(method.id)} className="text-red-600 hover:underline">
+                    Remove
+                  </button>
                 </div>
               </div>
-              <button className="p-1.5 text-muted-foreground hover:bg-muted rounded-md transition-colors">
-                <MoreVertical className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="mt-5 pt-4 border-t border-border">
-              <button className="text-sm font-medium text-primary hover:underline">Make Default</button>
-            </div>
-          </div>
+            ))
+          )}
         </div>
 
-        {/* Billing Information */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Billing Information</h2>
-            <button className="text-primary hover:underline font-medium text-sm">Edit</button>
-          </div>
-          
+          <h2 className="text-lg font-semibold text-foreground">Billing Information</h2>
           <div className="bg-muted/30 border border-border rounded-xl p-6 space-y-4">
             <div className="flex items-start gap-4">
               <Building className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-medium text-foreground">AutopilotMonster Enterprise</h3>
-                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                  Attn: Amit Saroj<br />
-                  123 Innovation Drive<br />
-                  Suite 400<br />
-                  San Francisco, CA 94105<br />
-                  United States
+                <h3 className="font-medium text-foreground">Billing profile</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Tax ID and billing address are managed in your account settings.
                 </p>
               </div>
             </div>
-            
-            <div className="pt-4 border-t border-border">
-              <p className="text-sm font-medium text-foreground mb-1">Tax ID / VAT Number</p>
-              <p className="text-sm text-muted-foreground font-mono bg-background border border-input rounded px-2 py-1 inline-block">US-123456789</p>
-              <p className="text-xs text-muted-foreground mt-2">This will appear on all your invoices.</p>
-            </div>
           </div>
         </div>
-        
       </div>
-
     </div>
   );
 }

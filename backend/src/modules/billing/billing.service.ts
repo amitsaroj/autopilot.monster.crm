@@ -7,6 +7,7 @@ import { Subscription as SubscriptionEntity } from '../../database/entities/subs
 import { Invoice as InvoiceEntity } from '../../database/entities/invoice.entity';
 import { Payment } from '../../database/entities/payment.entity';
 import { UsageRecord } from '../../database/entities/usage-record.entity';
+import { PaymentMethod } from '../../database/entities/payment-method.entity';
 import { Plan } from '../../database/entities/plan.entity';
 import { AppConfig } from '../../config/app.config';
 
@@ -25,6 +26,8 @@ export class BillingService {
     private readonly usageRepo: Repository<UsageRecord>,
     @InjectRepository(Plan)
     private readonly planRepo: Repository<Plan>,
+    @InjectRepository(PaymentMethod)
+    private readonly paymentMethodRepo: Repository<PaymentMethod>,
     private readonly configService: ConfigService,
   ) {
     const stripeConfig = this.configService.get<AppConfig['stripe']>('app.stripe');
@@ -255,21 +258,203 @@ export class BillingService {
     });
   }
 
-  async getGlobalUsage(metric: string = 'all'): Promise<any> {
+  async getGlobalUsage(metric: string = 'all'): Promise<Record<string, number> | number> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     if (metric === 'all') {
-        const records = await this.usageRepo.find({ where: { periodStart: startOfMonth } as any });
-        return records.reduce((acc: any, r: any) => {
-            acc[r.metric] = (acc[r.metric] || 0) + Number(r.quantity);
+        const records = await this.usageRepo.find({ where: { periodStart: startOfMonth } as Record<string, Date> });
+        return records.reduce((acc: Record<string, number>, record) => {
+            acc[record.metric] = (acc[record.metric] || 0) + Number(record.quantity);
             return acc;
-        }, {} as Record<string, number>);
+        }, {});
     }
 
     const records = await this.usageRepo.find({
-      where: { metric, periodStart: startOfMonth } as any,
+      where: { metric, periodStart: startOfMonth } as Record<string, string | Date>,
     });
-    return records.reduce((sum, r) => sum + Number(r.quantity), 0);
+    return records.reduce((sum, record) => sum + Number(record.quantity), 0);
+  }
+
+  private async ensureStripeCustomer(tenantId: string): Promise<string> {
+    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    if (sub?.stripeCustomerId) {
+      return sub.stripeCustomerId;
+    }
+
+    const customer = await this.stripe.customers.create({ metadata: { tenantId } });
+    if (sub) {
+      sub.stripeCustomerId = customer.id;
+      await this.subscriptionRepo.save(sub);
+    }
+    return customer.id;
+  }
+
+  async listPaymentMethods(tenantId: string): Promise<PaymentMethod[]> {
+    return this.paymentMethodRepo.find({
+      where: { tenantId },
+      order: { isDefault: 'DESC', createdAt: 'DESC' },
+    });
+  }
+
+  async createSetupIntent(tenantId: string): Promise<{ clientSecret: string }> {
+    const customerId = await this.ensureStripeCustomer(tenantId);
+    const intent = await this.stripe.setupIntents.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+    });
+
+    if (!intent.client_secret) {
+      throw new BadRequestException('Failed to create setup intent');
+    }
+
+    return { clientSecret: intent.client_secret };
+  }
+
+  async attachPaymentMethod(
+    tenantId: string,
+    paymentMethodId: string,
+    setDefault = false,
+  ): Promise<PaymentMethod> {
+    const customerId = await this.ensureStripeCustomer(tenantId);
+    await this.stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+    const stripeMethod = await this.stripe.paymentMethods.retrieve(paymentMethodId);
+
+    if (stripeMethod.type !== 'card' || !stripeMethod.card) {
+      throw new BadRequestException('Only card payment methods are supported');
+    }
+
+    if (setDefault) {
+      await this.clearDefaultPaymentMethod(tenantId);
+      await this.stripe.customers.update(customerId, {
+        invoice_settings: { default_payment_method: paymentMethodId },
+      });
+    }
+
+    const existing = await this.paymentMethodRepo.findOne({
+      where: { tenantId, stripePaymentMethodId: paymentMethodId },
+    });
+
+    if (existing) {
+      existing.brand = stripeMethod.card.brand;
+      existing.lastFour = stripeMethod.card.last4;
+      existing.expMonth = stripeMethod.card.exp_month;
+      existing.expYear = stripeMethod.card.exp_year;
+      existing.isDefault = setDefault || existing.isDefault;
+      return this.paymentMethodRepo.save(existing);
+    }
+
+    return this.paymentMethodRepo.save(
+      this.paymentMethodRepo.create({
+        tenantId,
+        stripePaymentMethodId: paymentMethodId,
+        type: stripeMethod.type,
+        brand: stripeMethod.card.brand,
+        lastFour: stripeMethod.card.last4,
+        expMonth: stripeMethod.card.exp_month,
+        expYear: stripeMethod.card.exp_year,
+        isDefault: setDefault,
+      }),
+    );
+  }
+
+  async removePaymentMethod(tenantId: string, id: string): Promise<void> {
+    const method = await this.paymentMethodRepo.findOne({ where: { id, tenantId } });
+    if (!method) {
+      throw new NotFoundException('Payment method not found');
+    }
+
+    await this.stripe.paymentMethods.detach(method.stripePaymentMethodId);
+    await this.paymentMethodRepo.softDelete({ id, tenantId });
+  }
+
+  async setDefaultPaymentMethod(tenantId: string, id: string): Promise<PaymentMethod> {
+    const method = await this.paymentMethodRepo.findOne({ where: { id, tenantId } });
+    if (!method) {
+      throw new NotFoundException('Payment method not found');
+    }
+
+    const customerId = await this.ensureStripeCustomer(tenantId);
+    await this.clearDefaultPaymentMethod(tenantId);
+    await this.stripe.customers.update(customerId, {
+      invoice_settings: { default_payment_method: method.stripePaymentMethodId },
+    });
+
+    method.isDefault = true;
+    return this.paymentMethodRepo.save(method);
+  }
+
+  private async clearDefaultPaymentMethod(tenantId: string): Promise<void> {
+    const defaults = await this.paymentMethodRepo.find({ where: { tenantId, isDefault: true } });
+    for (const method of defaults) {
+      method.isDefault = false;
+      await this.paymentMethodRepo.save(method);
+    }
+  }
+
+  async downgradeSubscription(tenantId: string, planId: string): Promise<SubscriptionEntity> {
+    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    if (!sub?.stripeSubscriptionId) {
+      throw new NotFoundException('Active subscription not found');
+    }
+
+    const plan = await this.planRepo.findOne({ where: { id: planId } });
+    if (!plan) {
+      throw new NotFoundException('Plan not found');
+    }
+
+    const priceId =
+      sub.billingCycle === 'MONTHLY' ? plan.stripePriceIdMonthly : plan.stripePriceIdAnnual;
+    if (!priceId) {
+      throw new BadRequestException('Target plan price not configured in Stripe');
+    }
+
+    const stripeSub = await this.stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
+    const itemId = stripeSub.items.data[0]?.id;
+    if (!itemId) {
+      throw new BadRequestException('Subscription has no line items');
+    }
+
+    await this.stripe.subscriptions.update(sub.stripeSubscriptionId, {
+      items: [{ id: itemId, price: priceId }],
+      proration_behavior: 'create_prorations',
+    });
+
+    sub.planId = planId;
+    return this.subscriptionRepo.save(sub);
+  }
+
+  async cancelSubscription(tenantId: string, atPeriodEnd = true): Promise<SubscriptionEntity> {
+    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    if (!sub?.stripeSubscriptionId) {
+      throw new NotFoundException('Active subscription not found');
+    }
+
+    if (atPeriodEnd) {
+      await this.stripe.subscriptions.update(sub.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
+    } else {
+      await this.stripe.subscriptions.cancel(sub.stripeSubscriptionId);
+      sub.status = 'CANCELLED';
+      sub.cancelledAt = new Date();
+    }
+
+    return this.subscriptionRepo.save(sub);
+  }
+
+  async reactivateSubscription(tenantId: string): Promise<SubscriptionEntity> {
+    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    if (!sub?.stripeSubscriptionId) {
+      throw new NotFoundException('Subscription not found');
+    }
+
+    await this.stripe.subscriptions.update(sub.stripeSubscriptionId, {
+      cancel_at_period_end: false,
+    });
+
+    sub.status = 'ACTIVE';
+    sub.cancelledAt = undefined;
+    return this.subscriptionRepo.save(sub);
   }
 }

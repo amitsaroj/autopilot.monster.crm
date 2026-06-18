@@ -14,6 +14,16 @@ export class TwilioService {
     private configOrchestrator: ConfigOrchestratorService,
   ) {}
 
+  async getFromNumber(tenantId: string): Promise<string> {
+    const { from } = await this.getClient(tenantId);
+    return from;
+  }
+
+  async hangUpCall(tenantId: string, callSid: string): Promise<void> {
+    const { client } = await this.getClient(tenantId);
+    await client.calls(callSid).update({ status: 'completed' });
+  }
+
   private async getClient(tenantId: string): Promise<{ client: twilio.Twilio; from: string }> {
     if (this.clients.has(tenantId)) {
       return { 
@@ -71,5 +81,33 @@ export class TwilioService {
       url: wssUrl, // e.g. wss://api.autopilot.com/voice/stream
     });
     return twiml.toString();
+  }
+
+  async purchasePhoneNumber(tenantId: string, phoneNumber: string): Promise<string> {
+    const { client } = await this.getClient(tenantId);
+    const purchased = await client.incomingPhoneNumbers.create({ phoneNumber });
+    return purchased.sid;
+  }
+
+  async releasePhoneNumber(tenantId: string, twilioSid: string): Promise<void> {
+    const { client } = await this.getClient(tenantId);
+    await client.incomingPhoneNumbers(twilioSid).remove();
+  }
+
+  async searchAvailableNumbers(
+    tenantId: string,
+    country: string,
+    areaCode?: string,
+  ): Promise<Array<{ phoneNumber: string; friendlyName: string }>> {
+    const { client } = await this.getClient(tenantId);
+    const numbers = await client.availablePhoneNumbers(country).local.list({
+      areaCode: areaCode ? parseInt(areaCode, 10) : undefined,
+      limit: 20,
+    });
+
+    return numbers.map((n) => ({
+      phoneNumber: n.phoneNumber,
+      friendlyName: n.friendlyName,
+    }));
   }
 }

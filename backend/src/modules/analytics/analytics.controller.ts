@@ -11,20 +11,60 @@ import { TenantId } from '../../common/decorators';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Get('dashboard')
-  @ApiOperation({ summary: 'Get main dashboard metrics' })
-  async getDashboard(@TenantId() tenantId: string) {
-    // Aggregates across multiple metrics
-    const contacts = await this.analyticsService.getMetrics(tenantId, 'contacts_total', 'DAILY');
-    const deals = await this.analyticsService.getMetrics(tenantId, 'deals_value', 'DAILY');
-    const calls = await this.analyticsService.getMetrics(tenantId, 'calls_total', 'DAILY');
+  @Get('overview')
+  @ApiOperation({ summary: 'Dashboard KPI summary' })
+  async getOverview(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getOverview(tenantId);
+    return { status: 200, message: 'Overview retrieved', error: false, data };
+  }
 
-    return {
-      contacts: contacts[0]?.value || 0,
-      deals: deals[0]?.value || 0,
-      calls: calls[0]?.value || 0,
-      period: 'last_24h',
-    };
+  @Get('dashboard')
+  @ApiOperation({ summary: 'Get main dashboard metrics (legacy)' })
+  async getDashboard(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getOverview(tenantId);
+    return { status: 200, message: 'Dashboard retrieved', error: false, data };
+  }
+
+  @Get('crm')
+  @ApiOperation({ summary: 'CRM KPIs' })
+  async getCrm(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getCrmAnalytics(tenantId);
+    return { status: 200, message: 'CRM analytics retrieved', error: false, data };
+  }
+
+  @Get('revenue')
+  @ApiOperation({ summary: 'Revenue analytics' })
+  async getRevenue(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getRevenueAnalytics(tenantId);
+    return { status: 200, message: 'Revenue analytics retrieved', error: false, data };
+  }
+
+  @Get('pipeline')
+  @ApiOperation({ summary: 'Pipeline funnel analytics' })
+  async getPipeline(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getPipelineAnalytics(tenantId);
+    return { status: 200, message: 'Pipeline analytics retrieved', error: false, data };
+  }
+
+  @Get('team')
+  @ApiOperation({ summary: 'Team performance analytics' })
+  async getTeam(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getTeamAnalytics(tenantId);
+    return { status: 200, message: 'Team analytics retrieved', error: false, data };
+  }
+
+  @Get('voice')
+  @ApiOperation({ summary: 'Voice call analytics' })
+  async getVoice(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getVoiceAnalytics(tenantId);
+    return { status: 200, message: 'Voice analytics retrieved', error: false, data };
+  }
+
+  @Get('whatsapp')
+  @ApiOperation({ summary: 'WhatsApp message analytics' })
+  async getWhatsapp(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getWhatsappAnalytics(tenantId);
+    return { status: 200, message: 'WhatsApp analytics retrieved', error: false, data };
   }
 
   @Get('metrics')
@@ -34,13 +74,19 @@ export class AnalyticsController {
     @Query('name') name: string,
     @Query('period') period: string = 'DAILY',
   ) {
-    return this.analyticsService.getMetrics(tenantId, name, period);
+    const data = await this.analyticsService.getMetrics(tenantId, name, period);
+    return { status: 200, message: 'Metrics retrieved', error: false, data };
   }
 
   @Get('reports')
   @ApiOperation({ summary: 'Get generated reports' })
   async getReports(@TenantId() tenantId: string) {
-    console.log(`Fetching reports for tenant ${tenantId}`);
-    return [];
+    return {
+      status: 200,
+      message: 'Reports retrieved',
+      error: false,
+      data: [],
+      meta: { tenantId },
+    };
   }
 }

@@ -9,7 +9,7 @@ export class GenerateDto {
   @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
-  options?: any;
+  options?: Record<string, unknown>;
 }
 
 export class ChatDto {

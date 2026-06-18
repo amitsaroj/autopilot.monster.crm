@@ -1,7 +1,6 @@
 import * as crypto from 'crypto';
 
 import {
-  UseGuards,
   Controller,
   Get,
   Post,
@@ -15,11 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
 import { WhatsappService } from './whatsapp.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { TenantGuard } from '../../common/guards/tenant.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
 
-@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 @Controller('v1/whatsapp/webhook')
 export class MetaWebhookController {
   private readonly appSecret: string;
@@ -37,7 +32,6 @@ export class MetaWebhookController {
     @Query('hub.verify_token') token: string,
     @Query('hub.challenge') challenge: string,
   ) {
-    // Meta explicitly hits this endpoint via GET when configuring the webhook in App Dashboard
     if (mode === 'subscribe' && token === this.whatsappService.getVerifyToken()) {
       return challenge;
     }
@@ -49,10 +43,10 @@ export class MetaWebhookController {
     @Req() req: Request,
     @Res() res: Response,
     @Headers('x-hub-signature-256') signature: string,
+    @Headers('x-tenant-id') tenantHeader: string,
   ) {
-    // 1. Verify HMAC SHA-256 Signature to ensure payload actually came from Meta
     if (this.appSecret !== 'mock_secret' && signature) {
-      const rawBody = JSON.stringify(req.body); // In production, use rawBuffer middleware
+      const rawBody = JSON.stringify(req.body);
       const expectedSig =
         'sha256=' + crypto.createHmac('sha256', this.appSecret).update(rawBody).digest('hex');
       if (expectedSig !== signature) {
@@ -60,10 +54,23 @@ export class MetaWebhookController {
       }
     }
 
-    // 2. Acknowledge Receipt immediately (Meta requires 200 OK within 3 seconds)
     res.status(200).send('OK');
 
-    // 3. Process asynchronously
-    await this.whatsappService.processIncomingMessage(req.body);
+    const tenantId =
+      tenantHeader ||
+      this.configService.get<string>('DEFAULT_TENANT_ID') ||
+      this.extractTenantFromPayload(req.body);
+
+    if (tenantId) {
+      await this.whatsappService.processIncomingMessage(tenantId, req.body);
+    }
+  }
+
+  private extractTenantFromPayload(body: Record<string, unknown>): string {
+    const entry = (body.entry as Array<Record<string, unknown>> | undefined)?.[0];
+    const changes = (entry?.changes as Array<Record<string, unknown>> | undefined)?.[0];
+    const value = changes?.value as Record<string, unknown> | undefined;
+    const metadata = value?.metadata as { phone_number_id?: string } | undefined;
+    return metadata?.phone_number_id ?? '';
   }
 }

@@ -16,9 +16,11 @@ export class SearchController {
   async search(
     @TenantId() tenantId: string,
     @Query('q') query: string,
-    @Query('collection') collection: string = 'all',
+    @Query('types') types?: string,
+    @Query('collection') collection?: string,
   ) {
-    return this.searchService.search(tenantId, collection, query);
+    const resolvedCollection = types ?? collection ?? 'all';
+    return this.searchService.search(tenantId, resolvedCollection, query);
   }
 
   @Post('reindex')

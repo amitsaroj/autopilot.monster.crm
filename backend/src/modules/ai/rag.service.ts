@@ -138,15 +138,45 @@ export class RagService {
     }
   }
 
-  async generate(tenantId: string | undefined, prompt: string, options: any = {}) {
+  async generate(
+    tenantId: string | undefined,
+    prompt: string,
+    options: Record<string, unknown> = {},
+  ): Promise<string | null> {
     this.logger.log(`Generating text for prompt: ${prompt.slice(0, 50)}...`);
     const openai = await this.getOpenAIClient(tenantId);
+    const model = typeof options.model === 'string' ? options.model : 'gpt-4o';
+    const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
     const response = await openai.chat.completions.create({
-      model: options.model || 'gpt-4o',
+      model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: options.temperature || 0.7,
+      temperature,
     });
     return response.choices[0].message.content;
+  }
+
+  async *streamGenerate(
+    tenantId: string | undefined,
+    prompt: string,
+    options: Record<string, unknown> = {},
+  ): AsyncGenerator<string> {
+    const openai = await this.getOpenAIClient(tenantId);
+    const model = typeof options.model === 'string' ? options.model : 'gpt-4o';
+    const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
+
+    const stream = await openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature,
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content;
+      if (content) {
+        yield content;
+      }
+    }
   }
 
   async analyze(tenantId: string | undefined, text: string, task: string) {

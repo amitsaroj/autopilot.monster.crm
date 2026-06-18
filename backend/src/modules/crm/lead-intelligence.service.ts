@@ -69,6 +69,7 @@ export class LeadIntelligenceService {
         const lead = await this.leadService.findOne(tenantId, leadId);
         if (lead && lead.phone) {
           await this.notificationService.sendPostCallFollowUp(
+            tenantId,
             lead.phone,
             result.name || lead.firstName || 'there',
             result.summary,

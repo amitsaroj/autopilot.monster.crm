@@ -33,7 +33,6 @@ import { LoggerModule } from './logger/logger.module';
 import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
 import { EventBusModule } from './events/event-bus.module';
-import { StorageModule } from './storage/storage.module';
 import { EmailModule } from './shared/email/email.module';
 
 // Business Modules
@@ -54,6 +53,8 @@ import { SubAdminModule } from './modules/sub-admin/sub-admin.module';
 import { TenantSettingsModule } from './modules/tenant-settings/tenant-settings.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SupportModule } from './modules/support/support.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { DataJobsModule } from './modules/data-jobs/data-jobs.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -98,7 +99,6 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     CacheModule,
     QueueModule,
     EventBusModule,
-    StorageModule,
     EmailModule,
 
     // Business Modules
@@ -120,6 +120,8 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     TenantSettingsModule,
     SchedulerModule,
     SupportModule,
+    AnalyticsModule,
+    DataJobsModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

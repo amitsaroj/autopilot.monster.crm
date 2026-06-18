@@ -25,10 +25,28 @@ export class WorkflowController {
     return this.workflowService.create(tenantId, dto);
   }
 
+  @Get('executions/:execId')
+  @ApiOperation({ summary: 'Get workflow execution detail' })
+  getExecution(@TenantId() tenantId: string, @Param('execId') execId: string) {
+    return this.workflowService.getExecution(tenantId, execId);
+  }
+
   @Get('executions')
   @ApiOperation({ summary: 'Get workflow execution history' })
   getExecutions(@TenantId() tenantId: string) {
     return this.workflowService.getExecutions(tenantId);
+  }
+
+  @Get('workflow-triggers')
+  @ApiOperation({ summary: 'List available workflow trigger types' })
+  getTriggers() {
+    return this.workflowService.getTriggerTypes();
+  }
+
+  @Get('workflow-actions')
+  @ApiOperation({ summary: 'List available workflow action types' })
+  getActions() {
+    return this.workflowService.getActionTypes();
   }
 
   @Get(':id')
@@ -55,9 +73,36 @@ export class WorkflowController {
     return this.workflowService.remove(tenantId, id);
   }
 
+  @Post(':id/activate')
+  @ApiOperation({ summary: 'Activate workflow' })
+  @Roles('TENANT_ADMIN')
+  activate(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.workflowService.activate(tenantId, id);
+  }
+
+  @Post(':id/deactivate')
+  @ApiOperation({ summary: 'Deactivate workflow' })
+  @Roles('TENANT_ADMIN')
+  deactivate(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.workflowService.deactivate(tenantId, id);
+  }
+
+  @Post(':id/duplicate')
+  @ApiOperation({ summary: 'Duplicate workflow' })
+  @Roles('TENANT_ADMIN')
+  duplicate(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.workflowService.duplicate(tenantId, id);
+  }
+
+  @Post(':id/trigger')
+  @ApiOperation({ summary: 'Manually trigger workflow' })
+  trigger(@TenantId() tenantId: string, @Param('id') id: string, @Body() payload: Record<string, unknown>) {
+    return this.workflowService.triggerWorkflow(tenantId, `manual_${id}`, payload);
+  }
+
   @Post(':id/execute')
-  @ApiOperation({ summary: 'Manually trigger workflow execution' })
-  execute(@TenantId() tenantId: string, @Param('id') id: string, @Body() payload: any) {
+  @ApiOperation({ summary: 'Manually trigger workflow execution (legacy)' })
+  execute(@TenantId() tenantId: string, @Param('id') id: string, @Body() payload: Record<string, unknown>) {
     return this.workflowService.triggerWorkflow(tenantId, `manual_${id}`, payload);
   }
 }

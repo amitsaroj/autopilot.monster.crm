@@ -11,6 +11,7 @@ import { Flow } from '../../database/entities/flow.entity';
 import { WorkflowExecution } from '../../database/entities/workflow-execution.entity';
 
 import { WorkflowController } from './workflow.controller';
+import { WorkflowMetaController } from './workflow-meta.controller';
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { WorkflowController } from './workflow.controller';
       name: 'workflows',
     }),
   ],
-  controllers: [WorkflowController],
+  controllers: [WorkflowController, WorkflowMetaController],
   providers: [WorkflowService, WorkflowProcessor, WorkflowRepository],
   exports: [WorkflowService],
 })
