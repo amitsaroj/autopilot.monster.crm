@@ -4,6 +4,7 @@ export const METADATA_KEYS = {
   USER_ID: 'userId',
   ROLES: 'roles',
   PERMISSIONS: 'permissions',
+  PERMISSION_RESOURCE: 'permissionResource',
   PLAN_FEATURE: 'planFeature',
   PLAN_LIMIT: 'planLimit',
   IS_PUBLIC: 'isPublic',

@@ -25,12 +25,28 @@ export class WorkflowService {
   }
 
   async create(tenantId: string, dto: CreateWorkflowDto): Promise<Flow> {
-    return this.workflowRepo.create(tenantId, dto);
+    const definition = {
+      ...dto.definition,
+      ...(dto.triggerEvent ? { triggerEvent: dto.triggerEvent } : {}),
+    };
+    return this.workflowRepo.create(tenantId, {
+      name: dto.name,
+      description: dto.description,
+      type: dto.type ?? 'voice',
+      definition,
+      isPublished: dto.isPublished ?? false,
+    });
   }
 
   async update(tenantId: string, id: string, dto: Partial<CreateWorkflowDto>): Promise<Flow> {
     await this.findOne(tenantId, id);
-    return this.workflowRepo.updateWithTenant(tenantId, id, dto);
+    const updates: Partial<Flow> = {};
+    if (dto.name !== undefined) updates.name = dto.name;
+    if (dto.description !== undefined) updates.description = dto.description;
+    if (dto.type !== undefined) updates.type = dto.type;
+    if (dto.definition !== undefined) updates.definition = dto.definition;
+    if (dto.isPublished !== undefined) updates.isPublished = dto.isPublished;
+    return this.workflowRepo.updateWithTenant(tenantId, id, updates);
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
@@ -92,31 +108,49 @@ export class WorkflowService {
   }
 
   /**
-   * Triggers an automation workflow based on system events
+   * Triggers automation workflows based on system events.
+   * When workflowId is provided, only that workflow is executed (manual trigger).
    */
-  async triggerWorkflow(tenantId: string, eventName: string, payload: any) {
+  async triggerWorkflow(
+    tenantId: string,
+    eventName: string,
+    payload: Record<string, unknown>,
+    workflowId?: string,
+  ) {
     this.logger.log(`Triggering workflow for event: ${eventName} (Tenant: ${tenantId})`);
 
-    // In production, fetch active workflows attached to this event from the DB
-    // e.g., const workflows = await this.db.workflows.find({ tenantId, trigger: eventName, active: true })
+    const targets = workflowId
+      ? [await this.findOne(tenantId, workflowId)]
+      : await this.workflowRepo.findActiveByTrigger(tenantId, eventName);
 
-    // Mock scheduling the execution
-    const workflowId = 'wkf_' + Math.random().toString(36).substring(7);
+    const jobIds: string[] = [];
 
-    const job = await this.workflowQueue.add(
-      'execute-workflow',
-      {
-        workflowId,
+    for (const flow of targets) {
+      const execution = await this.workflowRepo.createExecution({
         tenantId,
-        eventName,
-        payload,
-      },
-      {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 5000 },
-      },
-    );
+        flowId: flow.id,
+        status: 'RUNNING',
+        input: { eventName, payload },
+        output: { steps: [] },
+      });
 
-    return { success: true, jobId: job.id };
+      const job = await this.workflowQueue.add(
+        'execute-workflow',
+        {
+          workflowId: flow.id,
+          tenantId,
+          eventName,
+          payload,
+          executionId: execution.id,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 5000 },
+        },
+      );
+      jobIds.push(String(job.id));
+    }
+
+    return { success: true, triggered: targets.length, jobIds };
   }
 }

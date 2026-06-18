@@ -2,44 +2,94 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 
+import { WorkflowRepository } from './workflow.repository';
+import { WorkflowExecutorService } from './workflow-executor.service';
+
+interface WorkflowJobData {
+  workflowId: string;
+  tenantId: string;
+  eventName: string;
+  payload: Record<string, unknown>;
+  executionId?: string;
+}
+
 @Processor('workflows')
 export class WorkflowProcessor extends WorkerHost {
   private readonly logger = new Logger(WorkflowProcessor.name);
 
-  async process(job: Job<any, any, string>): Promise<any> {
-    this.logger.log(`Executing Workflow Job ${job.id} for event: ${job.data.eventName}`);
+  constructor(
+    private readonly workflowRepo: WorkflowRepository,
+    private readonly executor: WorkflowExecutorService,
+  ) {
+    super();
+  }
 
-    const { workflowId } = job.data;
+  async process(job: Job<WorkflowJobData, { status: string }>): Promise<{ status: string }> {
+    const { workflowId, tenantId, eventName, payload, executionId } = job.data;
+    this.logger.log(`Executing workflow job ${job.id} (${workflowId}) for event: ${eventName}`);
+
+    const flow = await this.workflowRepo.findById(tenantId, workflowId);
+    if (!flow) {
+      throw new Error(`Workflow ${workflowId} not found for tenant ${tenantId}`);
+    }
+
+    if (!flow.isPublished) {
+      this.logger.warn(`Workflow ${workflowId} is not published — skipping`);
+      return { status: 'SKIPPED' };
+    }
+
+    const execution =
+      executionId !== undefined
+        ? await this.workflowRepo.findExecutionById(tenantId, executionId)
+        : await this.workflowRepo.createExecution({
+            tenantId,
+            flowId: workflowId,
+            status: 'RUNNING',
+            input: { eventName, payload },
+            output: { steps: [] },
+          });
+
+    const steps = this.executor.extractSteps(flow.definition ?? {});
+    const stepResults: Record<string, unknown>[] = [];
 
     try {
-      // 1. Fetch Workflow Definition Steps from DB
-      this.logger.debug(`Fetching steps for workflow ${workflowId}...`);
-
-      const mockSteps = [
-        { type: 'CONDITION', config: { field: 'deal.value', operator: 'gt', value: 1000 } },
-        { type: 'ACTION', config: { actionParams: { channel: 'WHATSAPP', message: 'Hello!' } } },
-      ];
-
-      // 2. Iterate Steps
-      for (const step of mockSteps) {
-        if (step.type === 'CONDITION') {
-          this.logger.debug('Evaluating condition: ' + JSON.stringify(step.config));
-          // if condition false -> return
+      for (const step of steps) {
+        if (step.type === 'CONDITION' || step.type === 'CONDITION_BRANCH') {
+          const result = await this.executor.executeStep(step, { tenantId, eventName, payload });
+          stepResults.push(result);
+          if (result.passed === false) {
+            this.logger.debug(`Condition failed at step ${step.id} — halting workflow`);
+            break;
+          }
+          continue;
         }
 
-        if (step.type === 'ACTION') {
-          this.logger.log(`Executing Action: ${step.config.actionParams?.channel || 'UNKNOWN'}`);
-          // Call respective service (WhatsappService, TwilioService, EmailService)
-
-          // await this.whatsappService.sendTextMessage(...)
-        }
+        const result = await this.executor.executeStep(step, { tenantId, eventName, payload });
+        stepResults.push(result);
       }
 
-      this.logger.log(`Workflow ${job.id} execution completed successfully.`);
+      if (execution) {
+        await this.workflowRepo.updateExecution(tenantId, execution.id, {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+          output: { steps: stepResults },
+        });
+      }
+
+      this.logger.log(`Workflow ${workflowId} completed (${stepResults.length} steps)`);
       return { status: 'COMPLETED' };
-    } catch (err: any) {
-      this.logger.error(`Workflow ${job.id} failed`, err.stack);
-      throw err; // Throws to BullMQ for exponentially backed-off retry
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown workflow error';
+      if (execution) {
+        await this.workflowRepo.updateExecution(tenantId, execution.id, {
+          status: 'FAILED',
+          completedAt: new Date(),
+          error: message,
+          output: { steps: stepResults },
+        });
+      }
+      this.logger.error(`Workflow ${workflowId} failed: ${message}`);
+      throw err;
     }
   }
 }

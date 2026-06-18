@@ -1,9 +1,18 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import * as dns from 'dns/promises';
+
 import { TenantRepository } from './tenant.repository';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
 import { TenantFilterDto } from './dto/tenant.dto';
+
+export interface DomainVerificationResult {
+  verified: boolean;
+  pending: boolean;
+  message?: string;
+  verificationRecord: string;
+}
 
 @Injectable()
 export class TenantService {
@@ -59,17 +68,42 @@ export class TenantService {
     return this.tenantRepository.update(id, { status: 'ACTIVE' });
   }
 
-  async verifyDomain(id: string, domain: string): Promise<{ verified: boolean }> {
+  async verifyDomain(id: string, domain: string): Promise<DomainVerificationResult> {
     const existing = await this.tenantRepository.findByCustomDomain(domain);
     if (existing && existing.id !== id) {
       throw new ConflictException('Domain already in use by another tenant');
     }
-    // Mocking DNS check
-    const isVerified = true; 
-    if (isVerified) {
+
+    const verificationRecord = `autopilot-verify=${id}`;
+    const verified = await this.checkDnsVerification(domain, verificationRecord);
+
+    if (verified) {
       await this.tenantRepository.update(id, { customDomain: domain });
+      return {
+        verified: true,
+        pending: false,
+        message: 'Domain verified successfully',
+        verificationRecord,
+      };
     }
-    return { verified: isVerified };
+
+    return {
+      verified: false,
+      pending: true,
+      message: `Add TXT record on _autopilot-verify.${domain} with value "${verificationRecord}"`,
+      verificationRecord,
+    };
+  }
+
+  private async checkDnsVerification(domain: string, expectedValue: string): Promise<boolean> {
+    const host = `_autopilot-verify.${domain}`;
+    try {
+      const records = await dns.resolveTxt(host);
+      const flat = records.map((parts) => parts.join(''));
+      return flat.some((record) => record.includes(expectedValue));
+    } catch {
+      return false;
+    }
   }
 
   async updateBranding(id: string, data: any): Promise<Tenant> {
@@ -94,13 +128,11 @@ export class TenantService {
 
   async getLimits(id: string) {
     await this.findOne(id);
-    // Future: fetch from BillingModule
     return { contacts: 1000, emails: 5000, storage: '1GB' };
   }
 
   async getUsage(id: string) {
     await this.findOne(id);
-    // Future: fetch from UsageModule
     return { contacts: 150, emails: 1200, storage: '150MB' };
   }
 

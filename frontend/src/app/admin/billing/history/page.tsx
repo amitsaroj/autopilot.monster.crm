@@ -1,21 +1,57 @@
 "use client";
 
-import { useState } from 'react';
-import { FileText, Search, Download, Eye, Clock, CreditCard, CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FileText, Search, Download, Eye, CreditCard, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { billingService } from '@/services/billing.service';
 
-const mockHistory = [
-  { id: '1', invoiceNum: 'INV-2025-003', plan: 'Growth Plan', amount: 149, status: 'PAID', period: 'Mar 2025', paidOn: '2025-03-01', method: 'Visa ****4242' },
-  { id: '2', invoiceNum: 'INV-2025-002', plan: 'Growth Plan', amount: 149, status: 'PAID', period: 'Feb 2025', paidOn: '2025-02-01', method: 'Visa ****4242' },
-  { id: '3', invoiceNum: 'INV-2025-001', plan: 'Growth Plan', amount: 149, status: 'PAID', period: 'Jan 2025', paidOn: '2025-01-01', method: 'Visa ****4242' },
-  { id: '4', invoiceNum: 'INV-2024-012', plan: 'Starter Plan', amount: 49, status: 'PAID', period: 'Dec 2024', paidOn: '2024-12-01', method: 'Visa ****4242' },
-  { id: '5', invoiceNum: 'INV-2024-011', plan: 'Starter Plan', amount: 49, status: 'FAILED', period: 'Nov 2024', paidOn: '—', method: 'Expired Card' },
-  { id: '6', invoiceNum: 'INV-2024-010', plan: 'Starter Plan', amount: 49, status: 'PAID', period: 'Oct 2024', paidOn: '2024-10-01', method: 'Visa ****4242' },
-];
+interface InvoiceRow {
+  id: string;
+  invoiceNumber?: string;
+  planName?: string;
+  amount?: number;
+  status?: string;
+  periodStart?: string;
+  paidAt?: string;
+  paymentMethod?: string;
+}
 
 export default function AdminBillingHistoryPage() {
+  const [history, setHistory] = useState<InvoiceRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const filtered = mockHistory.filter(h => h.invoiceNum.toLowerCase().includes(search.toLowerCase()) || h.plan.toLowerCase().includes(search.toLowerCase()));
-  const totalPaid = mockHistory.filter(h => h.status === 'PAID').reduce((s, h) => s + h.amount, 0);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await billingService.getInvoices();
+        const payload = res.data?.data ?? res.data;
+        setHistory(Array.isArray(payload) ? payload : []);
+      } catch {
+        toast.error('Failed to load billing history');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const filtered = history.filter(h =>
+    String(h.invoiceNumber ?? h.id).toLowerCase().includes(search.toLowerCase()) ||
+    String(h.planName ?? '').toLowerCase().includes(search.toLowerCase())
+  );
+  const totalPaid = history
+    .filter(h => (h.status ?? '').toUpperCase() === 'PAID')
+    .reduce((s, h) => s + Number(h.amount ?? 0), 0);
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -32,8 +68,8 @@ export default function AdminBillingHistoryPage() {
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: 'Total Paid', value: `$${totalPaid}`, color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: CreditCard },
-          { label: 'Successful', value: mockHistory.filter(h => h.status === 'PAID').length, color: 'text-blue-400', bg: 'bg-blue-500/10', icon: CheckCircle2 },
-          { label: 'Failed', value: mockHistory.filter(h => h.status === 'FAILED').length, color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle },
+          { label: 'Successful', value: history.filter(h => (h.status ?? '').toUpperCase() === 'PAID').length, color: 'text-blue-400', bg: 'bg-blue-500/10', icon: CheckCircle2 },
+          { label: 'Failed', value: history.filter(h => (h.status ?? '').toUpperCase() === 'FAILED').length, color: 'text-red-400', bg: 'bg-red-500/10', icon: XCircle },
         ].map(s => (
           <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
             <div className={`p-3 rounded-xl ${s.bg}`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
@@ -55,7 +91,7 @@ export default function AdminBillingHistoryPage() {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-white/[0.05] bg-white/[0.02]">
-              {['Invoice', 'Plan', 'Period', 'Amount', 'Status', 'Payment Method', 'Paid On', ''].map(h => (
+              {['Invoice', 'Plan', 'Amount', 'Status', 'Paid On', ''].map(h => (
                 <th key={h} className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -63,20 +99,17 @@ export default function AdminBillingHistoryPage() {
           <tbody className="divide-y divide-white/[0.03]">
             {filtered.map(inv => (
               <tr key={inv.id} className="group hover:bg-white/[0.02] transition-colors">
-                <td className="px-5 py-4 text-xs font-mono font-bold text-indigo-300">{inv.invoiceNum}</td>
-                <td className="px-5 py-4 text-xs text-gray-300">{inv.plan}</td>
-                <td className="px-5 py-4 text-xs text-gray-400">{inv.period}</td>
-                <td className="px-5 py-4 text-sm font-black text-white">${inv.amount}</td>
+                <td className="px-5 py-4 text-xs font-mono font-bold text-indigo-300">{inv.invoiceNumber ?? inv.id}</td>
+                <td className="px-5 py-4 text-xs text-gray-300">{inv.planName ?? '—'}</td>
+                <td className="px-5 py-4 text-sm font-black text-white">${Number(inv.amount ?? 0)}</td>
                 <td className="px-5 py-4">
-                  <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${inv.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>{inv.status}</span>
+                  <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${(inv.status ?? '').toUpperCase() === 'PAID' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>{inv.status ?? 'UNKNOWN'}</span>
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-400 font-mono">{inv.method}</td>
-                <td className="px-5 py-4 text-xs text-gray-500">{inv.paidOn}</td>
+                <td className="px-5 py-4 text-xs text-gray-500">{inv.paidAt ? new Date(inv.paidAt).toLocaleDateString() : '—'}</td>
                 <td className="px-5 py-4">
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all"><Eye className="w-3.5 h-3.5" /></button>
-                    <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all"><Download className="w-3.5 h-3.5" /></button>
-                  </div>
+                  <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all opacity-0 group-hover:opacity-100">
+                    <Eye className="w-3.5 h-3.5" />
+                  </button>
                 </td>
               </tr>
             ))}

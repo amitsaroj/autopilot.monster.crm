@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import { parseApiData } from '../lib/api/parse-response';
 
 export interface Workflow {
   id: string;
@@ -18,18 +19,50 @@ export interface WorkflowExecution {
   startedAt: string;
   completedAt?: string;
   error?: string;
+  input?: Record<string, unknown>;
+  output?: Record<string, unknown>;
+}
+
+export interface WorkflowTrigger {
+  key: string;
+  label: string;
 }
 
 export const workflowService = {
-  list: () => api.get<{ data: Workflow[] }>('/workflows'),
-  get: (id: string) => api.get<{ data: Workflow }>(`/workflows/${id}`),
-  create: (payload: Partial<Workflow>) => api.post<{ data: Workflow }>('/workflows', payload),
-  update: (id: string, payload: Partial<Workflow>) =>
-    api.patch<{ data: Workflow }>(`/workflows/${id}`, payload),
+  list: async () => {
+    const res = await api.get('/workflows');
+    return { data: { data: parseApiData<Workflow[]>(res) ?? [] } };
+  },
+  get: async (id: string) => {
+    const res = await api.get(`/workflows/${id}`);
+    return { data: { data: parseApiData<Workflow>(res) } };
+  },
+  create: async (payload: Partial<Workflow> & { definition: Record<string, unknown> }) => {
+    const res = await api.post('/workflows', payload);
+    return { data: { data: parseApiData<Workflow>(res) } };
+  },
+  update: async (id: string, payload: Partial<Workflow>) => {
+    const res = await api.patch(`/workflows/${id}`, payload);
+    return { data: { data: parseApiData<Workflow>(res) } };
+  },
   remove: (id: string) => api.delete(`/workflows/${id}`),
   activate: (id: string) => api.post(`/workflows/${id}/activate`),
   deactivate: (id: string) => api.post(`/workflows/${id}/deactivate`),
-  getExecutions: () => api.get<{ data: WorkflowExecution[] }>('/workflows/executions'),
-  getExecution: (execId: string) =>
-    api.get<{ data: WorkflowExecution }>(`/workflows/executions/${execId}`),
+  duplicate: (id: string) => api.post(`/workflows/${id}/duplicate`),
+  getExecutions: async () => {
+    const res = await api.get('/workflows/executions');
+    return { data: { data: parseApiData<WorkflowExecution[]>(res) ?? [] } };
+  },
+  getExecution: async (execId: string) => {
+    const res = await api.get(`/workflows/executions/${execId}`);
+    return { data: { data: parseApiData<WorkflowExecution>(res) } };
+  },
+  getTriggers: async () => {
+    const res = await api.get('/workflows/workflow-triggers');
+    return { data: { data: parseApiData<WorkflowTrigger[]>(res) ?? [] } };
+  },
+  getActions: async () => {
+    const res = await api.get('/workflows/workflow-actions');
+    return { data: { data: parseApiData<WorkflowTrigger[]>(res) ?? [] } };
+  },
 };

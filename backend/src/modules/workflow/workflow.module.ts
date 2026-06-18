@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { WorkflowProcessor } from './workflow.processor';
+import { WorkflowExecutorService } from './workflow-executor.service';
 import { WorkflowService } from './workflow.service';
 import { WorkflowRepository } from './workflow.repository';
 import { Flow } from '../../database/entities/flow.entity';
@@ -35,7 +36,7 @@ import { WorkflowMetaController } from './workflow-meta.controller';
     }),
   ],
   controllers: [WorkflowController, WorkflowMetaController],
-  providers: [WorkflowService, WorkflowProcessor, WorkflowRepository],
+  providers: [WorkflowService, WorkflowProcessor, WorkflowExecutorService, WorkflowRepository],
   exports: [WorkflowService],
 })
 export class WorkflowModule {}

@@ -58,3 +58,39 @@ export class UpdateWebhookDto {
   @IsOptional()
   status?: string;
 }
+
+export class CreateOAuthAppDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(255)
+  name!: string;
+
+  @ApiProperty({ type: [String] })
+  @IsArray()
+  @IsUrl({ require_tld: false }, { each: true })
+  redirectUris!: string[];
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  scopes?: string[];
+}
+
+export class UpdateNotificationPreferencesDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  email?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  sms?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  push?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  inApp?: boolean;
+}

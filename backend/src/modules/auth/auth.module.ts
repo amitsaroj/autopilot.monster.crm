@@ -27,9 +27,11 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GithubStrategy } from './strategies/github.strategy';
 import { AppleStrategy } from './strategies/apple.strategy';
 import { MfaService } from './mfa.service';
+import { MonetizationModule } from '../monetization.module';
 
 @Module({
   imports: [
+    MonetizationModule,
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

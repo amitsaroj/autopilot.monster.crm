@@ -15,7 +15,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions } from '../../common/decorators';
 import { Public } from '../../common/decorators/public.decorator';
 import { BillingService } from './billing.service';
 import { PricingService } from '../pricing/pricing.service';
@@ -24,6 +24,7 @@ import { AddWalletCreditsDto } from './dto/wallet.dto';
 import { WalletService } from './wallet.service';
 
 @ApiTags('Billing')
+@ResourcePermissions('billing')
 @Controller('billing')
 export class BillingController {
   constructor(

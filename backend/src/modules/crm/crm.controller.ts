@@ -47,13 +47,14 @@ import { MoveDealStageDto, MarkDealLostDto, CreateContactNoteDto } from './dto/d
 import { DealProductService } from './deal-product.service';
 import { AddDealProductDto } from './dto/deal-product.dto';
 import { SendQuoteDto } from './dto/quote-lifecycle.dto';
-import { TenantId, Roles } from '../../common/decorators';
+import { TenantId, Roles, ResourcePermissions } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 
 @ApiTags('CRM & AI Agents')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('crm')
 @Controller('crm')
 export class CrmController {
   constructor(

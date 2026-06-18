@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@n
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { DeveloperSettingsService } from './developer-settings.service';
-import { CreateApiKeyDto, CreateWebhookDto, UpdateWebhookDto } from './dto/developer-settings.dto';
+import { CreateApiKeyDto, CreateWebhookDto, UpdateWebhookDto, CreateOAuthAppDto } from './dto/developer-settings.dto';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
@@ -77,5 +77,26 @@ export class DeveloperSettingsController {
   async testWebhook(@CurrentUser() user: IRequestContext, @Param('id') id: string) {
     const data = await this.developerSettingsService.testWebhook(user.tenantId, id);
     return { status: 200, message: 'Webhook test completed', error: false, data };
+  }
+
+  @Get('oauth-apps')
+  @ApiOperation({ summary: 'List OAuth applications' })
+  async listOAuthApps(@CurrentUser() user: IRequestContext) {
+    const data = await this.developerSettingsService.listOAuthApps(user.tenantId);
+    return { status: 200, message: 'OAuth apps retrieved', error: false, data };
+  }
+
+  @Post('oauth-apps')
+  @ApiOperation({ summary: 'Create OAuth application' })
+  async createOAuthApp(@CurrentUser() user: IRequestContext, @Body() dto: CreateOAuthAppDto) {
+    const data = await this.developerSettingsService.createOAuthApp(user.tenantId, dto);
+    return { status: 201, message: 'OAuth app created', error: false, data };
+  }
+
+  @Delete('oauth-apps/:id')
+  @ApiOperation({ summary: 'Revoke OAuth application' })
+  async revokeOAuthApp(@CurrentUser() user: IRequestContext, @Param('id') id: string) {
+    await this.developerSettingsService.revokeOAuthApp(user.tenantId, id);
+    return { status: 200, message: 'OAuth app revoked', error: false, data: null };
   }
 }

@@ -29,4 +29,19 @@ export const developerSettingsService = {
     api.post<{ data: WebhookEndpoint }>('/settings/webhooks', payload),
   deleteWebhook: (id: string) => api.delete(`/settings/webhooks/${id}`),
   testWebhook: (id: string) => api.post<{ data: { delivered: boolean; statusCode: number } }>(`/settings/webhooks/${id}/test`),
+  listOAuthApps: () => api.get<{ data: OAuthApp[] }>('/settings/oauth-apps'),
+  createOAuthApp: (payload: { name: string; redirectUris: string[]; scopes?: string[] }) =>
+    api.post<{ data: OAuthApp & { clientSecret: string } }>('/settings/oauth-apps', payload),
+  revokeOAuthApp: (id: string) => api.delete(`/settings/oauth-apps/${id}`),
 };
+
+export interface OAuthApp {
+  id: string;
+  name: string;
+  clientId: string;
+  clientSecretPrefix: string;
+  redirectUris: string[];
+  scopes: string[];
+  isActive: boolean;
+  createdAt: string;
+}

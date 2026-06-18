@@ -20,11 +20,13 @@ import { KnowledgeBaseService } from './knowledge-base.service';
 import { ConversationService } from './conversation.service';
 import { GenerateDto, ChatDto, AnalyzeDto } from './dto/ai.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
 @ApiTags('AI Engine')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('ai')
+@PlanFeature('ai')
 @Controller('ai')
 export class AiController {
   constructor(

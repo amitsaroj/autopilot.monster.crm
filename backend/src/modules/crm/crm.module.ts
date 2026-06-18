@@ -8,6 +8,7 @@ import { CsvService } from './csv.service';
 import { FlowService } from './flow.service';
 import { LeadIntelligenceService } from './lead-intelligence.service';
 import { LeadService } from './lead.service';
+import { LeadScoringService } from './lead-scoring.service';
 import { NotificationService } from './notification.service';
 
 import { Agent } from '../../database/entities/agent.entity';
@@ -116,6 +117,7 @@ import { EmailModule } from '../../shared/email/email.module';
     AgentService,
     FlowService,
     LeadService,
+    LeadScoringService,
     CsvService,
     LeadIntelligenceService,
     NotificationService,

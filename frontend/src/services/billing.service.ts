@@ -11,6 +11,7 @@ export interface PaymentMethod {
 }
 
 export const billingService = {
+  getInvoices: () => api.get('/billing/invoices'),
   listPaymentMethods: () => api.get<{ data: PaymentMethod[] }>('/billing/payment-methods'),
   createSetupIntent: () => api.post<{ data: { clientSecret: string } }>('/billing/payment-methods'),
   attachPaymentMethod: (paymentMethodId: string, setDefault = false) =>

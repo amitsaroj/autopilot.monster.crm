@@ -11,11 +11,13 @@ import {
   ScheduleWhatsappBroadcastDto,
 } from './dto/whatsapp-broadcast.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
 @ApiTags('WhatsApp')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('whatsapp')
+@PlanFeature('whatsapp')
 @Controller('whatsapp')
 export class WhatsappController {
   constructor(

@@ -20,6 +20,7 @@ import { AuthTokens } from './interfaces/auth-tokens.interface';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { MfaService } from './mfa.service';
 import { EmailService } from '../../shared/email/email.service';
+import { PricingService } from '../pricing/pricing.service';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -35,6 +36,7 @@ export class AuthService {
     private readonly eventEmitter: EventEmitter2,
     private readonly mfaService: MfaService,
     private readonly emailService: EmailService,
+    private readonly pricingService: PricingService,
   ) {
     const cfg = this.configService.get<JwtConfig>('jwt');
     if (cfg === undefined) throw new Error('JWT config missing');
@@ -352,13 +354,16 @@ export class AuthService {
       new Set(rolesWithPermissions.flatMap((r) => r.permissions.map((p) => p.name)))
     );
 
+    const subscription = await this.pricingService.getTenantSubscription(user.tenantId);
+    const planId = subscription?.planId ?? '';
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
       roles,
       permissions,
-      planId: '',
+      planId,
     };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn as any, issuer: 'autopilot.monster', audience: 'autopilot.monster.user' }),

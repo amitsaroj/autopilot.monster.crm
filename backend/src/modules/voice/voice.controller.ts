@@ -9,11 +9,13 @@ import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-camp
 import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-phone-number.dto';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
 @ApiTags('Voice Engine')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('voice')
+@PlanFeature('voice')
 @Controller('voice')
 export class VoiceController {
   constructor(

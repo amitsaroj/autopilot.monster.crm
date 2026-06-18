@@ -3,12 +3,13 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { TenantGuard } from '../../../common/guards/tenant.guard';
-import { Roles, TenantId } from '../../../common/decorators';
+import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
 import { AnalyticsCrmService } from '../crm-support.service';
 
 @ApiTags('CRM Reports')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
+@ResourcePermissions('crm')
 @Controller('crm/reports')
 export class CrmReportsController {
   constructor(private readonly analyticsService: AnalyticsCrmService) {}

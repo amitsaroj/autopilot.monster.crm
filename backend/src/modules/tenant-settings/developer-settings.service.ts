@@ -4,8 +4,14 @@ import { createHash, randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
 
 import { ApiKey } from '../../database/entities/api-key.entity';
+import { OAuthApp } from '../../database/entities/oauth-app.entity';
 import { Webhook } from '../../database/entities/webhook.entity';
-import { CreateApiKeyDto, CreateWebhookDto, UpdateWebhookDto } from './dto/developer-settings.dto';
+import {
+  CreateApiKeyDto,
+  CreateOAuthAppDto,
+  CreateWebhookDto,
+  UpdateWebhookDto,
+} from './dto/developer-settings.dto';
 
 export interface ApiKeyCreatedResult {
   id: string;
@@ -17,6 +23,18 @@ export interface ApiKeyCreatedResult {
   createdAt: Date;
 }
 
+export interface OAuthAppCreatedResult {
+  id: string;
+  name: string;
+  clientId: string;
+  clientSecret: string;
+  clientSecretPrefix: string;
+  redirectUris: string[];
+  scopes: string[];
+  isActive: boolean;
+  createdAt: Date;
+}
+
 @Injectable()
 export class DeveloperSettingsService {
   constructor(
@@ -24,6 +42,8 @@ export class DeveloperSettingsService {
     private readonly apiKeyRepository: Repository<ApiKey>,
     @InjectRepository(Webhook)
     private readonly webhookRepository: Repository<Webhook>,
+    @InjectRepository(OAuthApp)
+    private readonly oauthAppRepository: Repository<OAuthApp>,
   ) {}
 
   async listApiKeys(tenantId: string): Promise<ApiKey[]> {
@@ -146,5 +166,52 @@ export class DeveloperSettingsService {
     await this.webhookRepository.save(webhook);
 
     return { delivered, statusCode: response.status };
+  }
+
+  async listOAuthApps(tenantId: string): Promise<OAuthApp[]> {
+    return this.oauthAppRepository.find({
+      where: { tenantId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async createOAuthApp(tenantId: string, dto: CreateOAuthAppDto): Promise<OAuthAppCreatedResult> {
+    const rawSecret = `cs_live_${randomBytes(24).toString('hex')}`;
+    const clientId = `ca_${randomBytes(12).toString('hex')}`;
+    const secretHash = createHash('sha256').update(rawSecret).digest('hex');
+    const secretPrefix = rawSecret.slice(0, 12);
+
+    const entity = await this.oauthAppRepository.save(
+      this.oauthAppRepository.create({
+        tenantId,
+        name: dto.name,
+        clientId,
+        clientSecretHash: secretHash,
+        clientSecretPrefix: secretPrefix,
+        redirectUris: dto.redirectUris,
+        scopes: dto.scopes ?? ['crm:read'],
+        isActive: true,
+      }),
+    );
+
+    return {
+      id: entity.id,
+      name: entity.name,
+      clientId: entity.clientId,
+      clientSecret: rawSecret,
+      clientSecretPrefix: entity.clientSecretPrefix,
+      redirectUris: entity.redirectUris,
+      scopes: entity.scopes,
+      isActive: entity.isActive,
+      createdAt: entity.createdAt,
+    };
+  }
+
+  async revokeOAuthApp(tenantId: string, id: string): Promise<void> {
+    const app = await this.oauthAppRepository.findOne({ where: { id, tenantId } });
+    if (!app) {
+      throw new NotFoundException('OAuth app not found');
+    }
+    await this.oauthAppRepository.softDelete({ id, tenantId });
   }
 }

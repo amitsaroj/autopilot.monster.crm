@@ -8,24 +8,31 @@ import {
   developerSettingsService,
   ApiKey,
   WebhookEndpoint,
+  OAuthApp,
 } from '@/services/developer-settings.service';
 
 export default function SettingsApiPage() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>([]);
+  const [oauthApps, setOauthApps] = useState<OAuthApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState('');
   const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [newAppName, setNewAppName] = useState('');
+  const [newAppRedirect, setNewAppRedirect] = useState('https://localhost/callback');
+  const [createdOAuth, setCreatedOAuth] = useState<{ clientId: string; clientSecret: string } | null>(null);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [keysRes, hooksRes] = await Promise.all([
+      const [keysRes, hooksRes, appsRes] = await Promise.all([
         developerSettingsService.listApiKeys(),
         developerSettingsService.listWebhooks(),
+        developerSettingsService.listOAuthApps(),
       ]);
       setKeys(keysRes.data?.data ?? []);
       setWebhooks(hooksRes.data?.data ?? []);
+      setOauthApps(appsRes.data?.data ?? []);
     } catch {
       toast.error('Failed to load developer settings');
     } finally {
@@ -69,6 +76,36 @@ export default function SettingsApiPage() {
       void load();
     } catch {
       toast.error('Failed to delete webhook');
+    }
+  };
+
+  const handleCreateOAuthApp = async () => {
+    if (!newAppName.trim()) return;
+    try {
+      const res = await developerSettingsService.createOAuthApp({
+        name: newAppName.trim(),
+        redirectUris: [newAppRedirect],
+      });
+      setCreatedOAuth({
+        clientId: res.data.data.clientId,
+        clientSecret: res.data.data.clientSecret,
+      });
+      setNewAppName('');
+      toast.success('OAuth app created');
+      void load();
+    } catch {
+      toast.error('Failed to create OAuth app');
+    }
+  };
+
+  const handleRevokeOAuthApp = async (id: string) => {
+    if (!confirm('Revoke this OAuth app?')) return;
+    try {
+      await developerSettingsService.revokeOAuthApp(id);
+      toast.success('OAuth app revoked');
+      void load();
+    } catch {
+      toast.error('Failed to revoke OAuth app');
     }
   };
 
@@ -171,6 +208,40 @@ export default function SettingsApiPage() {
                     <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {createdOAuth && (
+        <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-4">
+          <p className="text-sm font-medium text-green-700">OAuth credentials (copy now — shown once):</p>
+          <p className="text-xs font-mono mt-2">Client ID: {createdOAuth.clientId}</p>
+          <p className="text-xs font-mono break-all">Client Secret: {createdOAuth.clientSecret}</p>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+        <h2 className="text-sm font-semibold">OAuth Applications</h2>
+        <div className="flex gap-2">
+          <input value={newAppName} onChange={(e) => setNewAppName(e.target.value)} placeholder="App name" className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background" />
+          <input value={newAppRedirect} onChange={(e) => setNewAppRedirect(e.target.value)} placeholder="Redirect URI" className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background" />
+          <button onClick={() => void handleCreateOAuthApp()} className="px-3 py-2 text-xs bg-[hsl(246,80%,60%)] text-white rounded-lg">Create</button>
+        </div>
+        <div className="space-y-3">
+          {oauthApps.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No OAuth apps registered.</p>
+          ) : (
+            oauthApps.map((app) => (
+              <div key={app.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+                <div>
+                  <p className="text-sm font-medium">{app.name}</p>
+                  <code className="text-xs text-muted-foreground">{app.clientId}</code>
+                </div>
+                <button onClick={() => void handleRevokeOAuthApp(app.id)} className="p-2 rounded-lg border border-border hover:bg-red-500/10">
+                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                </button>
               </div>
             ))
           )}

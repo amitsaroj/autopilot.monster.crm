@@ -2,13 +2,14 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/c
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantSettingsService } from './tenant-settings.service';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
-import { Roles, CurrentUser } from '../../common/decorators';
+import { Roles, CurrentUser, ResourcePermissions } from '../../common/decorators';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('Tenant / Settings / Integrations')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 @Roles('TENANT_ADMIN')
+@ResourcePermissions('settings')
 @Controller('settings/integrations')
 export class TenantSettingsController {
   constructor(private readonly service: TenantSettingsService) {}
