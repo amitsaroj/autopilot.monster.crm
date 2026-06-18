@@ -14,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { Request, Response } from 'express';
 
 import { WhatsappService } from './whatsapp.service';
+import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('v1/whatsapp/webhook')
 export class MetaWebhookController {
@@ -27,6 +28,7 @@ export class MetaWebhookController {
   }
 
   @Get()
+  @Public()
   verifyWebhook(
     @Query('hub.mode') mode: string,
     @Query('hub.verify_token') token: string,
@@ -39,6 +41,7 @@ export class MetaWebhookController {
   }
 
   @Post()
+  @Public()
   async receiveMessage(
     @Req() req: Request,
     @Res() res: Response,

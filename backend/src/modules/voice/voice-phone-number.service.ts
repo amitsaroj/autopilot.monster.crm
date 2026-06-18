@@ -56,4 +56,12 @@ export class VoicePhoneNumberService {
     number.status = VoicePhoneNumberStatus.RELEASED;
     await this.phoneRepository.save(number);
   }
+
+  searchAvailable(
+    tenantId: string,
+    country: string,
+    areaCode?: string,
+  ): Promise<Array<{ phoneNumber: string; friendlyName: string }>> {
+    return this.twilioService.searchAvailableNumbers(tenantId, country, areaCode);
+  }
 }

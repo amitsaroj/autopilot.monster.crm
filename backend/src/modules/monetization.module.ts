@@ -12,6 +12,9 @@ import { Invoice } from '../database/entities/invoice.entity';
 import { Payment } from '../database/entities/payment.entity';
 import { PaymentMethod } from '../database/entities/payment-method.entity';
 import { UsageRecord } from '../database/entities/usage-record.entity';
+import { Wallet } from '../database/entities/wallet.entity';
+import { WalletTransaction } from '../database/entities/wallet-transaction.entity';
+import { WalletService } from './billing/wallet.service';
 
 import { MonetizationController } from './monetization.controller';
 
@@ -26,10 +29,12 @@ import { MonetizationController } from './monetization.controller';
       Payment,
       PaymentMethod,
       UsageRecord,
+      Wallet,
+      WalletTransaction,
     ]),
   ],
   controllers: [MonetizationController, BillingController],
-  providers: [PricingService, PricingRepository, BillingService],
-  exports: [PricingService, BillingService],
+  providers: [PricingService, PricingRepository, BillingService, WalletService],
+  exports: [PricingService, BillingService, WalletService],
 })
 export class MonetizationModule {}

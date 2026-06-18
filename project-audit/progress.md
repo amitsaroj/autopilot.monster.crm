@@ -1,46 +1,55 @@
-# Project Progress — Session 4
+# Project Progress — Session 6
 
 **Date:** 2026-06-18
 
-## Session 4 Completed
+## Session 6 Completed
 
-### 1. AI Conversations Path (`/ai/conversations`)
-- `ConversationsController` — list (paginated), create, detail+messages, add message, delete, handoff
-- `ConversationService` expanded with DTOs, tenant-scoped message access, pagination
-- Legacy `/ai/chats` paths retained for backward compatibility
+### 1. Analytics Dashboards CRUD
+- `AnalyticsDashboard` entity with widgets JSON layout
+- `GET/POST/PATCH/DELETE /analytics/dashboards` + detail endpoint
+- Frontend: list, detail, and new dashboard pages wired
 
-### 2. HTTP E2E Test Suite Expanded
-- `test/e2e/helpers/app-test.helper.ts` — full app bootstrap with guard overrides
-- `test/e2e/setup.ts` — otplib mock for ESM compatibility
-- `health-http.integration.spec.ts` — supertest against `/api/v1/health`
-- `quote-public-http.integration.spec.ts` — public quote 404 path
-- `deal-lifecycle.integration.spec.ts` — deal won event flow
-- Jest e2e config: path aliases, transformIgnorePatterns, 120s timeout
+### 2. Voice Phone Number Search
+- `GET /voice/phone-numbers/available` — Twilio `searchAvailableNumbers` integration
+- Query params: `country`, optional `areaCode`
 
-### 3. Quote Public View Frontend
-- `frontend/src/app/crm/quotes/view/[token]/page.tsx` — fetches `GET /crm/quotes/view/:token`, renders line items and totals
+### 3. Fine-Tuning APIs
+- `FineTuningJob` entity with status lifecycle
+- `GET/POST/PATCH/DELETE /ai/fine-tuning` + cancel endpoint
+- Frontend fine-tuning page wired
 
-### 4. Stripe Elements Card Attach
-- `@stripe/stripe-js` + `@stripe/react-stripe-js` installed
-- `StripeCardSetup` component — setup intent → confirmSetup → attach API
-- Payment methods page wired to inline card form
+### 4. Frontend Mock-Data Batch 3 (10 pages)
+- Analytics dashboards (list, detail, new)
+- CRM deals forecast (API-backed)
+- Settings API keys & webhooks
+- AI fine-tuning
+- Voice transcripts
+- WhatsApp broadcasts
+- Billing wallet (new page)
 
-### 5. WhatsApp Broadcast BullMQ Queue
-- `WhatsappBroadcastProcessor` on `QUEUE_NAMES.WHATSAPP`
-- Rate limiting: 13ms stagger (~80 msgs/sec per Meta docs)
-- `WhatsappBroadcastService.send()` enqueues via `addBulk` instead of sync loop
+### 5. Wallet/Credits Billing
+- `Wallet` + `WalletTransaction` entities
+- `GET /billing/wallet`, `GET /billing/wallet/transactions`, `POST /billing/wallet/credits`
+- Frontend wallet page with balance and transaction history
 
-### 6. Additional P1/P2 Items
-- **Deal products** — `DealProduct` entity + `DealProductService` + CRM routes
-- **Unified search** — `SearchService` queries contacts/deals/companies via TypeORM `ILike`
-- **CI migration gate** — `migrate:prod` step added to deploy workflow before `up -d`
+### 6. Expanded E2E Tests
+- `auth-login-http.integration.spec.ts` — login success + invalid password (2 tests)
+- `crm-crud-http.integration.spec.ts` — contact CRUD + list (2 tests)
+- `seed-test.helper.ts` — test tenant/user seeding for HTTP E2E
+- Total E2E: **10/10 PASS** (8 suites)
+
+### 7. Frontend API Base URL Fix
+- `client.ts` default changed to `http://localhost:8000/api/v1`
+
+### 8. Voice Transcripts API
+- `GET /voice/transcripts`, `GET /voice/transcripts/:id`
 
 ## Build & Test
 - Backend build: **PASS**
 - Unit tests: **2/2 PASS**
-- Integration tests: **6/6 PASS** (`npm run test:e2e`)
+- Integration tests: **10/10 PASS** (`npm run test:e2e`)
 - Frontend build: **PASS**
 
 ## Cumulative Status
-- Sessions 1–3: audit, CRM/voice/WA/billing/marketplace, migrations, frontend batch 1
-- Session 4: AI conversations, HTTP E2E, quote public UI, Stripe Elements, WA broadcast queue, deal products, search, CI migration
+- Sessions 1–5: audit, CRM/voice/WA/billing, migrations, Phase 5 priorities
+- Session 6: analytics dashboards, fine-tuning, wallet, voice search/transcripts, frontend batch 3, E2E expansion, API URL fix

@@ -117,14 +117,24 @@ export class DataJobService {
     id: string,
     updates: Partial<Pick<DataJob, 'downloadUrl' | 'fileKey' | 'metadata'>>,
   ): Promise<void> {
-    await this.jobRepository.update(
-      { id },
-      {
-        status: DataJobStatus.COMPLETED,
-        completedAt: new Date(),
-        ...updates,
-      },
-    );
+    const job = await this.jobRepository.findOne({ where: { id } });
+    if (!job) {
+      return;
+    }
+
+    job.status = DataJobStatus.COMPLETED;
+    job.completedAt = new Date();
+    if (updates.downloadUrl !== undefined) {
+      job.downloadUrl = updates.downloadUrl;
+    }
+    if (updates.fileKey !== undefined) {
+      job.fileKey = updates.fileKey;
+    }
+    if (updates.metadata !== undefined) {
+      job.metadata = updates.metadata;
+    }
+
+    await this.jobRepository.save(job);
   }
 
   async markFailed(id: string, errorMessage: string): Promise<void> {

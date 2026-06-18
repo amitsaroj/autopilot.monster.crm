@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 
 import { Contact } from '../../database/entities/contact.entity';
 import { Deal } from '../../database/entities/deal.entity';
@@ -36,18 +36,18 @@ export class SearchService {
       return { query: trimmed, results: [], total: 0 };
     }
 
-    const pattern = ILike(`%${trimmed}%`);
     const results: SearchResultItem[] = [];
 
     if (collection === 'all' || collection === 'contacts') {
-      const contacts = await this.contactRepository.find({
-        where: [
-          { tenantId, firstName: pattern },
-          { tenantId, lastName: pattern },
-          { tenantId, email: pattern },
-        ],
-        take: 20,
-      });
+      const contacts = await this.contactRepository
+        .createQueryBuilder('contact')
+        .where('contact.tenantId = :tenantId', { tenantId })
+        .andWhere(
+          `to_tsvector('english', coalesce(contact.first_name, '') || ' ' || coalesce(contact.last_name, '') || ' ' || coalesce(contact.email, '')) @@ plainto_tsquery('english', :query)`,
+          { query: trimmed },
+        )
+        .take(20)
+        .getMany();
 
       results.push(
         ...contacts.map((contact) => ({
@@ -60,10 +60,14 @@ export class SearchService {
     }
 
     if (collection === 'all' || collection === 'deals') {
-      const deals = await this.dealRepository.find({
-        where: { tenantId, name: pattern },
-        take: 20,
-      });
+      const deals = await this.dealRepository
+        .createQueryBuilder('deal')
+        .where('deal.tenantId = :tenantId', { tenantId })
+        .andWhere(`to_tsvector('english', coalesce(deal.name, '')) @@ plainto_tsquery('english', :query)`, {
+          query: trimmed,
+        })
+        .take(20)
+        .getMany();
 
       results.push(
         ...deals.map((deal) => ({
@@ -76,10 +80,15 @@ export class SearchService {
     }
 
     if (collection === 'all' || collection === 'companies') {
-      const companies = await this.companyRepository.find({
-        where: { tenantId, name: pattern },
-        take: 20,
-      });
+      const companies = await this.companyRepository
+        .createQueryBuilder('company')
+        .where('company.tenantId = :tenantId', { tenantId })
+        .andWhere(
+          `to_tsvector('english', coalesce(company.name, '') || ' ' || coalesce(company.domain, '')) @@ plainto_tsquery('english', :query)`,
+          { query: trimmed },
+        )
+        .take(20)
+        .getMany();
 
       results.push(
         ...companies.map((company) => ({

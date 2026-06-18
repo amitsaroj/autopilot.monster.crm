@@ -21,4 +21,14 @@ export class VoiceCallRepository extends BaseRepository<VoiceCall> {
   async findBySidGlobal(sid: string): Promise<VoiceCall | null> {
     return this.repository.findOne({ where: { sid } });
   }
+
+  async findWithTranscripts(tenantId: string): Promise<VoiceCall[]> {
+    return this.repository
+      .createQueryBuilder('call')
+      .where('call.tenant_id = :tenantId', { tenantId })
+      .andWhere('call.transcript IS NOT NULL')
+      .orderBy('call.created_at', 'DESC')
+      .take(100)
+      .getMany();
+  }
 }

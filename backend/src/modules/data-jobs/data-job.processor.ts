@@ -237,25 +237,31 @@ export class ExportJobProcessor {
     entityType: string,
   ): Promise<Array<Record<string, unknown>>> {
     switch (entityType) {
-      case 'contacts':
-        return this.contactRepository.find({ where: { tenantId } }) as Promise<
-          Array<Record<string, unknown>>
-        >;
-      case 'deals':
-        return this.dealRepository.find({ where: { tenantId } }) as Promise<
-          Array<Record<string, unknown>>
-        >;
-      case 'companies':
-        return this.companyRepository.find({ where: { tenantId } }) as Promise<
-          Array<Record<string, unknown>>
-        >;
-      case 'leads':
-        return this.leadRepository.find({ where: { tenantId } }) as Promise<
-          Array<Record<string, unknown>>
-        >;
+      case 'contacts': {
+        const records = await this.contactRepository.find({ where: { tenantId } });
+        return this.toPlainRecords(records);
+      }
+      case 'deals': {
+        const records = await this.dealRepository.find({ where: { tenantId } });
+        return this.toPlainRecords(records);
+      }
+      case 'companies': {
+        const records = await this.companyRepository.find({ where: { tenantId } });
+        return this.toPlainRecords(records);
+      }
+      case 'leads': {
+        const records = await this.leadRepository.find({ where: { tenantId } });
+        return this.toPlainRecords(records);
+      }
       default:
         throw new Error(`Unsupported export entity: ${entityType}`);
     }
+  }
+
+  private toPlainRecords<T extends object>(records: T[]): Array<Record<string, unknown>> {
+    return records.map(
+      (record) => JSON.parse(JSON.stringify(record)) as Record<string, unknown>,
+    );
   }
 
   private toCsv(records: Array<Record<string, unknown>>): string {

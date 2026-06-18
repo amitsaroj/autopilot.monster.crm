@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param, Delete, Patch, UseGuards, Res, NotFoundException } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Delete, Patch, UseGuards, Res, NotFoundException, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 
@@ -6,7 +6,7 @@ import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
 import { CallDto, SynthesizeDto } from './dto/voice.dto';
 import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
-import { ProvisionPhoneNumberDto } from './dto/voice-phone-number.dto';
+import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-phone-number.dto';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId } from '../../common/decorators';
@@ -168,6 +168,20 @@ export class VoiceController {
     return { status: 200, message: 'Campaign stats retrieved', error: false, data };
   }
 
+  @Get('phone-numbers/available')
+  @ApiOperation({ summary: 'Search available phone numbers' })
+  async searchAvailableNumbers(
+    @TenantId() tenantId: string,
+    @Query() query: SearchAvailableNumbersDto,
+  ) {
+    const data = await this.voicePhoneNumberService.searchAvailable(
+      tenantId,
+      query.country,
+      query.areaCode,
+    );
+    return { status: 200, message: 'Available numbers retrieved', error: false, data };
+  }
+
   @Get('phone-numbers')
   @ApiOperation({ summary: 'List provisioned phone numbers' })
   async listPhoneNumbers(@TenantId() tenantId: string) {
@@ -187,5 +201,19 @@ export class VoiceController {
   async releasePhoneNumber(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.voicePhoneNumberService.release(tenantId, id);
     return { status: 200, message: 'Phone number released', error: false, data: null };
+  }
+
+  @Get('transcripts')
+  @ApiOperation({ summary: 'List call transcripts' })
+  async listTranscripts(@TenantId() tenantId: string) {
+    const data = await this.voiceCallService.findTranscripts(tenantId);
+    return { status: 200, message: 'Transcripts retrieved', error: false, data };
+  }
+
+  @Get('transcripts/:id')
+  @ApiOperation({ summary: 'Get transcript detail' })
+  async getTranscriptDetail(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.voiceCallService.findTranscriptById(tenantId, id);
+    return { status: 200, message: 'Transcript retrieved', error: false, data };
   }
 }

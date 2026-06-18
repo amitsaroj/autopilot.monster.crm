@@ -15,3 +15,14 @@ export class ProvisionPhoneNumberDto {
   @IsOptional()
   capabilities?: { voice: boolean; sms: boolean; mms: boolean };
 }
+
+export class SearchAvailableNumbersDto {
+  @ApiProperty({ example: 'US' })
+  @IsString()
+  country!: string;
+
+  @ApiPropertyOptional({ example: '415' })
+  @IsString()
+  @IsOptional()
+  areaCode?: string;
+}

@@ -91,4 +91,16 @@ export class VoiceCallService {
   getTranscript(call: VoiceCall): { transcript: string | null } {
     return { transcript: call.transcript ?? null };
   }
+
+  async findTranscripts(tenantId: string): Promise<VoiceCall[]> {
+    return this.voiceCallRepository.findWithTranscripts(tenantId);
+  }
+
+  async findTranscriptById(tenantId: string, id: string): Promise<VoiceCall> {
+    const call = await this.findOne(tenantId, id);
+    if (!call.transcript) {
+      throw new NotFoundException('Transcript not found');
+    }
+    return call;
+  }
 }

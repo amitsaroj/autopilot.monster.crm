@@ -42,6 +42,23 @@ export async function createTestApp(): Promise<INestApplication> {
   return app;
 }
 
+export async function isMinioReachable(): Promise<boolean> {
+  try {
+    const Minio = await import('minio');
+    const client = new Minio.Client({
+      endPoint: process.env.MINIO_ENDPOINT ?? 'localhost',
+      port: parseInt(process.env.MINIO_PORT ?? '9000', 10),
+      useSSL: false,
+      accessKey: process.env.MINIO_ACCESS_KEY ?? 'minioadmin',
+      secretKey: process.env.MINIO_SECRET_KEY ?? 'minioadmin',
+    });
+    await client.listBuckets();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function isPostgresReachable(): Promise<boolean> {
   try {
     const { Client } = await import('pg');

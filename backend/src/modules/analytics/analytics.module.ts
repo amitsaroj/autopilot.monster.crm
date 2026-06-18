@@ -2,7 +2,19 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnalyticsService } from './analytics.service';
 import { AnalyticsController } from './analytics.controller';
+import { AnalyticsDashboardsController } from './analytics-dashboards.controller';
+import { AnalyticsReportsController } from './analytics-reports.controller';
+import {
+  AnalyticsDashboardService,
+  AnalyticsDashboardRepository,
+} from './analytics-dashboard.service';
+import {
+  AnalyticsReportService,
+  AnalyticsReportRepository,
+} from './analytics-report.service';
 import { DashboardMetric } from '../../database/entities/dashboard-metric.entity';
+import { AnalyticsDashboard } from '../../database/entities/analytics-dashboard.entity';
+import { AnalyticsReport } from '../../database/entities/analytics-report.entity';
 import { Deal } from '../../database/entities/deal.entity';
 import { Contact } from '../../database/entities/contact.entity';
 import { Lead } from '../../database/entities/lead.entity';
@@ -13,6 +25,8 @@ import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity
   imports: [
     TypeOrmModule.forFeature([
       DashboardMetric,
+      AnalyticsDashboard,
+      AnalyticsReport,
       Deal,
       Contact,
       Lead,
@@ -20,8 +34,14 @@ import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity
       WhatsAppMessage,
     ]),
   ],
-  controllers: [AnalyticsController],
-  providers: [AnalyticsService],
-  exports: [AnalyticsService],
+  controllers: [AnalyticsController, AnalyticsDashboardsController, AnalyticsReportsController],
+  providers: [
+    AnalyticsService,
+    AnalyticsDashboardService,
+    AnalyticsDashboardRepository,
+    AnalyticsReportService,
+    AnalyticsReportRepository,
+  ],
+  exports: [AnalyticsService, AnalyticsDashboardService, AnalyticsReportService],
 })
 export class AnalyticsModule {}

@@ -8,6 +8,9 @@ import { ConversationsController } from './conversations.controller';
 import { KnowledgeBasesController } from './knowledge-bases.controller';
 import { RagService } from './rag.service';
 import { AiPromptService } from './ai-prompt.service';
+import { FineTuningController } from './fine-tuning.controller';
+import { FineTuningService, FineTuningRepository } from './fine-tuning.service';
+import { FineTuningJob } from '../../database/entities/fine-tuning-job.entity';
 import { KnowledgeBase } from '../../database/entities/knowledge-base.entity';
 import { Conversation } from '../../database/entities/conversation.entity';
 import { Message } from '../../database/entities/message.entity';
@@ -15,14 +18,16 @@ import { AiPrompt } from '../../database/entities/ai-prompt.entity';
 import { KnowledgeBaseService, KnowledgeBaseRepository } from './knowledge-base.service';
 import { ConversationService, ConversationRepository } from './conversation.service';
 import { CrmModule } from '../crm/crm.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([KnowledgeBase, Conversation, Message, AiPrompt]),
+    StorageModule,
+    TypeOrmModule.forFeature([KnowledgeBase, Conversation, Message, AiPrompt, FineTuningJob]),
     forwardRef(() => CrmModule),
   ],
-  controllers: [AiController, AiAgentsController, AiPromptsController, KnowledgeBasesController, ConversationsController],
+  controllers: [AiController, AiAgentsController, AiPromptsController, KnowledgeBasesController, ConversationsController, FineTuningController],
   providers: [
     RagService,
     KnowledgeBaseService,
@@ -30,7 +35,9 @@ import { CrmModule } from '../crm/crm.module';
     ConversationService,
     ConversationRepository,
     AiPromptService,
+    FineTuningService,
+    FineTuningRepository,
   ],
-  exports: [RagService, KnowledgeBaseService, ConversationService, AiPromptService],
+  exports: [RagService, KnowledgeBaseService, ConversationService, AiPromptService, FineTuningService],
 })
 export class AiModule {}

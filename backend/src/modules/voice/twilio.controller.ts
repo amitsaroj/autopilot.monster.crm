@@ -1,6 +1,8 @@
 import { Controller, Post, Req, Res, Headers } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+import { Public } from '../../common/decorators/public.decorator';
+
 import { TwilioService } from './twilio.service';
 import { VoiceCallService } from './voice-call.service';
 
@@ -12,6 +14,7 @@ export class TwilioController {
   ) {}
 
   @Post('inbound')
+  @Public()
   handleInboundCall(@Req() _req: Request, @Res() res: Response, @Headers('host') host: string) {
     const wssUrl = `wss://${host}/voice/stream`;
     const twiml = this.twilioService.generateIncomingStreamingTwiml(wssUrl);
@@ -20,6 +23,7 @@ export class TwilioController {
   }
 
   @Post('status-callback')
+  @Public()
   async handleStatusCallback(@Req() req: Request, @Res() res: Response) {
     const callSid = String(req.body.CallSid ?? '');
     const callStatus = String(req.body.CallStatus ?? '');

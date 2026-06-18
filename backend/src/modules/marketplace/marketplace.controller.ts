@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId } from '../../common/decorators';
+import { Public } from '../../common/decorators/public.decorator';
 import { MarketplaceService } from './marketplace.service';
 
 @ApiTags('Marketplace')
@@ -11,6 +12,7 @@ export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}
 
   @Get()
+  @Public()
   @ApiOperation({ summary: 'Public app directory' })
   async listApps() {
     const data = await this.marketplaceService.listApps();
@@ -27,12 +29,14 @@ export class MarketplaceController {
   }
 
   @Get('apps')
+  @Public()
   @ApiOperation({ summary: 'Get all marketplace apps (legacy path)' })
   async getApps() {
     return this.listApps();
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'App detail' })
   async getApp(@Param('id') id: string) {
     const data = await this.marketplaceService.getApp(id);

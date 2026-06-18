@@ -78,15 +78,4 @@ export class AnalyticsController {
     return { status: 200, message: 'Metrics retrieved', error: false, data };
   }
 
-  @Get('reports')
-  @ApiOperation({ summary: 'Get generated reports' })
-  async getReports(@TenantId() tenantId: string) {
-    return {
-      status: 200,
-      message: 'Reports retrieved',
-      error: false,
-      data: [],
-      meta: { tenantId },
-    };
-  }
 }

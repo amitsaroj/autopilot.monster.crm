@@ -16,9 +16,12 @@ import { Request } from 'express';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId } from '../../common/decorators';
+import { Public } from '../../common/decorators/public.decorator';
 import { BillingService } from './billing.service';
 import { PricingService } from '../pricing/pricing.service';
 import { AttachPaymentMethodDto, UpgradeSubscriptionDto, DowngradeSubscriptionDto, CancelSubscriptionDto } from './dto/billing.dto';
+import { AddWalletCreditsDto } from './dto/wallet.dto';
+import { WalletService } from './wallet.service';
 
 @ApiTags('Billing')
 @Controller('billing')
@@ -26,9 +29,11 @@ export class BillingController {
   constructor(
     private readonly billingService: BillingService,
     private readonly pricingService: PricingService,
+    private readonly walletService: WalletService,
   ) {}
 
   @Get('plans')
+  @Public()
   @ApiOperation({ summary: 'Get all public plans' })
   getPlans() {
     return this.pricingService.findAllPlans();
@@ -142,7 +147,35 @@ export class BillingController {
     return { status: 200, message: 'Default payment method updated', error: false, data };
   }
 
+  @Get('wallet')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiOperation({ summary: 'Get wallet balance' })
+  async getWallet(@TenantId() tenantId: string) {
+    const data = await this.walletService.getWallet(tenantId);
+    return { status: 200, message: 'Wallet retrieved', error: false, data };
+  }
+
+  @Get('wallet/transactions')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiOperation({ summary: 'Get wallet transaction history' })
+  async getWalletTransactions(@TenantId() tenantId: string) {
+    const data = await this.walletService.getTransactions(tenantId);
+    return { status: 200, message: 'Wallet transactions retrieved', error: false, data };
+  }
+
+  @Post('wallet/credits')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiOperation({ summary: 'Add credits to wallet' })
+  async addWalletCredits(@TenantId() tenantId: string, @Body() dto: AddWalletCreditsDto) {
+    const data = await this.walletService.addCredits(tenantId, dto);
+    return { status: 201, message: 'Credits added', error: false, data };
+  }
+
   @Post('webhook')
+  @Public()
   @ApiOperation({ summary: 'Stripe webhook handler' })
   async handleWebhook(
     @Headers('stripe-signature') signature: string,

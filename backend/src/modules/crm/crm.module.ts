@@ -36,6 +36,7 @@ import { DealProduct } from '../../database/entities/deal-product.entity';
 import { ForecastService } from './forecast.service';
 import { QuoteLifecycleService } from './quote-lifecycle.service';
 import { QuotePublicController } from './quote-public.controller';
+import { CrmReportsController } from './controllers/crm-reports.controller';
 import { DealProductService } from './deal-product.service';
 
 import { ContactService } from './contact.service';
@@ -110,7 +111,7 @@ import { EmailModule } from '../../shared/email/email.module';
     forwardRef(() => VoiceModule),
     EmailModule,
   ],
-  controllers: [CrmController, QuotePublicController],
+  controllers: [CrmController, QuotePublicController, CrmReportsController],
   providers: [
     AgentService,
     FlowService,

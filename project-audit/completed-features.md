@@ -48,3 +48,23 @@
 - Deal products entity + nested CRM routes
 - Unified search API (contacts, deals, companies via PostgreSQL)
 - CI deploy workflow runs `migrate:prod` before container restart
+
+## Session 5
+- Import/export/backup async job system (`DataJob` entity + Bull processors)
+- `/import`, `/export`, `/backup` REST APIs per api_scope
+- Storage presigned URL APIs (`/storage/files/*`) with MinIO backend
+- AI SSE streaming chat (`POST /ai/chat/stream`) + frontend chat page
+- Public quote accept/decline/PDF by token (backend + frontend)
+- Frontend batch 2: marketplace, company nested pages, CSV import via presigned upload
+- CI workflow with Postgres + Redis services for full E2E
+- Queue module Redis config fix (env-driven host/port)
+
+## Session 6
+- Analytics dashboards CRUD (`/analytics/dashboards`) + frontend pages
+- Voice phone number search (`GET /voice/phone-numbers/available`)
+- Fine-tuning APIs (`/ai/fine-tuning`) + frontend page
+- Wallet/credits billing (`Wallet`, `WalletTransaction`, `/billing/wallet/*`)
+- Voice transcripts list/detail APIs + frontend page
+- Frontend batch 3: settings API, deals forecast, broadcasts, wallet (10 pages)
+- E2E expanded: auth login HTTP + CRM contact CRUD (10 total tests)
+- Frontend API base URL fixed to `/api/v1`
