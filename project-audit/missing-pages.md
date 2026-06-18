@@ -6,47 +6,42 @@ Compared against `Docs/PAGE_LIST.md` and `(app)` user routes.
 
 - **Documented pages in PAGE_LIST.md:** ~80 admin + marketing routes marked complete
 - **Actual frontend routes:** 327+ page.tsx files under `frontend/src/app`
-- **Gap type:** Most pages exist as UI shells; many use hardcoded mock data instead of API integration
+- **Placeholder pages remaining:** ~70 using `PagePlaceholder`
+- **Gap type:** Most routes exist; many still need API wiring
 
-## Pages With Mock Data (Need API Wiring)
+## Recently Wired (Sessions 6–7)
+
+| Page | Path | Status |
+|------|------|--------|
+| Analytics Dashboards | `/(app)/analytics/dashboards` | API wired |
+| Analytics Reports | `/(app)/analytics/reports` | API wired |
+| Billing Wallet | `/(app)/billing/wallet` | API wired |
+| Voice Transcripts | `/(app)/voice/transcripts` | API wired |
+| Contact Activities | `/(app)/crm/contacts/[id]/activities` | API wired |
+| Contact Deals/Notes/Calls/Emails/Messages/Files | `/(app)/crm/contacts/[id]/*` | API wired |
+| Workflow Detail | `/(app)/workflows/[id]` | API wired |
+| Workflow Runs | `/(app)/workflows/[id]/runs` | API wired |
+| Admin Voice Campaigns | `/admin/voice/campaigns` | API wired |
+| Admin AI Agents | `/admin/ai/agents` | API wired |
+
+## Pages Still Using PagePlaceholder (~70)
+
+Key areas: workflow edit/templates, voice/whatsapp nested pages, builder module, CRM leads/deals nested, plugins, inbox, settings notifications/SSO.
+
+## Pages With Hardcoded Mock Data (No PagePlaceholder)
 
 | Page | Path | Issue |
 |------|------|-------|
-| Revenue Forecast | `/(app)/crm/forecast` | Hardcoded deals array |
-| Revenue Forecast (alt) | `/(app)/crm/deals/forecast` | Likely mock data |
-| AI Agents | `/admin/ai/agents` | Verify API connection |
-| WhatsApp Admin | `/admin/whatsapp/*` | Limited backend |
-| Voice Campaigns | `/admin/voice/campaigns` | No backend campaigns |
-| Marketplace | `/admin/marketplace` | Backend returns `[]` |
+| Workflows List | `/(app)/workflows` | Hardcoded workflows table |
+| Admin Workflows Executions | `/admin/workflows/executions` | Mock executions |
+| Admin RBAC | `/admin/rbac/*` | Mock roles/users/permissions |
+| Admin Social | `/admin/social/*` | Mock posts/assets |
+| Admin Voice Numbers | `/admin/voice/numbers` | Mock phone numbers |
 
-## Documented But Potentially Missing User-Facing Routes
+## Documented But Still Missing or Partial
 
-| Feature Area | Expected Route | Found |
-|--------------|----------------|-------|
-| CRM Leads (user app) | `/(app)/crm/leads` | Yes |
-| CRM Segments | `/(app)/crm/segments` | Check |
-| CRM Tags | `/(app)/crm/tags` | Check |
-| AI Knowledge Base | `/(app)/ai/knowledge-base` | Check |
-| AI Prompts (user) | `/(app)/ai/prompts` | Admin only |
-| Billing Wallet | `/(app)/billing/wallet` | **Missing** |
-| Developer API Keys | `/(app)/settings/api-keys` | **Missing** |
+| Feature Area | Expected Route | Status |
+|--------------|----------------|--------|
+| WhatsApp Flow Builder | `/(app)/whatsapp/flows` | Missing |
 | Developer Webhooks | `/(app)/settings/webhooks` | Partial in admin settings |
-| WhatsApp Flow Builder | `/(app)/whatsapp/flows` | **Missing** |
-| WhatsApp Broadcasts | `/(app)/whatsapp/broadcasts` | Check |
-| Voice Transcripts | `/(app)/voice/transcripts` | **Missing** |
-| Analytics Dashboards | `/(app)/analytics/dashboards` | **Missing** |
-
-## Settings Pages (admin/settings/api)
-
-- `/admin/settings/api` exists — needs backend `/settings/api-keys` integration
-
-## Marketing Pages
-
-All documented marketing pages appear present under `(marketing)/`.
-
-## SuperAdmin
-
-Extended beyond PAGE_LIST.md with telemetry, system workers, marketplace sub-pages — all present.
-
-**Estimated pages needing real data integration: ~35**
-**Estimated fully missing pages: ~12**
+| SSO Settings | `/(app)/settings/workspace/sso` | Placeholder only |
