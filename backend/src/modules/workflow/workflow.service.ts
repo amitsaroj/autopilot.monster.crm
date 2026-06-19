@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { WorkflowRepository } from './workflow.repository';
 import { CreateWorkflowDto } from './dto/workflow.dto';
@@ -25,12 +25,28 @@ export class WorkflowService {
   }
 
   async create(tenantId: string, dto: CreateWorkflowDto): Promise<Flow> {
-    return this.workflowRepo.create(tenantId, dto);
+    const definition = {
+      ...dto.definition,
+      ...(dto.triggerEvent ? { triggerEvent: dto.triggerEvent } : {}),
+    };
+    return this.workflowRepo.create(tenantId, {
+      name: dto.name,
+      description: dto.description,
+      type: dto.type ?? 'voice',
+      definition,
+      isPublished: dto.isPublished ?? false,
+    });
   }
 
   async update(tenantId: string, id: string, dto: Partial<CreateWorkflowDto>): Promise<Flow> {
     await this.findOne(tenantId, id);
-    return this.workflowRepo.updateWithTenant(tenantId, id, dto);
+    const updates: Partial<Flow> = {};
+    if (dto.name !== undefined) updates.name = dto.name;
+    if (dto.description !== undefined) updates.description = dto.description;
+    if (dto.type !== undefined) updates.type = dto.type;
+    if (dto.definition !== undefined) updates.definition = dto.definition;
+    if (dto.isPublished !== undefined) updates.isPublished = dto.isPublished;
+    return this.workflowRepo.updateWithTenant(tenantId, id, updates);
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
@@ -38,58 +54,157 @@ export class WorkflowService {
     await this.workflowRepo.delete(tenantId, id);
   }
 
+  async activate(tenantId: string, id: string): Promise<Flow> {
+    await this.findOne(tenantId, id);
+    return this.workflowRepo.updateWithTenant(tenantId, id, { isPublished: true });
+  }
+
+  async deactivate(tenantId: string, id: string): Promise<Flow> {
+    await this.findOne(tenantId, id);
+    return this.workflowRepo.updateWithTenant(tenantId, id, { isPublished: false });
+  }
+
+  async duplicate(tenantId: string, id: string): Promise<Flow> {
+    const source = await this.findOne(tenantId, id);
+    return this.workflowRepo.create(tenantId, {
+      name: `${source.name} (Copy)`,
+      type: source.type,
+      definition: source.definition,
+      description: source.description,
+      isPublished: false,
+    });
+  }
+
+  async getExecution(tenantId: string, executionId: string) {
+    const execution = await this.workflowRepo.findExecutionById(tenantId, executionId);
+    if (!execution) throw new NotFoundException('Execution not found');
+    return execution;
+  }
+
+  getTriggerTypes() {
+    return [
+      { key: 'CONTACT_CREATED', label: 'Contact Created', category: 'CRM' },
+      { key: 'CONTACT_UPDATED', label: 'Contact Updated', category: 'CRM' },
+      { key: 'DEAL_CREATED', label: 'Deal Created', category: 'CRM' },
+      { key: 'DEAL_STAGE_CHANGED', label: 'Deal Stage Changed', category: 'CRM' },
+      { key: 'DEAL_WON', label: 'Deal Won', category: 'CRM' },
+      { key: 'DEAL_LOST', label: 'Deal Lost', category: 'CRM' },
+      { key: 'LEAD_CREATED', label: 'Lead Created', category: 'CRM' },
+      { key: 'CALL_COMPLETED', label: 'Call Completed', category: 'Voice' },
+      { key: 'WHATSAPP_MESSAGE_RECEIVED', label: 'WhatsApp Message Received', category: 'WhatsApp' },
+      { key: 'WEBHOOK', label: 'Inbound Webhook', category: 'Webhook' },
+      { key: 'SCHEDULE', label: 'Scheduled', category: 'Scheduler' },
+      { key: 'MANUAL', label: 'Manual Trigger', category: 'Manual' },
+    ];
+  }
+
+  getActionTypes() {
+    return [
+      { key: 'CREATE_CONTACT', label: 'Create Contact', category: 'CRM' },
+      { key: 'UPDATE_CONTACT', label: 'Update Contact', category: 'CRM' },
+      { key: 'CREATE_DEAL', label: 'Create Deal', category: 'CRM' },
+      { key: 'UPDATE_DEAL', label: 'Update Deal', category: 'CRM' },
+      { key: 'MOVE_PIPELINE_STAGE', label: 'Move Pipeline Stage', category: 'CRM' },
+      { key: 'ASSIGN_OWNER', label: 'Assign Owner', category: 'CRM' },
+      { key: 'ADD_TAG', label: 'Add Tag', category: 'CRM' },
+      { key: 'CREATE_TASK', label: 'Create Task', category: 'CRM' },
+      { key: 'CREATE_NOTE', label: 'Create Note', category: 'CRM' },
+      { key: 'SEND_EMAIL', label: 'Send Email', category: 'Email' },
+      { key: 'SEND_WHATSAPP', label: 'Send WhatsApp', category: 'WhatsApp' },
+      { key: 'INITIATE_CALL', label: 'Initiate Voice Call', category: 'Voice' },
+      { key: 'NOTIFY_TEAM', label: 'Notify Team', category: 'Notification' },
+      { key: 'CALL_WEBHOOK', label: 'Call Webhook', category: 'Webhook' },
+      { key: 'DELAY', label: 'Delay', category: 'Flow' },
+      { key: 'CONDITION_BRANCH', label: 'Condition Branch', category: 'Flow' },
+      { key: 'LOG', label: 'Log Message', category: 'Flow' },
+      { key: 'AI_CHAT', label: 'AI Chat', category: 'AI' },
+    ];
+  }
+
   async getExecutions(tenantId: string) {
     return this.workflowRepo.findExecutions(tenantId);
   }
 
   /**
-   * Triggers an automation workflow based on system events
+   * Triggers automation workflows based on system events.
+   * When workflowId is provided, only that workflow is executed (manual trigger).
    */
-  async triggerWorkflow(tenantId: string, eventName: string, payload: any) {
+  async triggerWorkflow(
+    tenantId: string,
+    eventName: string,
+    payload: Record<string, unknown>,
+    workflowId?: string,
+  ) {
     this.logger.log(`Triggering workflow for event: ${eventName} (Tenant: ${tenantId})`);
 
-    // Fetch active workflows for this tenant
-    const activeFlows = await this.workflowRepo.findActive(tenantId);
+    const targets = workflowId
+      ? [await this.findOne(tenantId, workflowId)]
+      : await this.workflowRepo.findActiveByTrigger(tenantId, eventName);
 
-    // Simple matching: in a real system we'd parse the 'definition' JSON 
-    // to find trigger nodes that match `eventName`. Here we do a basic check
-    // to see if the eventName string exists in the JSON stringified definition.
-    const matchedFlows = activeFlows.filter((flow: any) => {
-      try {
-        const defStr = JSON.stringify(flow.definition);
-        return defStr.includes(`"event":"${eventName}"`) || defStr.includes(`"trigger":"${eventName}"`);
-      } catch {
-        return false;
-      }
-    });
+    const jobIds: string[] = [];
 
-    if (matchedFlows.length === 0) {
-      this.logger.log(`No active workflows matched event: ${eventName}`);
-      return { success: true, executed: 0 };
-    }
+    for (const flow of targets) {
+      const execution = await this.workflowRepo.createExecution({
+        tenantId,
+        flowId: flow.id,
+        status: 'RUNNING',
+        input: { eventName, payload },
+        output: { steps: [] },
+      });
 
-    this.logger.log(`Found ${matchedFlows.length} matching workflow(s) for event: ${eventName}`);
-
-    for (const flow of matchedFlows) {
-      const executionId = 'exec_' + Math.random().toString(36).substring(7);
-
-      await this.workflowQueue.add(
+      const job = await this.workflowQueue.add(
         'execute-workflow',
         {
           workflowId: flow.id,
-          executionId,
           tenantId,
           eventName,
           payload,
+          executionId: execution.id,
         },
         {
           attempts: 3,
           backoff: { type: 'exponential', delay: 5000 },
-          removeOnComplete: true,
         },
       );
+      jobIds.push(String(job.id));
     }
 
-    return { success: true, executed: matchedFlows.length };
+    return { success: true, triggered: targets.length, jobIds };
+  }
+
+  async retryExecution(tenantId: string, executionId: string) {
+    const execution = await this.getExecution(tenantId, executionId);
+    if (execution.status !== 'FAILED') {
+      throw new BadRequestException('Only failed executions can be retried');
+    }
+
+    const input = execution.input as { eventName?: string; payload?: Record<string, unknown> };
+    const eventName = input.eventName ?? 'MANUAL_RETRY';
+    const payload = input.payload ?? {};
+
+    await this.workflowRepo.updateExecution(tenantId, executionId, {
+      status: 'RUNNING',
+      error: undefined,
+      completedAt: undefined,
+      currentStepId: undefined,
+      output: { steps: [] },
+    });
+
+    const job = await this.workflowQueue.add(
+      'execute-workflow',
+      {
+        workflowId: execution.flowId,
+        tenantId,
+        eventName,
+        payload,
+        executionId: execution.id,
+      },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    );
+
+    return { success: true, jobId: String(job.id), executionId: execution.id };
   }
 }

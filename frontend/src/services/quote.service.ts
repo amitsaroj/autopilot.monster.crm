@@ -40,4 +40,9 @@ export const quoteService = {
   createQuote: (data: Partial<Quote>) => api.post('/crm/quotes', data),
   updateQuote: (id: string, data: Partial<Quote>) => api.put(`/crm/quotes/${id}`, data),
   deleteQuote: (id: string) => api.delete(`/crm/quotes/${id}`),
+  sendQuote: (id: string, data: { to: string; message?: string }) =>
+    api.post(`/crm/quotes/${id}/send`, data),
+  acceptQuote: (id: string) => api.post(`/crm/quotes/${id}/accept`),
+  declineQuote: (id: string) => api.post(`/crm/quotes/${id}/decline`),
+  downloadPdf: (id: string) => api.get(`/crm/quotes/${id}/pdf`, { responseType: 'blob' }),
 };

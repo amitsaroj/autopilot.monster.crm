@@ -3,9 +3,12 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, TenantGuard, RolesGuard } from '../common/guards';
 import { PricingService } from './pricing/pricing.service';
 import { BillingService } from './billing/billing.service';
-import { TenantId, Roles } from '../common/decorators';
+import { TenantId, Roles, ResourcePermissions, PlanFeature } from '../common/decorators';
+import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('Monetization')
+@ResourcePermissions('billing')
+@PlanFeature('billing')
 @ApiBearerAuth()
 @Controller('monetization')
 export class MonetizationController {
@@ -15,6 +18,7 @@ export class MonetizationController {
   ) {}
 
   @Get('plans')
+  @Public()
   @ApiOperation({ summary: 'Get all available plans' })
   getPlans() {
     return this.pricingService.findAllPlans();
@@ -38,8 +42,7 @@ export class MonetizationController {
   @ApiOperation({ summary: 'Get current usage' })
   @UseGuards(JwtAuthGuard, TenantGuard)
   getUsage(@TenantId() tenantId: string) {
-    // Basic metrics retrieval
-    return this.billingService.getUsage(tenantId, 'all');
+    return this.billingService.getUsageBreakdown(tenantId);
   }
 
   @Post('upgrade')
@@ -57,8 +60,9 @@ export class MonetizationController {
   }
 
   @Post('webhook')
+  @Public()
   @ApiOperation({ summary: 'Stripe Webhook' })
-  async handleWebhook(@Body() _body: any, @Headers('stripe-signature') sig: string, @Req() req: any) {
+  async handleWebhook(@Body() _body: unknown, @Headers('stripe-signature') sig: string, @Req() req: { rawBody: Buffer }) {
     if (!sig) throw new BadRequestException('Missing signature');
     const rawBody = req.rawBody;
     return this.billingService.handleWebhook(sig, rawBody);

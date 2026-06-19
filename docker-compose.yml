@@ -24,19 +24,42 @@ services:
       - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "password", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # minio:
-  #   image: minio/minio
-  #   restart: always
-  #   command: server /data --console-address ":9001"
-  #   environment:
-  #     MINIO_ROOT_USER: root
-  #     MINIO_ROOT_PASSWORD: password123
-  #   ports:
-  #     - "${MINIO_API_PORT:-9000}:9000"
-  #     - "${MINIO_CONSOLE_PORT:-9001}:9001"
-  #   volumes:
-  #     - miniodata:/data
+  minio:
+    image: minio/minio:latest
+    restart: always
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrantdata:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   api:
     build:
@@ -47,16 +70,40 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
     ports:
       - "${API_PORT:-8000}:8000"
     env_file:
       - ./backend/.env
     environment:
       - DB_HOST=postgres
+      - DB_NAME=autopilot_monster
+      - DB_USER=root
+      - DB_PASSWORD=password
       - REDIS_HOST=redis
+      - REDIS_PASSWORD=password
       - MINIO_ENDPOINT=minio
-      - DB_SYNCHRONIZE=true
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - QDRANT_URL=http://qdrant:6333
+      - DB_SYNCHRONIZE=${DB_SYNCHRONIZE:-false}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:8000/api/v1/health/ready',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
 
   ui:
     build:
@@ -85,4 +132,5 @@ services:
 volumes:
   pgdata:
   redisdata:
-  # miniodata:
+  miniodata:
+  qdrantdata:

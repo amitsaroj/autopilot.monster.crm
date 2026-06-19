@@ -8,6 +8,7 @@ import { CsvService } from './csv.service';
 import { FlowService } from './flow.service';
 import { LeadIntelligenceService } from './lead-intelligence.service';
 import { LeadService } from './lead.service';
+import { LeadScoringService } from './lead-scoring.service';
 import { NotificationService } from './notification.service';
 
 import { Agent } from '../../database/entities/agent.entity';
@@ -29,6 +30,15 @@ import { Tag } from '../../database/entities/tag.entity';
 import { Segment } from '../../database/entities/segment.entity';
 import { CustomField } from '../../database/entities/custom-field.entity';
 import { DealHistory } from '../../database/entities/deal-history.entity';
+import { VoiceCall } from '../../database/entities/voice-call.entity';
+import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
+import { UserEntity } from '../auth/entities/user.entity';
+import { DealProduct } from '../../database/entities/deal-product.entity';
+import { ForecastService } from './forecast.service';
+import { QuoteLifecycleService } from './quote-lifecycle.service';
+import { QuotePublicController } from './quote-public.controller';
+import { CrmReportsController } from './controllers/crm-reports.controller';
+import { DealProductService } from './deal-product.service';
 
 import { ContactService } from './contact.service';
 import { ContactRepository } from './contact.repository';
@@ -66,8 +76,9 @@ import {
   SegmentRepository,
   CustomFieldRepository,
 } from './crm-support.repository';
-import { VoiceModule } from '../voice/voice.module';
+import { TwilioModule } from '../voice/twilio.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
+import { EmailModule } from '../../shared/email/email.module';
 
 @Module({
   imports: [
@@ -91,15 +102,22 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
       Segment,
       CustomField,
       DealHistory,
+      PipelineStage,
+      UserEntity,
+      VoiceCall,
+      WhatsAppMessage,
+      DealProduct,
     ]),
     forwardRef(() => WhatsappModule),
-    forwardRef(() => VoiceModule),
+    TwilioModule,
+    EmailModule,
   ],
-  controllers: [CrmController],
+  controllers: [CrmController, QuotePublicController, CrmReportsController],
   providers: [
     AgentService,
     FlowService,
     LeadService,
+    LeadScoringService,
     CsvService,
     LeadIntelligenceService,
     NotificationService,
@@ -136,6 +154,9 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     CustomFieldRepository,
     CrmAutomationService,
     LeadConversionService,
+    ForecastService,
+    QuoteLifecycleService,
+    DealProductService,
   ],
   exports: [
     AgentService,
@@ -159,6 +180,8 @@ import { WhatsappModule } from '../whatsapp/whatsapp.module';
     CustomFieldService,
     LeadConversionService,
     CrmAutomationService,
+    ForecastService,
+    EmailCrmService,
   ],
 })
 export class CrmModule {}

@@ -19,9 +19,9 @@ const queueList = Object.values(QUEUE_NAMES);
         }
         return {
           redis: {
-            host: 'redis',
-            port: 6379,
-            password: 'password',
+            host: redis.host,
+            port: redis.port,
+            password: redis.password,
           },
           defaultJobOptions: {
             removeOnComplete: true,

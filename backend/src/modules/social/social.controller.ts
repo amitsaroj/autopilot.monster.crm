@@ -2,11 +2,12 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/c
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SocialService } from './social.service';
 import { SocialPost } from '../../database/entities/social-post.entity';
-import { TenantId, Roles } from '../../common/decorators';
+import { TenantId, Roles, ResourcePermissions } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 
 @ApiTags('Social Media')
+@ResourcePermissions('social')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('social')

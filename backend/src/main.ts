@@ -54,32 +54,34 @@ async function bootstrap(): Promise<void> {
   // Global prefix
   app.setGlobalPrefix('api/v1');
 
-  // Swagger — enabled universally for the deployment
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('AutopilotMonster CRM API')
-    .setDescription('Full-Stack AI-Powered CRM Platform')
-    .setVersion('1.0.0')
-    .addBearerAuth()
-    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'ApiKey')
-    .addGlobalParameters({
-      in: 'header',
-      name: 'x-tenant-id',
-      required: true,
-      schema: { type: 'string' },
-    })
-    .addGlobalParameters({
-      in: 'header',
-      name: 'x-correlation-id',
-      required: false,
-      schema: { type: 'string' },
-    })
-    .addSecurityRequirements('bearer')
-    .build();
+  // Swagger — disabled in production to reduce attack surface
+  if (!isProd) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('AutopilotMonster CRM API')
+      .setDescription('Full-Stack AI-Powered CRM Platform')
+      .setVersion('1.0.0')
+      .addBearerAuth()
+      .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'ApiKey')
+      .addGlobalParameters({
+        in: 'header',
+        name: 'x-tenant-id',
+        required: true,
+        schema: { type: 'string' },
+      })
+      .addGlobalParameters({
+        in: 'header',
+        name: 'x-correlation-id',
+        required: false,
+        schema: { type: 'string' },
+      })
+      .addSecurityRequirements('bearer')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('/', app, document, {
-    swaggerOptions: { persistAuthorization: true },
-  });
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document, {
+      swaggerOptions: { persistAuthorization: true },
+    });
+  }
 
   // Enable graceful shutdown
   app.enableShutdownHooks();

@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { adminMarketplaceService, type AdminPlugin } from '@/services/admin-marketplace.service';
+
 interface Plugin {
   id: string;
   name: string;
@@ -20,7 +22,7 @@ interface Plugin {
   author: string;
   active: boolean;
   installations: number;
-  metadata: any;
+  metadata: Record<string, unknown>;
   createdAt: string;
 }
 
@@ -32,10 +34,21 @@ export default function GlobalMarketplacePage() {
   const fetchPlugins = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/marketplace/plugins');
-      const json = await res.json();
-      if (json.data) setPlugins(json.data);
-    } catch (e) {
+      const res = await adminMarketplaceService.getPlugins();
+      const items = (res.data?.data ?? []).map((plugin: AdminPlugin) => ({
+        id: plugin.id,
+        name: plugin.name,
+        description: plugin.description ?? '',
+        version: plugin.version ?? '1.0.0',
+        category: plugin.category ?? 'General',
+        author: plugin.author ?? 'Internal',
+        active: plugin.status === 'ACTIVE',
+        installations: plugin.installCount ?? 0,
+        metadata: { isPremium: plugin.isPremium },
+        createdAt: plugin.createdAt,
+      }));
+      setPlugins(items);
+    } catch {
       toast.error('Failed to sync platform marketplace artifacts');
     } finally {
       setLoading(false);

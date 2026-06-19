@@ -1,30 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Users, Search, Shield, Mail, Clock,
   CheckCircle2, AlertTriangle, Ban, Edit2,
-  UserPlus, MoreVertical, ShieldCheck
+  UserPlus, MoreVertical, ShieldCheck, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface RBACUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: 'ACTIVE' | 'PENDING' | 'SUSPENDED';
-  lastLogin: string;
-  mfaEnabled: boolean;
-}
-
-const mockUsers: RBACUser[] = [
-  { id: '1', name: 'Admin User', email: 'admin@workspace.com', role: 'TENANT_ADMIN', status: 'ACTIVE', lastLogin: '2 hours ago', mfaEnabled: true },
-  { id: '2', name: 'Sarah Johnson', email: 'sarah@workspace.com', role: 'SALES_REP', status: 'ACTIVE', lastLogin: '30 min ago', mfaEnabled: false },
-  { id: '3', name: 'Mike Chen', email: 'mike@workspace.com', role: 'SALES_REP', status: 'ACTIVE', lastLogin: '1 day ago', mfaEnabled: true },
-  { id: '4', name: 'Priya Patel', email: 'priya@workspace.com', role: 'SUPPORT_AGENT', status: 'ACTIVE', lastLogin: '4 hours ago', mfaEnabled: false },
-  { id: '5', name: 'Tom Williams', email: 'tom@workspace.com', role: 'ANALYST', status: 'PENDING', lastLogin: 'Never', mfaEnabled: false },
-  { id: '6', name: 'Alex Rivera', email: 'alex@workspace.com', role: 'VIEWER', status: 'SUSPENDED', lastLogin: '2 weeks ago', mfaEnabled: false },
-];
+import { userService, type User } from '@/services/user.service';
 
 const ROLE_STYLES: Record<string, string> = {
   TENANT_ADMIN: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
@@ -41,14 +25,38 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminRBACUsersPage() {
-  const [users] = useState<RBACUser[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await userService.getUsers();
+        const payload = res.data?.data ?? res.data;
+        setUsers(Array.isArray(payload) ? payload : payload?.data ?? []);
+      } catch {
+        toast.error('Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
   const filtered = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.role.toLowerCase().includes(search.toLowerCase())
+    `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -65,9 +73,9 @@ export default function AdminRBACUsersPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Users', value: users.length, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-          { label: 'Active', value: users.filter(u => u.status === 'ACTIVE').length, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'MFA Enabled', value: users.filter(u => u.mfaEnabled).length, icon: ShieldCheck, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-          { label: 'Pending', value: users.filter(u => u.status === 'PENDING').length, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+          { label: 'Active', value: users.length, icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: 'Roles', value: [...new Set(users.flatMap(u => u.roles))].length, icon: ShieldCheck, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+          { label: 'Total', value: users.length, icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10' },
         ].map(s => (
           <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
             <div className={`p-3 rounded-xl ${s.bg}`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
@@ -100,29 +108,27 @@ export default function AdminRBACUsersPage() {
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-sm border border-indigo-500/20">
-                      {user.name.charAt(0)}
+                      {(user.firstName?.[0] ?? user.email[0]).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-white">{user.name}</p>
+                      <p className="text-sm font-bold text-white">{user.firstName} {user.lastName}</p>
                       <p className="text-xs text-gray-600">{user.email}</p>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
-                  <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${ROLE_STYLES[user.role] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>{user.role.replace('_', ' ')}</span>
+                  <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${ROLE_STYLES[user.roles[0] ?? ''] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>{(user.roles[0] ?? 'USER').replace('_', ' ')}</span>
                 </td>
                 <td className="px-5 py-4">
-                  <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[user.status]}`}>{user.status}</span>
+                  <span className="px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-400 border-emerald-500/20">ACTIVE</span>
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <Clock className="w-3 h-3" /> {user.lastLogin}
+                    <Clock className="w-3 h-3" /> {new Date(user.createdAt).toLocaleDateString()}
                   </div>
                 </td>
                 <td className="px-5 py-4">
-                  {user.mfaEnabled
-                    ? <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    : <AlertTriangle className="w-4 h-4 text-amber-400" />}
+                  <AlertTriangle className="w-4 h-4 text-gray-600" />
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

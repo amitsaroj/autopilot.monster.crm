@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { adminMarketplaceService, type AdminPlugin } from '@/services/admin-marketplace.service';
+
 interface Plugin {
   id: string;
   name: string;
@@ -31,6 +33,22 @@ interface Plugin {
   createdAt: string;
 }
 
+function mapPlugin(plugin: AdminPlugin): Plugin {
+  const status: Plugin['status'] =
+    plugin.status === 'ACTIVE' ? 'PUBLISHED' : 'DRAFT';
+  return {
+    id: plugin.id,
+    name: plugin.name,
+    description: plugin.description ?? '',
+    version: plugin.version ?? '1.0.0',
+    author: plugin.author ?? 'Internal',
+    status,
+    installCount: plugin.installCount ?? 0,
+    category: plugin.category ?? 'General',
+    createdAt: plugin.createdAt,
+  };
+}
+
 export default function MarketplaceInventoryPage() {
   const [plugins, setPlugins] = useState<Plugin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,10 +57,9 @@ export default function MarketplaceInventoryPage() {
   const fetchPlugins = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/marketplace/plugins');
-      const json = await res.json();
-      if (json.data) setPlugins(json.data);
-    } catch (e) {
+      const res = await adminMarketplaceService.getPlugins();
+      setPlugins((res.data?.data ?? []).map(mapPlugin));
+    } catch {
       toast.error('Failed to synchronize marketplace inventory dispatches');
     } finally {
       setLoading(false);

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from 'react';
-import { Zap, Plus, Edit2, Trash2, CheckCircle2, Clock, Globe, Database, MessageSquare, Mail, Phone } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Zap, Plus, Edit2, Trash2, Clock, Globe, Database, MessageSquare, Loader2, Phone } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { workflowService, type WorkflowTrigger } from '@/services/workflow.service';
 
 interface Trigger {
   id: string;
@@ -10,19 +12,8 @@ interface Trigger {
   type: 'EVENT' | 'WEBHOOK' | 'SCHEDULE' | 'MANUAL';
   event: string;
   source: string;
-  workflowsAttached: number;
   status: 'ACTIVE' | 'INACTIVE';
-  lastFired: string;
 }
-
-const mockTriggers: Trigger[] = [
-  { id: '1', name: 'New Lead Created', type: 'EVENT', event: 'lead.created', source: 'CRM', workflowsAttached: 3, status: 'ACTIVE', lastFired: '5 min ago' },
-  { id: '2', name: 'Deal Stage Changed', type: 'EVENT', event: 'deal.stage_changed', source: 'CRM', workflowsAttached: 2, status: 'ACTIVE', lastFired: '12 min ago' },
-  { id: '3', name: 'WhatsApp Message Received', type: 'EVENT', event: 'whatsapp.message_received', source: 'WhatsApp', workflowsAttached: 1, status: 'ACTIVE', lastFired: '30 min ago' },
-  { id: '4', name: 'Daily Digest', type: 'SCHEDULE', event: 'cron:0 9 * * *', source: 'Scheduler', workflowsAttached: 1, status: 'ACTIVE', lastFired: '9 hours ago' },
-  { id: '5', name: 'Stripe Webhook', type: 'WEBHOOK', event: 'payment_intent.succeeded', source: 'Stripe', workflowsAttached: 2, status: 'ACTIVE', lastFired: '2 hours ago' },
-  { id: '6', name: 'Contact Inactivity', type: 'SCHEDULE', event: 'cron:0 0 * * 1', source: 'Scheduler', workflowsAttached: 1, status: 'INACTIVE', lastFired: '3 days ago' },
-];
 
 const TYPE_STYLES: Record<string, string> = {
   EVENT: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -33,13 +24,59 @@ const TYPE_STYLES: Record<string, string> = {
 
 const SOURCE_ICONS: Record<string, React.ElementType> = {
   CRM: Database,
+  Voice: Phone,
   WhatsApp: MessageSquare,
-  Stripe: Globe,
+  Webhook: Globe,
   Scheduler: Clock,
+  Manual: Globe,
 };
 
+function mapTriggerType(key: string): Trigger['type'] {
+  if (key === 'WEBHOOK') return 'WEBHOOK';
+  if (key === 'SCHEDULE') return 'SCHEDULE';
+  if (key === 'MANUAL') return 'MANUAL';
+  return 'EVENT';
+}
+
+function mapSource(category?: string): string {
+  return category ?? 'CRM';
+}
+
 export default function AdminWorkflowTriggersPage() {
-  const [triggers] = useState<Trigger[]>(mockTriggers);
+  const [triggers, setTriggers] = useState<Trigger[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const triggerRes = await workflowService.getTriggers();
+        const triggerItems = triggerRes.data?.data ?? [];
+        const mapped: Trigger[] = triggerItems.map((t: WorkflowTrigger, i: number) => ({
+          id: `trigger-${i}`,
+          name: t.label,
+          type: mapTriggerType(t.key),
+          event: t.key,
+          source: mapSource(t.category),
+          status: 'ACTIVE' as const,
+        }));
+        setTriggers(mapped);
+      } catch {
+        toast.error('Failed to load workflow triggers');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -80,19 +117,16 @@ export default function AdminWorkflowTriggersPage() {
                 <div className="flex flex-wrap items-center gap-2 mb-1">
                   <h3 className="text-sm font-black text-white">{trigger.name}</h3>
                   <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${TYPE_STYLES[trigger.type]}`}>{trigger.type}</span>
-                  {trigger.status === 'INACTIVE' && <span className="px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest bg-gray-500/10 text-gray-500 border-gray-500/20">Inactive</span>}
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-[10px] text-gray-600">
                   <span className="flex items-center gap-1"><SourceIcon className="w-3 h-3" /> {trigger.source}</span>
                   <span className="font-mono">{trigger.event}</span>
-                  <span>{trigger.workflowsAttached} workflow{trigger.workflowsAttached !== 1 ? 's' : ''} attached</span>
-                  <span>Last: {trigger.lastFired}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                 <button className="p-2 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all"><Edit2 className="w-3.5 h-3.5" /></button>
-                <button onClick={() => toast.error('Cannot delete trigger with attached workflows')} className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
+                <button onClick={() => toast.error('System triggers cannot be deleted')} className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
             </div>
           );

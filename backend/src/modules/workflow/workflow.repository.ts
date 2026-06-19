@@ -28,6 +28,31 @@ export class WorkflowRepository extends BaseRepository<Flow> {
     return this.executionRepo.findOne({ where: { id, tenantId } as any });
   }
 
+  async updateExecution(
+    tenantId: string,
+    id: string,
+    data: Partial<WorkflowExecution>,
+  ): Promise<WorkflowExecution> {
+    await this.executionRepo.update({ id, tenantId } as any, data);
+    const updated = await this.findExecutionById(tenantId, id);
+    if (!updated) {
+      throw new Error(`Execution ${id} not found`);
+    }
+    return updated;
+  }
+
+  async findActiveByTrigger(tenantId: string, eventName: string): Promise<Flow[]> {
+    return this.repository
+      .createQueryBuilder('flow')
+      .where('flow.tenantId = :tenantId', { tenantId })
+      .andWhere('flow.isPublished = :published', { published: true })
+      .andWhere(
+        `(flow.definition->>'triggerEvent' = :eventName OR flow.definition->'trigger'->>'type' = :eventName)`,
+        { eventName },
+      )
+      .getMany();
+  }
+
   async createExecution(data: Partial<WorkflowExecution>): Promise<WorkflowExecution> {
     const execution = this.executionRepo.create(data);
     return this.executionRepo.save(execution);

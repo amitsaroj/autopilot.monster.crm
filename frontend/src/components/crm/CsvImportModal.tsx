@@ -26,7 +26,7 @@ interface CsvImportModalProps {
 export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvImportModalProps) {
   const [step, setStep] = useState<'upload' | 'mapping' | 'importing'>('upload');
   const [file, setFile] = useState<File | null>(null);
-  const [csvData, setCsvData] = useState<any[]>([]);
+  const [csvData, setCsvData] = useState<Array<Record<string, string>>>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [mapping, setMapping] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
@@ -52,10 +52,12 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
           });
           setMapping(newMapping);
 
-          const parsedData = lines.slice(1).map(line => {
+          const parsedData = lines.slice(1).map((line) => {
             const values = line.split(',');
-            const row: any = {};
-            cols.forEach((h, i) => row[h] = values[i]?.trim() || '');
+            const row: Record<string, string> = {};
+            cols.forEach((h, i) => {
+              row[h] = values[i]?.trim() ?? '';
+            });
             return row;
           });
           setCsvData(parsedData);
@@ -67,22 +69,40 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
   };
 
   const handleImport = async () => {
+    if (!file) return;
+
     setIsProcessing(true);
     setStep('importing');
     try {
-      const mappedData = csvData.map(row => {
-        const item: any = {};
-        Object.entries(mapping).forEach(([target, source]) => {
-          item[target] = row[source];
-        });
-        return item;
+      const entityApiType = entityType === 'lead' ? 'leads' : 'contacts';
+      const targetFields = Object.keys(mapping).filter((field) => mapping[field]);
+
+      const csvLines = [targetFields.join(',')];
+      for (const row of csvData) {
+        csvLines.push(targetFields.map((field) => row[mapping[field]] ?? '').join(','));
+      }
+
+      const blob = new Blob([csvLines.join('\n')], { type: 'text/csv' });
+      const filename = `${entityApiType}-import-${Date.now()}.csv`;
+
+      const presignedRes = await importExportService.getPresignedUpload(filename, 'text/csv');
+      const { uploadUrl, fileKey } = presignedRes.data.data;
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: blob,
+        headers: { 'Content-Type': 'text/csv' },
       });
 
-      await importExportService.importData(entityType, mappedData);
-      toast.success(`Successfully imported ${mappedData.length} ${entityType}s`);
+      if (!uploadResponse.ok) {
+        throw new Error('Upload failed');
+      }
+
+      await importExportService.startImport(entityApiType, fileKey);
+      toast.success(`Import job started for ${csvData.length} ${entityType}s`);
       onSuccess();
       onClose();
-    } catch (error) {
+    } catch {
       toast.error('Import failed. Please check your data format.');
       setStep('mapping');
     } finally {

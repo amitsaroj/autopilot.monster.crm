@@ -9,6 +9,6 @@ import { Tenant } from '../../database/entities/tenant.entity';
   imports: [TypeOrmModule.forFeature([Tenant])],
   controllers: [TenantController],
   providers: [TenantService, TenantRepository],
-  exports: [TenantService],
+  exports: [TenantService, TenantRepository],
 })
 export class TenantModule {}

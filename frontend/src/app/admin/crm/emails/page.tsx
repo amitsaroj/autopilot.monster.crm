@@ -1,32 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Mail, Search, Plus, Filter, Send, Eye, Trash2,
   CheckCircle2, Clock, XCircle, ArrowUpRight,
-  User, Reply, Forward, Star, Archive, MoreVertical
+  User, Reply, Forward, Star, Archive, MoreVertical, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface Email {
-  id: string;
-  from: string;
-  to: string;
-  subject: string;
-  preview: string;
-  status: 'SENT' | 'RECEIVED' | 'DRAFT' | 'BOUNCED';
-  read: boolean;
-  starred: boolean;
-  createdAt: string;
-  contact?: string;
-}
-
-const mockEmails: Email[] = [
-  { id: '1', from: 'sarah.k@acmecorp.com', to: 'team@workspace.com', subject: 'Re: Q1 Proposal Follow-up', preview: 'Thank you for sending over the proposal. We have reviewed it with the team...', status: 'RECEIVED', read: false, starred: true, createdAt: new Date(Date.now() - 3600000).toISOString(), contact: 'Sarah Johnson' },
-  { id: '2', from: 'team@workspace.com', to: 'mike@globalcorp.com', subject: 'Your Demo is Scheduled!', preview: 'Hi Mike, your product demo has been scheduled for Thursday at 2 PM EST...', status: 'SENT', read: true, starred: false, createdAt: new Date(Date.now() - 7200000).toISOString(), contact: 'Mike Chen' },
-  { id: '3', from: 'team@workspace.com', to: 'priya@techstartup.io', subject: 'Welcome to Autopilot CRM', preview: 'Hi Priya, welcome aboard! Here\'s how to get started with your new CRM...', status: 'SENT', read: true, starred: false, createdAt: new Date(Date.now() - 86400000).toISOString(), contact: 'Priya Patel' },
-  { id: '4', from: 'noreply@bounce.com', to: 'team@workspace.com', subject: 'Delivery Failed: Monthly Newsletter', preview: 'We were unable to deliver your message to alex@oldcompany.com...', status: 'BOUNCED', read: false, starred: false, createdAt: new Date(Date.now() - 172800000).toISOString() },
-  { id: '5', from: 'team@workspace.com', to: '', subject: 'Q2 Outreach Campaign Template', preview: 'Dear [First Name], I wanted to reach out regarding...', status: 'DRAFT', read: true, starred: false, createdAt: new Date(Date.now() - 43200000).toISOString() },
-];
+import { emailService, type EmailMessage } from '@/services/email.service';
 
 const STATUS_STYLES: Record<string, string> = {
   SENT: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -36,17 +18,41 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminCRMEmailsPage() {
-  const [emails, setEmails] = useState<Email[]>(mockEmails);
+  const [emails, setEmails] = useState<EmailMessage[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('All');
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await emailService.getEmails();
+        const payload = res.data?.data ?? res.data;
+        setEmails(Array.isArray(payload) ? payload : payload?.data ?? []);
+      } catch {
+        toast.error('Failed to load emails');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
   const filtered = emails.filter(e => {
     const matchSearch = e.subject.toLowerCase().includes(search.toLowerCase()) || e.from.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === 'All' || e.status === filter;
+    const direction = e.direction === 'INBOUND' ? 'RECEIVED' : 'SENT';
+    const matchFilter = filter === 'All' || direction === filter;
     return matchSearch && matchFilter;
   });
 
-  const toggleStar = (id: string) => setEmails(prev => prev.map(e => e.id === id ? { ...e, starred: !e.starred } : e));
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -62,10 +68,10 @@ export default function AdminCRMEmailsPage() {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Received', value: emails.filter(e => e.status === 'RECEIVED').length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'Sent', value: emails.filter(e => e.status === 'SENT').length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-          { label: 'Drafts', value: emails.filter(e => e.status === 'DRAFT').length, color: 'text-gray-400', bg: 'bg-gray-500/10' },
-          { label: 'Bounced', value: emails.filter(e => e.status === 'BOUNCED').length, color: 'text-red-400', bg: 'bg-red-500/10' },
+          { label: 'Received', value: emails.filter(e => e.direction === 'INBOUND').length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: 'Sent', value: emails.filter(e => e.direction === 'OUTBOUND').length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+          { label: 'Unread', value: emails.filter(e => !e.isRead).length, color: 'text-gray-400', bg: 'bg-gray-500/10' },
+          { label: 'Total', value: emails.length, color: 'text-red-400', bg: 'bg-red-500/10' },
         ].map(s => (
           <div key={s.label} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3">
             <div className={`w-2 h-2 rounded-full ${s.bg.replace('bg-', 'bg-').replace('/10', '')}`} />
@@ -91,28 +97,28 @@ export default function AdminCRMEmailsPage() {
 
       <div className="space-y-2">
         {filtered.map(email => (
-          <div key={email.id} className={`p-5 rounded-2xl border transition-all group cursor-pointer hover:bg-white/[0.04] ${email.read ? 'bg-white/[0.01] border-white/[0.04]' : 'bg-white/[0.03] border-indigo-500/20'}`}>
+          <div key={email.id} className={`p-5 rounded-2xl border transition-all group cursor-pointer hover:bg-white/[0.04] ${email.isRead ? 'bg-white/[0.01] border-white/[0.04]' : 'bg-white/[0.03] border-indigo-500/20'}`}>
             <div className="flex items-start gap-4">
               <div className="w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-xs border border-indigo-500/20 shrink-0">
-                {(email.contact || email.from).charAt(0)}
+                {(email.from || '?').charAt(0)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-3 mb-1">
                   <div className="flex items-center gap-3">
-                    <p className={`text-sm font-bold ${email.read ? 'text-gray-300' : 'text-white'}`}>
-                      {email.status === 'RECEIVED' ? email.contact || email.from : email.to || 'Draft'}
+                    <p className={`text-sm font-bold ${email.isRead ? 'text-gray-300' : 'text-white'}`}>
+                      {email.direction === 'INBOUND' ? email.from : email.to}
                     </p>
-                    <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[email.status]}`}>{email.status}</span>
+                    <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[email.direction === 'INBOUND' ? 'RECEIVED' : 'SENT']}`}>{email.direction}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <button onClick={() => toggleStar(email.id)}>
-                      <Star className={`w-4 h-4 ${email.starred ? 'text-amber-400 fill-amber-400' : 'text-gray-600 hover:text-amber-400'} transition-colors`} />
+                    <button type="button">
+                      <Star className="w-4 h-4 text-gray-600" />
                     </button>
                     <span className="text-[10px] text-gray-600 font-mono">{new Date(email.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
-                <p className={`text-sm mb-1 ${email.read ? 'text-gray-500' : 'text-gray-300 font-medium'}`}>{email.subject}</p>
-                <p className="text-xs text-gray-600 truncate">{email.preview}</p>
+                <p className={`text-sm mb-1 ${email.isRead ? 'text-gray-500' : 'text-gray-300 font-medium'}`}>{email.subject}</p>
+                <p className="text-xs text-gray-600 truncate">{email.body}</p>
               </div>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                 <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all"><Reply className="w-3.5 h-3.5" /></button>

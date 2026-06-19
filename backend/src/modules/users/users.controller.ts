@@ -3,10 +3,11 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto, InviteUserDto } from './dto/users.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
-import { Roles, TenantId, CurrentUser } from '../../common/decorators';
+import { Roles, TenantId, CurrentUser, ResourcePermissions } from '../../common/decorators';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('Users')
+@ResourcePermissions('users')
 @Controller('users')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 @ApiBearerAuth()

@@ -178,12 +178,14 @@ export function Sidebar() {
               {[
                 { label: 'Control Center', href: '/superadmin', icon: LayoutDashboard },
                 { label: 'Tenants', href: '/superadmin/tenants', icon: Building2 },
+                { label: 'Users', href: '/superadmin/users', icon: Users },
+                { label: 'Plans', href: '/superadmin/plans', icon: CreditCard },
                 { label: 'Marketplace', href: '/superadmin/marketplace', icon: Store },
                 { label: 'Global Billing', href: '/superadmin/subscriptions', icon: CreditCard },
                 { label: 'System Health', href: '/superadmin/metrics', icon: Activity },
-                { label: 'Audit Logs', href: '/superadmin/logs/audit', icon: FileSearch },
+                { label: 'Audit Logs', href: '/superadmin/audits', icon: FileSearch },
                 { label: 'Broadcasts', href: '/superadmin/notifications', icon: Bell },
-                { label: 'Domain Events', href: '/superadmin/events', icon: Terminal },
+                { label: 'Domain Events', href: '/superadmin/system/events', icon: Terminal },
                 { label: 'Infrastructure', href: '/superadmin/settings', icon: Settings },
               ].map((sub) => (
                 <li key={sub.href}>

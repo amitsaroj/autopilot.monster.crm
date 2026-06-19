@@ -1,104 +1,144 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
+
 import { WorkflowRepository } from './workflow.repository';
-import { EmailService } from '../../shared/email/email.service';
-import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { WorkflowExecutorService, WorkflowStepResult } from './workflow-executor.service';
+
+interface WorkflowJobData {
+  workflowId: string;
+  tenantId: string;
+  eventName: string;
+  payload: Record<string, unknown>;
+  executionId?: string;
+  startStepIndex?: number;
+}
 
 @Processor('workflows')
 export class WorkflowProcessor extends WorkerHost {
   private readonly logger = new Logger(WorkflowProcessor.name);
 
   constructor(
+    @InjectQueue('workflows') private readonly workflowQueue: Queue,
     private readonly workflowRepo: WorkflowRepository,
-    private readonly emailService: EmailService,
-    private readonly whatsappService: WhatsappService,
+    private readonly executor: WorkflowExecutorService,
   ) {
     super();
   }
 
-  async process(job: Job<any, any, string>): Promise<any> {
-    this.logger.log(`Executing Workflow Job ${job.id} for event: ${job.data.eventName}`);
+  async process(job: Job<WorkflowJobData, { status: string }>): Promise<{ status: string }> {
+    const { workflowId, tenantId, eventName, payload, executionId, startStepIndex = 0 } = job.data;
+    this.logger.log(`Executing workflow job ${job.id} (${workflowId}) for event: ${eventName}`);
 
-    const { workflowId, executionId, tenantId } = job.data;
+    const flow = await this.workflowRepo.findById(tenantId, workflowId);
+    if (!flow) {
+      throw new Error(`Workflow ${workflowId} not found for tenant ${tenantId}`);
+    }
+
+    if (!flow.isPublished) {
+      this.logger.warn(`Workflow ${workflowId} is not published — skipping`);
+      return { status: 'SKIPPED' };
+    }
+
+    const execution =
+      executionId !== undefined
+        ? await this.workflowRepo.findExecutionById(tenantId, executionId)
+        : await this.workflowRepo.createExecution({
+            tenantId,
+            flowId: workflowId,
+            status: 'RUNNING',
+            input: { eventName, payload },
+            output: { steps: [] },
+          });
+
+    const steps = this.executor.extractSteps(flow.definition ?? {});
+    const priorSteps: WorkflowStepResult[] =
+      execution?.output &&
+      typeof execution.output === 'object' &&
+      Array.isArray((execution.output as { steps?: unknown }).steps)
+        ? ((execution.output as { steps: WorkflowStepResult[] }).steps ?? [])
+        : [];
+    const stepResults: WorkflowStepResult[] = [...priorSteps];
+
+    if (execution && execution.status === 'PAUSED') {
+      await this.workflowRepo.updateExecution(tenantId, execution.id, {
+        status: 'RUNNING',
+      });
+    }
 
     let executionRecord;
     try {
-      executionRecord = await this.workflowRepo.createExecution({
-        id: executionId,
-        tenantId,
-        flowId: workflowId,
-        status: 'RUNNING',
-        startedAt: new Date(),
-        output: { logs: [`Job started for event: ${job.data.eventName}`] },
-      });
+      for (let index = startStepIndex; index < steps.length; index += 1) {
+        const step = steps[index];
 
-      // 1. Fetch Workflow Definition
-      this.logger.debug(`Fetching definition for workflow ${workflowId}...`);
-      const flow = await this.workflowRepo.findById(tenantId, workflowId);
-      
-      if (!flow || !flow.definition) {
-        throw new Error(`Flow ${workflowId} not found or missing definition.`);
-      }
-
-      const { nodes = [], edges = [] } = flow.definition;
-      
-      // Basic Linear Execution: Find trigger node, follow edges
-      const triggerNode = nodes.find((n: any) => n.type === 'trigger' || n.type === 'webhook');
-      if (!triggerNode) {
-        throw new Error('No trigger node found in workflow.');
-      }
-
-      let currentNodeId = triggerNode.id;
-      let stepCount = 0;
-
-      while (currentNodeId) {
-        if (stepCount > 50) throw new Error('Infinite loop detected in workflow execution.');
-        const node = nodes.find((n: any) => n.id === currentNodeId);
-        if (!node) break;
-
-        executionRecord.output.logs.push(`Executing node: ${node.type} (${node.id})`);
-
-        if (node.type === 'action' || node.type === 'email' || node.type === 'whatsapp') {
-           this.logger.log(`Executing Action [${node.type}]: ${JSON.stringify(node.data)}`);
-           
-           if (node.type === 'email') {
-             const { to, subject, body } = node.data;
-             await this.emailService.sendEmail(to, subject, body);
-           } else if (node.type === 'whatsapp') {
-             const { to, text, wabaId } = node.data;
-             await this.whatsappService.sendTextMessage(to, text, wabaId, tenantId);
-           }
-        } else if (node.type === 'condition') {
-           this.logger.debug(`Evaluating condition: ${JSON.stringify(node.data)}`);
-           // Condition evaluation logic here
+        if (step.type === 'CONDITION' || step.type === 'CONDITION_BRANCH') {
+          const result = await this.executor.executeStep(step, { tenantId, eventName, payload });
+          stepResults.push(result);
+          if (result.passed === false) {
+            this.logger.debug(`Condition failed at step ${step.id} — halting workflow`);
+            break;
+          }
+          continue;
         }
 
-        // Find next node via edges
-        const nextEdge = edges.find((e: any) => e.source === currentNodeId);
-        currentNodeId = nextEdge ? nextEdge.target : null;
-        stepCount++;
+        const result = await this.executor.executeStep(step, { tenantId, eventName, payload });
+        stepResults.push(result);
+
+        if (result.status === 'SCHEDULED' && typeof result.delayMs === 'number') {
+          if (execution) {
+            await this.workflowRepo.updateExecution(tenantId, execution.id, {
+              status: 'PAUSED',
+              currentStepId: step.id,
+              output: { steps: stepResults },
+            });
+          }
+
+          await this.workflowQueue.add(
+            'execute-workflow',
+            {
+              workflowId,
+              tenantId,
+              eventName,
+              payload,
+              executionId: execution?.id,
+              startStepIndex: index + 1,
+            },
+            {
+              delay: result.delayMs,
+              attempts: 3,
+              backoff: { type: 'exponential', delay: 5000 },
+            },
+          );
+
+          this.logger.log(
+            `Workflow ${workflowId} scheduled to resume in ${result.delayMs}ms at step ${index + 1}`,
+          );
+          return { status: 'SCHEDULED' };
+        }
       }
 
-      executionRecord.status = 'COMPLETED';
-      executionRecord.completedAt = new Date();
-      executionRecord.output.logs.push(`Workflow execution completed successfully.`);
-      await this.workflowRepo.createExecution(executionRecord); // Update
+      if (execution) {
+        await this.workflowRepo.updateExecution(tenantId, execution.id, {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+          output: { steps: stepResults },
+        });
+      }
 
-      this.logger.log(`Workflow ${job.id} execution completed.`);
+      this.logger.log(`Workflow ${workflowId} completed (${stepResults.length} steps)`);
       return { status: 'COMPLETED' };
-    } catch (err: any) {
-      this.logger.error(`Workflow ${job.id} failed`, err.stack);
-      
-      if (executionRecord) {
-        executionRecord.status = 'FAILED';
-        executionRecord.completedAt = new Date();
-        executionRecord.error = err.message;
-        executionRecord.output.logs.push(`ERROR: ${err.message}`);
-        await this.workflowRepo.createExecution(executionRecord);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown workflow error';
+      if (execution) {
+        await this.workflowRepo.updateExecution(tenantId, execution.id, {
+          status: 'FAILED',
+          completedAt: new Date(),
+          error: message,
+          output: { steps: stepResults },
+        });
       }
-      
-      throw err; // Throws to BullMQ for retry
+      this.logger.error(`Workflow ${workflowId} failed: ${message}`);
+      throw err;
     }
   }
 }

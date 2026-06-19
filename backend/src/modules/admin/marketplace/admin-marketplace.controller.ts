@@ -2,10 +2,11 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminMarketplaceService } from './admin-marketplace.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles } from '../../../common/decorators';
+import { Roles, ResourcePermissions } from '../../../common/decorators';
 import { CreatePluginDto, UpdatePluginDto } from './admin-marketplace.dto';
 
 @ApiTags('Admin / Marketplace & Plugins')
+@ResourcePermissions('marketplace')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')
@@ -46,5 +47,12 @@ export class AdminMarketplaceController {
   async getInstallations(@Param('id') id: string) {
     const data = await this.marketplaceService.getInstallations(id);
     return { status: 200, message: 'Installations retrieved', error: false, data };
+  }
+
+  @Get('monetization')
+  @ApiOperation({ summary: 'Get marketplace monetization stats' })
+  async getMonetization() {
+    const data = await this.marketplaceService.getMonetizationStats();
+    return { status: 200, message: 'Monetization stats retrieved', error: false, data };
   }
 }

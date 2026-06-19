@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { adminHealthService } from '@/services/admin-health.service';
+
 interface ClusterNode {
   id: string;
   name: string;
@@ -37,25 +39,11 @@ const STATUS_STYLES: Record<string, string> = {
   UP: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
 };
 
-const mockNodes: ClusterNode[] = [
-  { id: '1', name: 'api-node-01', region: 'us-east-1', type: 'API Server', status: 'HEALTHY', cpuUsage: 42, memoryUsage: 67, diskUsage: 34, uptime: '99d 14h', version: 'v3.2.1' },
-  { id: '2', name: 'api-node-02', region: 'us-east-1', type: 'API Server', status: 'HEALTHY', cpuUsage: 38, memoryUsage: 72, diskUsage: 31, uptime: '99d 14h', version: 'v3.2.1' },
-  { id: '3', name: 'db-primary', region: 'us-east-1', type: 'Database', status: 'HEALTHY', cpuUsage: 28, memoryUsage: 85, diskUsage: 58, uptime: '120d 2h', version: 'PG 15.4' },
-  { id: '4', name: 'db-replica-01', region: 'eu-west-1', type: 'DB Replica', status: 'HEALTHY', cpuUsage: 18, memoryUsage: 79, diskUsage: 57, uptime: '120d 2h', version: 'PG 15.4' },
-  { id: '5', name: 'redis-cluster', region: 'us-east-1', type: 'Cache', status: 'DEGRADED', cpuUsage: 91, memoryUsage: 88, diskUsage: 12, uptime: '45d 8h', version: 'Redis 7.2' },
-  { id: '6', name: 'worker-node-01', region: 'us-west-2', type: 'Queue Worker', status: 'HEALTHY', cpuUsage: 55, memoryUsage: 62, diskUsage: 22, uptime: '87d 19h', version: 'v3.2.1' },
-];
-
-const mockServices: ServiceHealth[] = [
-  { name: 'REST API Gateway', status: 'UP', latency: 45, uptime: '99.98%', endpoint: 'api.autopilotmonster.com' },
-  { name: 'Auth Service', status: 'UP', latency: 12, uptime: '99.99%', endpoint: 'auth.autopilotmonster.com' },
-  { name: 'Database (Primary)', status: 'UP', latency: 3, uptime: '99.99%', endpoint: 'db.internal' },
-  { name: 'Redis Cache', status: 'DEGRADED', latency: 180, uptime: '99.72%', endpoint: 'cache.internal' },
-  { name: 'Message Queue', status: 'UP', latency: 8, uptime: '99.95%', endpoint: 'queue.internal' },
-  { name: 'Storage Service', status: 'UP', latency: 22, uptime: '99.97%', endpoint: 'storage.internal' },
-  { name: 'Email Relay', status: 'UP', latency: 65, uptime: '99.93%', endpoint: 'smtp.internal' },
-  { name: 'AI Inference Engine', status: 'UP', latency: 320, uptime: '99.88%', endpoint: 'ai.internal' },
-];
+function formatUptime(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const days = Math.floor(hours / 24);
+  return `${days}d ${hours % 24}h`;
+}
 
 function UsageBar({ value, color }: { value: number; color: string }) {
   const getColor = () => {
@@ -71,18 +59,74 @@ function UsageBar({ value, color }: { value: number; color: string }) {
 }
 
 export default function CloudOrchestrationPage() {
-  const [nodes] = useState<ClusterNode[]>(mockNodes);
-  const [services] = useState<ServiceHealth[]>(mockServices);
-  const [loading, setLoading] = useState(false);
+  const [nodes, setNodes] = useState<ClusterNode[]>([]);
+  const [services, setServices] = useState<ServiceHealth[]>([]);
+  const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const refresh = () => {
+  const load = async () => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); setLastRefresh(new Date()); }, 1000);
+    try {
+      const res = await adminHealthService.getHealth();
+      const health = res.data?.data;
+      if (!health) return;
+
+      const memoryUsage = Math.round(
+        ((health.memory.total - health.memory.free) / health.memory.total) * 100,
+      );
+      const cpuLoad = health.cpu.load[0] ?? 0;
+      const cpuUsage = Math.min(100, Math.round((cpuLoad / health.cpu.count) * 100));
+
+      setNodes([
+        {
+          id: '1',
+          name: 'api-primary',
+          region: health.platform,
+          type: 'API Server',
+          status: health.status === 'OK' ? 'HEALTHY' : 'DEGRADED',
+          cpuUsage,
+          memoryUsage,
+          diskUsage: Math.round((health.memory.usage.heapUsed / health.memory.usage.heapTotal) * 100),
+          uptime: formatUptime(health.uptime),
+          version: health.nodeVersion,
+        },
+      ]);
+
+      setServices([
+        {
+          name: 'Platform API',
+          status: health.status === 'OK' ? 'UP' : 'DEGRADED',
+          latency: Math.round(cpuLoad * 10),
+          uptime: formatUptime(health.uptime),
+          endpoint: 'api.autopilotmonster.com',
+        },
+      ]);
+      setLastRefresh(new Date());
+    } catch {
+      toast.error('Failed to load infrastructure health');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const refresh = () => {
+    void load();
   };
 
   const healthyNodes = nodes.filter(n => n.status === 'HEALTHY').length;
   const totalNodes = nodes.length;
+
+  if (loading && nodes.length === 0) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

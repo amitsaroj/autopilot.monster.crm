@@ -2,11 +2,12 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/c
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantSettingsService } from './tenant-settings.service';
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
-import { Roles } from '../../common/decorators';
+import { Roles, ResourcePermissions } from '../../common/decorators';
 
 @ApiTags('Admin / Tenants / Settings')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
+@ResourcePermissions('admin')
 @Roles('SUPER_ADMIN', 'ADMIN')
 @Controller('admin/tenants/:tenantId/settings')
 export class AdminTenantSettingsController {

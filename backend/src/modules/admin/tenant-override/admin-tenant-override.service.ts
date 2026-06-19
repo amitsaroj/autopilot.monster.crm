@@ -19,8 +19,16 @@ export class AdminTenantOverrideService {
   async setOverrides(tenantId: string, overrides: any) {
     const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
     if (!tenant) throw new NotFoundException('Tenant not found');
-    
+
     tenant.overrides = overrides;
+    return this.tenantRepo.save(tenant);
+  }
+
+  async removeOverrides(tenantId: string) {
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    tenant.overrides = undefined;
     return this.tenantRepo.save(tenant);
   }
 }

@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { adminStorageService } from '@/services/admin-storage.service';
+
 interface StorageNode {
   id: string;
   name: string;
@@ -28,13 +30,34 @@ interface StorageNode {
 }
 
 export default function GlobalStoragePersistencePage() {
-  const [nodes, setNodes] = useState<StorageNode[]>([
-     { id: '1', name: 'Primary Artifact Cluster', provider: 'AWS_S3', region: 'us-east-1', count: '142.0k', size: '1.2 TB', status: 'ONLINE' },
-     { id: '2', name: 'Identity Forensics Archive', provider: 'LOCAL_SSD', region: 'node-a-internal', count: '8.4m', size: '840 GB', status: 'ONLINE' },
-     { id: '3', name: 'Voice Synthesis Cache', provider: 'GOOGLE_CLOUD', region: 'europe-west1', count: '422', size: '4.2 GB', status: 'ONLINE' },
-     { id: '4', name: 'Legacy Log Ledger', provider: 'AWS_S3', region: 'us-west-2', count: '0', size: '0 B', status: 'MAINTENANCE' },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [nodes, setNodes] = useState<StorageNode[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await adminStorageService.getStats();
+        const stats = res.data?.data;
+        if (stats) {
+          setNodes(stats.buckets.map((bucket, index) => ({
+            id: String(index + 1),
+            name: bucket.name,
+            provider: stats.provider.includes('S3') ? 'AWS_S3' : 'LOCAL_SSD',
+            region: 'global',
+            count: String(bucket.fileCount),
+            size: bucket.size,
+            status: 'ONLINE' as const,
+          })));
+        }
+      } catch {
+        toast.error('Failed to load storage stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
 
   if (loading) {
      return (

@@ -19,7 +19,13 @@ export const authService = {
   },
 
   async logout(allSessions = false): Promise<void> {
-    await api.post('/auth/logout', { allSessions });
+    const extractCookie = (name: string) => {
+      if (typeof window === 'undefined') return null;
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
+    };
+    const refreshToken = extractCookie('refresh_token');
+    await api.post('/auth/logout', { allSessions, refreshToken: refreshToken ?? undefined });
   },
 
   async refreshTokens(refreshToken: string): Promise<{ accessToken: string }> {

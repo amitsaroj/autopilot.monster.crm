@@ -23,19 +23,20 @@ export class LimitGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
-    if (!request.user) return true; // Skip if no user context (e.g., public route)
-    
-    const { tenantId } = request.user;
-    if (!tenantId) return false;
+    const request = context.switchToHttp().getRequest<{ user?: { tenantId?: string } }>();
+    const tenantId = request.user?.tenantId;
 
-    try {
-      const pricingService = this.moduleRef.get('PricingService', { strict: false });
-      const billingService = this.moduleRef.get('BillingService', { strict: false });
+    if (!tenantId) {
+      return true;
+    }
 
-      if (pricingService && billingService) {
-        const limit = await pricingService.getLimit(tenantId, metric);
-        if (limit === -1) return true; // Unlimited
+    const limit = await this.pricingService.getLimit(tenantId, metric);
+    if (limit === -1) return true;
+    if (limit <= 0) return true;
+
+    const period = await this.pricingService.getLimitPeriod(tenantId, metric);
+    const usage = await this.billingService.getUsage(tenantId, metric, period);
+    const allowed = usage < limit;
 
         const usage = await billingService.getUsage(tenantId, metric);
         const allowed = usage < limit;

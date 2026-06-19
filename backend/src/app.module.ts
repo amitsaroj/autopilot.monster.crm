@@ -15,11 +15,12 @@ import { PlanGuard } from './common/guards/plan.guard';
 import { LimitGuard } from './common/guards/limit.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
+import { ActiveTenantGuard } from './common/guards/active-tenant.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
-import { FeatureGuard } from './common/guards/feature.guard';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { UsageMeteringInterceptor } from './common/interceptors/usage-metering.interceptor';
 import { appConfig } from './config/app.config';
 import { databaseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
@@ -34,7 +35,6 @@ import { LoggerModule } from './logger/logger.module';
 import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
 import { EventBusModule } from './events/event-bus.module';
-import { StorageModule } from './storage/storage.module';
 import { EmailModule } from './shared/email/email.module';
 
 // Business Modules
@@ -55,7 +55,8 @@ import { SubAdminModule } from './modules/sub-admin/sub-admin.module';
 import { TenantSettingsModule } from './modules/tenant-settings/tenant-settings.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SupportModule } from './modules/support/support.module';
-import { MarketplaceModule } from './modules/marketplace/marketplace.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { DataJobsModule } from './modules/data-jobs/data-jobs.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -100,7 +101,6 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     CacheModule,
     QueueModule,
     EventBusModule,
-    StorageModule,
     EmailModule,
 
     // Business Modules
@@ -122,7 +122,8 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     TenantSettingsModule,
     SchedulerModule,
     SupportModule,
-    MarketplaceModule,
+    AnalyticsModule,
+    DataJobsModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===
@@ -133,14 +134,15 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     { provide: APP_INTERCEPTOR, useClass: CorrelationIdInterceptor },
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: UsageMeteringInterceptor },
 
-    // === Global Guards (order: Throttler -> JWT → Tenant → Roles → Permissions → Features → Plan) ===
+    // === Global Guards (order: Throttler -> JWT → Tenant → Roles → Permissions → Plan → Limit) ===
     { provide: APP_GUARD, useClass: MultiLevelThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: TenantGuard },
+    { provide: APP_GUARD, useClass: ActiveTenantGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
-    { provide: APP_GUARD, useClass: FeatureGuard },
     { provide: APP_GUARD, useClass: PlanGuard },
     { provide: APP_GUARD, useClass: LimitGuard },
 

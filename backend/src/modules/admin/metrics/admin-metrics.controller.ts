@@ -2,9 +2,10 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminMetricsService } from './admin-metrics.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles } from '../../../common/decorators';
+import { Roles, ResourcePermissions } from '../../../common/decorators';
 
 @ApiTags('Admin / Platform Metrics')
+@ResourcePermissions('admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')
@@ -22,6 +23,12 @@ export class AdminMetricsController {
       error: false,
       data,
     };
+  }
+
+  @Get('global')
+  @ApiOperation({ summary: 'Get global platform statistics (alias)' })
+  async getGlobal() {
+    return this.getStats();
   }
 
   @Get('health')

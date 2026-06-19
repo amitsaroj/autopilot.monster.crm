@@ -1,4 +1,5 @@
 import { ERROR_CODES } from '../../common/constants/error-codes.constants';
+import { buildJwtVerifyConfig, signJwtToken } from '../../common/utils/jwt-signing.util';
 import type { JwtConfig } from '../../config/jwt.config';
 import { EVENT_NAMES } from '../../events/event.constants';
 import {
@@ -11,7 +12,6 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
-import * as bcrypt from 'bcryptjs';
 
 import { AuthRepository } from './auth.repository';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
@@ -20,6 +20,7 @@ import { AuthTokens } from './interfaces/auth-tokens.interface';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { MfaService } from './mfa.service';
 import { EmailService } from '../../shared/email/email.service';
+import { PricingService } from '../pricing/pricing.service';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -35,6 +36,7 @@ export class AuthService {
     private readonly eventEmitter: EventEmitter2,
     private readonly mfaService: MfaService,
     private readonly emailService: EmailService,
+    private readonly pricingService: PricingService,
   ) {
     const cfg = this.configService.get<JwtConfig>('jwt');
     if (cfg === undefined) throw new Error('JWT config missing');
@@ -76,6 +78,17 @@ export class AuthService {
     }
     if (user.status !== UserStatus.ACTIVE) {
       throw new UnauthorizedException({ message: 'Account is not active', code: ERROR_CODES.UNAUTHORIZED });
+    }
+
+    const tenant = await this.authRepo.findTenantById(user.tenantId);
+    if (tenant === null) {
+      throw new UnauthorizedException({ message: 'Workspace not found', code: ERROR_CODES.TENANT_NOT_FOUND });
+    }
+    if (tenant.status === 'SUSPENDED') {
+      throw new UnauthorizedException({ message: 'Workspace is suspended', code: ERROR_CODES.TENANT_SUSPENDED });
+    }
+    if (tenant.status === 'DELETED') {
+      throw new UnauthorizedException({ message: 'Workspace is no longer available', code: ERROR_CODES.TENANT_NOT_FOUND });
     }
 
     if (user.isMfaEnabled) {
@@ -132,7 +145,8 @@ export class AuthService {
       correlationId: uuidv4(),
     });
 
-    await this.emailService.sendWelcomeEmail(user.email, user.firstName || 'User');
+    await this.emailService.sendVerificationEmail(user.email, user.firstName || 'User', token);
+    await this.authRepo.bootstrapTenantAdminRole(tenant.id, user.id);
 
     return { user, tenant };
   }
@@ -140,34 +154,47 @@ export class AuthService {
   async refreshTokens(rawRefreshToken: string, tenantId: string, ipAddress: string): Promise<AuthTokens> {
     let payload: JwtPayload;
     try {
-      payload = this.jwtService.verify<JwtPayload>(rawRefreshToken, { secret: this.jwtConfig.refreshSecret });
+      payload = this.jwtService.verify<JwtPayload>(
+        rawRefreshToken,
+        buildJwtVerifyConfig(this.jwtConfig, 'refresh'),
+      );
     } catch {
       throw new UnauthorizedException({ message: 'Invalid or expired refresh token', code: ERROR_CODES.TOKEN_EXPIRED });
     }
-    const user = await this.authRepo.findUserById(payload.sub, tenantId);
+
+    if (!payload.sub || !payload.tenantId) {
+      throw new UnauthorizedException({ message: 'Invalid refresh token payload', code: ERROR_CODES.UNAUTHORIZED });
+    }
+
+    if (tenantId !== '' && tenantId !== payload.tenantId) {
+      throw new UnauthorizedException({ message: 'Tenant ID mismatch', code: ERROR_CODES.UNAUTHORIZED });
+    }
+
+    const resolvedTenantId = payload.tenantId;
+    const user = await this.authRepo.findUserById(payload.sub, resolvedTenantId);
     if (user === null || !user.isActive) {
       throw new UnauthorizedException({ code: ERROR_CODES.UNAUTHORIZED });
     }
 
-    const validTokens = await this.authRepo.findValidRefreshToken(user.id, tenantId);
-    let tokenMatched = false;
-    for (const valid of validTokens) {
-      if (await bcrypt.compare(rawRefreshToken, valid.tokenHash)) {
-        tokenMatched = true;
-        break;
-      }
-    }
-    if (!tokenMatched) {
+    const revoked = await this.authRepo.revokeRefreshTokenByRawToken(user.id, resolvedTenantId, rawRefreshToken);
+    if (!revoked) {
       throw new UnauthorizedException({ message: 'Refresh token revoked or invalid', code: ERROR_CODES.TOKEN_EXPIRED });
     }
 
     return this.generateTokens(user, ipAddress);
   }
 
-  async logout(userId: string, tenantId: string, allSessions: boolean): Promise<void> {
+  async logout(
+    userId: string,
+    tenantId: string,
+    allSessions: boolean,
+    refreshToken?: string,
+  ): Promise<void> {
     if (allSessions) {
       await this.authRepo.revokeAllUserTokens(userId, tenantId);
       await this.authRepo.deactivateAllUserSessions(userId, tenantId);
+    } else if (refreshToken) {
+      await this.authRepo.revokeRefreshTokenByRawToken(userId, tenantId, refreshToken);
     }
     this.eventEmitter.emit(EVENT_NAMES.USER_LOGOUT, {
       name: EVENT_NAMES.USER_LOGOUT, tenantId, actorId: userId,
@@ -182,6 +209,8 @@ export class AuthService {
     const valid = await user.validatePassword(currentPassword);
     if (!valid) throw new UnauthorizedException({ code: ERROR_CODES.UNAUTHORIZED });
     await this.authRepo.updateUser(userId, tenantId, { passwordHash: newPassword });
+    await this.authRepo.revokeAllUserTokens(userId, tenantId);
+    await this.authRepo.deactivateAllUserSessions(userId, tenantId);
   }
 
   async forgotPassword(email: string, tenantId: string): Promise<void> {
@@ -215,6 +244,8 @@ export class AuthService {
       resetToken: undefined,
       resetTokenExpiresAt: undefined,
     });
+    await this.authRepo.revokeAllUserTokens(user.id, user.tenantId);
+    await this.authRepo.deactivateAllUserSessions(user.id, user.tenantId);
   }
 
   async verifyEmail(token: string): Promise<void> {
@@ -280,9 +311,11 @@ export class AuthService {
     return this.authRepo.findActiveSessions(userId, tenantId);
   }
 
-  async revokeSession(userId: string, tenantId: string, sessionId: string) {
-    console.log(`Revoking session ${sessionId} for user ${userId} in tenant ${tenantId}`);
-    await this.authRepo.deactivateSession(sessionId, tenantId);
+  async revokeSession(userId: string, tenantId: string, sessionId: string): Promise<void> {
+    const revoked = await this.authRepo.deactivateSession(sessionId, userId, tenantId);
+    if (!revoked) {
+      throw new BadRequestException('Session not found');
+    }
   }
 
   async validateOAuthUser(profile: any): Promise<UserEntity> {
@@ -318,9 +351,11 @@ export class AuthService {
       tenantId: tenant.id,
       provider,
       providerId,
-      status: UserStatus.ACTIVE, // OAuth users are pre-verified via provider
+      status: UserStatus.ACTIVE,
       emailVerifiedAt: new Date(),
     });
+
+    await this.authRepo.bootstrapTenantAdminRole(tenant.id, user.id);
 
     this.eventEmitter.emit(EVENT_NAMES.USER_REGISTERED, {
       name: EVENT_NAMES.USER_REGISTERED,
@@ -352,18 +387,19 @@ export class AuthService {
       new Set(rolesWithPermissions.flatMap((r) => r.permissions.map((p) => p.name)))
     );
 
+    const subscription = await this.pricingService.getTenantSubscription(user.tenantId);
+    const planId = subscription?.planId ?? '';
+
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
       roles,
       permissions,
-      planId: '',
+      planId,
     };
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn as any, issuer: 'autopilot.monster', audience: 'autopilot.monster.user' }),
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.refreshSecret, expiresIn: this.jwtConfig.refreshExpiresIn as any, issuer: 'autopilot.monster', audience: 'autopilot.monster.user' }),
-    ]);
+    const accessToken = signJwtToken(this.jwtConfig, 'access', payload);
+    const refreshToken = signJwtToken(this.jwtConfig, 'refresh', payload);
 
     // Calculate generic valid expiry for the token (assumes refreshExpiresIn is in seconds if number, or ms if string, 7 days default)
     let expiryTime = 7 * 24 * 3600 * 1000;

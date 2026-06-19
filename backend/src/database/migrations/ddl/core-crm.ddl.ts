@@ -1,0 +1,273 @@
+import type { QueryRunner } from 'typeorm';
+
+import { createEnumType, runQueries } from './migration-utils';
+
+const CRM_QUERIES: string[] = [
+  createEnumType('contacts_status_enum', ['LEAD', 'PROSPECT', 'CUSTOMER', 'CHURNED']),
+  createEnumType('deals_status_enum', ['OPEN', 'WON', 'LOST']),
+  createEnumType('activities_type_enum', ['CALL', 'EMAIL', 'MEETING', 'NOTE', 'TASK', 'WHATSAPP']),
+  createEnumType('tasks_priority_enum', ['HIGH', 'MEDIUM', 'LOW']),
+  createEnumType('tasks_status_enum', ['OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']),
+
+  `CREATE TABLE IF NOT EXISTS companies (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name varchar NOT NULL,
+    domain varchar,
+    website varchar,
+    industry varchar,
+    phone varchar,
+    address text,
+    city varchar,
+    country varchar,
+    "logoUrl" varchar,
+    "sizeRange" varchar,
+    "annualRevenueRange" varchar,
+    tags text[] NOT NULL DEFAULT '{}',
+    "tenantId" uuid NOT NULL,
+    "createdAt" timestamptz NOT NULL DEFAULT now(),
+    "updatedAt" timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_companies_tenant ON companies("tenantId")`,
+
+  `CREATE TABLE IF NOT EXISTS contacts (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    first_name varchar(100) NOT NULL,
+    last_name varchar(100) NOT NULL,
+    email varchar(255) NOT NULL,
+    phone varchar(30),
+    mobile varchar(30),
+    job_title varchar(200),
+    department varchar(100),
+    company_id uuid,
+    owner_id uuid,
+    status "contacts_status_enum" NOT NULL DEFAULT 'LEAD',
+    lead_source varchar,
+    tags text[] NOT NULL DEFAULT '{}',
+    custom_fields jsonb NOT NULL DEFAULT '{}',
+    do_not_contact boolean NOT NULL DEFAULT false,
+    email_opt_out boolean NOT NULL DEFAULT false,
+    whatsapp_opt_in boolean NOT NULL DEFAULT false,
+    last_contacted_at timestamptz,
+    linkedin_url varchar,
+    twitter_handle varchar,
+    notes text,
+    CONSTRAINT fk_contacts_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL
+  )`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_contacts_tenant_email ON contacts(tenant_id, email)`,
+
+  `CREATE TABLE IF NOT EXISTS pipelines (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name varchar NOT NULL,
+    "order" integer NOT NULL DEFAULT 0,
+    "tenantId" uuid NOT NULL,
+    "createdAt" timestamptz NOT NULL DEFAULT now(),
+    "updatedAt" timestamptz NOT NULL DEFAULT now()
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_pipelines_tenant ON pipelines("tenantId")`,
+
+  `CREATE TABLE IF NOT EXISTS pipeline_stages (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name varchar NOT NULL,
+    "order" integer NOT NULL DEFAULT 0,
+    probability integer NOT NULL DEFAULT 0,
+    pipeline_id uuid NOT NULL,
+    "tenantId" uuid NOT NULL,
+    "createdAt" timestamptz NOT NULL DEFAULT now(),
+    "updatedAt" timestamptz NOT NULL DEFAULT now(),
+    CONSTRAINT fk_pipeline_stages_pipeline FOREIGN KEY (pipeline_id) REFERENCES pipelines(id) ON DELETE CASCADE
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_pipeline_stages_tenant ON pipeline_stages("tenantId")`,
+
+  `CREATE TABLE IF NOT EXISTS deals (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    name varchar(500) NOT NULL,
+    value decimal(15,2) NOT NULL DEFAULT 0,
+    currency varchar(3) NOT NULL DEFAULT 'USD',
+    pipeline_id uuid NOT NULL,
+    stage_id uuid NOT NULL,
+    contact_id uuid,
+    company_id uuid,
+    owner_id uuid,
+    status "deals_status_enum" NOT NULL DEFAULT 'OPEN',
+    probability integer NOT NULL DEFAULT 0,
+    expected_close_date date,
+    actual_close_date date,
+    lost_reason text,
+    tags text[] NOT NULL DEFAULT '{}',
+    custom_fields jsonb NOT NULL DEFAULT '{}',
+    CONSTRAINT fk_deals_pipeline FOREIGN KEY (pipeline_id) REFERENCES pipelines(id),
+    CONSTRAINT fk_deals_stage FOREIGN KEY (stage_id) REFERENCES pipeline_stages(id),
+    CONSTRAINT fk_deals_contact FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL,
+    CONSTRAINT fk_deals_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_deals_tenant_status ON deals(tenant_id, status)`,
+
+  `CREATE TABLE IF NOT EXISTS leads (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    "firstName" varchar(255) NOT NULL,
+    "lastName" varchar(255),
+    phone varchar(50) NOT NULL,
+    email varchar(255),
+    status varchar(50) NOT NULL DEFAULT 'NEW',
+    metadata jsonb,
+    score integer NOT NULL DEFAULT 0,
+    "aiSummary" text
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS activities (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    type "activities_type_enum" NOT NULL,
+    subject varchar(500) NOT NULL,
+    description text,
+    contact_id uuid,
+    deal_id uuid,
+    company_id uuid,
+    owner_id uuid,
+    occurred_at timestamptz NOT NULL,
+    duration_minutes integer,
+    outcome varchar(200),
+    CONSTRAINT fk_activities_contact FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL,
+    CONSTRAINT fk_activities_deal FOREIGN KEY (deal_id) REFERENCES deals(id) ON DELETE SET NULL,
+    CONSTRAINT fk_activities_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_activities_tenant_occurred ON activities(tenant_id, occurred_at)`,
+
+  `CREATE TABLE IF NOT EXISTS notes (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    title varchar(500) NOT NULL,
+    content text NOT NULL,
+    contact_id uuid,
+    deal_id uuid,
+    company_id uuid,
+    author_id uuid,
+    tags text[] NOT NULL DEFAULT '{}',
+    CONSTRAINT fk_notes_contact FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL,
+    CONSTRAINT fk_notes_deal FOREIGN KEY (deal_id) REFERENCES deals(id) ON DELETE SET NULL,
+    CONSTRAINT fk_notes_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE SET NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_notes_tenant_created ON notes(tenant_id, created_at)`,
+
+  `CREATE TABLE IF NOT EXISTS tasks (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    title varchar(500) NOT NULL,
+    description text,
+    contact_id uuid,
+    deal_id uuid,
+    assignee_id uuid,
+    priority "tasks_priority_enum" NOT NULL DEFAULT 'MEDIUM',
+    status "tasks_status_enum" NOT NULL DEFAULT 'OPEN',
+    due_date timestamptz,
+    completed_at timestamptz,
+    CONSTRAINT fk_tasks_contact FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL,
+    CONSTRAINT fk_tasks_deal FOREIGN KEY (deal_id) REFERENCES deals(id) ON DELETE SET NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS idx_tasks_tenant_due ON tasks(tenant_id, due_date)`,
+
+  `CREATE TABLE IF NOT EXISTS crm_tags (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    name varchar NOT NULL,
+    color varchar NOT NULL DEFAULT '#6366f1',
+    type varchar NOT NULL DEFAULT 'GENERIC'
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS crm_custom_fields (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    name varchar NOT NULL,
+    label varchar NOT NULL,
+    type varchar NOT NULL DEFAULT 'TEXT',
+    options json,
+    "entityType" varchar NOT NULL DEFAULT 'LEAD',
+    "isRequired" boolean NOT NULL DEFAULT false,
+    "order" integer NOT NULL DEFAULT 0
+  )`,
+
+  `CREATE TABLE IF NOT EXISTS crm_segments (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id uuid NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz,
+    created_by uuid,
+    updated_by uuid,
+    name varchar NOT NULL,
+    description varchar,
+    rules json NOT NULL,
+    "entityType" varchar NOT NULL DEFAULT 'LEAD'
+  )`,
+];
+
+const CRM_DOWN_QUERIES: string[] = [
+  'DROP TABLE IF EXISTS crm_segments',
+  'DROP TABLE IF EXISTS crm_custom_fields',
+  'DROP TABLE IF EXISTS crm_tags',
+  'DROP TABLE IF EXISTS tasks',
+  'DROP TABLE IF EXISTS notes',
+  'DROP TABLE IF EXISTS activities',
+  'DROP TABLE IF EXISTS leads',
+  'DROP TABLE IF EXISTS deals',
+  'DROP TABLE IF EXISTS pipeline_stages',
+  'DROP TABLE IF EXISTS pipelines',
+  'DROP TABLE IF EXISTS contacts',
+  'DROP TABLE IF EXISTS companies',
+  'DROP TYPE IF EXISTS tasks_status_enum',
+  'DROP TYPE IF EXISTS tasks_priority_enum',
+  'DROP TYPE IF EXISTS activities_type_enum',
+  'DROP TYPE IF EXISTS deals_status_enum',
+  'DROP TYPE IF EXISTS contacts_status_enum',
+];
+
+export async function upCoreCrm(queryRunner: QueryRunner): Promise<void> {
+  await runQueries(queryRunner, CRM_QUERIES);
+}
+
+export async function downCoreCrm(queryRunner: QueryRunner): Promise<void> {
+  await runQueries(queryRunner, CRM_DOWN_QUERIES);
+}

@@ -1,4 +1,5 @@
 import type { JwtConfig } from '@autopilot/core/config/jwt.config';
+import { buildJwtModuleOptions } from '@autopilot/core/common/utils/jwt-signing.util';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -29,7 +30,7 @@ import { LocalStrategy } from './strategies/local.strategy';
       useFactory: (configService: ConfigService) => {
         const jwt = configService.get<JwtConfig>('jwt');
         if (jwt === undefined) throw new Error('JWT config missing');
-        return { secret: jwt.secret, signOptions: { expiresIn: jwt.expiresIn as any } };
+        return buildJwtModuleOptions(jwt);
       },
     }),
     TypeOrmModule.forFeature([UserEntity, SessionEntity, RefreshTokenEntity, Tenant, Role, UserRole]),

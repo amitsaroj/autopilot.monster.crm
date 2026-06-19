@@ -8,19 +8,35 @@ import api from '@/lib/api/client';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+function parseHashParams(): URLSearchParams {
+  if (typeof window === 'undefined') {
+    return new URLSearchParams();
+  }
+  const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+  return new URLSearchParams(hash);
+}
+
 function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuth();
 
   useEffect(() => {
-    const accessToken = searchParams.get('accessToken');
-    const refreshToken = searchParams.get('refreshToken');
+    const hashParams = parseHashParams();
+    const accessToken = hashParams.get('accessToken') ?? searchParams.get('accessToken');
+    const refreshToken = hashParams.get('refreshToken') ?? searchParams.get('refreshToken');
 
     if (accessToken && refreshToken) {
       const handleAuth = async () => {
-        // 1. Initial token setting (so we can call /users/me)
-        setToken(accessToken, refreshToken);
+        let tenantId: string | undefined;
+        try {
+          const payload = JSON.parse(atob(accessToken.split('.')[1]));
+          tenantId = payload.tenantId;
+        } catch {
+          tenantId = undefined;
+        }
+
+        setToken(accessToken, refreshToken, tenantId);
         
         try {
           // 2. Fetch full user profile and tenant info from the newly created session

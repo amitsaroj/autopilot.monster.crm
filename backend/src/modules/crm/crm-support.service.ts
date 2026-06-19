@@ -15,6 +15,7 @@ import {
 } from './crm-support.repository';
 import { ContactRepository } from './contact.repository';
 import { DealRepository } from './deal.repository';
+import { DealStatus } from '../../database/entities/deal.entity';
 
 @Injectable()
 export class ActivityService {
@@ -25,10 +26,8 @@ export class ActivityService {
   findAll(tid: string) {
     return this.repo.findAll(tid);
   }
-  async getCalendarEvents(tid: string) {
-    const activities = await this.repo.findAll(tid);
-    // Include Meetings, Calls, and Tasks that are tracked as activities
-    return activities.filter(a => ['MEETING', 'CALL', 'TASK'].includes(a.type));
+  findByDeal(tid: string, dealId: string) {
+    return this.repo.findAll(tid, { where: { dealId } as never });
   }
   remove(tid: string, id: string) {
     return this.repo.delete(tid, id);
@@ -43,6 +42,12 @@ export class TaskCrmService {
   }
   findAll(tid: string) {
     return this.repo.findAll(tid);
+  }
+  findOne(tid: string, id: string) {
+    return this.repo.findById(tid, id);
+  }
+  update(tid: string, id: string, dto: any) {
+    return this.repo.updateWithTenant(tid, id, dto);
   }
   remove(tid: string, id: string) {
     return this.repo.delete(tid, id);
@@ -136,25 +141,34 @@ export class AnalyticsCrmService {
     const leads = await this.leadService.findAll(tid);
     const contacts = await this.contactRepo.findAll(tid);
 
-    const totalRevenue = deals.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
-    const wonDeals = deals.filter(d => d.stageId?.toLowerCase() === 'won').length;
+    const wonDeals = deals.filter((d) => d.status === DealStatus.WON);
+    const totalRevenue = wonDeals.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
 
     return {
       totalDeals: deals.length,
       totalRevenue,
       totalLeads: leads.length,
       totalContacts: contacts.length,
-      winRate: deals.length > 0 ? (wonDeals / deals.length) * 100 : 0,
+      winRate: deals.length > 0 ? (wonDeals.length / deals.length) * 100 : 0,
     };
   }
 
   async getPipelineData(tid: string) {
-    const deals = await this.dealRepo.findAll(tid);
-    const stages = ['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Won', 'Lost'];
-    return stages.map(s => ({
-      name: s,
-      value: deals.filter(d => d.stageId?.toLowerCase() === s.toLowerCase()).length,
-      amount: deals.filter(d => d.stageId?.toLowerCase() === s.toLowerCase()).reduce((sum, d) => sum + (Number(d.value) || 0), 0),
+    const deals = await this.dealRepo.findAll(tid, { relations: ['stage'] });
+    const byStage = new Map<string, { value: number; amount: number }>();
+
+    for (const deal of deals) {
+      const stageName = deal.stage?.name ?? 'Unknown';
+      const existing = byStage.get(stageName) ?? { value: 0, amount: 0 };
+      existing.value += 1;
+      existing.amount += Number(deal.value) || 0;
+      byStage.set(stageName, existing);
+    }
+
+    return Array.from(byStage.entries()).map(([name, stats]) => ({
+      name,
+      value: stats.value,
+      amount: stats.amount,
     }));
   }
 
@@ -169,8 +183,7 @@ export class AnalyticsCrmService {
 
   async getRevenueTrend(tid: string) {
     const deals = await this.dealRepo.findAll(tid);
-    // Group won deals by month
-    const wonDeals = deals.filter(d => d.stageId?.toLowerCase() === 'won');
+    const wonDeals = deals.filter((d) => d.status === DealStatus.WON);
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
     return months.map((month, idx) => {
@@ -188,7 +201,7 @@ export class AnalyticsCrmService {
     
     return owners.map(ownerId => {
        const userDeals = deals.filter(d => d.ownerId === ownerId);
-       const won = userDeals.filter(d => d.stageId?.toLowerCase() === 'won');
+       const won = userDeals.filter((d) => d.status === DealStatus.WON);
        return {
           ownerId,
           totalDeals: userDeals.length,
