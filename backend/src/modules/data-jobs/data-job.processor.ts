@@ -10,7 +10,7 @@ import { Contact } from '../../database/entities/contact.entity';
 import { Deal } from '../../database/entities/deal.entity';
 import { Company } from '../../database/entities/company.entity';
 import { Lead } from '../../database/entities/lead.entity';
-import { StorageService } from '../storage/storage.service';
+import { StorageService } from '../../storage/storage.service';
 
 @Processor(QUEUE_NAMES.IMPORT)
 export class ImportJobProcessor {

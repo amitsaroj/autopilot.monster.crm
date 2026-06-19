@@ -13,8 +13,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { StorageService } from './storage.service';
-import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, ResourcePermissions } from '../../common/decorators';
+import { JwtAuthGuard, TenantGuard } from '../common/guards';
+import { TenantId, ResourcePermissions } from '../common/decorators';
 
 @ApiTags('Storage')
 @ResourcePermissions('storage')

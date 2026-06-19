@@ -485,9 +485,9 @@ export class CrmController {
   @ApiOperation({ summary: 'Get unified calendar events' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCalendar(@TenantId() tenantId: string) {
-    const activities = await this.activityService.getCalendarEvents(tenantId);
+    const activities = await this.activityService.findAll(tenantId);
     const tasks = await this.taskService.findAll(tenantId);
-    
+
     return [
       ...activities.map((a: any) => ({
         id: a.id,

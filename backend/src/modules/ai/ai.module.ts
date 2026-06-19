@@ -18,10 +18,8 @@ import { AiPrompt } from '../../database/entities/ai-prompt.entity';
 import { KnowledgeBaseService, KnowledgeBaseRepository } from './knowledge-base.service';
 import { ConversationService, ConversationRepository } from './conversation.service';
 import { CrmModule } from '../crm/crm.module';
-import { StorageModule } from '../storage/storage.module';
+import { StorageModule } from '../../storage/storage.module';
 import { TenantSettingsModule } from '../tenant-settings/tenant-settings.module';
-import { MonetizationModule } from '../monetization.module';
-
 import { MonetizationModule } from '../monetization.module';
 
 @Module({

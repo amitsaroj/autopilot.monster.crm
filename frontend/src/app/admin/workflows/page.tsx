@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Workflow, ArrowRight, Play, Pause, Zap, Clock, Loader2 } from 'lucide-react';
+import { Workflow as WorkflowIcon, ArrowRight, Play, Pause, Zap, Clock, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { parseApiData } from '@/lib/api/parse-response';
 import { workflowService, type WorkflowExecution, type Workflow } from '@/services/workflow.service';
 
 const MODULES = [
-  { label: 'All Workflows', href: '/workflows', icon: Workflow, desc: 'View and manage workspace automations', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+  { label: 'All Workflows', href: '/workflows', icon: WorkflowIcon, desc: 'View and manage workspace automations', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
   { label: 'Executions', href: '/admin/workflows/executions', icon: Play, desc: 'Monitor live and historical runs', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
   { label: 'Triggers', href: '/admin/workflows/triggers', icon: Zap, desc: 'Configure event triggers and webhooks', color: 'text-amber-400', bg: 'bg-amber-500/10' },
 ];
@@ -61,7 +61,7 @@ export default function AdminWorkflowsPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Active Workflows', value: String(activeCount), color: 'text-indigo-400', bg: 'bg-indigo-500/10', icon: Workflow },
+          { label: 'Active Workflows', value: String(activeCount), color: 'text-indigo-400', bg: 'bg-indigo-500/10', icon: WorkflowIcon },
           { label: 'Runs Today', value: String(todayCount), color: 'text-emerald-400', bg: 'bg-emerald-500/10', icon: Play },
           { label: 'Failed Runs', value: String(failedCount), color: 'text-red-400', bg: 'bg-red-500/10', icon: Pause },
         ].map((s) => (
