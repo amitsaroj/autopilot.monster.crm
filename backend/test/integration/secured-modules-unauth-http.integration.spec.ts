@@ -18,6 +18,16 @@ const PROTECTED_ROUTES = [
   { method: 'get' as const, path: '/api/v1/ai/agents' },
   { method: 'get' as const, path: '/api/v1/billing/subscription' },
   { method: 'get' as const, path: '/api/v1/search' },
+  { method: 'get' as const, path: '/api/v1/support/tickets' },
+  { method: 'get' as const, path: '/api/v1/social/posts' },
+  { method: 'get' as const, path: '/api/v1/marketplace/installed' },
+  { method: 'get' as const, path: '/api/v1/settings/workspace' },
+  { method: 'get' as const, path: '/api/v1/monetization/subscription' },
+  { method: 'get' as const, path: '/api/v1/rbac/roles' },
+  { method: 'get' as const, path: '/api/v1/users' },
+  { method: 'get' as const, path: '/api/v1/scheduler' },
+  { method: 'get' as const, path: '/api/v1/backup' },
+  { method: 'get' as const, path: '/api/v1/usage' },
 ] as const;
 
 describe('HTTP E2E — multi-module auth rejection (secured)', () => {

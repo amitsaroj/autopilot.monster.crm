@@ -6,9 +6,36 @@ Project: autopilot.monster.crm
 ## 1. Authentication
 
 ### 1.1 JWT & Sessions
-- **Access Tokens:** Short-lived JWTs (15 minutes). Signed using RS256 with asymmetric key pairs. Contains user ID, tenant ID, and role.
+- **Access Tokens:** Short-lived JWTs (15 minutes). Signed using RS256 with asymmetric key pairs when `JWT_PRIVATE_KEY` and `JWT_PUBLIC_KEY` are set; HS256 is permitted only in non-production environments.
 - **Refresh Tokens:** Opaque, high-entropy tokens (30 days). Stored hashed (bcrypt) in the DB `sessions` table alongside IP and User-Agent.
 - **Session Revocation:** Changing password or logging out revokes the specific refresh token. "Log out all devices" revokes all sessions for the user.
+
+#### RS256 Key Configuration & Rotation
+
+Production **requires** RS256. Set these environment variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `JWT_ALGORITHM` | Set to `RS256` (auto-selected when key pair is present) |
+| `JWT_PRIVATE_KEY` | PEM-encoded RSA private key (signing) |
+| `JWT_PUBLIC_KEY` | PEM-encoded RSA public key (verification) |
+| `JWT_SECRET` | HS256 fallback secret (non-production only) |
+| `JWT_REFRESH_SECRET` | Refresh token signing secret |
+
+**Key generation (4096-bit RSA):**
+```bash
+openssl genrsa -out jwt-private.pem 4096
+openssl rsa -in jwt-private.pem -pubout -out jwt-public.pem
+```
+
+**Rotation procedure:**
+1. Generate a new RSA key pair.
+2. Deploy the new `JWT_PRIVATE_KEY` and `JWT_PUBLIC_KEY` to all API instances simultaneously (rolling restart acceptable; old tokens remain valid until expiry because verification uses the public key).
+3. For zero-downtime rotation with overlapping validity, maintain a `JWT_PUBLIC_KEYS` comma-separated list of active public keys (future enhancement); current implementation uses a single key pair.
+4. Access tokens expire in 15 minutes; after rotation, all clients receive new tokens on next refresh.
+5. Optionally revoke all refresh tokens via admin endpoint to force re-authentication after compromise.
+
+Implementation: `backend/src/config/jwt.config.ts`, `backend/src/common/utils/jwt-signing.util.ts`. Production startup throws if HS256 is attempted without key pair.
 
 ### 1.2 Multi-Factor Auth (MFA)
 - Supports TOTP (Google Authenticator, Authy).

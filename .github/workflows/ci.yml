@@ -91,9 +91,22 @@ jobs:
         working-directory: backend
         run: npm test -- --passWithNoTests
 
+      - name: Wait for Postgres
+        run: |
+          for i in $(seq 1 30); do
+            if pg_isready -h localhost -p 5432 -U root; then
+              echo "Postgres is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Postgres did not become ready in time"
+          exit 1
+
       - name: Integration tests
         working-directory: backend
         run: npm run test:integration
+        timeout-minutes: 25
 
   frontend:
     runs-on: ubuntu-latest
