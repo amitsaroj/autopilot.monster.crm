@@ -1,4 +1,40 @@
 ## COMPLETED
+
+- [x] Phase 7: Functional Parity & Final Production Gaps
+  - id: TASK-018
+  - description: Implement CRM Calendar, Real Backup/Restore, Subscription Auto-Downgrade, Plugin Sandbox, and LLM Fallback.
+  - completed_at: 2026-04-30
+
+- [x] Phase 6: Final Production Hardening & Operationalization
+  - id: TASK-014
+  - description: Implement High-Velocity Usage Counting (Redis + Flusher), Stripe Metered Sync, and resolve all remaining stubs/bugs identified in audit.
+  - completed_at: 2026-04-30
+
+- [x] Phase 5: Security, Performance, & DevOps
+  - id: TASK-013
+  - description: Audit endpoints, finalize Docker, CI/CD, and health checks.
+  - completed_at: 2026-04-30
+
+- [x] Phase 4: Omnichannel & Marketplace Integrations
+  - id: TASK-012
+  - description: Activate WhatsApp, Voice, Social integrations, and Marketplace directory.
+  - completed_at: 2026-04-30
+
+- [x] Phase 3: AI & Workflow Orchestration
+  - id: TASK-011
+  - description: Operationalize AI endpoints, vector search, and custom workflow triggers.
+  - completed_at: 2026-04-30
+
+- [x] Phase 2: Billing & Subscription Engine
+  - id: TASK-010
+  - description: Connect Stripe, enforce tenant limits, and complete billing UI.
+  - completed_at: 2026-04-29
+
+- [x] Phase 1: Core Infrastructure & Asynchronous Systems
+  - id: TASK-009
+  - description: Implement Queues, Scheduler, Storage Service, and Centralized Logging.
+  - completed_at: 2026-04-28
+
 - [x] Complete All Missing Pages & Settings (~80 pages)
   - id: TASK-004
   - description: Generate missing layers and connect UI to backend logic (Onboarding, Admin Settings, App Settings).

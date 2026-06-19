@@ -11,6 +11,7 @@ const pdfParse = require('pdf-parse');
 import { QdrantConfig } from '../../config/qdrant.config';
 import { BillingService } from '../billing/billing.service';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { BillingService } from '../billing/billing.service';
 
 const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
   'gpt-4o': { input: 0.005, output: 0.015 },
@@ -208,6 +209,24 @@ export class RagService {
     options: Record<string, unknown> = {},
   ): Promise<string | null> {
     this.logger.log(`Generating text for prompt: ${prompt.slice(0, 50)}...`);
+    
+    const primaryModel = options.model || 'gpt-4o';
+    const fallbackModel = 'gpt-4o-mini';
+
+    try {
+      return await this._generateInternal(tenantId, prompt, primaryModel, options);
+    } catch (err) {
+      this.logger.warn(`Primary model ${primaryModel} failed, trying fallback ${fallbackModel}`);
+      try {
+        return await this._generateInternal(tenantId, prompt, fallbackModel, options);
+      } catch (fallbackErr) {
+        this.logger.error('All LLM providers failed', fallbackErr);
+        throw fallbackErr;
+      }
+    }
+  }
+
+  private async _generateInternal(tenantId: string | undefined, prompt: string, model: string, options: any) {
     const openai = await this.getOpenAIClient(tenantId);
     const model =
       typeof options.model === 'string'

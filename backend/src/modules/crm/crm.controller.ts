@@ -144,6 +144,7 @@ export class CrmController {
   @Limit('contacts_limit')
   @ApiOperation({ summary: 'Create contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  @Limit('contacts')
   async createContact(@TenantId() tenantId: string, @Body() dto: CreateContactDto) {
     const data = await this.contactService.create(tenantId, dto);
     return {
@@ -478,6 +479,31 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getActivities(@TenantId() tenantId: string) {
     return await this.activityService.findAll(tenantId);
+  }
+
+  @Get('calendar')
+  @ApiOperation({ summary: 'Get unified calendar events' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getCalendar(@TenantId() tenantId: string) {
+    const activities = await this.activityService.getCalendarEvents(tenantId);
+    const tasks = await this.taskService.findAll(tenantId);
+    
+    return [
+      ...activities.map((a: any) => ({
+        id: a.id,
+        title: a.subject,
+        start: a.occurredAt,
+        type: a.type.toLowerCase(),
+        description: a.description,
+      })),
+      ...tasks.map((t: any) => ({
+        id: t.id,
+        title: t.title,
+        start: t.dueDate,
+        type: 'task',
+        description: t.description,
+      }))
+    ];
   }
 
   @Post('activities')

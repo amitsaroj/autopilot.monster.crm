@@ -9,7 +9,7 @@ import { BaseRepository } from '../../database/base.repository';
 export class WorkflowRepository extends BaseRepository<Flow> {
   constructor(
     @InjectRepository(Flow)
-    flowRepo: Repository<Flow>,
+    private readonly flowRepo: Repository<Flow>,
     @InjectRepository(WorkflowExecution)
     private readonly executionRepo: Repository<WorkflowExecution>,
   ) {
@@ -18,6 +18,10 @@ export class WorkflowRepository extends BaseRepository<Flow> {
 
   async findExecutions(tenantId: string): Promise<WorkflowExecution[]> {
     return this.executionRepo.find({ where: { tenantId } as any, order: { startedAt: 'DESC' } });
+  }
+
+  async findActive(tenantId: string): Promise<Flow[]> {
+    return this.flowRepo.find({ where: { tenantId, isPublished: true } as any });
   }
 
   async findExecutionById(tenantId: string, id: string): Promise<WorkflowExecution | null> {

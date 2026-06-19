@@ -22,6 +22,8 @@ import { StorageModule } from '../storage/storage.module';
 import { TenantSettingsModule } from '../tenant-settings/tenant-settings.module';
 import { MonetizationModule } from '../monetization.module';
 
+import { MonetizationModule } from '../monetization.module';
+
 @Module({
   imports: [
     ConfigModule,

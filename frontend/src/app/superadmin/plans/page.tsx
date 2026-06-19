@@ -25,13 +25,37 @@ interface Plan {
 export default function PlansManagementPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newPlan, setNewPlan] = useState<Partial<Plan>>({ name: '', description: '', priceMonthly: 0, priceAnnual: 0, currency: 'USD', status: 'ACTIVE', isPublic: true });
+
+  const handleCreatePlan = async () => {
+    try {
+      const res = await fetch('/api/v1/monetization/admin/plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newPlan)
+      });
+      if (res.ok) {
+        toast.success('Plan created successfully');
+        setShowCreateModal(false);
+        // Refresh plans
+        const listRes = await fetch('/api/v1/monetization/plans');
+        const json = await listRes.json();
+        setPlans(json.data || json);
+      } else {
+        toast.error('Failed to create plan');
+      }
+    } catch (e) {
+      toast.error('Network error creating plan');
+    }
+  };
 
   useEffect(() => {
     async function fetchPlans() {
       try {
-        const res = await fetch('/api/v1/admin/plans');
+        const res = await fetch('/api/v1/monetization/plans');
         const json = await res.json();
-        if (json.data) setPlans(json.data);
+        if (json.data || Array.isArray(json)) setPlans(json.data || json);
       } catch (e) {
         toast.error('Failed to sync pricing data');
       } finally {
@@ -58,7 +82,9 @@ export default function PlansManagementPage() {
           <h1 className="text-3xl font-black text-white tracking-tight">Monetization Registry</h1>
           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Billing Architecture ({plans.length} tiers)</p>
         </div>
-        <button className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
            <Plus className="w-4 h-4" /> Define New Tier
         </button>
       </div>
@@ -141,7 +167,7 @@ export default function PlansManagementPage() {
         ))}
 
         {/* Create Card */}
-        <button className="group p-8 rounded-3xl border border-dashed border-white/10 hover:border-indigo-500/40 hover:bg-indigo-500/[0.02] transition-all flex flex-col items-center justify-center text-center space-y-4">
+        <button onClick={() => setShowCreateModal(true)} className="group p-8 rounded-3xl border border-dashed border-white/10 hover:border-indigo-500/40 hover:bg-indigo-500/[0.02] transition-all flex flex-col items-center justify-center text-center space-y-4">
            <div className="w-16 h-16 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center group-hover:bg-indigo-500/10 group-hover:text-indigo-400 transition-all duration-500">
               <Plus className="w-8 h-8 text-gray-600 group-hover:text-indigo-400" />
            </div>
@@ -169,6 +195,41 @@ export default function PlansManagementPage() {
              </p>
           </div>
       </div>
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#111] border border-white/10 p-8 rounded-2xl w-full max-w-md space-y-6">
+            <h2 className="text-xl font-bold text-white">Create New Plan</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-400 mb-1">Plan Name</label>
+                <input 
+                  type="text" 
+                  value={newPlan.name} 
+                  onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                  className="w-full bg-black border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-indigo-500"
+                  placeholder="e.g. Enterprise"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1">Monthly Price ($)</label>
+                  <input type="number" value={newPlan.priceMonthly} onChange={(e) => setNewPlan({ ...newPlan, priceMonthly: Number(e.target.value) })} className="w-full bg-black border border-white/10 rounded-lg px-4 py-2 text-white" />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 mb-1">Annual Price ($)</label>
+                  <input type="number" value={newPlan.priceAnnual} onChange={(e) => setNewPlan({ ...newPlan, priceAnnual: Number(e.target.value) })} className="w-full bg-black border border-white/10 rounded-lg px-4 py-2 text-white" />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-4 justify-end pt-4 border-t border-white/10">
+              <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors">Cancel</button>
+              <button onClick={handleCreatePlan} className="px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white text-sm font-bold rounded-lg transition-colors">Create Plan</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import Stripe from 'stripe';
 import { Subscription as SubscriptionEntity } from '../../database/entities/subscription.entity';
 import { Invoice as InvoiceEntity } from '../../database/entities/invoice.entity';
@@ -14,6 +18,7 @@ import { resolveUsagePeriodBounds, UsagePeriod } from './usage-period.util';
 
 @Injectable()
 export class BillingService {
+  private readonly logger = new Logger(BillingService.name);
   private stripe: Stripe;
 
   constructor(
@@ -30,6 +35,8 @@ export class BillingService {
     @InjectRepository(PaymentMethod)
     private readonly paymentMethodRepo: Repository<PaymentMethod>,
     private readonly configService: ConfigService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     const stripeConfig = this.configService.get<AppConfig['stripe']>('app.stripe');
     if (!stripeConfig?.secretKey) {

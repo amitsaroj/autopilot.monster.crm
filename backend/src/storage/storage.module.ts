@@ -1,11 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { StorageFile } from '../database/entities/storage-file.entity';
 import { StorageService } from './storage.service';
+import { StorageController } from './storage.controller';
+import { StorageFilesController } from './storage-files.controller';
 import type { MinioConfig } from '../config/minio.config';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, TypeOrmModule.forFeature([StorageFile])],
+  controllers: [StorageController, StorageFilesController],
   providers: [
     StorageService,
     {

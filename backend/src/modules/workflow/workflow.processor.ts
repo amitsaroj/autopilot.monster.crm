@@ -66,6 +66,7 @@ export class WorkflowProcessor extends WorkerHost {
       });
     }
 
+    let executionRecord;
     try {
       for (let index = startStepIndex; index < steps.length; index += 1) {
         const step = steps[index];

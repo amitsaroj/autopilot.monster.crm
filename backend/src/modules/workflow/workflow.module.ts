@@ -22,6 +22,8 @@ import { VoiceModule } from '../voice/voice.module';
 
 @Module({
   imports: [
+    EmailModule,
+    WhatsappModule,
     TypeOrmModule.forFeature([Flow, WorkflowExecution]),
     CrmModule,
     NotificationModule,
