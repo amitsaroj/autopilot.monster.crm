@@ -10,7 +10,7 @@ import {
   FineTuningStatus,
 } from '../../database/entities/fine-tuning-job.entity';
 import { BaseRepository } from '../../database/base.repository';
-import { StorageService } from '../storage/storage.service';
+import { StorageService } from '../../storage/storage.service';
 import { CreateFineTuningJobDto, UpdateFineTuningJobDto } from './dto/fine-tuning.dto';
 
 @Injectable()

@@ -38,8 +38,7 @@ export default function AdminAIConversationsPage() {
       setLoading(true);
       try {
         const res = await aiChatService.getConversations();
-        const payload = res.data?.data ?? res.data;
-        const items = Array.isArray(payload) ? payload : payload?.data ?? [];
+        const items = Array.isArray(res.data) ? res.data : [];
         setConversations(items.map((c: Record<string, unknown>) => ({
           id: String(c.id),
           contact: String(c.contactId ?? c.title ?? 'Conversation'),

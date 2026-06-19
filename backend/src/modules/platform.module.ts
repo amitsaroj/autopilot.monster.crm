@@ -1,6 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { StorageModule } from './storage/storage.module';
+
+import { StorageModule } from '../storage/storage.module';
 import { SearchService } from './search/search.service';
 import { SearchController } from './search/search.controller';
 import { MarketplaceController } from './marketplace/marketplace.controller';
@@ -8,7 +9,8 @@ import { MarketplaceService } from './marketplace/marketplace.service';
 import { PluginsController } from './plugins/plugins.controller';
 import { PluginsService } from './plugins/plugins.service';
 import { PlatformController } from './platform.controller';
-import { LogsModule } from './logs/logs.module';
+import { AuditLogController } from './logs/audit-log.controller';
+import { AuditLogService } from './logs/audit-log.service';
 import { MonetizationModule } from './monetization.module';
 import { DashboardMetric } from '../database/entities/dashboard-metric.entity';
 import { PlatformSetting } from '../database/entities/platform-setting.entity';
@@ -30,24 +32,26 @@ import { Company } from '../database/entities/company.entity';
       Deal,
       Company,
     ]),
-    LogsModule,
     StorageModule,
     MonetizationModule,
   ],
   controllers: [
     SearchController,
+    AuditLogController,
     MarketplaceController,
     PluginsController,
     PlatformController,
   ],
   providers: [
     SearchService,
+    AuditLogService,
     MarketplaceService,
     PluginsService,
   ],
   exports: [
     StorageModule,
     SearchService,
+    AuditLogService,
     MarketplaceService,
     PluginsService,
   ],

@@ -13,7 +13,7 @@ import { ImportJobProcessor, ExportJobProcessor } from './data-job.processor';
 import { ImportController } from './import.controller';
 import { ExportController } from './export.controller';
 import { BackupController } from './backup.controller';
-import { StorageModule } from '../storage/storage.module';
+import { StorageModule } from '../../storage/storage.module';
 
 @Module({
   imports: [

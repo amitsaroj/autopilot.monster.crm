@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
-import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, ResourcePermissions } from '../../common/decorators';
+import { JwtAuthGuard, TenantGuard } from '../common/guards';
+import { TenantId, ResourcePermissions } from '../common/decorators';
 import { StorageService } from './storage.service';
-import { PresignedUploadDto } from '../data-jobs/dto/data-job.dto';
+import { PresignedUploadDto } from '../modules/data-jobs/dto/data-job.dto';
 
 @ApiTags('Storage')
 @ApiBearerAuth()

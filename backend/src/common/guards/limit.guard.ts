@@ -23,20 +23,19 @@ export class LimitGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<{ user?: { tenantId?: string } }>();
-    const tenantId = request.user?.tenantId;
+    const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
+    if (!request.user) return true;
 
-    if (!tenantId) {
-      return true;
-    }
+    const { tenantId } = request.user;
+    if (!tenantId) return false;
 
-    const limit = await this.pricingService.getLimit(tenantId, metric);
-    if (limit === -1) return true;
-    if (limit <= 0) return true;
+    try {
+      const pricingService = this.moduleRef.get('PricingService', { strict: false });
+      const billingService = this.moduleRef.get('BillingService', { strict: false });
 
-    const period = await this.pricingService.getLimitPeriod(tenantId, metric);
-    const usage = await this.billingService.getUsage(tenantId, metric, period);
-    const allowed = usage < limit;
+      if (pricingService && billingService) {
+        const limit = await pricingService.getLimit(tenantId, metric);
+        if (limit === -1) return true;
 
         const usage = await billingService.getUsage(tenantId, metric);
         const allowed = usage < limit;
@@ -50,7 +49,6 @@ export class LimitGuard implements CanActivate {
       }
     } catch (e: any) {
       if (e instanceof ForbiddenException) throw e;
-      // If services are not yet loaded, allow pass-through or handle gracefully
     }
 
     return true;

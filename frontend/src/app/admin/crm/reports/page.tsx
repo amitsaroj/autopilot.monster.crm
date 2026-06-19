@@ -206,7 +206,7 @@ export default function AdminCRMReportsPage() {
                     borderRadius: "12px",
                     fontSize: "12px",
                   }}
-                  formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]}
+                  formatter={(v) => [`$${Number(v).toLocaleString()}`, "Revenue"]}
                 />
                 <Area
                   type="monotone"
@@ -250,7 +250,7 @@ export default function AdminCRMReportsPage() {
                       borderRadius: "8px",
                       fontSize: "11px",
                     }}
-                    formatter={(v: number) => [`${v}%`, "Share"]}
+                    formatter={(v) => [`${Number(v)}%`, "Share"]}
                   />
                 </PieChart>
               </ResponsiveContainer>

@@ -211,7 +211,7 @@ export default function AdminCRMDashboardPage() {
                     borderRadius: "12px",
                     fontSize: "12px",
                   }}
-                  formatter={(v: number) => [`$${v.toLocaleString()}`, "Revenue"]}
+                  formatter={(v) => [`$${Number(v).toLocaleString()}`, "Revenue"]}
                 />
                 <Area
                   type="monotone"

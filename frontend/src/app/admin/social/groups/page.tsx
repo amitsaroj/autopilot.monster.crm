@@ -5,6 +5,7 @@ import { Users, Plus, Globe, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { socialService } from "@/services/social.service";
 import { parseApiData } from "@/lib/api/parse-response";
+interface SocialGroup {
   id: string;
   name: string;
   description: string;

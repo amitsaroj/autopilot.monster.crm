@@ -5,24 +5,15 @@ import type { Request } from 'express';
 import { METADATA_KEYS } from '../constants/app.constants';
 import { ERROR_CODES } from '../constants/error-codes.constants';
 import type { IRequestContext } from '../interfaces/request-context.interface';
-import { PricingService } from '../../modules/pricing/pricing.service';
 
 @Injectable()
 export class PlanGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly pricingService: PricingService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(METADATA_KEYS.IS_PUBLIC, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (isPublic === true) {
-      return true;
-    }
-
     const requiredFeature = this.reflector.getAllAndOverride<string | undefined>(
       METADATA_KEYS.PLAN_FEATURE,
       [context.getHandler(), context.getClass()],
@@ -32,20 +23,10 @@ export class PlanGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request & { user?: IRequestContext }>();
-    const tenantId = request.user?.tenantId;
-    const roles = request.user?.roles;
+    const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
+    const { tenantId, planId } = request.user;
 
-    if (!tenantId) {
-      return true;
-    }
-
-    if (roles?.includes('SUPER_ADMIN')) {
-      return true;
-    }
-
-    const enabled = await this.pricingService.isFeatureEnabled(tenantId, requiredFeature);
-    if (!enabled) {
+    if (!tenantId || !planId) {
       throw new ForbiddenException({
         message: `Plan feature '${requiredFeature}' requires an active subscription`,
         code: ERROR_CODES.PLAN_FEATURE_DISABLED,
@@ -53,7 +34,6 @@ export class PlanGuard implements CanActivate {
     }
 
     try {
-      // Dynamically load PricingService to avoid circular dependencies in global guards
       const pricingService = this.moduleRef.get('PricingService', { strict: false });
       if (pricingService) {
         const isEnabled = await pricingService.isFeatureEnabled(tenantId, requiredFeature);
@@ -66,7 +46,6 @@ export class PlanGuard implements CanActivate {
       }
     } catch (e: any) {
       if (e instanceof ForbiddenException) throw e;
-      // If service is not yet loaded or fails, fallback to strict block
       throw new ForbiddenException({
         message: `Plan feature check failed`,
         code: ERROR_CODES.PLAN_FEATURE_DISABLED,

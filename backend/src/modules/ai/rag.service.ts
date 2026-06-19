@@ -11,7 +11,6 @@ const pdfParse = require('pdf-parse');
 import { QdrantConfig } from '../../config/qdrant.config';
 import { BillingService } from '../billing/billing.service';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
-import { BillingService } from '../billing/billing.service';
 
 const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
   'gpt-4o': { input: 0.005, output: 0.015 },
@@ -209,8 +208,8 @@ export class RagService {
     options: Record<string, unknown> = {},
   ): Promise<string | null> {
     this.logger.log(`Generating text for prompt: ${prompt.slice(0, 50)}...`);
-    
-    const primaryModel = options.model || 'gpt-4o';
+
+    const primaryModel = typeof options.model === 'string' ? options.model : 'gpt-4o';
     const fallbackModel = 'gpt-4o-mini';
 
     try {
@@ -226,14 +225,17 @@ export class RagService {
     }
   }
 
-  private async _generateInternal(tenantId: string | undefined, prompt: string, model: string, options: any) {
+  private async _generateInternal(
+    tenantId: string | undefined,
+    prompt: string,
+    defaultModel: string,
+    options: any,
+  ) {
     const openai = await this.getOpenAIClient(tenantId);
     const model =
       typeof options.model === 'string'
         ? options.model
-        : tenantId
-          ? await this.getDefaultChatModel(tenantId)
-          : 'gpt-4o';
+        : defaultModel;
     const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
     const response = await openai.chat.completions.create({
       model,

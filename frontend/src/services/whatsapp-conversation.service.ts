@@ -23,8 +23,14 @@ export interface WhatsAppConversationSummary {
   status: 'OPEN' | 'RESOLVED';
 }
 
+export type WhatsAppConversation = WhatsAppConversationSummary;
+
 export const whatsappConversationService = {
   list: () => api.get<{ data: WhatsAppConversationSummary[] }>('/whatsapp/conversations'),
+  get: (phone: string) =>
+    api.get<{ data: { messages: WhatsAppMessage[] } }>(
+      `/whatsapp/conversations/${encodeURIComponent(phone)}`,
+    ),
   getMessages: (phone: string) =>
     api.get<{ data: WhatsAppMessage[] }>(`/whatsapp/conversations/${encodeURIComponent(phone)}`),
   send: (phone: string, message: string) =>
