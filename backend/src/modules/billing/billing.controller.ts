@@ -14,8 +14,8 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Request } from 'express';
 
-import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, ResourcePermissions } from '../../common/decorators';
+import { JwtAuthGuard, TenantGuard, RolesGuard } from '../../common/guards';
+import { TenantId, ResourcePermissions, PlanFeature, Roles } from '../../common/decorators';
 import { Public } from '../../common/decorators/public.decorator';
 import { BillingService } from './billing.service';
 import { PricingService } from '../pricing/pricing.service';
@@ -25,6 +25,7 @@ import { WalletService } from './wallet.service';
 
 @ApiTags('Billing')
 @ResourcePermissions('billing')
+@PlanFeature('billing')
 @Controller('billing')
 export class BillingController {
   constructor(
@@ -91,12 +92,21 @@ export class BillingController {
     return this.billingService.getInvoices(tenantId);
   }
 
+  @Get('invoices/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiOperation({ summary: 'Get invoice by id' })
+  async getInvoice(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.billingService.getInvoice(tenantId, id);
+    return { status: 200, message: 'Invoice retrieved', error: false, data };
+  }
+
   @Get('usage')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Get current usage' })
   getUsage(@TenantId() tenantId: string) {
-    return this.billingService.getUsage(tenantId, 'all');
+    return this.billingService.getUsageBreakdown(tenantId);
   }
 
   @Get('payment-methods')
@@ -168,8 +178,9 @@ export class BillingController {
 
   @Post('wallet/credits')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, TenantGuard)
-  @ApiOperation({ summary: 'Add credits to wallet' })
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles('SUPER_ADMIN', 'ADMIN')
+  @ApiOperation({ summary: 'Add credits to wallet (admin only)' })
   async addWalletCredits(@TenantId() tenantId: string, @Body() dto: AddWalletCreditsDto) {
     const data = await this.walletService.addCredits(tenantId, dto);
     return { status: 201, message: 'Credits added', error: false, data };

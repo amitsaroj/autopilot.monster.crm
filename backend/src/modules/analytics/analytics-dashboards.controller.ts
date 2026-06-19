@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 import { AnalyticsDashboardService } from './analytics-dashboard.service';
 import {
   CreateAnalyticsDashboardDto,
@@ -19,6 +19,8 @@ import {
 } from './dto/analytics-dashboard.dto';
 
 @ApiTags('Analytics Dashboards')
+@ResourcePermissions('analytics')
+@PlanFeature('analytics')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('analytics/dashboards')

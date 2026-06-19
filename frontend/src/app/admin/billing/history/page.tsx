@@ -26,7 +26,7 @@ export default function AdminBillingHistoryPage() {
       setLoading(true);
       try {
         const res = await billingService.getInvoices();
-        const payload = res.data?.data ?? res.data;
+        const payload = Array.isArray(res.data) ? res.data : (res.data as { data?: InvoiceRow[] })?.data;
         setHistory(Array.isArray(payload) ? payload : []);
       } catch {
         toast.error('Failed to load billing history');

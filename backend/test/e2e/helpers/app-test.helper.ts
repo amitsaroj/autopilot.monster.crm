@@ -1,41 +1,49 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { CoreModule } from '../../../src/app.module';
-import { JwtAuthGuard } from '../../../src/common/guards/jwt-auth.guard';
-import { TenantGuard } from '../../../src/common/guards/tenant.guard';
-import { RolesGuard } from '../../../src/common/guards/roles.guard';
-import { PlanGuard } from '../../../src/common/guards/plan.guard';
-import { PermissionGuard } from '../../../src/common/guards/permission.guard';
-import { FeatureGuard } from '../../../src/common/guards/feature.guard';
 
+const legacyTestAppGuard = {
+  canActivate: (context: {
+    switchToHttp: () => { getRequest: () => Record<string, unknown> & { headers?: Record<string, string> } };
+  }) => {
+    const req = context.switchToHttp().getRequest();
+    if (!req.tenantId) {
+      req.tenantId = req.headers?.['x-tenant-id'] ?? 'test-tenant';
+    }
+    return true;
+  },
+};
+
+/**
+ * Boots the full Nest application with production global guards (JWT, Tenant, Roles,
+ * Permissions, Plan, Limit). Use for integration tests that validate real auth behaviour.
+ */
 export async function createTestApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [CoreModule],
+  }).compile();
+
+  const app = moduleFixture.createNestApplication({ rawBody: true });
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.setGlobalPrefix('api/v1');
+  await app.init();
+  return app;
+}
+
+/**
+ * @deprecated Prefer createTestApp() with seeded credentials. Bypasses all APP_GUARD checks.
+ */
+export async function createTestAppWithMockGuards(): Promise<INestApplication> {
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [CoreModule],
   })
-    .overrideGuard(JwtAuthGuard)
-    .useValue({ canActivate: () => true })
-    .overrideGuard(TenantGuard)
-    .useValue({
-      canActivate: (context: { switchToHttp: () => { getRequest: () => Record<string, unknown> } }) => {
-        const req = context.switchToHttp().getRequest();
-        if (!req.tenantId) {
-          req.tenantId = (req.headers as Record<string, string>)['x-tenant-id'] ?? 'test-tenant';
-        }
-        return true;
-      },
-    })
-    .overrideGuard(RolesGuard)
-    .useValue({ canActivate: () => true })
-    .overrideGuard(PlanGuard)
-    .useValue({ canActivate: () => true })
-    .overrideGuard(PermissionGuard)
-    .useValue({ canActivate: () => true })
-    .overrideGuard(FeatureGuard)
-    .useValue({ canActivate: () => true })
+    .overrideProvider(APP_GUARD)
+    .useValue(legacyTestAppGuard)
     .compile();
 
-  const app = moduleFixture.createNestApplication();
+  const app = moduleFixture.createNestApplication({ rawBody: true });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.setGlobalPrefix('api/v1');
   await app.init();

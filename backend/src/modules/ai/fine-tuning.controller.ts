@@ -11,11 +11,13 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 import { FineTuningService } from './fine-tuning.service';
 import { CreateFineTuningJobDto, UpdateFineTuningJobDto } from './dto/fine-tuning.dto';
 
 @ApiTags('AI Fine-Tuning')
+@ResourcePermissions('ai')
+@PlanFeature('ai')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('ai/fine-tuning')

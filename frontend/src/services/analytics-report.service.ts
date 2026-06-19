@@ -7,7 +7,9 @@ export type AnalyticsReportType =
   | 'PIPELINE'
   | 'TEAM'
   | 'VOICE'
-  | 'WHATSAPP';
+  | 'WHATSAPP'
+  | 'AI'
+  | 'FORECAST';
 
 export type AnalyticsReportStatus = 'DRAFT' | 'READY' | 'RUNNING' | 'FAILED';
 

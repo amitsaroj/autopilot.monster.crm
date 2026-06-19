@@ -12,13 +12,15 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PlanGuard } from './common/guards/plan.guard';
+import { LimitGuard } from './common/guards/limit.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { TenantGuard } from './common/guards/tenant.guard';
+import { ActiveTenantGuard } from './common/guards/active-tenant.guard';
 import { PermissionGuard } from './common/guards/permission.guard';
-import { FeatureGuard } from './common/guards/feature.guard';
 import { CorrelationIdInterceptor } from './common/interceptors/correlation-id.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { UsageMeteringInterceptor } from './common/interceptors/usage-metering.interceptor';
 import { appConfig } from './config/app.config';
 import { databaseConfig } from './config/database.config';
 import { redisConfig } from './config/redis.config';
@@ -132,15 +134,17 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     { provide: APP_INTERCEPTOR, useClass: CorrelationIdInterceptor },
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: UsageMeteringInterceptor },
 
-    // === Global Guards (order: Throttler -> JWT → Tenant → Roles → Permissions → Features → Plan) ===
+    // === Global Guards (order: Throttler -> JWT → Tenant → Roles → Permissions → Plan → Limit) ===
     { provide: APP_GUARD, useClass: MultiLevelThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: TenantGuard },
+    { provide: APP_GUARD, useClass: ActiveTenantGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
     { provide: APP_GUARD, useClass: PermissionGuard },
-    { provide: APP_GUARD, useClass: FeatureGuard },
     { provide: APP_GUARD, useClass: PlanGuard },
+    { provide: APP_GUARD, useClass: LimitGuard },
 
     // === Global Validation Pipe ===
     { provide: APP_PIPE, useClass: ValidationPipe },

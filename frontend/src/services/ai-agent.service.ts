@@ -15,6 +15,7 @@ export const aiAgentService = {
   list: () => api.get<{ data: Agent[] }>('/ai/agents'),
   get: (id: string) => api.get<{ data: Agent }>(`/ai/agents/${id}`),
   create: (payload: Partial<Agent>) => api.post<{ data: Agent }>('/ai/agents', payload),
+  update: (id: string, payload: Partial<Agent>) => api.patch<{ data: Agent }>(`/ai/agents/${id}`, payload),
   remove: (id: string) => api.delete(`/ai/agents/${id}`),
   activate: (id: string) => api.post(`/ai/agents/${id}/activate`),
   pause: (id: string) => api.post(`/ai/agents/${id}/pause`),

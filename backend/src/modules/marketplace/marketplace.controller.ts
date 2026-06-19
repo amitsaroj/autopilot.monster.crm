@@ -2,11 +2,12 @@ import { Controller, Get, Post, Delete, Param, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions } from '../../common/decorators';
 import { Public } from '../../common/decorators/public.decorator';
 import { MarketplaceService } from './marketplace.service';
 
 @ApiTags('Marketplace')
+@ResourcePermissions('marketplace')
 @Controller('marketplace')
 export class MarketplaceController {
   constructor(private readonly marketplaceService: MarketplaceService) {}

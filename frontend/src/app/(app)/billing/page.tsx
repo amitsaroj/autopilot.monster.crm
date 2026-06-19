@@ -1,17 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CreditCard, Zap, CheckCircle2, AlertTriangle, ShieldCheck, ArrowRight, Download, Receipt, Users, Loader2 } from 'lucide-react';
+import { CreditCard, Zap, CheckCircle2, ShieldCheck, ArrowRight, Download, Receipt, Users, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
-interface Subscription {
-  planId: string;
-  status: string;
-  currentPeriodEnd: string;
-  stripeCustomerId?: string;
-  billingCycle: string;
-}
+import { billingService, Subscription } from '@/services/billing.service';
 
 interface Usage {
   [key: string]: number;
@@ -27,11 +21,11 @@ export default function BillingOverviewPage() {
     async function fetchData() {
       try {
         const [subRes, usageRes] = await Promise.all([
-          fetch('/api/v1/monetization/subscription').then(res => res.ok ? res.json() : null),
-          fetch('/api/v1/monetization/usage/all').then(res => res.ok ? res.json() : {})
+          billingService.getSubscription(),
+          billingService.getUsage(),
         ]);
-        setSub(subRes);
-        setUsage(usageRes);
+        setSub(subRes.data);
+        setUsage(usageRes.data ?? {});
       } catch (err) {
         console.error('Failed to fetch billing data', err);
       } finally {
@@ -44,18 +38,13 @@ export default function BillingOverviewPage() {
   const handleUpgrade = async (planId: string, billingCycle: 'MONTHLY' | 'ANNUAL' = 'MONTHLY') => {
     setActionLoading('upgrade');
     try {
-      const res = await fetch('/api/v1/monetization/upgrade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId, billingCycle })
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      const res = await billingService.createCheckout(planId, billingCycle);
+      if (res.data.url) {
+        window.location.href = res.data.url;
       } else {
         toast.error('Failed to initiate checkout session');
       }
-    } catch (err) {
+    } catch {
       toast.error('Error initiating checkout');
     } finally {
       setActionLoading(null);
@@ -65,14 +54,13 @@ export default function BillingOverviewPage() {
   const handlePortal = async () => {
     setActionLoading('portal');
     try {
-      const res = await fetch('/api/v1/monetization/portal', { method: 'POST' });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
+      const res = await billingService.getPortal();
+      if (res.data.url) {
+        window.location.href = res.data.url;
       } else {
         toast.error('Failed to initiate portal session');
       }
-    } catch (err) {
+    } catch {
       toast.error('Error initiating portal');
     } finally {
       setActionLoading(null);
@@ -90,15 +78,12 @@ export default function BillingOverviewPage() {
   return (
     <div className="space-y-8 animate-fade-in max-w-5xl">
       
-      {/* Header */}
       <div className="border-b border-border pb-6">
         <h1 className="text-2xl font-bold text-foreground">Billing & Subscription</h1>
         <p className="text-sm text-muted-foreground mt-1">Manage your enterprise plan, limits, and payment methods.</p>
       </div>
 
-      {/* Current Plan Overview */}
       <div className="bg-card border border-border rounded-xl p-6 lg:p-8 shadow-sm flex flex-col md:flex-row gap-8 justify-between relative overflow-hidden">
-        {/* Background Decoration */}
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
         
         <div className="relative z-10 space-y-4 max-w-md">
@@ -111,14 +96,17 @@ export default function BillingOverviewPage() {
             </span>
           </div>
           <h2 className="text-3xl font-black text-foreground">
-             {sub?.billingCycle === 'ANNUAL' ? 'Custom Annual' : 'Custom Monthly'}
+             {sub?.billingCycle === 'ANNUAL' ? 'Annual Plan' : 'Monthly Plan'}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Your workspace is currently on the {sub?.planId} Plan. This plan includes unlimited team members, advanced AI Voice campaigns, and custom SLA support.
+            Your workspace is currently on the {sub?.planId} plan.
+            {sub?.trialEndsAt && sub.status === 'TRIAL' && (
+              <> Trial ends {new Date(sub.trialEndsAt).toLocaleDateString()}.</>
+            )}
           </p>
           <div className="pt-4 flex gap-3">
             <button 
-              onClick={() => handleUpgrade('pro-plan', 'ANNUAL')}
+              onClick={() => handleUpgrade(sub?.planId ?? 'STARTER', 'MONTHLY')}
               disabled={!!actionLoading}
               className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2"
             >
@@ -141,7 +129,7 @@ export default function BillingOverviewPage() {
           <div className="space-y-3">
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Status</span>
-              <span className="font-bold text-foreground">Upcoming</span>
+              <span className="font-bold text-foreground">{sub?.status === 'TRIAL' ? 'Trial' : 'Upcoming'}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-muted-foreground">Renewal Date</span>
@@ -157,14 +145,12 @@ export default function BillingOverviewPage() {
         </div>
       </div>
 
-      {/* Usage Limits */}
       <div className="space-y-4">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-muted-foreground" /> Resource Usage
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
-          {/* Contacts Usage */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold text-foreground flex items-center gap-2"><Users className="w-4 h-4 text-blue-500"/> CRM Contacts</span>
@@ -176,7 +162,6 @@ export default function BillingOverviewPage() {
             <p className="text-xs text-muted-foreground">Metered real-time usage (per tenant)</p>
           </div>
 
-          {/* AI Voice Minutes */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold text-foreground flex items-center gap-2"><Zap className="w-4 h-4 text-amber-500"/> AI Task Units</span>
@@ -190,7 +175,6 @@ export default function BillingOverviewPage() {
             </p>
           </div>
 
-          {/* Storage */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold text-foreground flex items-center gap-2"><Download className="w-4 h-4 text-green-500"/> Data Storage</span>
@@ -205,7 +189,6 @@ export default function BillingOverviewPage() {
         </div>
       </div>
 
-      {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link href="/billing/invoices" className="group bg-card hover:bg-muted/50 border border-border rounded-xl p-5 flex items-center justify-between transition-colors">
           <div className="flex items-center gap-4">
@@ -218,7 +201,7 @@ export default function BillingOverviewPage() {
           <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
         </Link>
 
-        <button onClick={handlePortal} className="group w-full text-left bg-card hover:bg-muted/50 border border-border rounded-xl p-5 flex items-center justify-between transition-colors">
+        <Link href="/billing/payment-methods" className="group bg-card hover:bg-muted/50 border border-border rounded-xl p-5 flex items-center justify-between transition-colors">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-purple-100 rounded-lg text-purple-600 group-hover:bg-purple-200 transition-colors"><CreditCard className="w-5 h-5" /></div>
             <div>
@@ -227,7 +210,7 @@ export default function BillingOverviewPage() {
             </div>
           </div>
           <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-        </button>
+        </Link>
       </div>
 
     </div>

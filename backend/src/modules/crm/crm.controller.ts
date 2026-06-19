@@ -47,7 +47,8 @@ import { MoveDealStageDto, MarkDealLostDto, CreateContactNoteDto } from './dto/d
 import { DealProductService } from './deal-product.service';
 import { AddDealProductDto } from './dto/deal-product.dto';
 import { SendQuoteDto } from './dto/quote-lifecycle.dto';
-import { TenantId, Roles, ResourcePermissions } from '../../common/decorators';
+import { LeadConversionService } from './services/lead-conversion.service';
+import { TenantId, Roles, ResourcePermissions, PlanFeature, Limit } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 
@@ -55,6 +56,7 @@ import { TenantGuard } from '../../common/guards/tenant.guard';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @ResourcePermissions('crm')
+@PlanFeature('crm')
 @Controller('crm')
 export class CrmController {
   constructor(
@@ -82,6 +84,7 @@ export class CrmController {
     private readonly forecastService: ForecastService,
     private readonly quoteLifecycleService: QuoteLifecycleService,
     private readonly dealProductService: DealProductService,
+    private readonly leadConversionService: LeadConversionService,
   ) {}
 
   // --- Agents ---
@@ -138,6 +141,7 @@ export class CrmController {
   }
 
   @Post('contacts')
+  @Limit('contacts_limit')
   @ApiOperation({ summary: 'Create contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async createContact(@TenantId() tenantId: string, @Body() dto: CreateContactDto) {
@@ -242,6 +246,17 @@ export class CrmController {
     return { status: 200, message: 'Contact WhatsApp messages retrieved', error: false, data };
   }
 
+  @Post('contacts/merge')
+  @ApiOperation({ summary: 'Merge two contacts' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async mergeContacts(
+    @TenantId() tenantId: string,
+    @Body() body: { primaryId: string; secondaryId: string },
+  ) {
+    const data = await this.contactService.mergeContacts(tenantId, body.primaryId, body.secondaryId);
+    return { status: 200, message: 'Contacts merged', error: false, data };
+  }
+
   // --- Companies ---
   @Get('companies')
   @ApiOperation({ summary: 'Get all companies' })
@@ -337,6 +352,7 @@ export class CrmController {
   }
 
   @Post('deals')
+  @Limit('deals_limit')
   @ApiOperation({ summary: 'Create deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async createDeal(@TenantId() tenantId: string, @Body() dto: CreateDealDto) {
@@ -415,6 +431,14 @@ export class CrmController {
     return { status: 200, message: 'Deal products retrieved', error: false, data };
   }
 
+  @Get('deals/:id/activities')
+  @ApiOperation({ summary: 'Get activities linked to deal' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getDealActivities(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.activityService.findByDeal(tenantId, id);
+    return { status: 200, message: 'Deal activities retrieved', error: false, data };
+  }
+
   @Post('deals/:id/products')
   @ApiOperation({ summary: 'Add product to deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
@@ -490,6 +514,20 @@ export class CrmController {
     };
   }
 
+  @Get('tasks/:id')
+  @ApiOperation({ summary: 'Get task by ID' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getTask(@TenantId() tenantId: string, @Param('id') id: string) {
+    return await this.taskService.findOne(tenantId, id);
+  }
+
+  @Put('tasks/:id')
+  @ApiOperation({ summary: 'Update task' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async updateTask(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+    return await this.taskService.update(tenantId, id, dto);
+  }
+
   @Delete('tasks/:id')
   @ApiOperation({ summary: 'Delete task' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
@@ -530,18 +568,24 @@ export class CrmController {
     };
   }
 
+  @Delete('notes/:id')
+  @ApiOperation({ summary: 'Delete note' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async deleteNote(@TenantId() tenantId: string, @Param('id') id: string) {
+    await this.noteService.remove(tenantId, id);
+    return { success: true };
+  }
+
   @Get('dashboard')
   @ApiOperation({ summary: 'Get CRM dashboard metrics' })
-  async getDashboard(@TenantId() _tenantId: string) {
+  async getDashboard(@TenantId() tenantId: string) {
+    const summary = await this.analyticsService.getSummary(tenantId);
     return {
-      status: 200,
-      message: 'Dashboard metrics retrieved',
-      error: false,
-      data: {
-        contactsCount: 0,
-        dealsValue: 0,
-        activeCampaigns: 0,
-      },
+      contactsCount: summary.totalContacts,
+      dealsValue: summary.totalRevenue,
+      activeCampaigns: summary.totalDeals,
+      totalLeads: summary.totalLeads,
+      winRate: summary.winRate,
     };
   }
 
@@ -744,14 +788,30 @@ export class CrmController {
   }
 
   @Post('leads/:id/convert')
-  @ApiOperation({ summary: 'Convert lead' })
+  @ApiOperation({ summary: 'Convert lead to contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async convertLead(@TenantId() _tenantId: string, @Param('id') _id: string) {
+  async convertLead(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body()
+    body: {
+      createCompany?: boolean;
+      createDeal?: boolean;
+      dealName?: string;
+      pipelineId?: string;
+    },
+  ) {
+    const result = await this.leadConversionService.convertLead(id, {
+      tenantId,
+      createCompany: body.createCompany ?? false,
+      createDeal: body.createDeal ?? false,
+      dealName: body.dealName,
+      pipelineId: body.pipelineId,
+    });
     return {
-      status: 200,
-      message: 'Lead conversion started',
-      error: false,
-      data: { success: true },
+      contactId: result.contact.id,
+      contact: result.contact,
+      companyId: result.companyId ?? null,
     };
   }
 
@@ -1006,6 +1066,22 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createPipeline(@TenantId() tenantId: string, @Body() dto: any) {
     return await this.pipelineService.create(tenantId, dto);
+  }
+
+  @Get('pipelines/:id')
+  @ApiOperation({ summary: 'Get pipeline by id' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getPipeline(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.pipelineService.findOne(tenantId, id);
+    return { status: 200, message: 'Pipeline retrieved', error: false, data };
+  }
+
+  @Put('pipelines/:id')
+  @ApiOperation({ summary: 'Update pipeline' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async updatePipeline(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+    const data = await this.pipelineService.update(tenantId, id, dto);
+    return { status: 200, message: 'Pipeline updated', error: false, data };
   }
 
   @Post('pipelines/:id/stages')

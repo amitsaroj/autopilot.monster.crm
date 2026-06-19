@@ -5,9 +5,11 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { ResourcePermissions } from '../../common/decorators';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 
 @ApiTags('Support & Ticketing')
+@ResourcePermissions('support')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 @Controller('support')

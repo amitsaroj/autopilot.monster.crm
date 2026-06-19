@@ -1,9 +1,20 @@
 import api from '../lib/api/client';
+import { parseApiData } from '../lib/api/parse-response';
+
+export interface AdminInvoice {
+  id: string;
+  number: string;
+  status: string;
+  total: number;
+  currency: string;
+  createdAt: string;
+  tenantId?: string;
+}
 
 export const adminInvoicesService = {
   findAll: async (params?: { tenantId?: string; status?: string }) => {
     const response = await api.get('/monetization/admin/invoices', { params });
-    return response.data;
+    return { data: { data: parseApiData<AdminInvoice[]>(response) ?? [] } };
   },
 
   findOne: async (id: string) => {

@@ -19,6 +19,8 @@ const REPORT_TYPES: AnalyticsReportType[] = [
   'TEAM',
   'VOICE',
   'WHATSAPP',
+  'AI',
+  'FORECAST',
 ];
 
 export default function NewAnalyticsReportPage() {

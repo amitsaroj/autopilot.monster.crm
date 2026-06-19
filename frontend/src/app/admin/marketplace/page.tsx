@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { subAdminMarketplaceService } from '@/services/sub-admin-marketplace.service';
+
 interface Plugin {
   id: string;
   name: string;
@@ -31,10 +33,9 @@ export default function TenantMarketplacePage() {
   const fetchPlugins = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/sub-admin/marketplace/discover');
-      const json = await res.json();
+      const json = await subAdminMarketplaceService.discover();
       if (json.data) setPlugins(json.data);
-    } catch (e) {
+    } catch {
       toast.error('Failed to synchronize marketplace discovery');
     } finally {
       setLoading(false);
@@ -48,15 +49,11 @@ export default function TenantMarketplacePage() {
   const handleInstall = async (id: string) => {
     setInstalling(id);
     try {
-      const res = await fetch(`/api/v1/sub-admin/marketplace/install/${id}`, { method: 'POST' });
-      if (res.ok) {
-        toast.success('Marketplace vector deployed successfully');
-        fetchPlugins();
-      } else {
-        toast.error('Module installation failure');
-      }
-    } catch (e) {
-      toast.error('Network bridge failure during deployment');
+      await subAdminMarketplaceService.installItem(id);
+      toast.success('Marketplace vector deployed successfully');
+      fetchPlugins();
+    } catch {
+      toast.error('Module installation failure');
     } finally {
       setInstalling(null);
     }

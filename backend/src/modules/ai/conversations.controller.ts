@@ -12,11 +12,13 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 import { ConversationService } from './conversation.service';
 import { CreateConversationDto, AddConversationMessageDto } from './dto/conversation.dto';
 
 @ApiTags('AI Conversations')
+@ResourcePermissions('ai')
+@PlanFeature('ai')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('ai/conversations')

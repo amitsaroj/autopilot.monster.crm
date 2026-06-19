@@ -64,4 +64,15 @@ export class VoicePhoneNumberService {
   ): Promise<Array<{ phoneNumber: string; friendlyName: string }>> {
     return this.twilioService.searchAvailableNumbers(tenantId, country, areaCode);
   }
+
+  async findTenantIdByNumber(phoneNumber: string): Promise<string | null> {
+    const normalized = phoneNumber.replace(/\s+/g, '');
+    const number = await this.phoneRepository.findOne({
+      where: [
+        { phoneNumber: normalized, status: VoicePhoneNumberStatus.ACTIVE },
+        { phoneNumber, status: VoicePhoneNumberStatus.ACTIVE },
+      ],
+    });
+    return number?.tenantId ?? null;
+  }
 }

@@ -76,7 +76,7 @@ import {
   SegmentRepository,
   CustomFieldRepository,
 } from './crm-support.repository';
-import { VoiceModule } from '../voice/voice.module';
+import { TwilioModule } from '../voice/twilio.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { EmailModule } from '../../shared/email/email.module';
 
@@ -109,7 +109,7 @@ import { EmailModule } from '../../shared/email/email.module';
       DealProduct,
     ]),
     forwardRef(() => WhatsappModule),
-    forwardRef(() => VoiceModule),
+    TwilioModule,
     EmailModule,
   ],
   controllers: [CrmController, QuotePublicController, CrmReportsController],
@@ -181,6 +181,7 @@ import { EmailModule } from '../../shared/email/email.module';
     LeadConversionService,
     CrmAutomationService,
     ForecastService,
+    EmailCrmService,
   ],
 })
 export class CrmModule {}

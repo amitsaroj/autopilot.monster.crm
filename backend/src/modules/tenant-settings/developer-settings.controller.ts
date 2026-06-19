@@ -3,11 +3,12 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { DeveloperSettingsService } from './developer-settings.service';
 import { CreateApiKeyDto, CreateWebhookDto, UpdateWebhookDto, CreateOAuthAppDto } from './dto/developer-settings.dto';
-import { CurrentUser, Roles } from '../../common/decorators';
+import { CurrentUser, Roles, ResourcePermissions } from '../../common/decorators';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('Settings / Developer')
+@ResourcePermissions('settings')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 @Roles('TENANT_ADMIN')

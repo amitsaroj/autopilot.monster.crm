@@ -19,11 +19,15 @@ import { KnowledgeBaseService, KnowledgeBaseRepository } from './knowledge-base.
 import { ConversationService, ConversationRepository } from './conversation.service';
 import { CrmModule } from '../crm/crm.module';
 import { StorageModule } from '../storage/storage.module';
+import { TenantSettingsModule } from '../tenant-settings/tenant-settings.module';
+import { MonetizationModule } from '../monetization.module';
 
 @Module({
   imports: [
     ConfigModule,
     StorageModule,
+    TenantSettingsModule,
+    MonetizationModule,
     TypeOrmModule.forFeature([KnowledgeBase, Conversation, Message, AiPrompt, FineTuningJob]),
     forwardRef(() => CrmModule),
   ],

@@ -15,16 +15,24 @@ import { Request, Response } from 'express';
 
 import { WhatsappService } from './whatsapp.service';
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipThrottle } from '@nestjs/throttler';
 
-@Controller('v1/whatsapp/webhook')
+@SkipThrottle()
+@Controller('whatsapp/webhook')
 export class MetaWebhookController {
   private readonly appSecret: string;
+  private readonly isProduction: boolean;
 
   constructor(
     private readonly whatsappService: WhatsappService,
     private configService: ConfigService,
   ) {
+    this.isProduction = process.env.NODE_ENV === 'production';
     this.appSecret = this.configService.get('META_APP_SECRET') || 'mock_secret';
+  }
+
+  private isMockSecret(): boolean {
+    return !this.appSecret || this.appSecret === 'mock_secret';
   }
 
   @Get()
@@ -43,13 +51,25 @@ export class MetaWebhookController {
   @Post()
   @Public()
   async receiveMessage(
-    @Req() req: Request,
+    @Req() req: Request & { rawBody?: Buffer },
     @Res() res: Response,
     @Headers('x-hub-signature-256') signature: string,
     @Headers('x-tenant-id') tenantHeader: string,
   ) {
-    if (this.appSecret !== 'mock_secret' && signature) {
-      const rawBody = JSON.stringify(req.body);
+    if (this.isProduction && this.isMockSecret()) {
+      throw new ForbiddenException('Webhook signature verification is not configured');
+    }
+
+    if (!this.isMockSecret()) {
+      if (!signature) {
+        throw new ForbiddenException('Missing webhook signature');
+      }
+
+      const rawBody = req.rawBody ?? Buffer.from(JSON.stringify(req.body));
+      if (this.isProduction && !req.rawBody) {
+        throw new ForbiddenException('Raw request body required for webhook verification');
+      }
+
       const expectedSig =
         'sha256=' + crypto.createHmac('sha256', this.appSecret).update(rawBody).digest('hex');
       if (expectedSig !== signature) {

@@ -1,32 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   BookOpen, Search, Plus, Filter, ThumbsUp,
   Eye, Edit2, Trash2, Star, Tag, Clock, User,
-  ChevronRight, FileText, TrendingUp
+  ChevronRight, FileText, TrendingUp, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface KBArticle {
-  id: string;
-  title: string;
-  category: string;
-  status: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED';
-  views: number;
-  helpful: number;
-  author: string;
-  tags: string[];
-  updatedAt: string;
-}
-
-const mockArticles: KBArticle[] = [
-  { id: '1', title: 'Getting Started with CRM', category: 'Onboarding', status: 'PUBLISHED', views: 1240, helpful: 98, author: 'Admin', tags: ['crm', 'basics', 'onboarding'], updatedAt: new Date().toISOString() },
-  { id: '2', title: 'How to Import Contacts via CSV', category: 'Data & Import', status: 'PUBLISHED', views: 892, helpful: 94, author: 'Support', tags: ['import', 'contacts', 'csv'], updatedAt: new Date().toISOString() },
-  { id: '3', title: 'Setting Up AI Agents', category: 'AI & Automation', status: 'PUBLISHED', views: 542, helpful: 91, author: 'Product', tags: ['ai', 'agents', 'automation'], updatedAt: new Date().toISOString() },
-  { id: '4', title: 'WhatsApp Integration Guide', category: 'Integrations', status: 'PUBLISHED', views: 348, helpful: 87, author: 'Support', tags: ['whatsapp', 'integration'], updatedAt: new Date().toISOString() },
-  { id: '5', title: 'Custom Roles & Permissions', category: 'Security & Access', status: 'DRAFT', views: 0, helpful: 0, author: 'Admin', tags: ['rbac', 'roles', 'permissions'], updatedAt: new Date().toISOString() },
-  { id: '6', title: 'Billing & Subscription FAQ', category: 'Billing', status: 'PUBLISHED', views: 712, helpful: 89, author: 'Finance', tags: ['billing', 'subscription', 'faq'], updatedAt: new Date().toISOString() },
-];
+import { supportService, type KnowledgeArticle } from '@/services/support.service';
 
 const STATUS_STYLES: Record<string, string> = {
   PUBLISHED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -35,13 +17,37 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminCRMKnowledgeBasePage() {
-  const [articles] = useState<KBArticle[]>(mockArticles);
+  const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await supportService.getArticles();
+        setArticles(res.data?.data ?? []);
+      } catch {
+        toast.error('Failed to load articles');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
 
   const filtered = articles.filter(a =>
     a.title.toLowerCase().includes(search.toLowerCase()) ||
-    a.category.toLowerCase().includes(search.toLowerCase())
+    (a.category ?? '').toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -60,7 +66,7 @@ export default function AdminCRMKnowledgeBasePage() {
           { label: 'Total Articles', value: articles.length, icon: FileText },
           { label: 'Published', value: articles.filter(a => a.status === 'PUBLISHED').length, icon: Star },
           { label: 'Total Views', value: articles.reduce((s, a) => s + a.views, 0).toLocaleString(), icon: Eye },
-          { label: 'Avg Helpful %', value: `${Math.round(articles.filter(a => a.helpful > 0).reduce((s, a) => s + a.helpful, 0) / articles.filter(a => a.helpful > 0).length)}%`, icon: ThumbsUp },
+          { label: 'Avg Views', value: articles.length ? Math.round(articles.reduce((s, a) => s + a.views, 0) / articles.length) : 0, icon: ThumbsUp },
         ].map(s => (
           <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
             <div className="p-3 rounded-xl bg-indigo-500/10"><s.icon className="w-5 h-5 text-indigo-400" /></div>
@@ -94,9 +100,7 @@ export default function AdminCRMKnowledgeBasePage() {
                   <div>
                     <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors mb-1">{article.title}</p>
                     <div className="flex gap-1 flex-wrap">
-                      {article.tags.slice(0, 2).map(t => (
-                        <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-gray-600 uppercase tracking-widest">{t}</span>
-                      ))}
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-gray-600 uppercase tracking-widest">{article.slug}</span>
                     </div>
                   </div>
                 </td>
@@ -110,11 +114,11 @@ export default function AdminCRMKnowledgeBasePage() {
                   </div>
                 </td>
                 <td className="px-5 py-4">
-                  <span className="text-sm font-black text-emerald-400">{article.helpful > 0 ? `${article.helpful}%` : '—'}</span>
+                  <span className="text-sm font-black text-emerald-400">{article.views}</span>
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <User className="w-3 h-3" /> {article.author}
+                    <User className="w-3 h-3" /> {article.category ?? 'General'}
                   </div>
                 </td>
                 <td className="px-5 py-4">

@@ -1,6 +1,9 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { v4 as uuidv4 } from 'uuid';
 import * as dns from 'dns/promises';
 
+import { EVENT_NAMES } from '../../events/event.constants';
 import { TenantRepository } from './tenant.repository';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { Tenant } from '../../database/entities/tenant.entity';
@@ -16,14 +19,26 @@ export interface DomainVerificationResult {
 
 @Injectable()
 export class TenantService {
-  constructor(private readonly tenantRepository: TenantRepository) {}
+  constructor(
+    private readonly tenantRepository: TenantRepository,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(createTenantDto: CreateTenantDto): Promise<Tenant> {
     const existing = await this.tenantRepository.findBySlug(createTenantDto.slug);
     if (existing) {
       throw new ConflictException('Tenant with this slug already exists');
     }
-    return this.tenantRepository.create(createTenantDto);
+    const tenant = await this.tenantRepository.create(createTenantDto);
+    this.eventEmitter.emit(EVENT_NAMES.TENANT_CREATED, {
+      name: EVENT_NAMES.TENANT_CREATED,
+      tenantId: tenant.id,
+      actorId: null,
+      payload: { tenantId: tenant.id, slug: tenant.slug },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+    return tenant;
   }
 
   async findAll(filter: TenantFilterDto): Promise<IPaginatedResult<Tenant>> {
@@ -55,12 +70,30 @@ export class TenantService {
 
   async update(id: string, updateTenantDto: Partial<CreateTenantDto>): Promise<Tenant> {
     await this.findOne(id);
-    return this.tenantRepository.update(id, updateTenantDto);
+    const tenant = await this.tenantRepository.update(id, updateTenantDto);
+    this.eventEmitter.emit(EVENT_NAMES.TENANT_UPDATED, {
+      name: EVENT_NAMES.TENANT_UPDATED,
+      tenantId: id,
+      actorId: null,
+      payload: { tenantId: id, changes: updateTenantDto },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+    return tenant;
   }
 
   async suspend(id: string): Promise<Tenant> {
     await this.findOne(id);
-    return this.tenantRepository.update(id, { status: 'SUSPENDED' });
+    const tenant = await this.tenantRepository.update(id, { status: 'SUSPENDED' });
+    this.eventEmitter.emit(EVENT_NAMES.TENANT_SUSPENDED, {
+      name: EVENT_NAMES.TENANT_SUSPENDED,
+      tenantId: id,
+      actorId: null,
+      payload: { tenantId: id },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+    return tenant;
   }
 
   async activate(id: string): Promise<Tenant> {
@@ -126,18 +159,9 @@ export class TenantService {
     return this.tenantRepository.update(id, { overrides: undefined });
   }
 
-  async getLimits(id: string) {
-    await this.findOne(id);
-    return { contacts: 1000, emails: 5000, storage: '1GB' };
-  }
-
-  async getUsage(id: string) {
-    await this.findOne(id);
-    return { contacts: 150, emails: 1200, storage: '150MB' };
-  }
-
   async remove(id: string): Promise<void> {
     await this.findOne(id);
+    await this.tenantRepository.update(id, { status: 'DELETED' });
     await this.tenantRepository.softDelete(id);
   }
 }

@@ -10,6 +10,7 @@ const STATUS_STYLES: Record<string, string> = {
   SUCCESS: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   FAILED: 'bg-red-500/10 text-red-400 border-red-500/20',
   RUNNING: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  PAUSED: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
 };
 
 export default function AdminWorkflowExecutionsPage() {
@@ -17,6 +18,7 @@ export default function AdminWorkflowExecutionsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   const loadExecutions = async () => {
     setLoading(true);
@@ -34,6 +36,19 @@ export default function AdminWorkflowExecutionsPage() {
   useEffect(() => {
     loadExecutions();
   }, []);
+
+  const handleRetry = async (execId: string) => {
+    setRetryingId(execId);
+    try {
+      await workflowService.retryExecution(execId);
+      toast.success('Execution retry queued');
+      await loadExecutions();
+    } catch {
+      toast.error('Failed to retry execution');
+    } finally {
+      setRetryingId(null);
+    }
+  };
 
   const filtered = executions.filter(e => {
     const matchSearch = e.flowId.toLowerCase().includes(search.toLowerCase()) || e.id.toLowerCase().includes(search.toLowerCase());
@@ -61,11 +76,12 @@ export default function AdminWorkflowExecutionsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         {[
           { label: 'Successful', value: executions.filter(e => e.status === 'COMPLETED').length, color: 'text-emerald-400', icon: CheckCircle2 },
           { label: 'Failed', value: executions.filter(e => e.status === 'FAILED').length, color: 'text-red-400', icon: XCircle },
           { label: 'Running', value: executions.filter(e => e.status === 'RUNNING').length, color: 'text-blue-400', icon: Play },
+          { label: 'Paused', value: executions.filter(e => e.status === 'PAUSED').length, color: 'text-amber-400', icon: Clock },
         ].map(s => (
           <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
             <s.icon className={`w-6 h-6 ${s.color} shrink-0`} />
@@ -85,7 +101,7 @@ export default function AdminWorkflowExecutionsPage() {
         </div>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
           className="px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-xs text-gray-300 outline-none font-black uppercase tracking-widest">
-          {['All', 'COMPLETED', 'FAILED', 'RUNNING'].map(s => <option key={s} value={s}>{s}</option>)}
+          {['All', 'COMPLETED', 'FAILED', 'RUNNING', 'PAUSED'].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
@@ -115,9 +131,21 @@ export default function AdminWorkflowExecutionsPage() {
                   {exec.completedAt ? new Date(exec.completedAt).toLocaleString() : '—'}
                 </td>
                 <td className="px-5 py-4">
-                  <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all opacity-0 group-hover:opacity-100">
-                    <Eye className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                    {exec.status === 'FAILED' && (
+                      <button
+                        onClick={() => void handleRetry(exec.id)}
+                        disabled={retryingId === exec.id}
+                        className="p-1.5 rounded-lg text-gray-600 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+                        title="Retry"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${retryingId === exec.id ? 'animate-spin' : ''}`} />
+                      </button>
+                    )}
+                    <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

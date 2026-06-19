@@ -8,13 +8,18 @@ import {
   Param,
   Query,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminTenantsService } from './admin-tenants.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles } from '../../../common/decorators';
+import { Roles, ResourcePermissions } from '../../../common/decorators';
+import { CreateTenantDto } from '../../tenant/dto/create-tenant.dto';
+import { TenantFilterDto } from '../../tenant/dto/tenant.dto';
 
 @ApiTags('Admin / Tenants')
+@ResourcePermissions('tenant')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')
@@ -24,62 +29,44 @@ export class AdminTenantsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all tenants' })
-  @ApiQuery({ name: 'search', required: false })
-  async findAll(@Query('search') search?: string) {
-    const data = await this.adminTenantsService.findAll({ search });
-    return {
-      status: 200,
-      message: 'Tenants retrieved',
-      error: false,
-      data,
-    };
+  async findAll(@Query() filter: TenantFilterDto) {
+    return this.adminTenantsService.findAll(filter);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get tenant details' })
   async findOne(@Param('id') id: string) {
-    const data = await this.adminTenantsService.findOne(id);
-    return {
-      status: 200,
-      message: 'Tenant retrieved',
-      error: false,
-      data,
-    };
+    return this.adminTenantsService.findOne(id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new tenant (workspace)' })
-  async create(@Body() body: any) {
-    const data = await this.adminTenantsService.create(body);
-    return {
-      status: 201,
-      message: 'Tenant created',
-      error: false,
-      data,
-    };
+  async create(@Body() body: CreateTenantDto) {
+    return this.adminTenantsService.create(body);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update tenant details/status' })
-  async update(@Param('id') id: string, @Body() body: any) {
-    const data = await this.adminTenantsService.update(id, body);
-    return {
-      status: 200,
-      message: 'Tenant updated',
-      error: false,
-      data,
-    };
+  async update(@Param('id') id: string, @Body() body: Partial<CreateTenantDto>) {
+    return this.adminTenantsService.update(id, body);
+  }
+
+  @Post(':id/suspend')
+  @ApiOperation({ summary: 'Suspend tenant' })
+  async suspend(@Param('id') id: string) {
+    return this.adminTenantsService.suspend(id);
+  }
+
+  @Post(':id/activate')
+  @ApiOperation({ summary: 'Activate tenant' })
+  async activate(@Param('id') id: string) {
+    return this.adminTenantsService.activate(id);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete tenant' })
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Soft delete tenant' })
   async remove(@Param('id') id: string) {
     await this.adminTenantsService.remove(id);
-    return {
-      status: 200,
-      message: 'Tenant deleted',
-      error: false,
-      data: null,
-    };
   }
 }

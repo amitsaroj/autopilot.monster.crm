@@ -32,8 +32,13 @@ export class PlanGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
-    const { tenantId, roles } = request.user;
+    const request = context.switchToHttp().getRequest<Request & { user?: IRequestContext }>();
+    const tenantId = request.user?.tenantId;
+    const roles = request.user?.roles;
+
+    if (!tenantId) {
+      return true;
+    }
 
     if (roles?.includes('SUPER_ADMIN')) {
       return true;

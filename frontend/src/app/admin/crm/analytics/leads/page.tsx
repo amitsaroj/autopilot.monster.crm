@@ -14,25 +14,24 @@ import {
   ZapOff, Lock, User, Briefcase
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { parseApiData } from '@/lib/api/parse-response';
+import { crmReportService } from '@/services/crm-report.service';
 
-interface LeadMetric {
-  source: string;
+interface LeadFunnelPoint {
+  name: string;
   count: number;
-  conversionRate: number;
-  qualityScore: number;
 }
 
 export default function LeadAnalyticsPage() {
-  const [metrics, setMetrics] = useState<LeadMetric[]>([]);
+  const [metrics, setMetrics] = useState<LeadFunnelPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchLeadAnalytics = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/crm/analytics/leads');
-      const json = await res.json();
-      if (json.data) setMetrics(json.data);
-    } catch (e) {
+      const res = await crmReportService.getLeadFunnel();
+      setMetrics(parseApiData<LeadFunnelPoint[]>(res) ?? []);
+    } catch {
       toast.error('Failed to synchronize lead funnel forensics');
     } finally {
       setLoading(false);
@@ -107,37 +106,37 @@ export default function LeadAnalyticsPage() {
             </div>
             
             <div className="space-y-6">
-               {(metrics.length > 0 ? metrics : [
-                  { source: 'Global Search Nodes', count: 1420, conversionRate: 18.4, qualityScore: 8.2 },
-                  { source: 'Email Dispatches', count: 850, conversionRate: 12.1, qualityScore: 7.4 },
-                  { source: 'Paid Ad Lattices', count: 1240, conversionRate: 24.2, qualityScore: 6.8 },
-                  { source: 'Direct Inbound Pulse', count: 680, conversionRate: 42.4, qualityScore: 9.1 },
-                  { source: 'Referral Vectors', count: 320, conversionRate: 14.8, qualityScore: 8.9 },
-               ]).map((m: any, idx) => (
-                  <div key={idx} className="p-6 rounded-[32px] bg-white/[0.01] border border-white/5 hover:bg-white/[0.03] transition-all group/row flex items-center justify-between gap-10 cursor-pointer">
+               {metrics.length === 0 ? (
+                 <p className="text-sm text-gray-500 text-center py-12">No lead funnel data yet</p>
+               ) : metrics.map((m, idx) => {
+                  const total = metrics.reduce((sum, item) => sum + item.count, 0) || 1;
+                  const share = Math.round((m.count / total) * 100);
+                  return (
+                  <div key={m.name} className="p-6 rounded-[32px] bg-white/[0.01] border border-white/5 hover:bg-white/[0.03] transition-all group/row flex items-center justify-between gap-10 cursor-pointer">
                      <div className="flex items-center gap-6 min-w-0 flex-1">
                         <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-500 group-hover/row:bg-indigo-500 group-hover/row:text-white transition-all">
-                           {m.source.includes('Search') ? <Globe2 className="w-6 h-6" /> : m.source.includes('Email') ? <Mail className="w-6 h-6" /> : m.source.includes('Ad') ? <Target className="w-6 h-6" /> : <MousePointer2 className="w-6 h-6" />}
+                           <UserPlus className="w-6 h-6" />
                         </div>
                         <div className="min-w-0 flex-1">
-                           <h4 className="text-sm font-black text-white uppercase tracking-tighter truncate">{m.source}</h4>
+                           <h4 className="text-sm font-black text-white uppercase tracking-tighter truncate">{m.name}</h4>
                            <div className="h-1 w-full bg-white/5 rounded-full mt-2 overflow-hidden">
-                              <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${m.conversionRate}%` }} />
+                              <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${share}%` }} />
                            </div>
                         </div>
                      </div>
                      <div className="flex items-center gap-12 shrink-0">
                         <div className="text-right">
-                           <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-0.5 whitespace-nowrap">Acquisitions</p>
-                           <p className="text-sm font-black text-white uppercase tracking-tighter">{m.count?.toLocaleString() || 0} Nodes</p>
+                           <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-0.5 whitespace-nowrap">Leads</p>
+                           <p className="text-sm font-black text-white uppercase tracking-tighter">{m.count.toLocaleString()}</p>
                         </div>
                         <div className="text-right min-w-[80px]">
-                           <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-0.5 whitespace-nowrap">Mean Quality</p>
-                           <span className="text-sm font-black text-emerald-500 uppercase tracking-tighter">{m.qualityScore || 0}/10</span>
+                           <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-0.5 whitespace-nowrap">Share</p>
+                           <span className="text-sm font-black text-emerald-500 uppercase tracking-tighter">{share}%</span>
                         </div>
                      </div>
                   </div>
-               ))}
+               );
+               })}
             </div>
          </div>
 

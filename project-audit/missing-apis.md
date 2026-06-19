@@ -1,167 +1,102 @@
 # Missing API Endpoints
 
+**Audit date:** 2026-06-18 (Session 10)  
 Compared against `Docs/api_scope.md`. Documented path is canonical.
 
-## Authentication (mostly implemented)
-- `GET /auth/sessions` — partial via auth module
-- `DELETE /auth/sessions/:id` — verify implementation
+## Summary
 
-## CRM — Missing or Incomplete
+| Category | Documented | Implemented | Missing/Partial |
+|----------|------------|-------------|-----------------|
+| Auth | 14 | 12 | 2 |
+| CRM | 65 | 58 | 7 |
+| Workflows | 12 | 12 | 0 |
+| AI | 22 | 18 | 4 |
+| Voice | 20 | 16 | 4 |
+| WhatsApp | 18 | 12 | 6 |
+| Billing | 16 | 13 | 3 |
+| Analytics | 14 | 12 | 2 |
+| Settings | 20 | 14 | 6 |
+| Search/Storage | 10 | 8 | 2 |
+| Marketplace | 8 | 4 | 4 |
+| Import/Export | 8 | 6 | 2 |
+| **Total** | **~250** | **~205** | **~45** |
 
+## Still Missing or Incomplete
+
+### Auth
 ```
-POST   /crm/contacts/bulk-import
-GET    /crm/contacts/export
-POST   /crm/contacts/:id/tags
-DELETE /crm/contacts/:id/tags/:tag
-GET    /crm/contacts/:id/activities
-GET    /crm/contacts/:id/deals
-GET    /crm/contacts/:id/notes
-POST   /crm/contacts/:id/notes
-GET    /crm/contacts/:id/calls
-GET    /crm/contacts/:id/emails
-GET    /crm/contacts/:id/whatsapp
-PATCH  /crm/contacts/bulk-update
-DELETE /crm/contacts/bulk-delete
-GET    /crm/leads/export
-GET    /crm/companies/:id/contacts
-GET    /crm/companies/:id/deals
-GET    /crm/companies/:id/activities
-PATCH  /crm/deals/:id/stage
-PATCH  /crm/deals/:id/won
-PATCH  /crm/deals/:id/lost
-GET    /crm/deals/:id/activities
-GET    /crm/deals/:id/products
-POST   /crm/deals/:id/products
-DELETE /crm/deals/:id/products/:productId
-POST   /crm/quotes/:id/send
-POST   /crm/quotes/:id/accept
-POST   /crm/quotes/:id/decline
-GET    /crm/quotes/:id/pdf
-GET    /crm/quotes/view/:token
-PATCH  /crm/tasks/:id/complete
-GET    /crm/forecast
-GET    /crm/forecast/by-stage
-GET    /crm/forecast/by-owner
-GET    /crm/forecast/historical
+DELETE /auth/sessions/:id     — verify single-session revoke
+POST   /auth/verify-email     — verify implementation
 ```
 
-## Workflows — Missing
-
+### CRM
 ```
-POST   /workflows/:id/activate
-POST   /workflows/:id/deactivate
-POST   /workflows/:id/trigger
-GET    /workflows/:id/executions
-GET    /workflows/executions/:execId
-POST   /workflows/:id/duplicate
-GET    /workflow-triggers
-GET    /workflow-actions
+GET    /crm/contacts/:id/whatsapp   — dedicated WA history (may use messages)
+PATCH  /crm/contacts/bulk-update    — verify
+DELETE /crm/contacts/bulk-delete    — verify
+GET    /crm/leads/export            — verify CSV export
 ```
 
-## AI — Missing / Path Mismatch
-
+### AI
 ```
-GET/POST/PATCH/DELETE /ai/agents (currently /crm/agents)
-POST   /ai/agents/:id/activate
-POST   /ai/agents/:id/pause
-GET    /ai/conversations (currently /ai/chats)
 POST   /ai/conversations/:id/handoff
-GET/POST/PATCH/DELETE /ai/knowledge-bases (currently /ai/kb)
-POST   /ai/knowledge-bases/:id/sync
-POST   /ai/knowledge-bases/:id/documents
-DELETE /ai/knowledge-bases/:id/documents/:docId
-GET/POST/PATCH/DELETE /ai/prompts
+GET/POST embedding management APIs
+PATCH  /ai/prompts/:id              — verify update endpoint
 ```
 
-## Voice — Missing (majority)
-
+### Voice
 ```
-GET    /voice/calls
-POST   /voice/calls
-DELETE /voice/calls/:id/hang-up
-GET    /voice/calls/:id/recording
-GET    /voice/calls/:id/transcript
-GET    /voice/phone-numbers
-POST   /voice/phone-numbers
-DELETE /voice/phone-numbers/:id
-GET/POST/PATCH/DELETE /voice/campaigns/*
-GET    /voice/transcripts
 GET/PATCH /voice/settings
+POST   /voice/synthesize            — stub response
+POST   /voice/transcribe            — stub response
+GET    /voice/transcripts/:id       — verify detail endpoint
 ```
 
-## WhatsApp — Missing (majority)
-
+### WhatsApp
 ```
 GET/POST/DELETE /whatsapp/numbers
-GET    /whatsapp/conversations
-GET    /whatsapp/conversations/:id
-POST   /whatsapp/conversations/:id/messages
 POST   /whatsapp/conversations/:id/assign
 POST   /whatsapp/conversations/:id/resolve
-POST   /whatsapp/templates
-DELETE /whatsapp/templates/:id
-GET/POST/PATCH/DELETE /whatsapp/broadcasts/*
 GET/PATCH /whatsapp/settings
+GET    /whatsapp/templates/:id
 ```
 
-## Billing — Path & Feature Gaps
-
-Documented `/billing/*` — implemented under `/monetization/*`:
-- `POST /billing/subscription/downgrade`
-- `POST /billing/subscription/cancel`
-- `POST /billing/subscription/reactivate`
-- `GET /billing/invoices/:id/pdf`
-- `GET/POST/DELETE/PATCH /billing/payment-methods/*`
-- `GET /billing/usage/history`
-
-## Analytics — Missing
-
+### Billing
 ```
-GET /analytics/overview
-GET /analytics/crm
-GET /analytics/revenue
-GET /analytics/pipeline
-GET /analytics/team
-GET /analytics/activities
-GET /analytics/ai
-GET /analytics/voice
-GET /analytics/whatsapp
-GET/POST/PATCH/DELETE /analytics/dashboards/*
-GET/POST /analytics/reports/*
-GET /analytics/export
+GET    /billing/invoices/:id/pdf    — verify PDF generation
+GET    /billing/usage/history       — verify
+PayPal/Razorpay webhooks          — not implemented
 ```
 
-## Settings — Missing
+### Analytics
+```
+GET    /analytics/activities
+GET    /analytics/export          — async job integration
+```
 
+### Settings
 ```
 GET/PATCH /settings/profile
-POST /settings/profile/avatar
-PATCH /settings/password
+POST   /settings/profile/avatar
+PATCH  /settings/password
 GET/PATCH /settings/notifications
 GET/PATCH /settings/workspace
-GET/POST/PATCH/DELETE /settings/users/*
-GET/POST/PATCH/DELETE /settings/roles/*
-GET /settings/permissions
-GET/POST/DELETE /settings/api-keys
-GET/POST/PATCH/DELETE /settings/webhooks/*
-POST /settings/webhooks/:id/test
-GET/POST/DELETE /settings/integrations/*
 GET/PATCH /settings/sso
+GET/POST/DELETE /settings/integrations/*
 ```
 
-## Search, Storage, Marketplace, Import/Export — Missing
-
+### Marketplace
 ```
-GET /search (unified)
-GET /search/contacts|deals|companies
-GET/POST/DELETE /storage/files/*
-GET /storage/usage
-GET/POST/DELETE /marketplace/* (stubs only)
-GET/POST/PATCH/DELETE /plugins/*
-POST/GET /import/*
-POST/GET /export/*
-POST/GET /backup/*
-GET /logs/*
+GET    /marketplace/apps/:id
+POST   /marketplace/apps/:id/install  — verify real install flow
+Vendor payout APIs                    — missing
 ```
 
-**Estimated missing endpoints: ~180 of ~250 documented**
+### Logs
+```
+GET /logs/audit
+GET /logs/api
+GET /logs/webhooks
+```
+
+**Estimated missing endpoints: ~45 of ~250 documented (~82% coverage)**

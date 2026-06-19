@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { WorkflowRepository } from './workflow.repository';
 import { CreateWorkflowDto } from './dto/workflow.dto';
@@ -83,23 +83,41 @@ export class WorkflowService {
 
   getTriggerTypes() {
     return [
-      { key: 'DEAL_WON', label: 'Deal Won' },
-      { key: 'DEAL_LOST', label: 'Deal Lost' },
-      { key: 'LEAD_CREATED', label: 'Lead Created' },
-      { key: 'CONTACT_CREATED', label: 'Contact Created' },
-      { key: 'WEBHOOK', label: 'Inbound Webhook' },
-      { key: 'SCHEDULE', label: 'Scheduled' },
+      { key: 'CONTACT_CREATED', label: 'Contact Created', category: 'CRM' },
+      { key: 'CONTACT_UPDATED', label: 'Contact Updated', category: 'CRM' },
+      { key: 'DEAL_CREATED', label: 'Deal Created', category: 'CRM' },
+      { key: 'DEAL_STAGE_CHANGED', label: 'Deal Stage Changed', category: 'CRM' },
+      { key: 'DEAL_WON', label: 'Deal Won', category: 'CRM' },
+      { key: 'DEAL_LOST', label: 'Deal Lost', category: 'CRM' },
+      { key: 'LEAD_CREATED', label: 'Lead Created', category: 'CRM' },
+      { key: 'CALL_COMPLETED', label: 'Call Completed', category: 'Voice' },
+      { key: 'WHATSAPP_MESSAGE_RECEIVED', label: 'WhatsApp Message Received', category: 'WhatsApp' },
+      { key: 'WEBHOOK', label: 'Inbound Webhook', category: 'Webhook' },
+      { key: 'SCHEDULE', label: 'Scheduled', category: 'Scheduler' },
+      { key: 'MANUAL', label: 'Manual Trigger', category: 'Manual' },
     ];
   }
 
   getActionTypes() {
     return [
-      { key: 'SEND_EMAIL', label: 'Send Email' },
-      { key: 'SEND_WHATSAPP', label: 'Send WhatsApp' },
-      { key: 'CREATE_TASK', label: 'Create Task' },
-      { key: 'UPDATE_DEAL', label: 'Update Deal' },
-      { key: 'AI_CHAT', label: 'AI Chat' },
-      { key: 'DELAY', label: 'Delay' },
+      { key: 'CREATE_CONTACT', label: 'Create Contact', category: 'CRM' },
+      { key: 'UPDATE_CONTACT', label: 'Update Contact', category: 'CRM' },
+      { key: 'CREATE_DEAL', label: 'Create Deal', category: 'CRM' },
+      { key: 'UPDATE_DEAL', label: 'Update Deal', category: 'CRM' },
+      { key: 'MOVE_PIPELINE_STAGE', label: 'Move Pipeline Stage', category: 'CRM' },
+      { key: 'ASSIGN_OWNER', label: 'Assign Owner', category: 'CRM' },
+      { key: 'ADD_TAG', label: 'Add Tag', category: 'CRM' },
+      { key: 'CREATE_TASK', label: 'Create Task', category: 'CRM' },
+      { key: 'CREATE_NOTE', label: 'Create Note', category: 'CRM' },
+      { key: 'SEND_EMAIL', label: 'Send Email', category: 'Email' },
+      { key: 'SEND_WHATSAPP', label: 'Send WhatsApp', category: 'WhatsApp' },
+      { key: 'INITIATE_CALL', label: 'Initiate Voice Call', category: 'Voice' },
+      { key: 'NOTIFY_TEAM', label: 'Notify Team', category: 'Notification' },
+      { key: 'CALL_WEBHOOK', label: 'Call Webhook', category: 'Webhook' },
+      { key: 'DELAY', label: 'Delay', category: 'Flow' },
+      { key: 'CONDITION_BRANCH', label: 'Condition Branch', category: 'Flow' },
+      { key: 'LOG', label: 'Log Message', category: 'Flow' },
+      { key: 'AI_CHAT', label: 'AI Chat', category: 'AI' },
     ];
   }
 
@@ -152,5 +170,41 @@ export class WorkflowService {
     }
 
     return { success: true, triggered: targets.length, jobIds };
+  }
+
+  async retryExecution(tenantId: string, executionId: string) {
+    const execution = await this.getExecution(tenantId, executionId);
+    if (execution.status !== 'FAILED') {
+      throw new BadRequestException('Only failed executions can be retried');
+    }
+
+    const input = execution.input as { eventName?: string; payload?: Record<string, unknown> };
+    const eventName = input.eventName ?? 'MANUAL_RETRY';
+    const payload = input.payload ?? {};
+
+    await this.workflowRepo.updateExecution(tenantId, executionId, {
+      status: 'RUNNING',
+      error: undefined,
+      completedAt: undefined,
+      currentStepId: undefined,
+      output: { steps: [] },
+    });
+
+    const job = await this.workflowQueue.add(
+      'execute-workflow',
+      {
+        workflowId: execution.flowId,
+        tenantId,
+        eventName,
+        payload,
+        executionId: execution.id,
+      },
+      {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    );
+
+    return { success: true, jobId: String(job.id), executionId: execution.id };
   }
 }

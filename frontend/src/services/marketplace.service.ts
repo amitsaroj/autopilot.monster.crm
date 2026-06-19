@@ -16,9 +16,9 @@ export interface MarketplacePlugin {
 export interface TenantPluginInstallation {
   id: string;
   pluginId: string;
-  status: string;
+  isEnabled: boolean;
   plugin?: MarketplacePlugin;
-  lastSyncAt?: string;
+  installedAt?: string;
 }
 
 export const marketplaceService = {

@@ -1,15 +1,36 @@
-import { Controller, Post, Get, Body, Param, Delete, Patch, UseGuards, Res, NotFoundException, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Delete,
+  Patch,
+  UseGuards,
+  Res,
+  NotFoundException,
+  Query,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Response } from 'express';
 
 import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
-import { CallDto, SynthesizeDto } from './dto/voice.dto';
+import {
+  CallDto,
+  SynthesizeDto,
+  TransferCallDto,
+  UpdateVoiceSettingsDto,
+} from './dto/voice.dto';
 import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
 import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-phone-number.dto';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
+import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { TenantSettingsService } from '../tenant-settings/tenant-settings.service';
+
+const VOICE_PROFILES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse'];
 
 @ApiTags('Voice Engine')
 @ApiBearerAuth()
@@ -22,6 +43,8 @@ export class VoiceController {
     private readonly voiceCallService: VoiceCallService,
     private readonly voiceCampaignService: VoiceCampaignService,
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
+    private readonly configOrchestrator: ConfigOrchestratorService,
+    private readonly tenantSettingsService: TenantSettingsService,
   ) {}
 
   @Get('calls')
@@ -34,10 +57,20 @@ export class VoiceController {
   @Post('calls')
   @ApiOperation({ summary: 'Initiate an outbound AI call' })
   async initiateCall(@TenantId() tenantId: string, @Body() dto: CallDto) {
-    const wssUrl = `wss://api.autopilot.monster/voice/stream?tenantId=${tenantId}`;
+    const defaultVoice = await this.configOrchestrator.get(
+      tenantId,
+      'voice_default_profile',
+      'shimmer',
+    );
+    const wssUrl = this.voiceCallService.buildStreamUrl(tenantId, {
+      agentId: dto.agentId,
+      leadId: dto.leadId,
+      voice: dto.voice ?? defaultVoice,
+    });
     const data = await this.voiceCallService.initiateOutbound(tenantId, {
       to: dto.to,
       wssUrl,
+      voiceProfile: dto.voice ?? defaultVoice,
     });
     return { status: 201, message: 'Call initiated', error: false, data };
   }
@@ -62,6 +95,17 @@ export class VoiceController {
     return { status: 200, message: 'Call ended', error: false, data };
   }
 
+  @Post('calls/:id/transfer')
+  @ApiOperation({ summary: 'Transfer an active call to another number' })
+  async transferCall(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: TransferCallDto,
+  ) {
+    const data = await this.voiceCallService.transferCall(tenantId, id, dto.to);
+    return { status: 200, message: 'Call transfer initiated', error: false, data };
+  }
+
   @Get('calls/:id/recording')
   @ApiOperation({ summary: 'Get call recording URL' })
   async getRecording(@TenantId() tenantId: string, @Param('id') id: string) {
@@ -76,6 +120,14 @@ export class VoiceController {
     const call = await this.voiceCallService.findOne(tenantId, id);
     const data = this.voiceCallService.getTranscript(call);
     return { status: 200, message: 'Transcript retrieved', error: false, data };
+  }
+
+  @Get('calls/:id/summary')
+  @ApiOperation({ summary: 'Get AI call summary and sentiment' })
+  async getSummary(@TenantId() tenantId: string, @Param('id') id: string) {
+    const call = await this.voiceCallService.findOne(tenantId, id);
+    const data = this.voiceCallService.getSummary(call);
+    return { status: 200, message: 'Call summary retrieved', error: false, data };
   }
 
   @Post('synthesize')
@@ -101,6 +153,64 @@ export class VoiceController {
       error: false,
       data: { text: null, audioUrl: dto.audioUrl },
     };
+  }
+
+  @Get('profiles')
+  @ApiOperation({ summary: 'List available AI voice profiles' })
+  async listProfiles(@TenantId() tenantId: string) {
+    const defaultProfile = await this.configOrchestrator.get(
+      tenantId,
+      'voice_default_profile',
+      'shimmer',
+    );
+    return {
+      status: 200,
+      message: 'Voice profiles retrieved',
+      error: false,
+      data: { profiles: VOICE_PROFILES, defaultProfile },
+    };
+  }
+
+  @Get('settings')
+  @ApiOperation({ summary: 'Get tenant voice settings' })
+  async getSettings(@TenantId() tenantId: string) {
+    const data = {
+      twilio_account_sid: await this.configOrchestrator.get(tenantId, 'twilio_account_sid', ''),
+      twilio_auth_token: await this.configOrchestrator.get(tenantId, 'twilio_auth_token', ''),
+      twilio_phone_number: await this.configOrchestrator.get(tenantId, 'twilio_phone_number', ''),
+      voice_default_profile: await this.configOrchestrator.get(
+        tenantId,
+        'voice_default_profile',
+        'shimmer',
+      ),
+      voice_routing_number: await this.configOrchestrator.get(tenantId, 'voice_routing_number', ''),
+    };
+    return { status: 200, message: 'Voice settings retrieved', error: false, data };
+  }
+
+  @Patch('settings')
+  @ApiOperation({ summary: 'Update tenant voice settings' })
+  async updateSettings(@TenantId() tenantId: string, @Body() dto: UpdateVoiceSettingsDto) {
+    const entries: Array<{ key: keyof UpdateVoiceSettingsDto; group: string }> = [
+      { key: 'twilio_account_sid', group: 'voice' },
+      { key: 'twilio_auth_token', group: 'voice' },
+      { key: 'twilio_phone_number', group: 'voice' },
+      { key: 'voice_default_profile', group: 'voice' },
+      { key: 'voice_routing_number', group: 'voice' },
+    ];
+
+    for (const entry of entries) {
+      const value = dto[entry.key];
+      if (value !== undefined) {
+        await this.tenantSettingsService.updateSetting(tenantId, {
+          key: entry.key,
+          value,
+          group: entry.group,
+        });
+      }
+    }
+
+    return this.getSettings(tenantId);
   }
 
   @Get('campaigns')

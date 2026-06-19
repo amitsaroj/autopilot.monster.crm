@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search, X, Users, Building2, Target, FileText,
-  Clock, ArrowRight, Command, Hash, Tag, Zap
+  Clock, ArrowRight, Command, Hash, Tag, Zap, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+
+import { searchService, type SearchResult } from '@/services/search.service';
 
 type ResultType = 'contact' | 'company' | 'deal' | 'quote';
 
-interface SearchResult {
+interface DisplayResult {
   id: string;
   type: ResultType;
   title: string;
@@ -18,15 +21,6 @@ interface SearchResult {
   updatedAt?: string;
 }
 
-const mockResults: SearchResult[] = [
-  { id: '1', type: 'contact', title: 'Sarah Johnson', subtitle: 'sarah.johnson@acmecorp.com · VP of Sales', href: '/admin/crm/contacts', updatedAt: '2h ago' },
-  { id: '2', type: 'company', title: 'Acme Corp', subtitle: 'Enterprise · New York, USA', href: '/admin/crm/companies', updatedAt: '1d ago' },
-  { id: '3', type: 'deal', title: 'Acme Corp — Enterprise Q2', subtitle: '$14,700 · Negotiation Stage', href: '/admin/crm/deals', updatedAt: '3h ago' },
-  { id: '4', type: 'contact', title: 'Mike Chen', subtitle: 'mike.chen@globalcorp.com · CEO', href: '/admin/crm/contacts', updatedAt: '5h ago' },
-  { id: '5', type: 'quote', title: 'QT-2025-002', subtitle: 'GlobalSales Inc · $5,980 · SENT', href: '/admin/crm/quotes', updatedAt: '2d ago' },
-  { id: '6', type: 'company', title: 'TechStartup X', subtitle: 'Trial · San Francisco, USA', href: '/admin/crm/companies', updatedAt: '6h ago' },
-];
-
 const TYPE_CONFIG: Record<ResultType, { icon: React.ElementType; color: string; bg: string; label: string }> = {
   contact: { icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Contact' },
   company: { icon: Building2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', label: 'Company' },
@@ -34,17 +28,51 @@ const TYPE_CONFIG: Record<ResultType, { icon: React.ElementType; color: string; 
   quote: { icon: FileText, color: 'text-purple-400', bg: 'bg-purple-500/10', label: 'Quote' },
 };
 
-const RECENT = ['Sarah Johnson', 'Acme Corp Enterprise Deal', 'Lead Import March', 'QT-2025-001'];
+const RECENT = ['contacts', 'companies', 'deals', 'quotes'];
 const FILTERS = ['All', 'Contacts', 'Companies', 'Deals', 'Quotes', 'Activities'];
+
+function mapResult(r: SearchResult): DisplayResult {
+  const type = (r.type?.toLowerCase() ?? 'contact') as ResultType;
+  const hrefMap: Record<string, string> = {
+    contact: '/admin/crm/contacts',
+    company: '/admin/crm/companies',
+    deal: '/admin/crm/deals',
+    quote: '/admin/crm/quotes',
+  };
+  return {
+    id: r.id,
+    type,
+    title: r.title,
+    subtitle: r.subtitle ?? '',
+    href: r.url ?? hrefMap[type] ?? '/admin/crm/contacts',
+  };
+}
 
 export default function AdminCRMSearchPage() {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  const [results, setResults] = useState<DisplayResult[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const results = query.length > 0 ? mockResults.filter(r =>
-    r.title.toLowerCase().includes(query.toLowerCase()) ||
-    r.subtitle.toLowerCase().includes(query.toLowerCase())
-  ) : [];
+  useEffect(() => {
+    if (query.length < 2) {
+      setResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const types = activeFilter === 'All' ? 'all' : activeFilter.toLowerCase();
+        const res = await searchService.search(query, types);
+        setResults((res.data?.data ?? []).map(mapResult));
+      } catch {
+        toast.error('Search failed');
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, activeFilter]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
@@ -91,40 +119,49 @@ export default function AdminCRMSearchPage() {
       {/* Results */}
       {query.length > 0 ? (
         <div>
-          <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mb-4">
-            {results.length} Result{results.length !== 1 ? 's' : ''} for "{query}"
-          </p>
-          {results.length > 0 ? (
-            <div className="space-y-2">
-              {results.map(r => {
-                const cfg = TYPE_CONFIG[r.type];
-                return (
-                  <Link key={r.id} href={r.href}
-                    className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group">
-                    <div className={`p-3 rounded-xl ${cfg.bg} shrink-0 group-hover:scale-110 transition-transform`}>
-                      <cfg.icon className={`w-5 h-5 ${cfg.color}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">{r.title}</p>
-                        <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
-                      </div>
-                      <p className="text-xs text-gray-500 truncate">{r.subtitle}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {r.updatedAt && <span className="text-[10px] text-gray-600 font-mono">{r.updatedAt}</span>}
-                      <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
-                    </div>
-                  </Link>
-                );
-              })}
+          {loading && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
             </div>
-          ) : (
-            <div className="py-20 text-center">
-              <Search className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-              <p className="text-sm text-gray-500 font-medium">No results found for "{query}"</p>
-              <p className="text-xs text-gray-700 mt-1">Try different keywords or check filters</p>
-            </div>
+          )}
+          {!loading && (
+            <>
+              <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mb-4">
+                {results.length} Result{results.length !== 1 ? 's' : ''} for "{query}"
+              </p>
+              {results.length > 0 ? (
+                <div className="space-y-2">
+                  {results.map(r => {
+                    const cfg = TYPE_CONFIG[r.type];
+                    return (
+                      <Link key={r.id} href={r.href}
+                        className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group">
+                        <div className={`p-3 rounded-xl ${cfg.bg} shrink-0 group-hover:scale-110 transition-transform`}>
+                          <cfg.icon className={`w-5 h-5 ${cfg.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">{r.title}</p>
+                            <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                          </div>
+                          <p className="text-xs text-gray-500 truncate">{r.subtitle}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {r.updatedAt && <span className="text-[10px] text-gray-600 font-mono">{r.updatedAt}</span>}
+                          <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-20 text-center">
+                  <Search className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                  <p className="text-sm text-gray-500 font-medium">No results found for "{query}"</p>
+                  <p className="text-xs text-gray-700 mt-1">Try different keywords or check filters</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       ) : (

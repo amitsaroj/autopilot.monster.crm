@@ -113,6 +113,10 @@ export class AnalyticsReportService {
         return this.analyticsService.getVoiceAnalytics(tenantId);
       case AnalyticsReportType.WHATSAPP:
         return this.analyticsService.getWhatsappAnalytics(tenantId);
+      case AnalyticsReportType.AI:
+        return this.analyticsService.getAiUsageAnalytics(tenantId);
+      case AnalyticsReportType.FORECAST:
+        return (await this.analyticsService.getForecastAnalytics(tenantId)) as unknown as Record<string, unknown>;
       case AnalyticsReportType.OVERVIEW:
         return this.analyticsService.getOverview(tenantId);
       default: {

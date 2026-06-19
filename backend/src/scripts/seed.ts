@@ -8,7 +8,16 @@ import { Plan } from '../database/entities/plan.entity';
 import { PlanFeature } from '../database/entities/plan-feature.entity';
 import { PlanLimit } from '../database/entities/plan-limit.entity';
 import { PlatformSetting } from '../database/entities/platform-setting.entity';
+import {
+  PERMISSION_ACTIONS,
+  PERMISSION_RESOURCES,
+} from '../common/constants/permission-resources.constants';
 import * as bcrypt from 'bcryptjs';
+
+import { seedDemoCrmData, seedDemoSubscription } from './seed-demo-data';
+import { seedMarketplacePlugins } from './seed-marketplace-plugins';
+
+const DEMO_PASSWORD = 'SecureP@ssw0rd!';
 
 async function seed() {
   console.log('Starting seed process...');
@@ -41,12 +50,9 @@ async function seed() {
     }
 
     // 2. PERMISSIONS
-    const actions = ['create', 'read', 'update', 'delete', 'manage', 'view', 'execute'];
-    const resources = ['users', 'crm', 'billing', 'workflow', 'ai', 'voice', 'whatsapp', 'analytics', 'settings', 'admin'];
-    
     const allPermissions: Permission[] = [];
-    for (const action of actions) {
-      for (const resource of resources) {
+    for (const action of PERMISSION_ACTIONS) {
+      for (const resource of PERMISSION_RESOURCES) {
         const name = `${resource}:${action}`;
         let perm = await permRepo.findOneBy({ name });
         if (!perm) {
@@ -61,10 +67,10 @@ async function seed() {
     // 3. ROLES (and map permissions)
     const roleMappings = [
       { name: 'SUPER_ADMIN', perms: allPermissions },
-      { name: 'ADMIN', perms: allPermissions.filter(p => p.resource !== 'admin') }, // Admins get nearly everything
-      { name: 'MANAGER', perms: allPermissions.filter(p => !['admin', 'billing'].includes(p.resource) && p.action !== 'delete') },
-      { name: 'USER', perms: allPermissions.filter(p => ['read', 'create', 'update', 'view'].includes(p.action) && !['admin', 'billing', 'settings'].includes(p.resource)) },
-      { name: 'AGENT', perms: allPermissions.filter(p => ['read', 'view'].includes(p.action) && ['crm', 'voice', 'whatsapp'].includes(p.resource)) },
+      { name: 'TENANT_ADMIN', perms: allPermissions.filter((p) => p.resource !== 'admin') },
+      { name: 'MANAGER', perms: allPermissions.filter((p) => !['admin', 'billing'].includes(p.resource) && p.action !== 'delete') },
+      { name: 'USER', perms: allPermissions.filter((p) => ['read', 'create', 'update', 'view'].includes(p.action) && !['admin', 'billing', 'settings'].includes(p.resource)) },
+      { name: 'AGENT', perms: allPermissions.filter((p) => ['read', 'view', 'create', 'update'].includes(p.action) && ['crm', 'voice', 'whatsapp'].includes(p.resource)) },
     ];
 
     const rolesMap = new Map<string, Role>();
@@ -84,10 +90,10 @@ async function seed() {
 
     // 4. PLANS, FEATURES, LIMITS
     const plansData = [
-      { name: 'Free', slug: 'FREE', priceMonthly: 0, priceAnnual: 0, limitContacts: 100, limitUsers: 1, limitAiTokens: 1000, features: ['crm', 'analytics'], stripePriceIdMonthly: null, stripePriceIdAnnual: null },
-      { name: 'Starter', slug: 'STARTER', priceMonthly: 29, priceAnnual: 290, limitContacts: 1000, limitUsers: 5, limitAiTokens: 50000, features: ['crm', 'analytics', 'workflow', 'whatsapp'], stripePriceIdMonthly: 'price_starter_monthly_placeholder', stripePriceIdAnnual: 'price_starter_annual_placeholder' },
-      { name: 'Pro', slug: 'PRO', priceMonthly: 99, priceAnnual: 990, limitContacts: 10000, limitUsers: 20, limitAiTokens: 500000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins'], stripePriceIdMonthly: 'price_pro_monthly_placeholder', stripePriceIdAnnual: 'price_pro_annual_placeholder' },
-      { name: 'Enterprise', slug: 'ENTERPRISE', priceMonthly: 499, priceAnnual: 4990, limitContacts: -1, limitUsers: -1, limitAiTokens: -1, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'marketplace'], stripePriceIdMonthly: 'price_ent_monthly_placeholder', stripePriceIdAnnual: 'price_ent_annual_placeholder' },
+      { name: 'Free', slug: 'FREE', priceMonthly: 0, priceAnnual: 0, limitContacts: 100, limitUsers: 1, limitAiTokens: 1000, features: ['crm', 'analytics', 'billing'], stripePriceIdMonthly: null, stripePriceIdAnnual: null },
+      { name: 'Starter', slug: 'STARTER', priceMonthly: 29, priceAnnual: 290, limitContacts: 1000, limitUsers: 5, limitAiTokens: 50000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'billing', 'export'], stripePriceIdMonthly: 'price_starter_monthly_placeholder', stripePriceIdAnnual: 'price_starter_annual_placeholder' },
+      { name: 'Pro', slug: 'PRO', priceMonthly: 99, priceAnnual: 990, limitContacts: 10000, limitUsers: 20, limitAiTokens: 500000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'billing', 'storage', 'export', 'import'], stripePriceIdMonthly: 'price_pro_monthly_placeholder', stripePriceIdAnnual: 'price_pro_annual_placeholder' },
+      { name: 'Enterprise', slug: 'ENTERPRISE', priceMonthly: 499, priceAnnual: 4990, limitContacts: -1, limitUsers: -1, limitAiTokens: -1, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'marketplace', 'billing', 'storage', 'export', 'import'], stripePriceIdMonthly: 'price_ent_monthly_placeholder', stripePriceIdAnnual: 'price_ent_annual_placeholder' },
     ];
 
     for (const pd of plansData) {
@@ -109,6 +115,7 @@ async function seed() {
         // Limits
         await limitRepo.save([
           limitRepo.create({ planId: plan.id, metric: 'contacts_limit', value: pd.limitContacts, period: 'TOTAL' }),
+          limitRepo.create({ planId: plan.id, metric: 'deals_limit', value: pd.limitContacts, period: 'TOTAL' }),
           limitRepo.create({ planId: plan.id, metric: 'users_limit', value: pd.limitUsers, period: 'TOTAL' }),
           limitRepo.create({ planId: plan.id, metric: 'ai_tokens', value: pd.limitAiTokens, period: 'MONTHLY' }),
           limitRepo.create({ planId: plan.id, metric: 'workflow_runs', value: pd.limitUsers === -1 ? -1 : pd.limitUsers * 500, period: 'MONTHLY' }),
@@ -124,55 +131,106 @@ async function seed() {
 
     // 5. USERS (SuperAdmin & Admin)
     const usersToCreate = [
-      { email: 'superadmin@autopilotmonster.com', role: 'SUPER_ADMIN', firstName: 'Super', lastName: 'Admin' },
-      { email: 'admin@autopilotmonster.com', role: 'ADMIN', firstName: 'System', lastName: 'Admin' },
-      { email: 'manager@autopilotmonster.com', role: 'MANAGER', firstName: 'Sales', lastName: 'Manager' },
-      { email: 'user@autopilotmonster.com', role: 'USER', firstName: 'Staff', lastName: 'Member' },
-      { email: 'agent@autopilotmonster.com', role: 'AGENT', firstName: 'Support', lastName: 'Agent' },
+      { key: 'superadmin', email: 'superadmin@autopilotmonster.com', role: 'SUPER_ADMIN', firstName: 'Super', lastName: 'Admin' },
+      { key: 'admin', email: 'admin@autopilotmonster.com', role: 'TENANT_ADMIN', firstName: 'System', lastName: 'Admin' },
+      { key: 'manager', email: 'manager@autopilotmonster.com', role: 'USER', firstName: 'Sales', lastName: 'Manager' },
+      { key: 'user', email: 'user@autopilotmonster.com', role: 'USER', firstName: 'Staff', lastName: 'Member' },
+      { key: 'agent', email: 'agent@autopilotmonster.com', role: 'USER', firstName: 'Support', lastName: 'Agent' },
     ];
+
+    const demoUsers: Record<string, UserEntity> = {};
+    const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 12);
 
     for (const ud of usersToCreate) {
       let user = await userRepo.findOneBy({ email: ud.email, tenantId: defaultTenant.id });
       if (!user) {
-        const hash = await bcrypt.hash('SecureP@ssw0rd!', 12);
         user = userRepo.create({
           email: ud.email,
           firstName: ud.firstName,
           lastName: ud.lastName,
           tenantId: defaultTenant.id,
-          passwordHash: hash,
+          passwordHash,
           status: UserStatus.ACTIVE,
         });
         await userRepo.save(user);
         console.log(`Created User: ${ud.email}`);
-
-        // Assign role
-        const role = rolesMap.get(ud.role);
-        if (role) {
-          const ur = userRoleRepo.create({ userId: user.id, roleId: role.id, tenantId: defaultTenant.id });
-          await userRoleRepo.save(ur);
-        }
       } else {
-        console.log(`User already exists: ${ud.email}`);
+        user.passwordHash = passwordHash;
+        user.status = UserStatus.ACTIVE;
+        await userRepo.save(user);
+        console.log(`Updated User: ${ud.email}`);
+      }
+
+      demoUsers[ud.key] = user;
+
+      const role = rolesMap.get(ud.role);
+      if (role) {
+        const existingAssignment = await userRoleRepo.findOne({
+          where: { userId: user.id, roleId: role.id, tenantId: defaultTenant.id },
+        });
+        if (!existingAssignment) {
+          await userRoleRepo.save(
+            userRoleRepo.create({ userId: user.id, roleId: role.id, tenantId: defaultTenant.id }),
+          );
+        }
+      }
+
+      if (ud.key === 'agent') {
+        const agentRole = rolesMap.get('AGENT');
+        if (agentRole) {
+          const existingAgentRole = await userRoleRepo.findOne({
+            where: { userId: user.id, roleId: agentRole.id, tenantId: defaultTenant.id },
+          });
+          if (!existingAgentRole) {
+            await userRoleRepo.save(
+              userRoleRepo.create({ userId: user.id, roleId: agentRole.id, tenantId: defaultTenant.id }),
+            );
+          }
+        }
       }
     }
 
     // 6. SYSTEM CONFIG / FEATURE FLAGS
-    const settings = [
-      { key: 'enable_ai', value: 'true' },
-      { key: 'enable_voice', value: 'true' },
-      { key: 'enable_whatsapp', value: 'true' },
-      { key: 'enable_marketplace', value: 'true' },
+    const globalFeatureFlags = [
+      'crm',
+      'analytics',
+      'workflow',
+      'whatsapp',
+      'ai',
+      'voice',
+      'plugins',
+      'marketplace',
+      'billing',
+      'storage',
+      'export',
+      'import',
     ];
 
-    for (const setting of settings) {
-      let platSet = await platformSettingRepo.findOneBy({ key: setting.key });
+    for (const featureKey of globalFeatureFlags) {
+      let platSet = await platformSettingRepo.findOne({
+        where: { key: featureKey, group: 'FEATURE_FLAGS' },
+      });
       if (!platSet) {
-        platSet = platformSettingRepo.create({ key: setting.key, value: setting.value, isPublic: true });
+        platSet = platformSettingRepo.create({
+          key: featureKey,
+          value: true,
+          group: 'FEATURE_FLAGS',
+          isPublic: true,
+        });
         await platformSettingRepo.save(platSet);
       }
     }
-    console.log('System settings verified.');
+    console.log('Global feature flags verified.');
+
+    await seedDemoSubscription(AppDataSource, defaultTenant.id);
+    await seedMarketplacePlugins(AppDataSource, defaultTenant.id);
+    await seedDemoCrmData(AppDataSource, defaultTenant.id, {
+      superadmin: demoUsers.superadmin,
+      admin: demoUsers.admin,
+      manager: demoUsers.manager,
+      user: demoUsers.user,
+      agent: demoUsers.agent,
+    });
 
     console.log('Seed completed successfully!');
     process.exit(0);

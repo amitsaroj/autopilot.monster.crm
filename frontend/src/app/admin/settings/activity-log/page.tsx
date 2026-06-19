@@ -33,7 +33,7 @@ export default function WorkspaceActivityLogPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/logs');
+      const res = await fetch('/api/v1/logs/audit');
       const json = await res.json();
       if (Array.isArray(json)) setLogs(json);
       else if (json.data) setLogs(json.data);

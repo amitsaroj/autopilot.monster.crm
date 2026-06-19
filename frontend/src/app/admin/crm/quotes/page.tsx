@@ -1,32 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   FileText, Search, Plus, Send, Eye, Download,
   Clock, CheckCircle2, XCircle, DollarSign, User,
-  ArrowRight, Edit2, Trash2, AlertTriangle
+  ArrowRight, Edit2, Trash2, AlertTriangle, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface Quote {
-  id: string;
-  number: string;
-  contact: string;
-  company: string;
-  total: number;
-  currency: string;
-  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
-  validUntil: string;
-  createdAt: string;
-  items: number;
-}
-
-const mockQuotes: Quote[] = [
-  { id: '1', number: 'QT-2025-001', contact: 'Sarah Johnson', company: 'Acme Corp', total: 14700, currency: 'USD', status: 'ACCEPTED', validUntil: '2025-05-01', createdAt: new Date(Date.now() - 604800000).toISOString(), items: 3 },
-  { id: '2', number: 'QT-2025-002', contact: 'Mike Chen', company: 'GlobalSales Inc', total: 5980, currency: 'USD', status: 'SENT', validUntil: '2025-04-20', createdAt: new Date(Date.now() - 259200000).toISOString(), items: 2 },
-  { id: '3', number: 'QT-2025-003', contact: 'Priya Patel', company: 'TechStartup X', total: 2940, currency: 'USD', status: 'DRAFT', validUntil: '2025-04-30', createdAt: new Date().toISOString(), items: 1 },
-  { id: '4', number: 'QT-2025-004', contact: 'Tom Williams', company: 'Enterprise Co', total: 29940, currency: 'USD', status: 'DECLINED', validUntil: '2025-03-31', createdAt: new Date(Date.now() - 1209600000).toISOString(), items: 6 },
-  { id: '5', number: 'QT-2025-005', contact: 'Alex Rivera', company: 'MediaHouse', total: 8880, currency: 'USD', status: 'EXPIRED', validUntil: '2025-03-15', createdAt: new Date(Date.now() - 2592000000).toISOString(), items: 4 },
-];
+import { quoteService, type Quote, QuoteStatus } from '@/services/quote.service';
 
 const STATUS_STYLES: Record<string, string> = {
   DRAFT: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
@@ -37,17 +19,42 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminCRMQuotesPage() {
-  const [quotes] = useState<Quote[]>(mockQuotes);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await quoteService.getQuotes();
+        const payload = res.data?.data ?? res.data;
+        setQuotes(Array.isArray(payload) ? payload : payload?.data ?? []);
+      } catch {
+        toast.error('Failed to load quotes');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
   const filtered = quotes.filter(q => {
-    const matchSearch = q.contact.toLowerCase().includes(search.toLowerCase()) || q.number.toLowerCase().includes(search.toLowerCase()) || q.company.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = q.number.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || q.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const totalValue = quotes.filter(q => q.status === 'ACCEPTED').reduce((s, q) => s + q.total, 0);
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
+
+  const totalValue = quotes.filter(q => q.status === QuoteStatus.ACCEPTED).reduce((s, q) => s + q.total, 0);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -64,8 +71,8 @@ export default function AdminCRMQuotesPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Quotes', value: quotes.length, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-          { label: 'Accepted', value: quotes.filter(q => q.status === 'ACCEPTED').length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'Pending', value: quotes.filter(q => q.status === 'SENT').length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+          { label: 'Accepted', value: quotes.filter(q => q.status === QuoteStatus.ACCEPTED).length, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: 'Pending', value: quotes.filter(q => q.status === QuoteStatus.SENT).length, color: 'text-blue-400', bg: 'bg-blue-500/10' },
           { label: 'Won Value', value: `$${(totalValue / 1000).toFixed(1)}K`, color: 'text-amber-400', bg: 'bg-amber-500/10' },
         ].map(s => (
           <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
@@ -96,7 +103,7 @@ export default function AdminCRMQuotesPage() {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-white/[0.05] bg-white/[0.02]">
-              {['Quote #', 'Contact', 'Company', 'Items', 'Total', 'Valid Until', 'Status', ''].map(h => (
+              {['Quote #', 'Contact', 'Items', 'Total', 'Valid Until', 'Status', ''].map(h => (
                 <th key={h} className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">{h}</th>
               ))}
             </tr>
@@ -109,18 +116,17 @@ export default function AdminCRMQuotesPage() {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xs font-black border border-indigo-500/20">{q.contact.charAt(0)}</div>
-                    <span className="text-sm text-white">{q.contact}</span>
+                    <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xs font-black border border-indigo-500/20">Q</div>
+                    <span className="text-sm text-white">{q.contactId ?? '—'}</span>
                   </div>
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-400">{q.company}</td>
-                <td className="px-5 py-4 text-xs text-gray-400">{q.items} items</td>
+                <td className="px-5 py-4 text-xs text-gray-400">{q.lineItems?.length ?? 0} items</td>
                 <td className="px-5 py-4">
-                  <span className="text-sm font-black text-white">${q.total.toLocaleString()}</span>
+                  <span className="text-sm font-black text-white">{q.currency} {q.total.toLocaleString()}</span>
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Clock className="w-3 h-3" />{new Date(q.validUntil).toLocaleDateString()}
+                    <Clock className="w-3 h-3" />{q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '—'}
                   </div>
                 </td>
                 <td className="px-5 py-4">

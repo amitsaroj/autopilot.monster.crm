@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { adminQueuesService } from '@/services/admin-queues.service';
+
 interface Queue {
   id: string;
   name: string;
@@ -30,13 +32,33 @@ interface Queue {
 }
 
 export default function GlobalQueueOrchestratorPage() {
-  const [queues, setQueues] = useState<Queue[]>([
-     { id: '1', name: 'CRM_CAMPAIGN_QUEUE', type: 'REDIS_BULL', count: 1420, activeCount: 12, failedCount: 42, paused: false, throughput: '124 j/s' },
-     { id: '2', name: 'AUDIT_PERSISTENCE_LATTICE', type: 'BULLMQ', count: 88, activeCount: 2, failedCount: 0, paused: false, throughput: '422 j/s' },
-     { id: '3', name: 'VOICE_SYNTH_DISPATCH', type: 'REDIS_BULL', count: 4, activeCount: 1, failedCount: 15, paused: true, throughput: '0 j/s' },
-     { id: '4', name: 'MARKETPLACE_VERIFICATION', type: 'INTERNAL_JOB', count: 0, activeCount: 0, failedCount: 0, paused: false, throughput: '2 j/m' },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [queues, setQueues] = useState<Queue[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await adminQueuesService.getStatus();
+        const items = res.data?.data ?? [];
+        setQueues(items.map((q, index) => ({
+          id: String(index + 1),
+          name: q.name,
+          type: 'REDIS_BULL',
+          count: q.counts.waiting + q.counts.delayed,
+          activeCount: q.counts.active,
+          failedCount: q.counts.failed,
+          paused: false,
+          throughput: `${q.counts.completed} completed`,
+        })));
+      } catch {
+        toast.error('Failed to load queue status');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
 
   const togglePause = (id: string) => {
      toast.success(`Queue node ${id} state dispatch synchronized`);

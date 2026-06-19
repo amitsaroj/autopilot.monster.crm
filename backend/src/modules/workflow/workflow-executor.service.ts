@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
+import { WorkflowActionExecutorService } from './workflow-action-executor.service';
+
 export interface WorkflowStep {
   id: string;
   type: string;
@@ -14,9 +16,37 @@ export interface WorkflowExecutionContext {
   payload: Record<string, unknown>;
 }
 
+export type WorkflowStepStatus = 'COMPLETED' | 'SCHEDULED' | 'SKIPPED';
+
+export interface WorkflowStepResult {
+  stepId: string;
+  type: string;
+  status: WorkflowStepStatus;
+  passed?: boolean;
+  delayedMs?: number;
+  delayMs?: number;
+  reason?: string;
+  contactId?: string;
+  dealId?: string;
+  taskId?: string;
+  noteId?: string;
+  notificationId?: string;
+  messageId?: string;
+  callId?: string;
+  to?: string;
+  subject?: string;
+  httpStatus?: number;
+  logged?: boolean;
+  stageId?: string;
+  ownerId?: string;
+  tag?: string;
+}
+
 @Injectable()
 export class WorkflowExecutorService {
   private readonly logger = new Logger(WorkflowExecutorService.name);
+
+  constructor(private readonly actionExecutor: WorkflowActionExecutorService) {}
 
   extractSteps(definition: Record<string, unknown>): WorkflowStep[] {
     if (Array.isArray(definition.steps)) {
@@ -86,57 +116,52 @@ export class WorkflowExecutorService {
         return actual !== expected;
       case 'contains':
         return String(actual).includes(String(expected));
+      case 'not_contains':
+        return !String(actual).includes(String(expected));
+      case 'starts_with':
+        return String(actual).startsWith(String(expected));
+      case 'ends_with':
+        return String(actual).endsWith(String(expected));
       case 'is_empty':
         return actual === undefined || actual === null || actual === '';
       case 'is_not_empty':
         return actual !== undefined && actual !== null && actual !== '';
-      default:
-        this.logger.warn(`Unknown condition operator: ${operator}`);
+      case 'in': {
+        const values = Array.isArray(expected) ? expected : [expected];
+        return values.some((entry) => entry === actual);
+      }
+      case 'not_in': {
+        const values = Array.isArray(expected) ? expected : [expected];
+        return !values.some((entry) => entry === actual);
+      }
+      default: {
+        const unknownOperator: never = operator as never;
+        this.logger.warn(`Unknown condition operator: ${String(unknownOperator)}`);
         return true;
+      }
     }
   }
 
   async executeStep(
     step: WorkflowStep,
     context: WorkflowExecutionContext,
-  ): Promise<Record<string, unknown>> {
+  ): Promise<WorkflowStepResult> {
     this.logger.log(`Executing step ${step.id} (${step.type}) for tenant ${context.tenantId}`);
 
     switch (step.type) {
       case 'CONDITION':
       case 'CONDITION_BRANCH': {
         const passed = this.evaluateCondition(step.config ?? {}, context);
-        return { stepId: step.id, type: step.type, passed };
+        return { stepId: step.id, type: step.type, status: 'COMPLETED', passed };
       }
-      case 'WAIT_DELAY':
-      case 'DELAY': {
-        const delayMs = this.resolveDelayMs(step.config ?? {});
-        if (delayMs > 0) {
-          await new Promise((resolve) => setTimeout(resolve, Math.min(delayMs, 5000)));
-        }
-        return { stepId: step.id, type: step.type, delayedMs: delayMs };
-      }
-      case 'LOG':
+      case 'LOG': {
         this.logger.log(
           `Workflow log [${context.eventName}]: ${String(step.config?.message ?? step.name ?? step.type)}`,
         );
-        return { stepId: step.id, type: step.type, logged: true };
-      case 'SEND_WHATSAPP':
-      case 'SEND_EMAIL':
-      case 'CREATE_TASK':
-      case 'UPDATE_DEAL':
-      case 'AI_CHAT':
-      case 'AI_RESPONSE':
-      case 'CALL_WEBHOOK':
-      case 'NOTIFY_TEAM':
-        this.logger.log(
-          `Action ${step.type} queued with config: ${JSON.stringify(step.config ?? {})}`,
-        );
-        return { stepId: step.id, type: step.type, status: 'QUEUED' };
-      default: {
-        this.logger.warn(`Unhandled workflow step type: ${step.type}`);
-        return { stepId: step.id, type: step.type, status: 'SKIPPED' };
+        return { stepId: step.id, type: step.type, status: 'COMPLETED', logged: true };
       }
+      default:
+        return this.actionExecutor.executeAction(step, context);
     }
   }
 
@@ -150,12 +175,5 @@ export class WorkflowExecutorService {
       current = (current as Record<string, unknown>)[part];
     }
     return current;
-  }
-
-  private resolveDelayMs(config: Record<string, unknown>): number {
-    const hours = Number(config.delayHours ?? 0);
-    const days = Number(config.delayDays ?? 0);
-    const seconds = Number(config.delaySeconds ?? config.seconds ?? 0);
-    return (days * 24 * 3600 + hours * 3600 + seconds) * 1000;
   }
 }

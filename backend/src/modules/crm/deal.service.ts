@@ -165,4 +165,11 @@ export class DealService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async reassignContact(tenantId: string, fromContactId: string, toContactId: string): Promise<void> {
+    const deals = await this.repository.findAll(tenantId, { where: { contactId: fromContactId } });
+    for (const deal of deals) {
+      await this.repository.updateWithTenant(tenantId, deal.id, { contactId: toContactId });
+    }
+  }
 }

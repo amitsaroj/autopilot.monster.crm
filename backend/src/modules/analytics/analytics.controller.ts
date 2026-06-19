@@ -2,11 +2,13 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 
 @ApiTags('Analytics')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('analytics')
+@PlanFeature('analytics')
 @Controller('analytics')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
@@ -65,6 +67,20 @@ export class AnalyticsController {
   async getWhatsapp(@TenantId() tenantId: string) {
     const data = await this.analyticsService.getWhatsappAnalytics(tenantId);
     return { status: 200, message: 'WhatsApp analytics retrieved', error: false, data };
+  }
+
+  @Get('ai')
+  @ApiOperation({ summary: 'AI usage analytics' })
+  async getAiUsage(@TenantId() tenantId: string) {
+    const data = await this.analyticsService.getAiUsageAnalytics(tenantId);
+    return { status: 200, message: 'AI usage analytics retrieved', error: false, data };
+  }
+
+  @Get('forecast')
+  @ApiOperation({ summary: 'Weighted pipeline forecast' })
+  async getForecast(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
+    const data = await this.analyticsService.getForecastAnalytics(tenantId, pipelineId);
+    return { status: 200, message: 'Forecast retrieved', error: false, data };
   }
 
   @Get('metrics')

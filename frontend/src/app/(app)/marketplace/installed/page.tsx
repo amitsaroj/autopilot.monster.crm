@@ -77,7 +77,7 @@ export default function MarketplaceInstalledPage() {
                 <div>
                   <p className="font-medium">{item.plugin?.name ?? item.pluginId}</p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3 text-green-500" /> {item.status}
+                    <CheckCircle className="h-3 w-3 text-green-500" /> Installed
                   </p>
                 </div>
               </div>

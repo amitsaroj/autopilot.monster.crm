@@ -56,6 +56,7 @@ jobs:
       DB_USER: root
       DB_PASSWORD: password
       DB_NAME: autopilot_monster
+      DB_SYNCHRONIZE: "true"
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       REDIS_PASSWORD: ""
@@ -63,6 +64,7 @@ jobs:
       JWT_REFRESH_SECRET: ci-test-refresh-secret-key-32ch
       OPENAI_API_KEY: sk-ci-test-placeholder
       STRIPE_SECRET_KEY: sk_test_ci_placeholder_key
+      STRIPE_WEBHOOK_SECRET: whsec_ci_test_webhook_secret_placeholder
       MINIO_ENDPOINT: localhost
       MINIO_PORT: 9000
       MINIO_ACCESS_KEY: minioadmin
@@ -89,9 +91,9 @@ jobs:
         working-directory: backend
         run: npm test -- --passWithNoTests
 
-      - name: E2E integration tests
+      - name: Integration tests
         working-directory: backend
-        run: npm run test:e2e
+        run: npm run test:integration
 
   frontend:
     runs-on: ubuntu-latest

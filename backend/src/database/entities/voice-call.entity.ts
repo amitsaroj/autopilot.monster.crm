@@ -31,6 +31,15 @@ export class VoiceCall extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   transcript?: string;
 
+  @Column({ name: 'ai_summary', type: 'text', nullable: true })
+  aiSummary?: string;
+
+  @Column({ length: 20, nullable: true })
+  sentiment?: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+
+  @Column({ name: 'voice_profile', length: 50, nullable: true })
+  voiceProfile?: string;
+
   @Column({ name: 'cost_amount', type: 'decimal', precision: 10, scale: 4, default: 0 })
   costAmount!: number;
 }

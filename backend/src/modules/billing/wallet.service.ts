@@ -42,25 +42,35 @@ export class WalletService {
   }
 
   async addCredits(tenantId: string, dto: AddWalletCreditsDto): Promise<Wallet> {
-    const wallet = await this.getOrCreateWallet(tenantId);
-    const newBalance = Number(wallet.balance) + dto.amount;
+    return this.walletRepository.manager.transaction(async (manager) => {
+      const walletRepo = manager.getRepository(Wallet);
+      const txRepo = manager.getRepository(WalletTransaction);
 
-    wallet.balance = newBalance;
-    const saved = await this.walletRepository.save(wallet);
+      let wallet = await walletRepo.findOne({ where: { tenantId } });
+      if (!wallet) {
+        wallet = await walletRepo.save(
+          walletRepo.create({ tenantId, balance: 0, currency: 'USD' }),
+        );
+      }
 
-    await this.transactionRepository.save(
-      this.transactionRepository.create({
-        tenantId,
-        walletId: wallet.id,
-        type: WalletTransactionType.CREDIT,
-        amount: dto.amount,
-        balanceAfter: newBalance,
-        description: dto.description ?? 'Credit added',
-        referenceId: dto.referenceId,
-      }),
-    );
+      const newBalance = Number(wallet.balance) + dto.amount;
+      wallet.balance = newBalance;
+      const saved = await walletRepo.save(wallet);
 
-    return saved;
+      await txRepo.save(
+        txRepo.create({
+          tenantId,
+          walletId: wallet.id,
+          type: WalletTransactionType.CREDIT,
+          amount: dto.amount,
+          balanceAfter: newBalance,
+          description: dto.description ?? 'Credit added',
+          referenceId: dto.referenceId,
+        }),
+      );
+
+      return saved;
+    });
   }
 
   async debit(
@@ -69,27 +79,38 @@ export class WalletService {
     description: string,
     referenceId?: string,
   ): Promise<Wallet> {
-    const wallet = await this.getOrCreateWallet(tenantId);
-    if (Number(wallet.balance) < amount) {
-      throw new BadRequestException('Insufficient wallet balance');
-    }
+    return this.walletRepository.manager.transaction(async (manager) => {
+      const walletRepo = manager.getRepository(Wallet);
+      const txRepo = manager.getRepository(WalletTransaction);
 
-    const newBalance = Number(wallet.balance) - amount;
-    wallet.balance = newBalance;
-    const saved = await this.walletRepository.save(wallet);
+      const wallet = await walletRepo.findOne({
+        where: { tenantId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!wallet) {
+        throw new BadRequestException('Wallet not found');
+      }
+      if (Number(wallet.balance) < amount) {
+        throw new BadRequestException('Insufficient wallet balance');
+      }
 
-    await this.transactionRepository.save(
-      this.transactionRepository.create({
-        tenantId,
-        walletId: wallet.id,
-        type: WalletTransactionType.DEBIT,
-        amount,
-        balanceAfter: newBalance,
-        description,
-        referenceId,
-      }),
-    );
+      const newBalance = Number(wallet.balance) - amount;
+      wallet.balance = newBalance;
+      const saved = await walletRepo.save(wallet);
 
-    return saved;
+      await txRepo.save(
+        txRepo.create({
+          tenantId,
+          walletId: wallet.id,
+          type: WalletTransactionType.DEBIT,
+          amount,
+          balanceAfter: newBalance,
+          description,
+          referenceId,
+        }),
+      );
+
+      return saved;
+    });
   }
 }

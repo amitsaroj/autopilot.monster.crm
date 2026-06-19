@@ -1,45 +1,38 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
-import { Tenant } from '@autopilot/core/database/entities/tenant.entity';
+import { Injectable } from '@nestjs/common';
+
+import { TenantService } from '../../tenant/tenant.service';
+import { CreateTenantDto } from '../../tenant/dto/create-tenant.dto';
+import { TenantFilterDto } from '../../tenant/dto/tenant.dto';
 
 @Injectable()
 export class AdminTenantsService {
-  constructor(
-    @InjectRepository(Tenant)
-    private readonly tenantRepo: Repository<Tenant>,
-  ) {}
+  constructor(private readonly tenantService: TenantService) {}
 
-  async findAll(options: { search?: string }) {
-    const where: any = {};
-    if (options.search) {
-      where.name = Like(`%${options.search}%`);
-    }
-    return this.tenantRepo.find({
-      where,
-      order: { createdAt: 'DESC' },
-    });
+  findAll(filter: TenantFilterDto) {
+    return this.tenantService.findAll(filter);
   }
 
-  async findOne(id: string) {
-    const tenant = await this.tenantRepo.findOne({ where: { id } });
-    if (!tenant) throw new NotFoundException('Tenant not found');
-    return tenant;
+  findOne(id: string) {
+    return this.tenantService.findOne(id);
   }
 
-  async create(data: any) {
-    const tenant = this.tenantRepo.create(data);
-    return this.tenantRepo.save(tenant);
+  create(data: CreateTenantDto) {
+    return this.tenantService.create(data);
   }
 
-  async update(id: string, data: any) {
-    await this.findOne(id);
-    await this.tenantRepo.update(id, data);
-    return this.findOne(id);
+  update(id: string, data: Partial<CreateTenantDto>) {
+    return this.tenantService.update(id, data);
   }
 
-  async remove(id: string) {
-    const tenant = await this.findOne(id);
-    return this.tenantRepo.remove(tenant);
+  suspend(id: string) {
+    return this.tenantService.suspend(id);
+  }
+
+  activate(id: string) {
+    return this.tenantService.activate(id);
+  }
+
+  remove(id: string) {
+    return this.tenantService.remove(id);
   }
 }

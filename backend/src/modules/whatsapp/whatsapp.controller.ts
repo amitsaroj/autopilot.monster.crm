@@ -10,6 +10,7 @@ import {
   CreateWhatsappBroadcastDto,
   ScheduleWhatsappBroadcastDto,
 } from './dto/whatsapp-broadcast.dto';
+import { AssignWhatsappConversationDto } from './dto/whatsapp-conversation.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
@@ -73,6 +74,24 @@ export class WhatsappController {
       dto.wabaId,
     );
     return { status: 201, message: 'Message sent', error: false, data };
+  }
+
+  @Post('conversations/:phone/assign')
+  @ApiOperation({ summary: 'Assign conversation to an agent' })
+  async assignConversation(
+    @TenantId() tenantId: string,
+    @Param('phone') phone: string,
+    @Body() dto: AssignWhatsappConversationDto,
+  ) {
+    const data = await this.whatsappService.assignConversation(tenantId, phone, dto.assigneeId);
+    return { status: 200, message: 'Conversation assigned', error: false, data };
+  }
+
+  @Post('conversations/:phone/resolve')
+  @ApiOperation({ summary: 'Resolve a conversation' })
+  async resolveConversation(@TenantId() tenantId: string, @Param('phone') phone: string) {
+    const data = await this.whatsappService.resolveConversation(tenantId, phone);
+    return { status: 200, message: 'Conversation resolved', error: false, data };
   }
 
   @Get('templates')

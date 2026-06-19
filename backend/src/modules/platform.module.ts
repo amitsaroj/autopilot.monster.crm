@@ -6,8 +6,10 @@ import { SearchController } from './search/search.controller';
 import { MarketplaceController } from './marketplace/marketplace.controller';
 import { MarketplaceService } from './marketplace/marketplace.service';
 import { PluginsController } from './plugins/plugins.controller';
+import { PluginsService } from './plugins/plugins.service';
 import { PlatformController } from './platform.controller';
 import { LogsModule } from './logs/logs.module';
+import { MonetizationModule } from './monetization.module';
 import { DashboardMetric } from '../database/entities/dashboard-metric.entity';
 import { PlatformSetting } from '../database/entities/platform-setting.entity';
 import { Plugin } from '../database/entities/plugin.entity';
@@ -30,6 +32,7 @@ import { Company } from '../database/entities/company.entity';
     ]),
     LogsModule,
     StorageModule,
+    MonetizationModule,
   ],
   controllers: [
     SearchController,
@@ -40,11 +43,13 @@ import { Company } from '../database/entities/company.entity';
   providers: [
     SearchService,
     MarketplaceService,
+    PluginsService,
   ],
   exports: [
     StorageModule,
     SearchService,
     MarketplaceService,
+    PluginsService,
   ],
 })
 export class PlatformModule {}

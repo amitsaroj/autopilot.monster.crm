@@ -2,11 +2,13 @@ import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 import { DataJobService } from './data-job.service';
 import { DataJobType } from '../../database/entities/data-job.entity';
 
 @ApiTags('Backup')
+@ResourcePermissions('data-jobs')
+@PlanFeature('storage')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('backup')

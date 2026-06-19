@@ -1,27 +1,10 @@
 "use client";
 
-import { useState } from 'react';
-import { Phone, Plus, Search, CheckCircle2, XCircle, RefreshCw, Settings, Globe, Hash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Phone, Plus, Search, CheckCircle2, XCircle, RefreshCw, Settings, Globe, Hash, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface PhoneNumber {
-  id: string;
-  number: string;
-  friendlyName: string;
-  type: 'LOCAL' | 'TOLL_FREE' | 'MOBILE';
-  country: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING';
-  capabilities: string[];
-  assignedTo: string;
-  monthlyCost: number;
-}
-
-const mockNumbers: PhoneNumber[] = [
-  { id: '1', number: '+1 (415) 555-0192', friendlyName: 'Main Sales Line', type: 'LOCAL', country: 'US', status: 'ACTIVE', capabilities: ['Voice', 'SMS'], assignedTo: 'Sales Team', monthlyCost: 1.15 },
-  { id: '2', number: '+1 (800) 555-0847', friendlyName: 'Customer Support', type: 'TOLL_FREE', country: 'US', status: 'ACTIVE', capabilities: ['Voice', 'SMS'], assignedTo: 'Support Team', monthlyCost: 2.00 },
-  { id: '3', number: '+44 20 7946 0839', friendlyName: 'UK Office', type: 'LOCAL', country: 'UK', status: 'ACTIVE', capabilities: ['Voice'], assignedTo: 'Global Team', monthlyCost: 1.20 },
-  { id: '4', number: '+91 98765 12345', friendlyName: 'India Line', type: 'MOBILE', country: 'IN', status: 'PENDING', capabilities: ['Voice', 'SMS', 'WhatsApp'], assignedTo: 'Unassigned', monthlyCost: 0.80 },
-];
+import { voicePhoneNumberService, type VoicePhoneNumber } from '@/services/voice-phone-number.service';
 
 const TYPE_STYLES: Record<string, string> = {
   LOCAL: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
@@ -36,16 +19,37 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminVoiceNumbersPage() {
-  const [numbers] = useState<PhoneNumber[]>(mockNumbers);
+  const [numbers, setNumbers] = useState<VoicePhoneNumber[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await voicePhoneNumberService.list();
+        setNumbers(res.data?.data ?? []);
+      } catch {
+        toast.error('Failed to load phone numbers');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
   const filtered = numbers.filter(n =>
-    n.number.includes(search) ||
-    n.friendlyName.toLowerCase().includes(search.toLowerCase()) ||
+    n.phoneNumber.includes(search) ||
     n.country.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalCost = numbers.reduce((s, n) => s + n.monthlyCost, 0);
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -64,7 +68,7 @@ export default function AdminVoiceNumbersPage() {
           { label: 'Total Numbers', value: numbers.length, icon: Hash },
           { label: 'Active', value: numbers.filter(n => n.status === 'ACTIVE').length, icon: CheckCircle2 },
           { label: 'Countries', value: [...new Set(numbers.map(n => n.country))].length, icon: Globe },
-          { label: 'Monthly Cost', value: `$${totalCost.toFixed(2)}`, icon: Phone },
+          { label: 'Provisioned', value: numbers.length, icon: Phone },
         ].map(s => (
           <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
             <div className="p-3 rounded-xl bg-indigo-500/10"><s.icon className="w-5 h-5 text-indigo-400" /></div>
@@ -91,31 +95,32 @@ export default function AdminVoiceNumbersPage() {
                   <Phone className="w-5 h-5 text-indigo-400 group-hover:text-white transition-colors" />
                 </div>
                 <div>
-                  <p className="text-base font-black text-white font-mono">{num.number}</p>
-                  <p className="text-xs text-gray-500">{num.friendlyName}</p>
+                  <p className="text-base font-black text-white font-mono">{num.phoneNumber}</p>
+                  <p className="text-xs text-gray-500">{num.twilioSid ?? 'Twilio'}</p>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase ${STATUS_STYLES[num.status]}`}>{num.status}</span>
-                <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase ${TYPE_STYLES[num.type]}`}>{num.type.replace('_', ' ')}</span>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="p-3 rounded-xl bg-white/[0.02]">
                 <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Country</p>
                 <p className="text-sm font-black text-white">{num.country}</p>
               </div>
               <div className="p-3 rounded-xl bg-white/[0.02]">
-                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Assigned</p>
-                <p className="text-xs font-black text-white truncate">{num.assignedTo}</p>
-              </div>
-              <div className="p-3 rounded-xl bg-white/[0.02]">
-                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Cost/mo</p>
-                <p className="text-sm font-black text-emerald-400">${num.monthlyCost}</p>
+                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Capabilities</p>
+                <p className="text-xs font-black text-white truncate">
+                  {[
+                    num.capabilities.voice && 'Voice',
+                    num.capabilities.sms && 'SMS',
+                    num.capabilities.mms && 'MMS',
+                  ].filter(Boolean).join(', ') || '—'}
+                </p>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5 mb-4">
-              {num.capabilities.map(cap => (
+              {Object.entries(num.capabilities).filter(([, v]) => v).map(([cap]) => (
                 <span key={cap} className="text-[10px] px-2 py-0.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-gray-400 font-black uppercase tracking-widest">{cap}</span>
               ))}
             </div>

@@ -4,11 +4,13 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
+import { authRequestHeaders, extractResponseData, loginTestUser } from '../e2e/helpers/auth-test.helper';
 
 describe('HTTP E2E — CRM contact CRUD', () => {
   let app: INestApplication;
   let postgresAvailable = false;
   let tenantId: string;
+  let accessToken: string;
 
   beforeAll(async () => {
     postgresAvailable = await isPostgresReachable();
@@ -20,6 +22,7 @@ describe('HTTP E2E — CRM contact CRUD', () => {
     app = await createTestApp();
     const credentials = await seedTestCredentials();
     tenantId = credentials.tenantId;
+    accessToken = await loginTestUser(app, credentials);
   });
 
   afterAll(async () => {
@@ -33,9 +36,11 @@ describe('HTTP E2E — CRM contact CRUD', () => {
       return;
     }
 
+    const headers = authRequestHeaders(tenantId, accessToken);
+
     const createRes = await request(app.getHttpServer())
       .post('/api/v1/crm/contacts')
-      .set('x-tenant-id', tenantId)
+      .set(headers)
       .send({
         firstName: 'E2E',
         lastName: 'Contact',
@@ -44,25 +49,25 @@ describe('HTTP E2E — CRM contact CRUD', () => {
       });
 
     expect([200, 201]).toContain(createRes.status);
-    const contactId = createRes.body.data?.id ?? createRes.body.id;
+    const contactId = extractResponseData<{ id: string }>(createRes.body).id;
     expect(contactId).toBeDefined();
 
     const getRes = await request(app.getHttpServer())
       .get(`/api/v1/crm/contacts/${contactId}`)
-      .set('x-tenant-id', tenantId);
+      .set(headers);
 
     expect(getRes.status).toBe(200);
 
     const updateRes = await request(app.getHttpServer())
       .put(`/api/v1/crm/contacts/${contactId}`)
-      .set('x-tenant-id', tenantId)
+      .set(headers)
       .send({ firstName: 'E2EUpdated' });
 
     expect(updateRes.status).toBe(200);
 
     const deleteRes = await request(app.getHttpServer())
       .delete(`/api/v1/crm/contacts/${contactId}`)
-      .set('x-tenant-id', tenantId);
+      .set(headers);
 
     expect(deleteRes.status).toBe(200);
   });
@@ -74,9 +79,61 @@ describe('HTTP E2E — CRM contact CRUD', () => {
 
     const response = await request(app.getHttpServer())
       .get('/api/v1/crm/contacts')
-      .set('x-tenant-id', tenantId);
+      .set(authRequestHeaders(tenantId, accessToken));
 
     expect(response.status).toBe(200);
-    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(Array.isArray(extractResponseData(response.body))).toBe(true);
+  });
+
+  it('creates, reads, and deletes a task', async () => {
+    if (!postgresAvailable) {
+      return;
+    }
+
+    const headers = authRequestHeaders(tenantId, accessToken);
+
+    const createRes = await request(app.getHttpServer())
+      .post('/api/v1/crm/tasks')
+      .set(headers)
+      .send({ title: 'E2E Task', priority: 'HIGH', status: 'OPEN' });
+
+    expect([200, 201]).toContain(createRes.status);
+    const taskId = extractResponseData<{ id: string }>(createRes.body).id;
+    expect(taskId).toBeDefined();
+
+    const getRes = await request(app.getHttpServer())
+      .get(`/api/v1/crm/tasks/${taskId}`)
+      .set(headers);
+
+    expect(getRes.status).toBe(200);
+
+    const deleteRes = await request(app.getHttpServer())
+      .delete(`/api/v1/crm/tasks/${taskId}`)
+      .set(headers);
+
+    expect(deleteRes.status).toBe(200);
+  });
+
+  it('creates and deletes a note', async () => {
+    if (!postgresAvailable) {
+      return;
+    }
+
+    const headers = authRequestHeaders(tenantId, accessToken);
+
+    const createRes = await request(app.getHttpServer())
+      .post('/api/v1/crm/notes')
+      .set(headers)
+      .send({ title: 'E2E Note', content: 'Test content' });
+
+    expect([200, 201]).toContain(createRes.status);
+    const noteId = extractResponseData<{ id: string }>(createRes.body).id;
+    expect(noteId).toBeDefined();
+
+    const deleteRes = await request(app.getHttpServer())
+      .delete(`/api/v1/crm/notes/${noteId}`)
+      .set(headers);
+
+    expect(deleteRes.status).toBe(200);
   });
 });

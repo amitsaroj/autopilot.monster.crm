@@ -4,19 +4,22 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isMinioReachable, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
+import { authRequestHeaders, loginTestUser } from '../e2e/helpers/auth-test.helper';
 
 async function waitForJob(
   app: INestApplication,
   tenantId: string,
+  accessToken: string,
   path: string,
   jobId: string,
   timeoutMs = 30000,
 ): Promise<Record<string, unknown>> {
+  const headers = authRequestHeaders(tenantId, accessToken);
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     const res = await request(app.getHttpServer())
       .get(`/api/v1/${path}/${jobId}`)
-      .set('x-tenant-id', tenantId);
+      .set(headers);
 
     const job = res.body.data as Record<string, unknown>;
     if (job?.status === 'COMPLETED') {
@@ -35,6 +38,7 @@ describe('HTTP E2E — import/export with MinIO', () => {
   let postgresAvailable = false;
   let minioAvailable = false;
   let tenantId: string;
+  let accessToken: string;
 
   beforeAll(async () => {
     postgresAvailable = await isPostgresReachable();
@@ -47,6 +51,7 @@ describe('HTTP E2E — import/export with MinIO', () => {
     app = await createTestApp();
     const credentials = await seedTestCredentials();
     tenantId = credentials.tenantId;
+    accessToken = await loginTestUser(app, credentials);
   });
 
   afterAll(async () => {
@@ -60,10 +65,11 @@ describe('HTTP E2E — import/export with MinIO', () => {
       return;
     }
 
+    const headers = authRequestHeaders(tenantId, accessToken);
     const csv = 'firstName,lastName,email\nImport,User,import-e2e@example.com\n';
     const uploadRes = await request(app.getHttpServer())
       .post('/api/v1/storage/files/upload')
-      .set('x-tenant-id', tenantId)
+      .set(headers)
       .send({ filename: 'contacts.csv', mimeType: 'text/csv' });
 
     expect(uploadRes.status).toBe(200);
@@ -79,26 +85,26 @@ describe('HTTP E2E — import/export with MinIO', () => {
 
     const importRes = await request(app.getHttpServer())
       .post('/api/v1/import')
-      .set('x-tenant-id', tenantId)
+      .set(headers)
       .send({ entityType: 'contacts', fileKey });
 
     expect([200, 202]).toContain(importRes.status);
     const importJobId = importRes.body.data?.id as string;
     expect(importJobId).toBeDefined();
 
-    const importJob = await waitForJob(app, tenantId, 'import', importJobId);
+    const importJob = await waitForJob(app, tenantId, accessToken, 'import', importJobId);
     expect(importJob.status).toBe('COMPLETED');
 
     const exportRes = await request(app.getHttpServer())
       .post('/api/v1/export')
-      .set('x-tenant-id', tenantId)
+      .set(headers)
       .send({ entityType: 'contacts', format: 'csv' });
 
     expect([200, 202]).toContain(exportRes.status);
     const exportJobId = exportRes.body.data?.id as string;
     expect(exportJobId).toBeDefined();
 
-    const exportJob = await waitForJob(app, tenantId, 'export', exportJobId);
+    const exportJob = await waitForJob(app, tenantId, accessToken, 'export', exportJobId);
     expect(exportJob.status).toBe('COMPLETED');
     expect(exportJob.downloadUrl ?? exportJob.fileKey).toBeDefined();
   });

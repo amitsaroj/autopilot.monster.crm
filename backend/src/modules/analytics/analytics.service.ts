@@ -8,6 +8,9 @@ import { Contact } from '../../database/entities/contact.entity';
 import { Lead } from '../../database/entities/lead.entity';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
+import { UsageRecord } from '../../database/entities/usage-record.entity';
+import { Message } from '../../database/entities/message.entity';
+import { ForecastService } from '../crm/forecast.service';
 
 @Injectable()
 export class AnalyticsService {
@@ -24,6 +27,11 @@ export class AnalyticsService {
     private readonly voiceCallRepo: Repository<VoiceCall>,
     @InjectRepository(WhatsAppMessage)
     private readonly whatsappRepo: Repository<WhatsAppMessage>,
+    @InjectRepository(UsageRecord)
+    private readonly usageRepo: Repository<UsageRecord>,
+    @InjectRepository(Message)
+    private readonly messageRepo: Repository<Message>,
+    private readonly forecastService: ForecastService,
   ) {}
 
   async getMetrics(tenantId: string, metricName: string, period: string) {
@@ -151,11 +159,34 @@ export class AnalyticsService {
   async getVoiceAnalytics(tenantId: string) {
     const calls = await this.voiceCallRepo.find({ where: { tenantId } });
     const completed = calls.filter((call) => call.status === 'COMPLETED');
+    const inbound = calls.filter((call) => call.direction === 'INBOUND').length;
+    const outbound = calls.filter((call) => call.direction === 'OUTBOUND').length;
+    const missed = calls.filter((call) =>
+      ['NO-ANSWER', 'BUSY', 'FAILED', 'CANCELED'].includes(call.status),
+    ).length;
     const totalDuration = completed.reduce((sum, call) => sum + call.durationSeconds, 0);
+    const totalCost = calls.reduce((sum, call) => sum + Number(call.costAmount || 0), 0);
+    const sentimentCounts = { POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0 };
+    for (const call of calls) {
+      if (call.sentiment) {
+        sentimentCounts[call.sentiment] += 1;
+      }
+    }
+    const analyzed = sentimentCounts.POSITIVE + sentimentCounts.NEUTRAL + sentimentCounts.NEGATIVE;
+
     return {
       totalCalls: calls.length,
       completedCalls: completed.length,
+      inboundCalls: inbound,
+      outboundCalls: outbound,
+      missedCalls: missed,
       averageDuration: completed.length > 0 ? totalDuration / completed.length : 0,
+      totalCost,
+      sentiment: {
+        positive: analyzed > 0 ? (sentimentCounts.POSITIVE / analyzed) * 100 : 0,
+        neutral: analyzed > 0 ? (sentimentCounts.NEUTRAL / analyzed) * 100 : 0,
+        negative: analyzed > 0 ? (sentimentCounts.NEGATIVE / analyzed) * 100 : 0,
+      },
     };
   }
 
@@ -164,5 +195,41 @@ export class AnalyticsService {
     const inbound = messages.filter((message) => message.direction === 'INBOUND').length;
     const outbound = messages.filter((message) => message.direction === 'OUTBOUND').length;
     return { total: messages.length, inbound, outbound };
+  }
+
+  async getAiUsageAnalytics(tenantId: string) {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const usageRecords = await this.usageRepo.find({
+      where: { tenantId, periodStart: startOfMonth },
+    });
+
+    const aiMetrics = usageRecords.filter((record) =>
+      ['ai_tokens', 'ai_messages', 'ai_calls'].includes(record.metric),
+    );
+
+    const tokensUsed = Number(
+      aiMetrics.find((record) => record.metric === 'ai_tokens')?.quantity ?? 0,
+    );
+    const messagesSent = Number(
+      aiMetrics.find((record) => record.metric === 'ai_messages')?.quantity ?? 0,
+    );
+    const totalCost = aiMetrics.reduce((sum, record) => sum + Number(record.totalCost || 0), 0);
+
+    const assistantMessages = await this.messageRepo.count({
+      where: { tenantId, role: 'ASSISTANT' },
+    });
+
+    return {
+      tokensUsed,
+      messagesSent: messagesSent || assistantMessages,
+      totalCost,
+      periodStart: startOfMonth.toISOString(),
+    };
+  }
+
+  async getForecastAnalytics(tenantId: string, pipelineId?: string) {
+    return this.forecastService.getForecast(tenantId, pipelineId);
   }
 }

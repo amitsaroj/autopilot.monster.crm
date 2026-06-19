@@ -2,13 +2,14 @@ import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/c
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions } from '../../common/decorators';
 import { StorageService } from './storage.service';
 import { PresignedUploadDto } from '../data-jobs/dto/data-job.dto';
 
 @ApiTags('Storage')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('storage')
 @Controller('storage/files')
 export class StorageFilesController {
   constructor(private readonly storageService: StorageService) {}

@@ -54,14 +54,16 @@
   - id: TASK-011
   - severity: CRITICAL
   - domain: Database
-- [ ] Replace 72 PagePlaceholder routes with real UI
+- [x] Replace 72 PagePlaceholder routes with real UI
   - id: TASK-012
   - severity: CRITICAL
   - domain: Frontend
-- [ ] Workflow engine — remove mockSteps, DB-driven execution
+  - completed_at: 2026-06-18
+- [x] Workflow engine — real action executors with CRM/email/notification side effects
   - id: TASK-013
   - severity: CRITICAL
   - domain: Workflows
+  - completed_at: 2026-06-19
 - [ ] Implement PlanGuard with real billing feature checks
   - id: TASK-014
   - severity: CRITICAL

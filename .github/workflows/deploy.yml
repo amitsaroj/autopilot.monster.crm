@@ -68,7 +68,11 @@ jobs:
         run: |
           aws s3 cp docker-compose.prod.yml s3://${{ env.BUCKET_NAME }}/deploy/docker-compose.prod.yml
           aws s3 cp nginx/nginx.conf s3://${{ env.BUCKET_NAME }}/deploy/nginx/nginx.conf
-          aws s3 cp backend/.env.production s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production
+          if [ -f backend/.env.production ]; then
+            aws s3 cp backend/.env.production s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production
+          else
+            echo "backend/.env.production not in repo — expecting file at s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production"
+          fi
 
       # --- DEPLOY VIA SSM ---
       - name: Deploy via SSM

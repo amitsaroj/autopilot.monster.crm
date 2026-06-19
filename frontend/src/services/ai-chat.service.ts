@@ -1,8 +1,18 @@
 import api from '../lib/api/client';
+import { parseApiData } from '../lib/api/parse-response';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+}
+
+export interface ConversationSummary {
+  id: string;
+  title?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  meta?: { title?: string };
 }
 
 function getAuthHeaders(): Record<string, string> {
@@ -19,10 +29,11 @@ function getAuthHeaders(): Record<string, string> {
 
 export const aiChatService = {
   sendMessage: (message: string, conversationId?: string, useRag = false) =>
-    api.post<{ reply: string; conversationId: string }>('/ai/chat', {
+    api.post<{ data: { reply: string; conversationId: string } }>('/ai/chat', {
       message,
       conversationId,
       useRag,
+      memoryWindow: 6,
     }),
 
   streamMessage: async (
@@ -35,7 +46,7 @@ export const aiChatService = {
     const response = await fetch(`${baseURL}/ai/chat/stream`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ message, conversationId, useRag }),
+      body: JSON.stringify({ message, conversationId, useRag, memoryWindow: 6 }),
     });
 
     if (!response.ok || !response.body) {
@@ -74,7 +85,21 @@ export const aiChatService = {
     return finalConversationId;
   },
 
-  getConversations: () => api.get('/ai/conversations'),
+  getConversations: async () => {
+    const res = await api.get('/ai/conversations');
+    const data = parseApiData<{ items: ConversationSummary[]; total: number }>(res);
+    const items = data?.items ?? (Array.isArray(data) ? data : []);
+    return {
+      data: items.map((item) => ({
+        ...item,
+        title: item.title ?? item.meta?.title,
+      })),
+    };
+  },
 
-  getMessages: (id: string) => api.get(`/ai/conversations/${id}`),
+  getMessages: async (id: string) => {
+    const res = await api.get(`/ai/conversations/${id}`);
+    const data = parseApiData<{ messages: Array<{ role: string; content: string }> }>(res);
+    return { data: data?.messages ?? [] };
+  },
 };

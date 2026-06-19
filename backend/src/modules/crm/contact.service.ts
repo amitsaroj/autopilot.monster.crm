@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -12,12 +13,14 @@ import { EmailMessage } from '../../database/entities/email-message.entity';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
 import { DealService } from './deal.service';
+import { EVENT_NAMES } from '../../events/event.constants';
 
 @Injectable()
 export class ContactService {
   constructor(
     private readonly contactRepository: ContactRepository,
     private readonly dealService: DealService,
+    private readonly eventEmitter: EventEmitter2,
     @InjectRepository(Activity)
     private readonly activityRepository: Repository<Activity>,
     @InjectRepository(Note)
@@ -31,7 +34,9 @@ export class ContactService {
   ) {}
 
   async create(tenantId: string, dto: CreateContactDto): Promise<Contact> {
-    return this.contactRepository.create(tenantId, dto);
+    const contact = await this.contactRepository.create(tenantId, dto);
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, { contact, tenantId });
+    return contact;
   }
 
   async findAll(tenantId: string): Promise<Contact[]> {
@@ -47,7 +52,27 @@ export class ContactService {
   }
 
   async update(tenantId: string, id: string, dto: Partial<CreateContactDto>): Promise<Contact> {
-    return this.contactRepository.updateWithTenant(tenantId, id, dto);
+    const contact = await this.contactRepository.updateWithTenant(tenantId, id, dto);
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId });
+    return contact;
+  }
+
+  async assignOwner(tenantId: string, id: string, ownerId: string): Promise<Contact> {
+    await this.findOne(tenantId, id);
+    const contact = await this.contactRepository.updateWithTenant(tenantId, id, { ownerId });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId });
+    return contact;
+  }
+
+  async addTag(tenantId: string, id: string, tag: string): Promise<Contact> {
+    const contact = await this.findOne(tenantId, id);
+    const tags = [...(contact.tags ?? [])];
+    if (!tags.includes(tag)) {
+      tags.push(tag);
+    }
+    const updated = await this.contactRepository.updateWithTenant(tenantId, id, { tags });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact: updated, tenantId });
+    return updated;
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
@@ -126,5 +151,35 @@ export class ContactService {
       ],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async mergeContacts(
+    tenantId: string,
+    primaryId: string,
+    secondaryId: string,
+  ): Promise<Contact> {
+    if (primaryId === secondaryId) {
+      throw new NotFoundException('Cannot merge contact with itself');
+    }
+
+    const primary = await this.findOne(tenantId, primaryId);
+    const secondary = await this.findOne(tenantId, secondaryId);
+
+    const mergedTags = Array.from(new Set([...(primary.tags ?? []), ...(secondary.tags ?? [])]));
+    const mergedCustomFields = { ...(secondary.customFields ?? {}), ...(primary.customFields ?? {}) };
+
+    await this.contactRepository.updateWithTenant(tenantId, primaryId, {
+      tags: mergedTags,
+      customFields: mergedCustomFields,
+      phone: primary.phone ?? secondary.phone,
+      jobTitle: primary.jobTitle ?? secondary.jobTitle,
+    });
+
+    await this.activityRepository.update({ tenantId, contactId: secondaryId }, { contactId: primaryId });
+    await this.noteRepository.update({ tenantId, contactId: secondaryId }, { contactId: primaryId });
+    await this.dealService.reassignContact(tenantId, secondaryId, primaryId);
+    await this.contactRepository.delete(tenantId, secondaryId);
+
+    return this.findOne(tenantId, primaryId);
   }
 }

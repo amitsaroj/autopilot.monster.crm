@@ -149,6 +149,13 @@ export class LogoutDto {
   @IsBoolean()
   @IsOptional()
   allSessions?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Current refresh token to revoke for single-session logout',
+  })
+  @IsString()
+  @IsOptional()
+  refreshToken?: string;
 }
 
 export class VerifyEmailDto {

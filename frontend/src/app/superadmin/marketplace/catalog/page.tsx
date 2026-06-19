@@ -13,9 +13,11 @@ import {
   Eye, CornerDownRight, SquareAsterisk,
   Grid, List as ListIcon, Tags, Bookmark,
   Sparkles, Megaphone, Target, Briefcase,
-  Compass, Map, MoveRight
+  Compass, MoveRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+import { adminMarketplaceService, type AdminPlugin } from '@/services/admin-marketplace.service';
 
 interface Category {
   id: string;
@@ -32,20 +34,84 @@ interface Collection {
 }
 
 export default function MarketplaceCatalogManagementPage() {
-  const [categories, setCategories] = useState<Category[]>([
-     { id: '1', name: 'Automation Lattices', count: 24, status: 'ACTIVE' },
-     { id: '2', name: 'Structural Security', count: 12, status: 'ACTIVE' },
-     { id: '3', name: 'Identity Forensics', count: 8, status: 'ACTIVE' },
-     { id: '4', name: 'CRM Connectors', count: 42, status: 'ACTIVE' },
-  ]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [collections, setCollections] = useState<Collection[]>([
-     { id: '1', name: 'Launch Essentials', pluginCount: 6, featured: true },
-     { id: '2', name: 'Enterprise Hardening', pluginCount: 4, featured: true },
-     { id: '3', name: 'High-Velocity Growth', pluginCount: 8, featured: false },
-  ]);
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await adminMarketplaceService.getPlugins();
+      const plugins = res.data?.data ?? [];
+      buildCatalogFromPlugins(plugins);
+    } catch {
+      toast.error('Failed to load marketplace catalog');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const buildCatalogFromPlugins = (plugins: AdminPlugin[]) => {
+    const categoryCounts = new Map<string, number>();
+    for (const plugin of plugins) {
+      const name = plugin.category?.trim() || 'Uncategorized';
+      categoryCounts.set(name, (categoryCounts.get(name) ?? 0) + 1);
+    }
+
+    setCategories(
+      Array.from(categoryCounts.entries()).map(([name, count], index) => ({
+        id: String(index + 1),
+        name,
+        count,
+        status: 'ACTIVE' as const,
+      })),
+    );
+
+    const premium = plugins.filter((p) => p.isPremium);
+    const community = plugins.filter((p) => !p.isPremium);
+    const nextCollections: Collection[] = [];
+
+    if (premium.length > 0) {
+      nextCollections.push({
+        id: '1',
+        name: 'Premium Extensions',
+        pluginCount: premium.length,
+        featured: true,
+      });
+    }
+    if (community.length > 0) {
+      nextCollections.push({
+        id: '2',
+        name: 'Community Extensions',
+        pluginCount: community.length,
+        featured: false,
+      });
+    }
+
+    const authorCounts = new Map<string, number>();
+    for (const plugin of plugins) {
+      const author = plugin.author?.trim() || 'Unknown';
+      authorCounts.set(author, (authorCounts.get(author) ?? 0) + 1);
+    }
+    const topAuthors = Array.from(authorCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+
+    topAuthors.forEach(([author, count], index) => {
+      nextCollections.push({
+        id: String(index + 3),
+        name: author,
+        pluginCount: count,
+        featured: index === 0,
+      });
+    });
+
+    setCollections(nextCollections);
+  };
 
   if (loading) {
      return (

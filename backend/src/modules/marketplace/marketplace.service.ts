@@ -31,7 +31,7 @@ export class MarketplaceService {
 
   async listInstalled(tenantId: string): Promise<TenantPlugin[]> {
     return this.tenantPluginRepository.find({
-      where: { tenantId, status: 'ENABLED' },
+      where: { tenantId, isEnabled: true },
       relations: ['plugin'],
       order: { createdAt: 'DESC' },
     });
@@ -40,16 +40,22 @@ export class MarketplaceService {
   async install(tenantId: string, pluginId: string): Promise<TenantPlugin> {
     const plugin = await this.getApp(pluginId);
 
+    if (plugin.isPremium && !plugin.stripePriceId) {
+      throw new BadRequestException(
+        'Premium app requires billing setup. Contact support to enable this plugin.',
+      );
+    }
+
     const existing = await this.tenantPluginRepository.findOne({
       where: { tenantId, pluginId },
     });
 
     if (existing) {
-      if (existing.status === 'ENABLED') {
+      if (existing.isEnabled) {
         throw new BadRequestException('App already installed');
       }
-      existing.status = 'ENABLED';
-      existing.lastSyncAt = new Date();
+      existing.isEnabled = true;
+      existing.installedAt = new Date();
       return this.tenantPluginRepository.save(existing);
     }
 
@@ -57,9 +63,9 @@ export class MarketplaceService {
       this.tenantPluginRepository.create({
         tenantId,
         pluginId: plugin.id,
-        status: 'ENABLED',
+        isEnabled: true,
         config: {},
-        lastSyncAt: new Date(),
+        installedAt: new Date(),
       }),
     );
   }
@@ -73,7 +79,7 @@ export class MarketplaceService {
       throw new NotFoundException('App not installed');
     }
 
-    installation.status = 'DISABLED';
+    installation.isEnabled = false;
     await this.tenantPluginRepository.save(installation);
   }
 }

@@ -14,6 +14,7 @@ import { AuthRepository } from '../../src/modules/auth/auth.repository';
 import { MfaService } from '../../src/modules/auth/mfa.service';
 import { EmailService } from '../../src/shared/email/email.service';
 import { ConfigService } from '@nestjs/config';
+import { PricingService } from '../../src/modules/pricing/pricing.service';
 
 const TENANT_A = '11111111-1111-1111-1111-111111111111';
 
@@ -37,6 +38,7 @@ describe('Auth integration (service)', () => {
         { provide: JwtService, useValue: { sign: jest.fn(), verify: jest.fn() } },
         { provide: MfaService, useValue: { generateSecret: jest.fn(), verifyToken: jest.fn() } },
         { provide: EmailService, useValue: { sendPasswordResetEmail: jest.fn() } },
+        { provide: PricingService, useValue: { getTenantSubscription: jest.fn() } },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
         {
           provide: ConfigService,

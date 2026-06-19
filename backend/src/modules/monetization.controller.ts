@@ -3,10 +3,12 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, TenantGuard, RolesGuard } from '../common/guards';
 import { PricingService } from './pricing/pricing.service';
 import { BillingService } from './billing/billing.service';
-import { TenantId, Roles } from '../common/decorators';
+import { TenantId, Roles, ResourcePermissions, PlanFeature } from '../common/decorators';
 import { Public } from '../common/decorators/public.decorator';
 
 @ApiTags('Monetization')
+@ResourcePermissions('billing')
+@PlanFeature('billing')
 @ApiBearerAuth()
 @Controller('monetization')
 export class MonetizationController {
@@ -40,8 +42,7 @@ export class MonetizationController {
   @ApiOperation({ summary: 'Get current usage' })
   @UseGuards(JwtAuthGuard, TenantGuard)
   getUsage(@TenantId() tenantId: string) {
-    // Basic metrics retrieval
-    return this.billingService.getUsage(tenantId, 'all');
+    return this.billingService.getUsageBreakdown(tenantId);
   }
 
   @Post('upgrade')

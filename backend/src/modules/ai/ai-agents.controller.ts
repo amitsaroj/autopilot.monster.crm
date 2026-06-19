@@ -14,9 +14,11 @@ import { AgentService } from '../crm/agent.service';
 import { AiPromptService } from './ai-prompt.service';
 import { CreateAiAgentDto, CreateAiPromptDto, UpdateAiAgentDto, UpdateAiPromptDto } from './dto/ai-agent.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 
 @ApiTags('AI Agents')
+@ResourcePermissions('ai')
+@PlanFeature('ai')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('ai/agents')
@@ -78,6 +80,8 @@ export class AiAgentsController {
 }
 
 @ApiTags('AI Prompts')
+@ResourcePermissions('ai')
+@PlanFeature('ai')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('ai/prompts')

@@ -197,6 +197,7 @@ export class FineTuningService {
       case 'cancelled':
         return FineTuningStatus.CANCELLED;
       default:
+        this.logger.warn(`Unknown OpenAI fine-tuning status: ${status}`);
         return FineTuningStatus.TRAINING;
     }
   }

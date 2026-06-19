@@ -14,26 +14,56 @@ import {
   Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { parseApiData } from '@/lib/api/parse-response';
+import { crmReportService } from '@/services/crm-report.service';
+import { analyticsService } from '@/services/analytics.service';
 
-interface AnalyticsSummary {
-  contactsCount: number;
-  dealsValue: number;
-  activeCampaigns: number;
-  conversionRate: number;
-  revenuePulse: number[];
+interface CrmSummary {
+  totalDeals: number;
+  totalRevenue: number;
+  totalLeads: number;
+  totalContacts: number;
+  winRate: number;
+}
+
+interface RevenuePoint {
+  name: string;
+  revenue: number;
+}
+
+interface LeadFunnelPoint {
+  name: string;
+  count: number;
 }
 
 export default function CRMAnalyticsSummaryPage() {
-  const [data, setData] = useState<AnalyticsSummary | null>(null);
+  const [summary, setSummary] = useState<CrmSummary | null>(null);
+  const [revenueData, setRevenueData] = useState<RevenuePoint[]>([]);
+  const [funnelData, setFunnelData] = useState<LeadFunnelPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAnalytics = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/crm/analytics/summary');
-      const json = await res.json();
-      if (json.data) setData(json.data);
-    } catch (e) {
+      const [summaryRes, revenueRes, funnelRes, crmAnalytics] = await Promise.all([
+        crmReportService.getSummary(),
+        crmReportService.getRevenueTrend(),
+        crmReportService.getLeadFunnel(),
+        analyticsService.getCrm(),
+      ]);
+      setSummary(parseApiData<CrmSummary>(summaryRes));
+      setRevenueData(parseApiData<RevenuePoint[]>(revenueRes) ?? []);
+      setFunnelData(parseApiData<LeadFunnelPoint[]>(funnelRes) ?? []);
+      if (!parseApiData<CrmSummary>(summaryRes) && crmAnalytics) {
+        setSummary({
+          totalContacts: crmAnalytics.contacts,
+          totalLeads: crmAnalytics.leads,
+          totalDeals: crmAnalytics.deals,
+          totalRevenue: 0,
+          winRate: crmAnalytics.conversionRate,
+        });
+      }
+    } catch {
       toast.error('Failed to synchronize CRM performance forensics');
     } finally {
       setLoading(false);
@@ -82,10 +112,10 @@ export default function CRMAnalyticsSummaryPage() {
       {/* Persistence Forensics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
          {[
-           { label: 'Lead Velocity', value: '4.2k', trend: '+12.4%', icon: UserPlus, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-           { label: 'Fiscal Pipeline', value: '$2.8M', trend: '+8.2%', icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-           { label: 'Conversion Pulse', value: '18.4%', trend: '+2.1%', icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-           { label: 'Engagement Rate', value: '42%', trend: '-1.4%', icon: Activity, color: 'text-red-500', bg: 'bg-red-500/10' },
+           { label: 'Total Leads', value: (summary?.totalLeads ?? 0).toLocaleString(), trend: '', icon: UserPlus, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+           { label: 'Fiscal Pipeline', value: `$${Math.round((summary?.totalRevenue ?? 0) / 1000)}K`, trend: '', icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+           { label: 'Conversion Pulse', value: `${Math.round(summary?.winRate ?? 0)}%`, trend: '', icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+           { label: 'Total Contacts', value: (summary?.totalContacts ?? 0).toLocaleString(), trend: '', icon: Activity, color: 'text-blue-500', bg: 'bg-blue-500/10' },
          ].map((stat) => (
            <div key={stat.label} className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] group hover:bg-white/[0.03] transition-all relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-indigo-500/5 transition-colors" />
@@ -121,23 +151,30 @@ export default function CRMAnalyticsSummaryPage() {
                   </div>
                </div>
             </div>
-            {/* Chart Placeholder */}
+            {/* Revenue chart from live API */}
             <div className="h-[300px] w-full flex items-end gap-3 px-4">
-               {[40, 70, 45, 90, 65, 80, 50, 95, 60, 85, 70, 90].map((h, i) => (
-                  <div key={i} className="flex-1 space-y-2 group/bar">
+               {(revenueData.length > 0 ? revenueData : []).map((point, i) => {
+                 const maxRevenue = Math.max(...revenueData.map((p) => p.revenue), 1);
+                 const height = Math.round((point.revenue / maxRevenue) * 100);
+                 return (
+                  <div key={point.name} className="flex-1 space-y-2 group/bar">
                      <div className="h-[250px] w-full flex items-end">
                         <div 
-                           style={{ height: `${h}%` }} 
+                           style={{ height: `${height}%` }} 
                            className="w-full bg-white/[0.03] border border-white/5 rounded-2xl group-hover/bar:bg-indigo-500 group-hover/bar:border-indigo-400 group-hover/bar:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all cursor-pointer relative"
                         >
                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity px-3 py-1 bg-white text-[#0b0f19] rounded-lg text-[9px] font-black uppercase whitespace-nowrap">
-                              NODE {i+1}: {h}k
+                              {point.name}: ${(point.revenue / 1000).toFixed(0)}K
                            </div>
                         </div>
                      </div>
-                     <p className="text-[8px] text-gray-700 font-black text-center uppercase tracking-tighter">PHASE {i+1}</p>
+                     <p className="text-[8px] text-gray-700 font-black text-center uppercase tracking-tighter">{point.name}</p>
                   </div>
-               ))}
+               );
+               })}
+               {revenueData.length === 0 && (
+                 <p className="text-sm text-gray-500 w-full text-center py-16">No revenue data yet</p>
+               )}
             </div>
          </div>
 
@@ -155,22 +192,26 @@ export default function CRMAnalyticsSummaryPage() {
                </div>
                
                <div className="space-y-6 pt-4">
-                  {[
-                    { label: 'Email Outreach', value: '52%', color: 'bg-indigo-500' },
-                    { label: 'WhatsApp Nodes', value: '28%', color: 'bg-emerald-500' },
-                    { label: 'SMS Lattices', value: '12%', color: 'bg-amber-500' },
-                    { label: 'Other Vectors', value: '8%', color: 'bg-white/20' },
-                  ].map((mix) => (
-                    <div key={mix.label} className="space-y-2">
+                  {(funnelData.length > 0 ? funnelData : []).map((mix) => {
+                    const total = funnelData.reduce((sum, f) => sum + f.count, 0) || 1;
+                    const pct = Math.round((mix.count / total) * 100);
+                    const colors = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500', 'bg-white/20'];
+                    const color = colors[funnelData.indexOf(mix) % colors.length];
+                    return (
+                    <div key={mix.name} className="space-y-2">
                        <div className="flex justify-between items-center px-1">
-                          <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{mix.label}</span>
-                          <span className="text-[10px] text-white font-black uppercase tracking-widest">{mix.value}</span>
+                          <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{mix.name}</span>
+                          <span className="text-[10px] text-white font-black uppercase tracking-widest">{pct}% ({mix.count})</span>
                        </div>
                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                          <div className={`h-full ${mix.color} rounded-full`} style={{ width: mix.value }} />
+                          <div className={`h-full ${color} rounded-full`} style={{ width: `${pct}%` }} />
                        </div>
                     </div>
-                  ))}
+                  );
+                  })}
+                  {funnelData.length === 0 && (
+                    <p className="text-sm text-gray-500">No lead funnel data</p>
+                  )}
                </div>
             </div>
 

@@ -73,6 +73,29 @@ export class TwilioService {
     }
   }
 
+  validateWebhookSignature(
+    signature: string | undefined,
+    url: string,
+    params: Record<string, string>,
+  ): boolean {
+    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN') ?? '';
+    const isMockToken = !authToken || authToken === 'mocktoken';
+
+    if (process.env.NODE_ENV === 'production' && isMockToken) {
+      return false;
+    }
+
+    if (isMockToken) {
+      return true;
+    }
+
+    if (!signature) {
+      return false;
+    }
+
+    return twilio.validateRequest(authToken, signature, url, params);
+  }
+
   generateIncomingStreamingTwiml(wssUrl: string): string {
     const twiml = new twilio.twiml.VoiceResponse();
     twiml.say({ voice: 'Polly.Amy' }, 'Hello. Please hold while I connect you to an agent.');
@@ -92,6 +115,29 @@ export class TwilioService {
   async releasePhoneNumber(tenantId: string, twilioSid: string): Promise<void> {
     const { client } = await this.getClient(tenantId);
     await client.incomingPhoneNumbers(twilioSid).remove();
+  }
+
+  async transferCall(tenantId: string, callSid: string, to: string): Promise<void> {
+    const { client } = await this.getClient(tenantId);
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say({ voice: 'Polly.Amy' }, 'Transferring your call now.');
+    twiml.dial(to);
+    await client.calls(callSid).update({ twiml: twiml.toString() });
+  }
+
+  generateRoutingTwiml(routingNumber: string, fallbackWssUrl: string): string {
+    const twiml = new twilio.twiml.VoiceResponse();
+    if (routingNumber) {
+      twiml.say({ voice: 'Polly.Amy' }, 'Connecting you to the next available agent.');
+      const dial = twiml.dial({ timeout: 20, action: '/v1/voice/twilio/routing-fallback' });
+      dial.number(routingNumber);
+      return twiml.toString();
+    }
+
+    twiml.say({ voice: 'Polly.Amy' }, 'Hello. Please hold while I connect you to an agent.');
+    const connect = twiml.connect();
+    connect.stream({ url: fallbackWssUrl });
+    return twiml.toString();
   }
 
   async searchAvailableNumbers(

@@ -26,6 +26,7 @@ export interface WorkflowExecution {
 export interface WorkflowTrigger {
   key: string;
   label: string;
+  category?: string;
 }
 
 export const workflowService = {
@@ -64,5 +65,9 @@ export const workflowService = {
   getActions: async () => {
     const res = await api.get('/workflows/workflow-actions');
     return { data: { data: parseApiData<WorkflowTrigger[]>(res) ?? [] } };
+  },
+  retryExecution: async (execId: string) => {
+    const res = await api.post(`/workflows/executions/${execId}/retry`);
+    return { data: { data: parseApiData<{ jobId: string; executionId: string }>(res) } };
   },
 };

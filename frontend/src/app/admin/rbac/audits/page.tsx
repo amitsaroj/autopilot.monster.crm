@@ -27,7 +27,7 @@ export default function AdminRBACauditsPage() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/audit-logs');
+      const res = await api.get('/logs/audit');
       const payload = res.data?.data ?? res.data;
       setEvents(Array.isArray(payload) ? payload : []);
     } catch {

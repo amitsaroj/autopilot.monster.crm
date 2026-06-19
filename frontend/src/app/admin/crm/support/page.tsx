@@ -1,34 +1,15 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   HeadphonesIcon, Search, Plus, Filter, User,
   Clock, CheckCircle2, AlertTriangle, ArrowUpRight,
   MessageSquare, Tag, MoreVertical, ChevronRight,
   XCircle, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface SupportTicket {
-  id: string;
-  number: string;
-  subject: string;
-  contact: string;
-  category: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-  status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-  assignedTo: string;
-  createdAt: string;
-  lastReply: string;
-  replies: number;
-}
-
-const mockTickets: SupportTicket[] = [
-  { id: '1', number: 'TKT-001', subject: 'Cannot import contacts via CSV', contact: 'Sarah Johnson', category: 'Data Import', priority: 'HIGH', status: 'IN_PROGRESS', assignedTo: 'Support Team', createdAt: new Date(Date.now() - 3600000).toISOString(), lastReply: '30 min ago', replies: 4 },
-  { id: '2', number: 'TKT-002', subject: 'WhatsApp integration not connecting', contact: 'Mike Chen', category: 'Integration', priority: 'URGENT', status: 'OPEN', assignedTo: 'Unassigned', createdAt: new Date(Date.now() - 1800000).toISOString(), lastReply: '1h ago', replies: 1 },
-  { id: '3', number: 'TKT-003', subject: 'Billing invoice incorrect for March', contact: 'Priya Patel', category: 'Billing', priority: 'MEDIUM', status: 'RESOLVED', assignedTo: 'Finance Team', createdAt: new Date(Date.now() - 86400000).toISOString(), lastReply: '2d ago', replies: 6 },
-  { id: '4', number: 'TKT-004', subject: 'Password reset email not received', contact: 'Tom Williams', category: 'Auth', priority: 'HIGH', status: 'RESOLVED', assignedTo: 'Support Team', createdAt: new Date(Date.now() - 172800000).toISOString(), lastReply: '3d ago', replies: 3 },
-  { id: '5', number: 'TKT-005', subject: 'Feature request: bulk email send', contact: 'Alex Rivera', category: 'Feature Request', priority: 'LOW', status: 'CLOSED', assignedTo: 'Product Team', createdAt: new Date(Date.now() - 604800000).toISOString(), lastReply: '1w ago', replies: 2 },
-];
+import { supportService, type SupportTicket } from '@/services/support.service';
 
 const PRIORITY_STYLES: Record<string, string> = {
   LOW: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
@@ -45,15 +26,39 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminCRMSupportPage() {
-  const [tickets] = useState<SupportTicket[]>(mockTickets);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await supportService.getTickets();
+        setTickets(res.data?.data ?? []);
+      } catch {
+        toast.error('Failed to load support tickets');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
   const filtered = tickets.filter(t => {
-    const matchSearch = t.subject.toLowerCase().includes(search.toLowerCase()) || t.contact.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = t.subject.toLowerCase().includes(search.toLowerCase()) || t.ticketNumber.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || t.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -110,26 +115,26 @@ export default function AdminCRMSupportPage() {
               <tr key={t.id} className="group hover:bg-white/[0.02] transition-colors cursor-pointer">
                 <td className="px-5 py-4">
                   <div>
-                    <p className="text-[10px] font-mono text-gray-600">{t.number}</p>
+                    <p className="text-[10px] font-mono text-gray-600">{t.ticketNumber}</p>
                     <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors max-w-[200px] truncate">{t.subject}</p>
-                    <p className="text-[10px] text-gray-600">{t.replies} replies</p>
+                    <p className="text-[10px] text-gray-600">{t.priority}</p>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-xs border border-indigo-500/20">{t.contact.charAt(0)}</div>
-                    <span className="text-xs text-gray-300">{t.contact}</span>
+                    <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-xs border border-indigo-500/20">T</div>
+                    <span className="text-xs text-gray-300">{t.contactId ?? '—'}</span>
                   </div>
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-500">{t.category}</td>
+                <td className="px-5 py-4 text-xs text-gray-500">{t.priority}</td>
                 <td className="px-5 py-4">
                   <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${PRIORITY_STYLES[t.priority]}`}>{t.priority}</span>
                 </td>
                 <td className="px-5 py-4">
                   <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[t.status]}`}>{t.status.replace('_', ' ')}</span>
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-400">{t.assignedTo}</td>
-                <td className="px-5 py-4 text-xs text-gray-500">{t.lastReply}</td>
+                <td className="px-5 py-4 text-xs text-gray-400">{t.assigneeId ?? 'Unassigned'}</td>
+                <td className="px-5 py-4 text-xs text-gray-500">{new Date(t.updatedAt).toLocaleDateString()}</td>
                 <td className="px-5 py-4">
                   <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 transition-colors" />
                 </td>

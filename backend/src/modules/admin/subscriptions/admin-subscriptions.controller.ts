@@ -2,9 +2,10 @@ import { Controller, Get, Patch, Delete, Body, Param, Query, UseGuards } from '@
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AdminSubscriptionsService } from './admin-subscriptions.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles } from '../../../common/decorators';
+import { Roles, ResourcePermissions } from '../../../common/decorators';
 
 @ApiTags('Admin / Subscriptions')
+@ResourcePermissions('billing')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')

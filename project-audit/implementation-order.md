@@ -1,50 +1,61 @@
 # Implementation Order (Prioritized)
 
-## Phase 1 — Foundation & Data Integrity (P0)
+**Audit date:** 2026-06-19 (Session 12)  
+**Overall completion estimate: ~83%**
 
-1. **Database migrations** — Initial migration from existing entities
-2. **CRM Forecast API** — `/crm/forecast/*` (doc-required, frontend exists with mocks)
-3. **Voice call persistence** — Wire Twilio webhooks to `voice_calls` table; real list/detail APIs
-4. **API Keys + Webhooks settings** — Entity + `/settings/api-keys`, `/settings/webhooks`
-5. **Core unit tests** — ForecastService, VoiceCallService, ApiKeyService
+## Phase 0 — Critical Security & Data (P0)
 
-## Phase 2 — Module Completion (P1)
+| # | Task | ID | Depends On | Effort |
+|---|------|----|------------|--------|
+| 1 | Explicit baseline DDL for 71 entities | TASK-011 | Entity audit | L |
+| 2 | RS256 JWT in production | TASK-017 | Key management | M |
+| 3 | Complete `@ResourcePermissions` + seed permissions | TASK-010 | RBAC seed | L |
+| 4 | Workflow action executors (real side effects) | TASK-013 | CRM/voice/WA services | L |
+| 5 | Register LimitGuard + verify PlanGuard | TASK-014 | Pricing service | S |
 
-6. **WhatsApp conversations** — Entity, persist inbound, conversation APIs
-7. **WhatsApp templates entity** — CRUD + Meta sync stub with real DB
-8. **Workflow activate/deactivate/duplicate** — Complete workflow API surface
-9. **Analytics endpoints** — overview, crm, revenue, pipeline, team
-10. **Billing path aliases** — `/billing/*` controller delegating to monetization
-11. **Deal stage/won/lost endpoints** — CRM sales funnel completion
-12. **Quote send/accept/PDF** — Quote lifecycle
+## Phase 1 — Module Completion (P1)
 
-## Phase 3 — AI & Communication (P2)
+| # | Task | ID | Depends On | Effort |
+|---|------|----|------------|--------|
+| 6 | Lead scoring rule engine | TASK-016 | CRM events + schema | M |
+| 7 | WhatsApp assign/resolve + numbers API | — | WA module | S |
+| 8 | WhatsApp Flow Builder entity + UI | — | Flow entity | L |
+| 9 | Voice sentiment + post-call summaries | TASK-024 | OpenAI + voice | M |
+| 10 | SSO SAML/OIDC backend | — | tenant-settings | M |
+| 11 | Cross-tenant HTTP isolation tests | TASK-021 | Test infra | M |
+| 12 | Webhook E2E without guard override | TASK-020 | Test infra | M |
+| 13 | Wire remaining admin mockData pages | — | Admin services | S |
 
-13. **AI agents/prompts at `/ai/*`** — Path alignment + prompt CRUD
-14. **Knowledge base path alignment** — `/ai/knowledge-bases`
-15. **Voice campaigns** — Entity + CRUD + start/pause
-16. **Voice phone numbers** — Provision/release
-17. **WhatsApp broadcasts** — Entity + send/schedule
-18. **SSE streaming chat** — `/ai/chat` streaming
+## Phase 2 — Platform & Billing (P2)
 
-## Phase 4 — Platform & Marketplace (P3)
+| # | Task | ID | Depends On | Effort |
+|---|------|----|------------|--------|
+| 14 | PayPal/Razorpay | TASK-022 | Stripe patterns | L |
+| 15 | SDK/OAuth developer portal | TASK-023 | dev_platform schema | M |
+| 16 | Full-text tsvector search | TASK-025 | Migration | M |
+| 17 | Marketing pages | TASK-027 | — | S |
+| 18 | Marketplace install + vendor flow | — | plugin entities | M |
 
-19. **Marketplace real directory** — Plugin/marketplace entities + install flow
-20. **Import/Export jobs** — Async job entities + APIs
-21. **Unified search** — `/search` across entities
-22. **Storage file APIs** — Presigned URLs
-23. **Logs endpoints** — Tenant-scoped audit/API/webhook logs
-24. **Wallet/Credits billing** — Entities + APIs
+## Phase 3 — Quality & Hardening (P3)
 
-## Phase 5 — Quality & Hardening (P4)
+| # | Task | ID | Depends On | Effort |
+|---|------|----|------------|--------|
+| 19 | Expand unit + integration tests to 40% routes | — | — | L |
+| 20 | Frontend Playwright smoke in CI | TASK-028 | CI | M |
+| 21 | Prometheus /metrics | TASK-033 | — | S |
+| 22 | Shared EmptyState/ErrorBoundary | TASK-032 | — | S |
+| 23 | Remove legacy auth.controller.ts | TASK-030 | — | S |
 
-25. **Integration test suite** — Auth, CRM, billing, tenant isolation
-26. **E2E smoke tests** — Critical user journeys
-27. **Frontend API wiring** — Replace remaining mock data pages
-28. **Contact nested routes** — activities, deals, notes per contact
-29. **Fine-tuning & embedding management APIs**
-30. **SSO configuration endpoints**
+## Dependency Graph
 
-## Session 1 Focus (This Run)
+```
+TASK-011 (migrations) ──► production deploy sign-off
+TASK-010 (permissions) ──► TASK-021 (isolation tests)
+TASK-017 (RS256) ──► security audit sign-off
+TASK-013 (workflows) ──► automation value proposition
+TASK-020 (webhook tests) ──► S12 webhook hardening validation
+```
 
-Implementing items **2, 3, 4, 5, 6 (partial), 8 (partial), 9 (partial)** and frontend forecast wiring.
+## Session 12 Focus
+
+Audit deliverables + webhook hardening + sub-admin ResourcePermissions.

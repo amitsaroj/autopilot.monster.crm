@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from 'react';
-import { Rss, Calendar, Clock, Heart, MessageSquare, Share2, Plus, Filter } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Rss, Calendar, Clock, Heart, MessageSquare, Share2, Plus, Filter, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { socialService } from '@/services/social.service';
 
 interface SocialPost {
   id: string;
@@ -14,13 +17,6 @@ interface SocialPost {
   shares: number;
   createdAt: string;
 }
-
-const mockPosts: SocialPost[] = [
-  { id: '1', content: '🚀 Excited to announce our new AI-powered CRM features! Automate your sales pipeline with intelligent lead scoring and...', platform: 'LinkedIn', status: 'PUBLISHED', likes: 142, comments: 18, shares: 34, createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: '2', content: 'Did you know our CRM integrates with 50+ tools? Connect your stack today! #SaaS #CRM #Sales', platform: 'Twitter', status: 'SCHEDULED', scheduledAt: new Date(Date.now() + 3600000).toISOString(), likes: 0, comments: 0, shares: 0, createdAt: new Date().toISOString() },
-  { id: '3', content: 'Month recap: Our customers closed 38% more deals using our AI agents. Here\'s how...', platform: 'LinkedIn', status: 'DRAFT', likes: 0, comments: 0, shares: 0, createdAt: new Date().toISOString() },
-  { id: '4', content: '💼 New case study: How GlobalSales Inc 3x\'d their outreach with Autopilot CRM', platform: 'Facebook', status: 'PUBLISHED', likes: 67, comments: 8, shares: 12, createdAt: new Date(Date.now() - 172800000).toISOString() },
-];
 
 const STATUS_STYLES: Record<string, string> = {
   PUBLISHED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -36,7 +32,43 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 export default function AdminSocialFeedPage() {
-  const [posts] = useState<SocialPost[]>(mockPosts);
+  const [posts, setPosts] = useState<SocialPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await socialService.getPosts();
+        const payload = res.data?.data ?? res.data;
+        const items = Array.isArray(payload) ? payload : payload?.data ?? [];
+        setPosts(items.map((p: Record<string, unknown>) => ({
+          id: String(p.id),
+          content: String(p.content ?? p.body ?? ''),
+          platform: String(p.platform ?? 'LinkedIn'),
+          status: (p.status as SocialPost['status']) ?? 'DRAFT',
+          scheduledAt: p.scheduledAt as string | undefined,
+          likes: Number(p.likes ?? 0),
+          comments: Number(p.comments ?? 0),
+          shares: Number(p.shares ?? 0),
+          createdAt: String(p.createdAt ?? new Date().toISOString()),
+        })));
+      } catch {
+        toast.error('Failed to load social posts');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

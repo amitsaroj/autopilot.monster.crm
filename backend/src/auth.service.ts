@@ -1,4 +1,5 @@
 import { ERROR_CODES } from '@autopilot/core/common/constants/error-codes.constants';
+import { buildJwtSignOptions, buildJwtVerifyConfig } from '@autopilot/core/common/utils/jwt-signing.util';
 import type { JwtConfig } from '@autopilot/core/config/jwt.config';
 import { EVENT_NAMES } from '@autopilot/core/events/event.constants';
 import {
@@ -135,7 +136,10 @@ export class AuthService {
   async refreshTokens(rawRefreshToken: string, tenantId: string, ipAddress: string): Promise<AuthTokens> {
     let payload: JwtPayload;
     try {
-      payload = this.jwtService.verify<JwtPayload>(rawRefreshToken, { secret: this.jwtConfig.refreshSecret });
+      payload = this.jwtService.verify<JwtPayload>(
+        rawRefreshToken,
+        buildJwtVerifyConfig(this.jwtConfig, 'refresh'),
+      );
     } catch {
       throw new UnauthorizedException({ message: 'Invalid or expired refresh token', code: ERROR_CODES.TOKEN_EXPIRED });
     }
@@ -281,8 +285,8 @@ export class AuthService {
       planId: '',
     };
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.secret, expiresIn: this.jwtConfig.expiresIn as any }),
-      this.jwtService.signAsync(payload, { secret: this.jwtConfig.refreshSecret, expiresIn: this.jwtConfig.refreshExpiresIn as any }),
+      this.jwtService.signAsync(payload, buildJwtSignOptions(this.jwtConfig, 'access')),
+      this.jwtService.signAsync(payload, buildJwtSignOptions(this.jwtConfig, 'refresh')),
     ]);
     return { accessToken, refreshToken, expiresIn: 900, tokenType: 'Bearer' };
   }

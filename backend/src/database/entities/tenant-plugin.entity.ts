@@ -19,12 +19,12 @@ export class TenantPlugin extends BaseEntity {
   @JoinColumn({ name: 'pluginId' })
   plugin!: Plugin;
 
-  @Column({ type: 'jsonb', nullable: true })
-  config!: any;
+  @Column({ type: 'jsonb', default: {} })
+  config!: Record<string, unknown>;
 
-  @Column({ default: 'ENABLED' })
-  status!: string;
+  @Column({ name: 'is_enabled', default: true })
+  isEnabled!: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
-  lastSyncAt!: Date;
+  @Column({ name: 'installed_at', type: 'timestamptz', nullable: true })
+  installedAt?: Date;
 }

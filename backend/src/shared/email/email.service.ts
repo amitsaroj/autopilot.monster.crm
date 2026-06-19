@@ -45,6 +45,20 @@ export class EmailService {
     return this.sendEmail(email, subject, html);
   }
 
+  async sendVerificationEmail(email: string, name: string, token: string) {
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
+    const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
+    const subject = 'Verify your email address';
+    const html = `
+      <h1>Welcome, ${name}!</h1>
+      <p>Please verify your email address to activate your account.</p>
+      <p><a href="${verifyUrl}">Verify email</a></p>
+      <p>Or copy this link: ${verifyUrl}</p>
+      <p>If you did not create an account, please ignore this email.</p>
+    `;
+    return this.sendEmail(email, subject, html);
+  }
+
   async sendPasswordResetEmail(email: string, token: string) {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;

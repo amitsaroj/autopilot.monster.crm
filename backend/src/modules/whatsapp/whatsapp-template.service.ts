@@ -79,13 +79,14 @@ export class WhatsappTemplateService {
     }
 
     try {
+      const componentList = this.resolveTemplateComponents(template.components);
       const response = await axios.post(
         `https://graph.facebook.com/v19.0/${businessAccountId}/message_templates`,
         {
           name: template.name,
           language: template.language,
           category: template.category,
-          components: template.components,
+          components: componentList,
         },
         {
           headers: {
@@ -104,5 +105,18 @@ export class WhatsappTemplateService {
       template.rejectionReason = message;
       return this.templateRepository.save(template);
     }
+  }
+
+  private resolveTemplateComponents(components: Record<string, unknown>): unknown[] {
+    if (Array.isArray(components)) {
+      return components;
+    }
+
+    const nested = components.components;
+    if (Array.isArray(nested)) {
+      return nested;
+    }
+
+    return [];
   }
 }

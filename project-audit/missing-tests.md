@@ -1,48 +1,70 @@
 # Missing Tests Audit
 
-## Current State
+**Audit date:** 2026-06-18 (Session 10)
 
-- Jest configured in `backend/package.json`
-- Scripts: `test`, `test:watch`, `test:cov`, `test:e2e`, `test:core`
-- **Zero test files found** (`*.spec.ts`, `*.test.ts`, `*.test.tsx`)
+## Summary
 
-## Required Test Coverage (per Docs/qa_batch*.md)
+| Type | Files Found | Target | Gap |
+|------|-------------|--------|-----|
+| Unit tests | 2 | 40+ | 38 |
+| Integration tests | 11 | 25+ | 14 |
+| E2E (Playwright) | 0 | 10+ | 10 |
+| Frontend tests | 0 | 20+ | 20 |
 
-### Unit Tests — Missing
+## Current Test Files (13 total)
+
+### Unit
+- `backend/src/modules/crm/forecast.service.spec.ts`
+- `backend/src/modules/crm/deal.service.spec.ts`
+
+### Integration (HTTP)
+- `auth.integration.spec.ts`
+- `auth-login-http.integration.spec.ts`
+- `analytics-reports-http.integration.spec.ts`
+- `workflow-crud-http.integration.spec.ts`
+- `import-export-http.integration.spec.ts`
+- `crm-crud-http.integration.spec.ts`
+- `quote-public-http.integration.spec.ts`
+- `deal-lifecycle.integration.spec.ts`
+- `billing-webhook.integration.spec.ts`
+- `health-http.integration.spec.ts`
+- `tenant-isolation.integration.spec.ts`
+
+## Missing Unit Tests — By Module
 
 | Module | Priority | Suggested Targets |
 |--------|----------|-------------------|
-| CRM Services | CRITICAL | ContactService, DealService, LeadConversionService, ForecastService |
 | Auth | CRITICAL | AuthService, MfaService, JwtStrategy |
-| Billing | CRITICAL | BillingService, PricingService, Stripe webhook handler |
-| Workflow | HIGH | WorkflowService, WorkflowProcessor |
-| AI | HIGH | RagService, ConversationService |
-| Voice | HIGH | TwilioService, VoiceCallService |
-| WhatsApp | HIGH | WhatsappService, MetaWebhookController |
-| RBAC | HIGH | RbacService, PermissionGuard |
-| Tenant | HIGH | TenantGuard, tenant isolation in BaseRepository |
+| Billing | CRITICAL | BillingService, WalletService, Stripe webhook |
+| CRM | HIGH | ContactService, LeadService, QuoteLifecycleService |
+| Workflow | HIGH | WorkflowService, WorkflowExecutorService |
+| AI | HIGH | RagService, ConversationService, FineTuningService |
+| Voice | HIGH | VoiceCallService, TwilioService |
+| WhatsApp | HIGH | WhatsappService, WhatsappBroadcastService |
+| RBAC | HIGH | PermissionGuard, RbacService |
+| Tenant | HIGH | TenantGuard, TenantService |
+| Search | MEDIUM | SearchService |
+| Marketplace | MEDIUM | MarketplaceService |
+| Developer | MEDIUM | DeveloperSettingsService |
 
-### Integration Tests — Missing
+## Missing Integration Tests
 
-- Multi-tenant data isolation (cross-tenant access denied)
-- Auth flow (login → refresh → logout)
-- CRM lead conversion pipeline
-- Stripe webhook → subscription state update
-- Workflow trigger → execution → completion
+- Cross-tenant HTTP isolation for all modules (partial — 1 suite exists)
+- Webhook E2E without guard override (TASK-020)
+- Voice call lifecycle (Twilio webhook → DB persist)
+- WhatsApp inbound message persistence
+- API key authentication flow
+- PlanGuard feature denial
 
-### E2E Tests — Missing
+## Missing E2E / Frontend Tests
 
-- `jest-e2e.config.ts` referenced but no e2e test files
-- Post-deployment smoke tests mentioned in build_order.md — not in repo
-
-### Frontend Tests — Missing
-
-- No Vitest/Jest/Playwright config found in frontend
-- No component or page tests
+- No Playwright config in frontend
+- No component tests (Vitest/Jest)
+- CI likely passes integration suite but no browser smoke tests
 
 ## CI Gap
 
-`.github/workflows/` exists but test execution likely passes vacuously with 0 tests.
+- `npm run test:core` fails — Jest CLI option `--testPathPattern` deprecated
+- Fix: update `package.json` to use `--testPathPatterns`
 
-**Estimated missing test files: 100+ for adequate coverage**
-**Current test files: 0**
+**Estimated missing test files: ~80 for adequate coverage**

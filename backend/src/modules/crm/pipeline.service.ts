@@ -34,7 +34,11 @@ export class PipelineService {
   }
 
   async create(tenantId: string, data: Partial<Pipeline>): Promise<Pipeline> {
-    return this.repository.create(tenantId, data);
+    const payload: Partial<Pipeline> = { ...data };
+    if (payload.stages !== undefined) {
+      payload.stages = payload.stages.map((stage) => ({ ...stage, tenantId }));
+    }
+    return this.repository.create(tenantId, payload);
   }
 
   async createStage(tenantId: string, pipelineId: string, data: Partial<PipelineStage>): Promise<PipelineStage> {

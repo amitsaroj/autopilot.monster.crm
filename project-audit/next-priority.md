@@ -1,17 +1,26 @@
-# Next Priority Items — Session 7
+# Next Priority Items — Session 19
 
-1. **Permission-based RBAC** — add `@Permissions('crm:read')` etc. on all routes; wire PermissionGuard
-2. **Full baseline migration** — DDL for all 76 entities; disable DB_SYNCHRONIZE in prod compose
-3. **Frontend PagePlaceholder batch 4** — 72 routes still stubbed (CRM nested, builder, AI/voice detail)
-4. **Admin mock-data replacement** — 22 admin pages with hardcoded arrays
-5. **Workflow engine** — remove mockSteps; load steps from DB; real Bull processor
-6. **PlanGuard implementation** — real plan feature checks via billing service
-7. **Lead scoring** — rule-based 0-100 per crm_design.md §4
-8. **RS256 JWT migration** — per Docs/security.md
-9. **Webhook E2E tests** — test @Public routes without guard override
-10. **Cross-tenant HTTP isolation test** — verify 403/404 on tenant mismatch
-11. **Domain verification** — remove mock always-true in tenant.service.ts
-12. **Analytics reports CRUD** — complete persistence + frontend
-13. **SDK/OAuth app management** — developer portal APIs + UI
-14. **Voice sentiment/summaries** — post-call AI analysis
-15. **MinIO in CI** — enable import/export E2E
+## Session 19 completed
+- **18 new secured integration spec files** (~51 tests) across CRM, billing, analytics, AI, voice, WhatsApp, notifications, search, storage, plugins
+- **`secured-http-test.helper.ts`** — shared bootstrap for real-guard HTTP tests
+- **CI:** `DB_SYNCHRONIZE`, `--forceExit --runInBand` on `test:integration`
+- **PayPal/Razorpay exclusion** documented in certificate (condition #6 MET)
+
+## Top 5 immediate tasks
+
+1. **Push integration coverage to ≥40%** — remaining modules: tenant settings, workflows meta, support, social, marketplace
+2. **Verify CI integration suite green** on GitHub Actions after merge
+3. **Security audit sign-off** — condition #10 verification
+4. **RS256 JWT documentation** — complete condition #2 partial
+5. **Usage metering HTTP assertion** — contacts_limit increment in secured spec
+
+## Recently completed (Sessions 18–19)
+- 40 integration spec files with real guards
+- Role-permission join table migration
+- Billing provider exclusion sign-off
+- Webhook HTTP E2E + auth refresh tests
+
+## Quick wins (≤1 day each)
+- Migrate any remaining specs using mock guards to `bootstrapSecuredHttpTest`
+- Remove legacy `src/auth.controller.ts` (TASK-030)
+- Add `jest --detectOpenHandles` diagnostic in CI if worker leaks persist

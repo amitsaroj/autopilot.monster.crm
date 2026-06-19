@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -10,6 +10,7 @@ import { UsageRecord } from '../../database/entities/usage-record.entity';
 import { PaymentMethod } from '../../database/entities/payment-method.entity';
 import { Plan } from '../../database/entities/plan.entity';
 import { AppConfig } from '../../config/app.config';
+import { resolveUsagePeriodBounds, UsagePeriod } from './usage-period.util';
 
 @Injectable()
 export class BillingService {
@@ -88,10 +89,18 @@ export class BillingService {
 
   async handleWebhook(signature: string, payload: Buffer) {
     const webhookSecret = this.configService.get<string>('app.stripe.webhookSecret');
+    const nodeEnv = this.configService.get<string>('app.nodeEnv');
+    if (!webhookSecret) {
+      if (nodeEnv === 'production') {
+        throw new ForbiddenException('Stripe webhook secret is not configured');
+      }
+      throw new BadRequestException('Webhook secret not configured');
+    }
+
     let event: Stripe.Event;
 
     try {
-      event = this.stripe.webhooks.constructEvent(payload, signature, webhookSecret!);
+      event = this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
     } catch (err: any) {
       throw new BadRequestException(`Webhook Error: ${err.message}`);
     }
@@ -106,6 +115,9 @@ export class BillingService {
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
         await this.handleSubscriptionChange(event.data.object as Stripe.Subscription);
+        break;
+      case 'charge.refunded':
+        await this.handleChargeRefunded(event.data.object as Stripe.Charge);
         break;
     }
   }
@@ -138,31 +150,90 @@ export class BillingService {
 
   private async handleInvoicePaid(invoice: Stripe.Invoice) {
     const stripeCustomerId = invoice.customer as string;
-    const sub = await this.subscriptionRepo.findOne({ where: { stripeCustomerId } as any });
+    const sub = await this.subscriptionRepo.findOne({ where: { stripeCustomerId } as Record<string, string> });
     if (!sub) return;
 
-    await this.invoiceRepo.save({
-      tenantId: sub.tenantId,
-      amount: invoice.amount_paid / 100,
-      currency: invoice.currency,
-      status: 'PAID',
-      stripeInvoiceId: invoice.id,
-      invoiceUrl: invoice.hosted_invoice_url || '',
-      createdAt: new Date(invoice.created * 1000),
-    } as any);
+    const existing = await this.invoiceRepo.findOne({
+      where: { stripeInvoiceId: invoice.id } as Record<string, string>,
+    });
+    if (existing) return;
 
-    const paymentIntentId = typeof (invoice as any).payment_intent === 'string' 
-      ? (invoice as any).payment_intent 
-      : ((invoice as any).payment_intent as any)?.id;
+    const stripeInvoice = invoice as Stripe.Invoice & {
+      tax?: number;
+      payment_intent?: string | Stripe.PaymentIntent | null;
+      charge?: string | Stripe.Charge | null;
+    };
+
+    const amountPaid = invoice.amount_paid / 100;
+    const subtotal = (invoice.subtotal ?? invoice.amount_paid) / 100;
+    const tax = (stripeInvoice.tax ?? 0) / 100;
+    const periodStart = invoice.period_start ?? invoice.created;
+    const periodEnd = invoice.period_end ?? invoice.created;
+
+    const savedInvoice = await this.invoiceRepo.save({
+      tenantId: sub.tenantId,
+      subscriptionId: sub.id,
+      number: invoice.number || `INV-${invoice.id.replace('in_', '').slice(0, 12).toUpperCase()}`,
+      status: 'PAID',
+      subtotal,
+      tax,
+      total: amountPaid,
+      currency: invoice.currency.toUpperCase(),
+      periodStart: new Date(periodStart * 1000),
+      periodEnd: new Date(periodEnd * 1000),
+      dueDate: invoice.due_date
+        ? new Date(invoice.due_date * 1000)
+        : new Date(invoice.created * 1000),
+      paidAt: new Date(),
+      stripeInvoiceId: invoice.id,
+      pdfUrl: invoice.invoice_pdf ?? undefined,
+      lineItems: (invoice.lines?.data ?? []).map((line) => ({
+        description: line.description || 'Subscription',
+        amount: (line.amount ?? 0) / 100,
+        quantity: line.quantity ?? 1,
+        unit_amount: ((line as Stripe.InvoiceLineItem & { price?: { unit_amount?: number } }).price?.unit_amount ?? 0) / 100,
+      })),
+    } as Partial<InvoiceEntity>);
+
+    const paymentIntentId =
+      typeof stripeInvoice.payment_intent === 'string'
+        ? stripeInvoice.payment_intent
+        : stripeInvoice.payment_intent?.id;
 
     await this.paymentRepo.save({
       tenantId: sub.tenantId,
-      amount: invoice.amount_paid / 100,
-      currency: invoice.currency,
+      invoiceId: savedInvoice.id,
+      amount: amountPaid,
+      currency: invoice.currency.toUpperCase(),
       status: 'SUCCEEDED',
-      stripePaymentIntentId: paymentIntentId || '',
-      method: 'CARD', 
-    } as any);
+      provider: 'stripe',
+      providerPaymentId:
+        paymentIntentId ||
+        (typeof stripeInvoice.charge === 'string' ? stripeInvoice.charge : undefined),
+      metadata: { stripeInvoiceId: invoice.id },
+    } as Partial<Payment>);
+  }
+
+  private async handleChargeRefunded(charge: Stripe.Charge) {
+    const paymentIntentId =
+      typeof charge.payment_intent === 'string'
+        ? charge.payment_intent
+        : charge.payment_intent?.id;
+
+    if (!paymentIntentId) return;
+
+    const payment = await this.paymentRepo.findOne({
+      where: { providerPaymentId: paymentIntentId } as Record<string, string>,
+    });
+    if (!payment) return;
+
+    payment.status = 'REFUNDED';
+    payment.metadata = {
+      ...payment.metadata,
+      refundId: charge.refunds?.data[0]?.id,
+      refundedAt: new Date().toISOString(),
+    };
+    await this.paymentRepo.save(payment);
   }
 
   private async handleSubscriptionChange(stripeSub: Stripe.Subscription) {
@@ -192,56 +263,102 @@ export class BillingService {
   }
 
   async getSubscription(tenantId: string) {
-    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as any });
-    if (!sub) throw new NotFoundException('Subscription not found');
+    let sub = await this.subscriptionRepo.findOne({
+      where: { tenantId } as Record<string, string>,
+      order: { createdAt: 'DESC' },
+    });
+    if (!sub) {
+      sub = await this.ensureTrialSubscription(tenantId);
+    }
     return sub;
+  }
+
+  private async ensureTrialSubscription(tenantId: string): Promise<SubscriptionEntity> {
+    const freePlan = await this.planRepo.findOne({ where: { slug: 'FREE' } });
+    if (!freePlan) {
+      throw new NotFoundException('Default plan not configured');
+    }
+
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+
+    const sub = this.subscriptionRepo.create({
+      tenantId,
+      planId: freePlan.id,
+      status: 'TRIAL',
+      billingCycle: 'MONTHLY',
+      trialEndsAt,
+    } as Partial<SubscriptionEntity>);
+
+    return this.subscriptionRepo.save(sub);
   }
 
   async getInvoices(tenantId: string) {
     return this.invoiceRepo.find({ where: { tenantId } as any, order: { createdAt: 'DESC' } });
   }
 
+  async getInvoice(tenantId: string, id: string) {
+    const invoice = await this.invoiceRepo.findOne({ where: { id, tenantId } as any });
+    if (!invoice) throw new NotFoundException('Invoice not found');
+    return invoice;
+  }
+
   async getPayments(tenantId: string) {
     return this.paymentRepo.find({ where: { tenantId } as any, order: { createdAt: 'DESC' } });
   }
 
-  async trackUsage(tenantId: string, metric: string, quantity: number) {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  async trackUsage(
+    tenantId: string,
+    metric: string,
+    quantity: number,
+    period: UsagePeriod = 'MONTHLY',
+  ): Promise<UsageRecord> {
+    const { periodStart, periodEnd } = resolveUsagePeriodBounds(period);
 
     const record = await this.usageRepo.findOne({
-      where: { tenantId, metric, periodStart: startOfMonth } as any,
+      where: { tenantId, metric, periodStart },
     });
 
     if (record) {
       record.quantity = Number(record.quantity) + quantity;
       return this.usageRepo.save(record);
-    } else {
-      const newRecord = this.usageRepo.create({
-        tenantId,
-        metric,
-        quantity,
-        periodStart: startOfMonth,
-        periodEnd: endOfMonth,
-      } as any);
-      return this.usageRepo.save(newRecord);
     }
+
+    const newRecord = this.usageRepo.create({
+      tenantId,
+      metric,
+      quantity,
+      periodStart,
+      periodEnd,
+    });
+    return this.usageRepo.save(newRecord);
   }
 
-  async getUsage(tenantId: string, metric: string): Promise<any> {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+  async getUsage(
+    tenantId: string,
+    metric: string,
+    period: UsagePeriod = 'MONTHLY',
+  ): Promise<number> {
     if (metric === 'all') {
-        const records = await this.usageRepo.find({ where: { tenantId, periodStart: startOfMonth } as any });
-        return records.reduce((acc, r) => ({ ...acc, [r.metric]: Number(r.quantity) }), {});
+      const { periodStart } = resolveUsagePeriodBounds(period);
+      const records = await this.usageRepo.find({ where: { tenantId, periodStart } });
+      return records.reduce((sum, record) => sum + Number(record.quantity), 0);
     }
 
+    const { periodStart } = resolveUsagePeriodBounds(period);
     const record = await this.usageRepo.findOne({
-      where: { tenantId, metric, periodStart: startOfMonth } as any,
+      where: { tenantId, metric, periodStart },
     });
     return record ? Number(record.quantity) : 0;
+  }
+
+  async getUsageBreakdown(tenantId: string, period: UsagePeriod = 'MONTHLY'): Promise<Record<string, number>> {
+    const { periodStart } = resolveUsagePeriodBounds(period);
+    const records = await this.usageRepo.find({ where: { tenantId, periodStart } });
+    return records.reduce<Record<string, number>>((acc, record) => {
+      acc[record.metric] = Number(record.quantity);
+      return acc;
+    }, {});
   }
 
   async getAllInvoices(options?: any) {

@@ -1,86 +1,73 @@
-# Test Coverage Report — Session 7
+# Test Coverage Report — Session 12
 
-**Date:** 2026-06-18
+**Date:** 2026-06-19
 
-## Test Run Results (Session 7)
+## Test Run Results
 
 | Suite | Result | Count |
 |-------|--------|-------|
-| Backend unit (`npm test`) | **PASS** | 2/2 tests, 2 suites |
-| Backend E2E (`npm run test:e2e`) | **PASS** | 11/11 tests, 9 suites |
-| Backend build (`npm run build`) | **PASS** | — |
-| Frontend build (`npm run build`) | **PASS** | 322 routes |
+| Backend unit (`test:core`) | **PASS** | 5/5 tests, 3 suites |
+| Backend E2E (`npm run test:e2e`) | Not re-run S12 | 11 suites exist |
+| Backend build | **PASS** | — |
+| Frontend build | **PASS** | 322 routes |
 
 ## Test Files
 
-| File | Type | Coverage |
-|------|------|----------|
-| `deal.service.spec.ts` | Unit | Deal mark-won + event |
-| `forecast.service.spec.ts` | Unit | Forecast aggregation |
-| `auth-login-http.integration.spec.ts` | HTTP | Login success + bad password |
-| `auth.integration.spec.ts` | Service | Unknown user rejection |
-| `crm-crud-http.integration.spec.ts` | HTTP | Contact CRUD + list |
-| `deal-lifecycle.integration.spec.ts` | Service | Deal won + events |
-| `quote-public-http.integration.spec.ts` | HTTP | Public quote 404 |
-| `billing-webhook.integration.spec.ts` | Service | Webhook signature rejection |
-| `health-http.integration.spec.ts` | HTTP | Health endpoint |
-| `tenant-isolation.integration.spec.ts` | Service | Contact tenant scoping |
+| File | Type |
+|------|------|
+| `deal.service.spec.ts` | Unit |
+| `forecast.service.spec.ts` | Unit |
+| `jwt-signing.util.spec.ts` | Unit (NEW) |
+| `auth-login-http.integration.spec.ts` | HTTP |
+| `auth.integration.spec.ts` | Service |
+| `crm-crud-http.integration.spec.ts` | HTTP |
+| `deal-lifecycle.integration.spec.ts` | Service |
+| `workflow-crud-http.integration.spec.ts` | HTTP |
+| `analytics-reports-http.integration.spec.ts` | HTTP |
+| `import-export-http.integration.spec.ts` | HTTP |
+| `quote-public-http.integration.spec.ts` | HTTP |
+| `billing-webhook.integration.spec.ts` | Service |
+| `health-http.integration.spec.ts` | HTTP |
+| `tenant-isolation.integration.spec.ts` | Service |
 
-## Coverage Gaps
+## Coverage Gaps by Domain
 
-### By Domain (570 API routes)
-
-| Domain | Routes | Tests | Coverage % |
-|--------|--------|-------|------------|
+| Domain | Routes | Tests | Coverage |
+|--------|--------|-------|----------|
 | Auth | 22 | 2 | ~9% |
-| CRM | 119 | 4 | ~3% |
+| CRM | 119 | 5 | ~4% |
 | AI | 43 | 0 | 0% |
 | Voice | 26 | 0 | 0% |
 | WhatsApp | 19 | 0 | 0% |
-| Workflow | 16 | 0 | 0% |
+| Workflow | 16 | 1 | ~6% |
 | Billing | 36 | 1 | ~3% |
 | Admin | 123 | 0 | 0% |
-| Analytics | 22 | 0 | 0% |
-| Other | 144 | 1 | <1% |
 
-**Estimated total route coverage: ~2.6%**
+**Estimated route coverage: ~3.1%**
 
-### Frontend
+## Frontend
 
 | Type | Status |
 |------|--------|
-| Unit tests | **None** |
-| Component tests | **None** |
-| E2E (Playwright/Cypress) | **None** |
-| Visual regression | **None** |
+| Unit tests | None |
+| E2E | None |
+| CI frontend tests | None |
 
-### Critical Untested Flows
+## Critical Untested Flows
 
-1. MFA login flow
-2. OAuth callbacks
-3. Stripe webhook end-to-end (with @Public)
-4. Twilio/Meta webhooks (now public)
-5. Permission/Plan guards
-6. Cross-tenant access attempts (HTTP level)
-7. Wallet credit purchase
-8. Marketplace install/uninstall
-9. Workflow execution
-10. WhatsApp broadcast send
-
-## Test Infrastructure Issues
-
-- `app-test.helper.ts` overrides all guards to `canActivate: () => true` — integration tests do not validate real auth
-- Worker process leak warning in E2E (improper teardown)
-- No frontend test script in CI
-- MinIO commented out in docker-compose — import/export E2E blocked
+1. MFA login
+2. Twilio/Meta webhooks (now hardened — need tests)
+3. PermissionGuard with ResourcePermissions
+4. Cross-tenant HTTP denial
+5. Workflow action execution
+6. Wallet purchase
+7. Marketplace install
 
 ## Recommendations
 
 | Priority | Action |
 |----------|--------|
-| P0 | Add HTTP tests for webhooks without guard override |
-| P0 | Add cross-tenant isolation HTTP test (expect 403/404) |
-| P1 | Add deal lifecycle HTTP E2E |
-| P1 | Add billing wallet flow test |
-| P2 | Add Playwright smoke tests for login + CRM list |
-| P2 | Enable MinIO in CI for storage tests |
+| P0 | Webhook HTTP tests without guard override |
+| P0 | Cross-tenant HTTP tests |
+| P1 | CRM permission tests |
+| P2 | Playwright smoke (TASK-028) |

@@ -16,12 +16,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 import { KnowledgeBaseService } from './knowledge-base.service';
 import { RagService } from './rag.service';
 import { CreateKnowledgeBaseDto, UpdateKnowledgeBaseDto } from './dto/knowledge-base.dto';
 
 @ApiTags('AI Knowledge Bases')
+@ResourcePermissions('ai')
+@PlanFeature('ai')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('ai/knowledge-bases')
@@ -93,13 +95,35 @@ export class KnowledgeBasesController {
     }
 
     await this.kbService.findOne(tenantId, id);
-    const data = await this.ragService.processFileAndIndex(
+    const indexResult = await this.ragService.processFileAndIndex(
       tenantId,
       file.buffer,
       file.originalname,
       file.mimetype,
+      id,
     );
-    return { status: 201, message: 'Document indexed', error: false, data };
+
+    const kb = await this.kbService.findOne(tenantId, id);
+    const indexMeta = { ...(kb?.indexMeta ?? {}) };
+    const documents = (indexMeta.documents as Array<Record<string, unknown>> | undefined) ?? [];
+    documents.push({
+      id: indexResult.documentId,
+      fileName: file.originalname,
+      chunksIndexed: indexResult.chunksIndexed,
+      embeddingTokens: indexResult.embeddingTokens,
+      indexedAt: new Date().toISOString(),
+    });
+    indexMeta.documents = documents;
+    indexMeta.totalChunks = documents.reduce(
+      (sum, doc) => sum + Number(doc.chunksIndexed ?? 0),
+      0,
+    );
+
+    const data = await this.kbService.update(tenantId, id, {
+      status: indexResult.success ? 'READY' : 'FAILED',
+      indexMeta,
+    });
+    return { status: 201, message: 'Document indexed', error: false, data: { ...indexResult, knowledgeBase: data } };
   }
 
   @Delete(':id/documents/:docId')

@@ -10,6 +10,8 @@ export enum AnalyticsReportType {
   TEAM = 'TEAM',
   VOICE = 'VOICE',
   WHATSAPP = 'WHATSAPP',
+  AI = 'AI',
+  FORECAST = 'FORECAST',
 }
 
 export enum AnalyticsReportStatus {

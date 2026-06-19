@@ -38,9 +38,9 @@ describe('HTTP E2E — auth login', () => {
       .send({ email: credentials.email, password: credentials.password });
 
     expect(response.status).toBe(200);
-    expect(response.body.accessToken).toBeDefined();
-    expect(response.body.refreshToken).toBeDefined();
-    expect(response.body.tokenType).toBe('Bearer');
+    expect(response.body.data.accessToken).toBeDefined();
+    expect(response.body.data.refreshToken).toBeDefined();
+    expect(response.body.data.tokenType).toBe('Bearer');
   });
 
   it('POST /api/v1/auth/login rejects invalid password', async () => {

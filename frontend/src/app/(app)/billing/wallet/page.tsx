@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Wallet, Plus, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Wallet, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { walletService, Wallet as WalletType, WalletTransaction } from '@/services/wallet.service';
@@ -10,8 +10,6 @@ export default function BillingWalletPage() {
   const [wallet, setWallet] = useState<WalletType | null>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [topUpAmount, setTopUpAmount] = useState('50');
-  const [toppingUp, setToppingUp] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -32,21 +30,6 @@ export default function BillingWalletPage() {
   useEffect(() => {
     void load();
   }, []);
-
-  const handleTopUp = async () => {
-    const amount = parseFloat(topUpAmount);
-    if (Number.isNaN(amount) || amount <= 0) return;
-    setToppingUp(true);
-    try {
-      await walletService.addCredits(amount, 'Manual top-up');
-      toast.success('Credits added');
-      void load();
-    } catch {
-      toast.error('Top-up failed');
-    } finally {
-      setToppingUp(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -76,21 +59,9 @@ export default function BillingWalletPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <input
-            type="number"
-            min="1"
-            value={topUpAmount}
-            onChange={(e) => setTopUpAmount(e.target.value)}
-            className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background"
-          />
-          <button
-            onClick={() => void handleTopUp()}
-            disabled={toppingUp}
-            className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg text-sm disabled:opacity-50"
-          >
-            {toppingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Add Credits
-          </button>
+          <p className="flex-1 px-3 py-2 text-sm text-muted-foreground border border-border rounded-lg bg-muted/30">
+            Credits are added by your administrator or via paid top-up.
+          </p>
         </div>
       </div>
 

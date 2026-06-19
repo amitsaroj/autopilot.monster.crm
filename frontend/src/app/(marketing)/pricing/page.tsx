@@ -84,7 +84,7 @@ export default function PricingPage() {
               </div>
 
               <Link
-                href="/register"
+                href={plan.name === 'Enterprise' ? '/contact' : '/register'}
                 className={`w-full py-3 rounded-xl text-center font-semibold text-sm transition-all mb-8 block ${
                   plan.highlight
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-gray-900 dark:text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02]'

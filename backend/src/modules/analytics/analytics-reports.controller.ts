@@ -11,7 +11,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 import { AnalyticsReportService } from './analytics-report.service';
 import {
   CreateAnalyticsReportDto,
@@ -19,6 +19,8 @@ import {
 } from './dto/analytics-report.dto';
 
 @ApiTags('Analytics Reports')
+@ResourcePermissions('analytics')
+@PlanFeature('analytics')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
 @Controller('analytics/reports')

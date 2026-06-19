@@ -79,7 +79,7 @@ export default function WhatsAppBroadcastPage() {
               <div>
                 <p className="font-medium">{broadcast.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {broadcast.status} · {broadcast.sentCount}/{broadcast.recipientCount} sent
+                  {broadcast.status} · {broadcast.sent}/{broadcast.total} sent
                 </p>
               </div>
               <div className="flex items-center gap-2">

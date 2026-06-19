@@ -24,4 +24,6 @@ export const voiceCampaignService = {
   remove: (id: string) => api.delete(`/voice/campaigns/${id}`),
   start: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/start`),
   pause: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/pause`),
+  resume: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/resume`),
+  getStats: (id: string) => api.get<{ data: Record<string, unknown> }>(`/voice/campaigns/${id}/stats`),
 };

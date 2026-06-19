@@ -1,5 +1,6 @@
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipPermissionCheck } from '../../common/decorators/skip-permission-check.decorator';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
 import type { IRequestContext } from '../../common/interfaces/request-context.interface';
 import {
@@ -20,6 +21,7 @@ import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import type { AppConfig } from '../../config/app.config';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
 import {
@@ -41,6 +43,7 @@ import { AppleAuthGuard } from './guards/apple-auth.guard';
 import type { AuthTokens } from './interfaces/auth-tokens.interface';
 
 @ApiTags('Auth')
+@SkipPermissionCheck()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -49,6 +52,7 @@ export class AuthController {
   ) {}
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user and tenant', security: [] })
@@ -63,6 +67,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email + password', security: [] })
@@ -77,6 +82,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token', security: [] })
@@ -97,7 +103,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout' })
   @ApiResponse({ status: 204, description: 'Successfully logged out' })
   async logout(@CurrentUser() user: IRequestContext, @Body() dto: LogoutDto): Promise<void> {
-    return this.authService.logout(user.userId, user.tenantId, dto.allSessions ?? false);
+    return this.authService.logout(
+      user.userId,
+      user.tenantId,
+      dto.allSessions ?? false,
+      dto.refreshToken,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -129,6 +140,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request password reset link', security: [] })
@@ -282,7 +294,7 @@ export class AuthController {
     const appCfg = this.configService.get<AppConfig>('app');
     const frontendUrl = appCfg?.frontendUrl || 'http://localhost:3000';
     res.redirect(
-      `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`,
+      `${frontendUrl}/auth/callback#accessToken=${encodeURIComponent(tokens.accessToken)}&refreshToken=${encodeURIComponent(tokens.refreshToken)}`,
     );
   }
 }

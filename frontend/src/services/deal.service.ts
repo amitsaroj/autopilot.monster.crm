@@ -28,4 +28,13 @@ export const dealService = {
   createDeal: (data: Partial<Deal>) => api.post('/crm/deals', data),
   updateDeal: (id: string, data: Partial<Deal>) => api.put(`/crm/deals/${id}`, data),
   deleteDeal: (id: string) => api.delete(`/crm/deals/${id}`),
+  moveStage: (id: string, stageId: string, reason?: string) =>
+    api.patch(`/crm/deals/${id}/stage`, { stageId, reason }),
+  markWon: (id: string) => api.patch(`/crm/deals/${id}/won`),
+  markLost: (id: string, lostReason: string) => api.patch(`/crm/deals/${id}/lost`, { lostReason }),
+  getActivities: (id: string) => api.get(`/crm/deals/${id}/activities`),
+  getProducts: (id: string) => api.get(`/crm/deals/${id}/products`),
+  addProduct: (id: string, data: { productId: string; quantity: number; unitPrice: number; discount?: number }) =>
+    api.post(`/crm/deals/${id}/products`, data),
+  removeProduct: (id: string, productId: string) => api.delete(`/crm/deals/${id}/products/${productId}`),
 };

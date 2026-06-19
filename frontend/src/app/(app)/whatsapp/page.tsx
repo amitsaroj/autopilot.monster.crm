@@ -1,17 +1,35 @@
-import { MessageSquare, Send, Plus, Search, Filter } from 'lucide-react';
-import Link from 'next/link';
+'use client';
 
-const conversations = [
-  { name: 'Sarah Johnson', preview: 'Thanks for sending the proposal!', time: '2m', unread: 2, avatar: 'SJ', status: 'online' },
-  { name: 'Mike Chen', preview: 'Can we schedule a call tomorrow?', time: '15m', unread: 0, avatar: 'MC', status: 'offline' },
-  { name: 'TechCorp Support', preview: 'Issue resolved — please confirm', time: '1h', unread: 1, avatar: 'TC', status: 'online' },
-  { name: 'Emily Davis', preview: 'Attached the signed contract', time: '3h', unread: 0, avatar: 'ED', status: 'offline' },
-];
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Loader2, MessageSquare, Search, Send } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+import {
+  whatsappConversationService,
+  WhatsAppConversationSummary,
+} from '@/services/whatsapp-conversation.service';
 
 export default function WhatsAppPage() {
+  const [conversations, setConversations] = useState<WhatsAppConversationSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    void whatsappConversationService
+      .list()
+      .then((res) => setConversations(res.data.data ?? []))
+      .catch(() => toast.error('Failed to load conversations'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = conversations.filter((conversation) => {
+    const haystack = `${conversation.contactName ?? ''} ${conversation.phone} ${conversation.lastMessage}`.toLowerCase();
+    return haystack.includes(query.toLowerCase());
+  });
+
   return (
     <div className="flex h-[calc(100vh-8rem)] animate-fade-in">
-      {/* Sidebar */}
       <div className="w-80 border-r border-border flex flex-col bg-card">
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
@@ -22,30 +40,53 @@ export default function WhatsAppPage() {
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <input placeholder="Search chats..." className="w-full pl-8 pr-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search chats..."
+              className="w-full pl-8 pr-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+            />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          {conversations.map((c) => (
-            <Link key={c.name} href={`/whatsapp/conversations/1`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-[hsl(246,80%,60%)]/20 flex items-center justify-center text-xs font-bold text-[hsl(246,80%,60%)]">{c.avatar}</div>
-                {c.status === 'online' && <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-card" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground truncate">{c.name}</span>
-                  <span className="text-xs text-muted-foreground shrink-0">{c.time}</span>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <p className="p-4 text-sm text-muted-foreground">No conversations yet.</p>
+          ) : (
+            filtered.map((conversation) => (
+              <Link
+                key={conversation.phone}
+                href={`/whatsapp/conversations/${encodeURIComponent(conversation.phone)}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors border-b border-border/50"
+              >
+                <div className="w-10 h-10 rounded-full bg-[hsl(246,80%,60%)]/20 flex items-center justify-center text-xs font-bold text-[hsl(246,80%,60%)]">
+                  {(conversation.contactName ?? conversation.phone).slice(0, 2).toUpperCase()}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{c.preview}</p>
-              </div>
-              {c.unread > 0 && <span className="w-5 h-5 rounded-full bg-[hsl(246,80%,60%)] text-white text-xs flex items-center justify-center shrink-0">{c.unread}</span>}
-            </Link>
-          ))}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {conversation.contactName ?? conversation.phone}
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{conversation.lastMessage}</p>
+                </div>
+                {conversation.unreadCount > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-[hsl(246,80%,60%)] text-white text-xs flex items-center justify-center shrink-0">
+                    {conversation.unreadCount}
+                  </span>
+                )}
+              </Link>
+            ))
+          )}
         </div>
       </div>
 
-      {/* Chat area placeholder */}
       <div className="flex-1 flex flex-col">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">

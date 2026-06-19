@@ -36,6 +36,16 @@ export class UpdateKnowledgeBaseDto {
   @IsObject()
   @IsOptional()
   sourceConfig?: Record<string, unknown>;
+
+  @ApiPropertyOptional({ enum: ['PROCESSING', 'READY', 'FAILED'] })
+  @IsString()
+  @IsOptional()
+  status?: 'PROCESSING' | 'READY' | 'FAILED';
+
+  @ApiPropertyOptional()
+  @IsObject()
+  @IsOptional()
+  indexMeta?: Record<string, unknown>;
 }
 
 export class UploadKnowledgeBaseDocumentDto {

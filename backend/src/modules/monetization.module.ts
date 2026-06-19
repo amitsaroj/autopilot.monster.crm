@@ -14,7 +14,9 @@ import { PaymentMethod } from '../database/entities/payment-method.entity';
 import { UsageRecord } from '../database/entities/usage-record.entity';
 import { Wallet } from '../database/entities/wallet.entity';
 import { WalletTransaction } from '../database/entities/wallet-transaction.entity';
+import { Tenant } from '../database/entities/tenant.entity';
 import { WalletService } from './billing/wallet.service';
+import { PlatformSetting } from '../database/entities/platform-setting.entity';
 
 import { MonetizationController } from './monetization.controller';
 
@@ -31,6 +33,8 @@ import { MonetizationController } from './monetization.controller';
       UsageRecord,
       Wallet,
       WalletTransaction,
+      Tenant,
+      PlatformSetting,
     ]),
   ],
   controllers: [MonetizationController, BillingController],

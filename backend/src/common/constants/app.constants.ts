@@ -8,6 +8,7 @@ export const METADATA_KEYS = {
   PLAN_FEATURE: 'planFeature',
   PLAN_LIMIT: 'planLimit',
   IS_PUBLIC: 'isPublic',
+  SKIP_PERMISSION_CHECK: 'skipPermissionCheck',
   CORRELATION_ID: 'correlationId',
 } as const;
 

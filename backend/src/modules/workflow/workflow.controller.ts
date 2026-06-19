@@ -36,6 +36,14 @@ export class WorkflowController {
     return { status: 200, message: 'Execution retrieved', error: false, data };
   }
 
+  @Post('executions/:execId/retry')
+  @ApiOperation({ summary: 'Retry a failed workflow execution' })
+  @Roles('TENANT_ADMIN')
+  async retryExecution(@TenantId() tenantId: string, @Param('execId') execId: string) {
+    const data = await this.workflowService.retryExecution(tenantId, execId);
+    return { status: 200, message: 'Execution retry queued', error: false, data };
+  }
+
   @Get('executions')
   @ApiOperation({ summary: 'Get workflow execution history' })
   async getExecutions(@TenantId() tenantId: string) {

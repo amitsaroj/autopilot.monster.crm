@@ -1,9 +1,9 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bullmq';
+import { Job, Queue } from 'bullmq';
 
 import { WorkflowRepository } from './workflow.repository';
-import { WorkflowExecutorService } from './workflow-executor.service';
+import { WorkflowExecutorService, WorkflowStepResult } from './workflow-executor.service';
 
 interface WorkflowJobData {
   workflowId: string;
@@ -11,6 +11,7 @@ interface WorkflowJobData {
   eventName: string;
   payload: Record<string, unknown>;
   executionId?: string;
+  startStepIndex?: number;
 }
 
 @Processor('workflows')
@@ -18,6 +19,7 @@ export class WorkflowProcessor extends WorkerHost {
   private readonly logger = new Logger(WorkflowProcessor.name);
 
   constructor(
+    @InjectQueue('workflows') private readonly workflowQueue: Queue,
     private readonly workflowRepo: WorkflowRepository,
     private readonly executor: WorkflowExecutorService,
   ) {
@@ -25,7 +27,7 @@ export class WorkflowProcessor extends WorkerHost {
   }
 
   async process(job: Job<WorkflowJobData, { status: string }>): Promise<{ status: string }> {
-    const { workflowId, tenantId, eventName, payload, executionId } = job.data;
+    const { workflowId, tenantId, eventName, payload, executionId, startStepIndex = 0 } = job.data;
     this.logger.log(`Executing workflow job ${job.id} (${workflowId}) for event: ${eventName}`);
 
     const flow = await this.workflowRepo.findById(tenantId, workflowId);
@@ -50,10 +52,24 @@ export class WorkflowProcessor extends WorkerHost {
           });
 
     const steps = this.executor.extractSteps(flow.definition ?? {});
-    const stepResults: Record<string, unknown>[] = [];
+    const priorSteps: WorkflowStepResult[] =
+      execution?.output &&
+      typeof execution.output === 'object' &&
+      Array.isArray((execution.output as { steps?: unknown }).steps)
+        ? ((execution.output as { steps: WorkflowStepResult[] }).steps ?? [])
+        : [];
+    const stepResults: WorkflowStepResult[] = [...priorSteps];
+
+    if (execution && execution.status === 'PAUSED') {
+      await this.workflowRepo.updateExecution(tenantId, execution.id, {
+        status: 'RUNNING',
+      });
+    }
 
     try {
-      for (const step of steps) {
+      for (let index = startStepIndex; index < steps.length; index += 1) {
+        const step = steps[index];
+
         if (step.type === 'CONDITION' || step.type === 'CONDITION_BRANCH') {
           const result = await this.executor.executeStep(step, { tenantId, eventName, payload });
           stepResults.push(result);
@@ -66,6 +82,38 @@ export class WorkflowProcessor extends WorkerHost {
 
         const result = await this.executor.executeStep(step, { tenantId, eventName, payload });
         stepResults.push(result);
+
+        if (result.status === 'SCHEDULED' && typeof result.delayMs === 'number') {
+          if (execution) {
+            await this.workflowRepo.updateExecution(tenantId, execution.id, {
+              status: 'PAUSED',
+              currentStepId: step.id,
+              output: { steps: stepResults },
+            });
+          }
+
+          await this.workflowQueue.add(
+            'execute-workflow',
+            {
+              workflowId,
+              tenantId,
+              eventName,
+              payload,
+              executionId: execution?.id,
+              startStepIndex: index + 1,
+            },
+            {
+              delay: result.delayMs,
+              attempts: 3,
+              backoff: { type: 'exponential', delay: 5000 },
+            },
+          );
+
+          this.logger.log(
+            `Workflow ${workflowId} scheduled to resume in ${result.delayMs}ms at step ${index + 1}`,
+          );
+          return { status: 'SCHEDULED' };
+        }
       }
 
       if (execution) {

@@ -14,13 +14,13 @@ import {
   Download, ArrowDown, PieChart, TrendingUp
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { parseApiData } from '@/lib/api/parse-response';
+import { crmReportService } from '@/services/crm-report.service';
 
 interface PipelineMetric {
-  stageId: string;
-  stageName: string;
-  count: number;
+  name: string;
   value: number;
-  conversionRate: number;
+  amount: number;
 }
 
 export default function PipelineAnalyticsPage() {
@@ -30,10 +30,9 @@ export default function PipelineAnalyticsPage() {
   const fetchPipelineAnalytics = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/crm/analytics/pipeline');
-      const json = await res.json();
-      if (json.data) setMetrics(json.data);
-    } catch (e) {
+      const res = await crmReportService.getPipeline();
+      setMetrics(parseApiData<PipelineMetric[]>(res) ?? []);
+    } catch {
       toast.error('Failed to synchronize pipeline conversion forensics');
     } finally {
       setLoading(false);
@@ -79,35 +78,35 @@ export default function PipelineAnalyticsPage() {
          <div className="absolute -right-20 -top-20 w-96 h-96 bg-indigo-500/5 rounded-full blur-[100px]" />
          
          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 relative">
-            {(metrics.length > 0 ? metrics : [
-               { stageId: '1', stageName: 'Discovery Vector', count: 142, value: 850000, conversionRate: 100 },
-               { stageId: '2', stageName: 'Qualified Node', count: 98, value: 620000, conversionRate: 69 },
-               { stageId: '3', stageName: 'Proposal Dispatch', count: 42, value: 380000, conversionRate: 43 },
-               { stageId: '4', stageName: 'Negotiation Persistence', count: 18, value: 210000, conversionRate: 42 },
-               { stageId: '5', stageName: 'Fiscal Closure', count: 12, value: 145000, conversionRate: 66 },
-            ]).map((step, idx) => (
-               <div key={step.stageId} className="flex flex-col items-center group/card transition-all cursor-pointer">
+            {metrics.length === 0 ? (
+              <p className="col-span-full text-sm text-gray-500 text-center py-16">No pipeline data yet</p>
+            ) : metrics.map((step, idx) => {
+               const prevCount = idx > 0 ? metrics[idx - 1].value : step.value;
+               const conversionRate = prevCount > 0 ? Math.round((step.value / prevCount) * 100) : 100;
+               return (
+               <div key={step.name} className="flex flex-col items-center group/card transition-all cursor-pointer">
                   <div className="w-full p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] group-hover/card:bg-indigo-500/10 group-hover/card:border-indigo-500/40 transition-all text-center space-y-4 relative overflow-hidden h-[240px] flex flex-col justify-center">
                      <div className="flex flex-col items-center gap-2">
                         <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest leading-none group-hover/card:text-indigo-400">Stage {idx + 1}</span>
-                        <h4 className="text-sm font-black text-white uppercase tracking-tighter line-clamp-2">{step.stageName}</h4>
+                        <h4 className="text-sm font-black text-white uppercase tracking-tighter line-clamp-2">{step.name}</h4>
                      </div>
                      <div className="space-y-1">
-                        <p className="text-2xl font-black text-white uppercase tracking-tighter">${(step.value / 1000).toFixed(0)}k</p>
-                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{step.count} Opportunity Nodes</p>
+                        <p className="text-2xl font-black text-white uppercase tracking-tighter">${(step.amount / 1000).toFixed(0)}k</p>
+                        <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{step.value} Opportunity Nodes</p>
                      </div>
                   </div>
                   
-                  {idx < 4 && (
+                  {idx < metrics.length - 1 && (
                      <div className="md:absolute md:top-1/2 md:right-0 md:-mr-3 md:-translate-y-1/2 flex items-center justify-center p-4">
                         <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex flex-col items-center justify-center group-hover/card:bg-indigo-500 group-hover/card:text-white transition-all shadow-xl">
-                           <span className="text-[10px] font-black">{step.conversionRate}%</span>
+                           <span className="text-[10px] font-black">{conversionRate}%</span>
                            <ArrowDown className="w-3 h-3 md:rotate-270" />
                         </div>
                      </div>
                   )}
                </div>
-            ))}
+            );
+            })}
          </div>
       </div>
 
@@ -126,32 +125,22 @@ export default function PipelineAnalyticsPage() {
             </div>
             
             <div className="space-y-8">
-               {(metrics.length > 0 ? metrics : [
-                  { stageName: 'Discovery Vector', velocity: '4.2 Days', trend: 'STABLE' },
-                  { stageName: 'Qualified Node', velocity: '8.4 Days', trend: 'ACCELERATING' },
-                  { stageName: 'Proposal Dispatch', velocity: '12.1 Days', trend: 'DELAYED' },
-                  { stageName: 'Negotiation Persistence', velocity: '5.8 Days', trend: 'ACCELERATING' },
-               ]).map((v: any, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-6 rounded-3xl bg-white/[0.01] border border-white/5 group/row hover:bg-white/[0.03] transition-all">
+               {metrics.length === 0 ? (
+                 <p className="text-sm text-gray-500 text-center py-8">No stage velocity data</p>
+               ) : metrics.map((step, idx) => (
+                  <div key={step.name} className="flex items-center justify-between p-6 rounded-3xl bg-white/[0.01] border border-white/5 group/row hover:bg-white/[0.03] transition-all">
                      <div className="flex items-center gap-6">
                         <div className="w-10 h-10 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-600 font-black text-xs group-hover/row:bg-indigo-500 group-hover/row:text-white transition-all">
                            {idx + 1}
                         </div>
                         <div>
-                           <p className="text-sm font-black text-white uppercase tracking-tighter">{v.stageName}</p>
-                           <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest">Topology: Primary Stage</p>
+                           <p className="text-sm font-black text-white uppercase tracking-tighter">{step.name}</p>
+                           <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest">Deals in stage</p>
                         </div>
                      </div>
-                     <div className="flex items-center gap-10">
-                        <div className="text-right">
-                           <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-0.5">Mean Time-in-Stage</p>
-                           <p className="text-sm font-black text-white uppercase tracking-tighter">{v.velocity || '6.2 ARCH-DAYS'}</p>
-                        </div>
-                        <div className="w-24 text-right">
-                           <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${v.trend === 'DELAYED' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                              {v.trend || 'STABLE'}
-                           </span>
-                        </div>
+                     <div className="text-right">
+                        <p className="text-[9px] text-gray-600 font-black uppercase tracking-widest mb-0.5">Deal Count</p>
+                        <p className="text-sm font-black text-white uppercase tracking-tighter">{step.value}</p>
                      </div>
                   </div>
                ))}
