@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  transpilePackages: ['reactflow'],
   images: {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },

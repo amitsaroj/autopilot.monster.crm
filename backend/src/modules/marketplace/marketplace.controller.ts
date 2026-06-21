@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, UseGuards, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, ResourcePermissions } from '../../common/decorators';
+import { TenantId, ResourcePermissions, Roles } from '../../common/decorators';
 import { Public } from '../../common/decorators/public.decorator';
 import { MarketplaceService } from './marketplace.service';
 
@@ -68,5 +68,43 @@ export class MarketplaceController {
   async uninstallApp(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.marketplaceService.uninstall(tenantId, id);
     return { status: 200, message: 'App uninstalled', error: false, data: null };
+  }
+
+  @Post('vendor/onboard')
+  @ApiOperation({ summary: 'Onboard current workspace as a marketplace vendor' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async onboardVendor(
+    @TenantId() tenantId: string,
+    @Body() details: { companyName: string; contactEmail: string; stripeAccountId?: string },
+  ) {
+    const result = await this.marketplaceService.onboardVendor(tenantId, details);
+    return { status: 200, message: 'Vendor onboarding complete', data: result };
+  }
+
+  @Get('vendor/details')
+  @ApiOperation({ summary: 'Retrieve vendor details for current workspace' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async getVendorDetails(@TenantId() tenantId: string) {
+    const result = await this.marketplaceService.getVendorDetails(tenantId);
+    return { status: 200, data: result };
+  }
+
+  @Post('apps/:appId/purchase')
+  @ApiOperation({ summary: 'Record a paid app purchase and allocate revenue share' })
+  async recordPurchase(
+    @TenantId() tenantId: string,
+    @Param('appId') appId: string,
+    @Body('amount') amount: number,
+  ) {
+    const result = await this.marketplaceService.recordPurchase(tenantId, appId, amount);
+    return { status: 200, message: 'Purchase registered and revenue share allocated', data: result };
+  }
+
+  @Get('vendor/revenue')
+  @ApiOperation({ summary: 'Get revenue share and payouts report for vendor' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async getRevenueReport(@TenantId() tenantId: string) {
+    const result = await this.marketplaceService.getRevenueReport(tenantId);
+    return { status: 200, data: result };
   }
 }

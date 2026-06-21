@@ -25,6 +25,7 @@ import {
 import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
 import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-phone-number.dto';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
+import { TwilioService } from './twilio.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
@@ -45,6 +46,7 @@ export class VoiceController {
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly tenantSettingsService: TenantSettingsService,
+    private readonly twilioService: TwilioService,
   ) {}
 
   @Get('calls')
@@ -327,5 +329,26 @@ export class VoiceController {
   async getTranscriptDetail(@TenantId() tenantId: string, @Param('id') id: string) {
     const data = await this.voiceCallService.findTranscriptById(tenantId, id);
     return { status: 200, message: 'Transcript retrieved', error: false, data };
+  }
+
+  @Get('calls/:id/sentiment')
+  @ApiOperation({ summary: 'Extract sentiment and keywords from a completed call' })
+  async getSentiment(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.twilioService.extractSentimentStub(id, tenantId);
+  }
+
+  @Post('clone')
+  @ApiOperation({ summary: 'Create a voice clone from sample audio' })
+  async cloneVoice(@TenantId() tenantId: string, @Body() dto: { sampleUrl: string }) {
+    const voiceId = await this.twilioService.cloneVoiceStub(tenantId, dto.sampleUrl);
+    return { success: true, voiceId };
+  }
+
+  @Post('ivr-callback')
+  @ApiOperation({ summary: 'Twilio IVR webhook callback' })
+  async ivrCallback(@Body() body: Record<string, any>, @Res() res: Response) {
+    // Generate IVR or route call
+    const twiml = this.twilioService.generateIvrTwiml(body);
+    res.type('text/xml').send(twiml);
   }
 }

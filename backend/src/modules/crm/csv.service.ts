@@ -37,6 +37,43 @@ export class CsvService {
     return leads;
   }
 
+  async importContacts(csvContent: string): Promise<any[]> {
+    const lines = csvContent.split(/\r?\n/).filter((line) => line.trim() !== '');
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const contacts = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(',').map((v) => v.trim());
+      const contact: any = {};
+      headers.forEach((header, index) => {
+        contact[header] = values[index];
+      });
+
+      if (contact.email || contact.phone) {
+        contacts.push({
+          firstName: contact.firstname || '',
+          lastName: contact.lastname || '',
+          email: contact.email || '',
+          phone: contact.phone || '',
+          company: contact.company || '',
+        });
+      }
+    }
+
+    this.logger.log(`Parsed ${contacts.length} contacts from CSV`);
+    return contacts;
+  }
+
+  exportContacts(contacts: any[]): string {
+    return this.generateCsv(contacts);
+  }
+
+  exportDeals(deals: any[]): string {
+    return this.generateCsv(deals);
+  }
+
   generateCsv(data: any[]): string {
     if (data.length === 0) return '';
     const headers = Object.keys(data[0]);

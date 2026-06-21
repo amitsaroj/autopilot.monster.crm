@@ -27,4 +27,8 @@ export class WalletTransaction extends BaseEntity {
 
   @Column({ name: 'reference_id', nullable: true })
   referenceId?: string;
+
+  @Column({ name: 'source', length: 50, nullable: true })
+  source?: string;
+
 }

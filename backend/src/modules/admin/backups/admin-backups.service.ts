@@ -21,6 +21,10 @@ export class AdminBackupsService {
     return this.currentBackups;
   }
 
+  async findOne(id: string) {
+    return this.currentBackups.find(b => b.id === id);
+  }
+
   async trigger() {
     const backupId = `bak-${Date.now()}`;
     const fileName = `backup-${Date.now()}.sql`;

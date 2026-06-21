@@ -199,7 +199,7 @@ export class DeveloperSettingsService {
       name: entity.name,
       clientId: entity.clientId,
       clientSecret: rawSecret,
-      clientSecretPrefix: entity.clientSecretPrefix,
+      clientSecretPrefix: entity.clientSecretPrefix!,
       redirectUris: entity.redirectUris,
       scopes: entity.scopes,
       isActive: entity.isActive,
