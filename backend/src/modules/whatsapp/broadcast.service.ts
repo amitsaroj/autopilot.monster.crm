@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WhatsappBroadcast } from '../../database/entities/whatsapp-broadcast.entity';
+import { WhatsAppBroadcast, WhatsAppBroadcastStatus } from '../../database/entities/whatsapp-broadcast.entity';
 
 @Injectable()
 export class BroadcastService {
   constructor(
-    @InjectRepository(WhatsappBroadcast)
-    private readonly broadcastRepo: Repository<WhatsappBroadcast>,
+    @InjectRepository(WhatsAppBroadcast)
+    private readonly broadcastRepo: Repository<WhatsAppBroadcast>,
   ) {}
 
-  async create(tenantId: string, dto: Partial<WhatsappBroadcast> & { segmentIds?: string[] }): Promise<WhatsappBroadcast> {
+  async create(tenantId: string, dto: any): Promise<WhatsAppBroadcast> {
     // Stub: In reality we would fetch contacts for each segmentId and add to targetContacts
     let additionalContacts = 0;
     if (dto.segmentIds && dto.segmentIds.length > 0) {
@@ -19,41 +19,42 @@ export class BroadcastService {
     }
 
     const broadcast = this.broadcastRepo.create({
-      ...dto, tenantId,
-      totalRecipients: (dto.targetContacts?.length || 0) + additionalContacts,
-    } as any) as unknown as WhatsappBroadcast;
-    return this.broadcastRepo.save(broadcast) as unknown as Promise<WhatsappBroadcast>;
+      ...dto,
+      tenantId,
+      total: (dto.targetContacts?.length || 0) + additionalContacts,
+    } as any) as unknown as WhatsAppBroadcast;
+    return this.broadcastRepo.save(broadcast) as unknown as Promise<WhatsAppBroadcast>;
   }
 
-  async findAll(tenantId: string): Promise<WhatsappBroadcast[]> {
+  async findAll(tenantId: string): Promise<WhatsAppBroadcast[]> {
     return this.broadcastRepo.find({ where: { tenantId } as any, order: { createdAt: 'DESC' } });
   }
 
-  async findOne(tenantId: string, id: string): Promise<WhatsappBroadcast> {
+  async findOne(tenantId: string, id: string): Promise<WhatsAppBroadcast> {
     const b = await this.broadcastRepo.findOne({ where: { id, tenantId } as any });
     if (!b) throw new NotFoundException('Broadcast not found');
     return b;
   }
 
-  async schedule(tenantId: string, id: string, scheduledAt: Date): Promise<WhatsappBroadcast> {
+  async schedule(tenantId: string, id: string, scheduledAt: Date): Promise<WhatsAppBroadcast> {
     const b = await this.findOne(tenantId, id);
-    b.status = 'SCHEDULED';
+    b.status = WhatsAppBroadcastStatus.SCHEDULED;
     b.scheduledAt = scheduledAt;
-    return this.broadcastRepo.save(b) as unknown as Promise<WhatsappBroadcast>;
+    return this.broadcastRepo.save(b) as unknown as Promise<WhatsAppBroadcast>;
   }
 
-  async send(tenantId: string, id: string): Promise<WhatsappBroadcast> {
+  async send(tenantId: string, id: string): Promise<WhatsAppBroadcast> {
     const b = await this.findOne(tenantId, id);
-    b.status = 'SENDING';
-    return this.broadcastRepo.save(b) as unknown as Promise<WhatsappBroadcast>;
+    b.status = WhatsAppBroadcastStatus.SENDING;
+    return this.broadcastRepo.save(b) as unknown as Promise<WhatsAppBroadcast>;
   }
 
   async getStats(tenantId: string, id: string) {
     const b = await this.findOne(tenantId, id);
     return {
       broadcast: b,
-      deliveryRate: b.totalRecipients > 0 ? Math.round((b.deliveredCount / b.totalRecipients) * 100) : 0,
-      readRate: b.deliveredCount > 0 ? Math.round((b.readCount / b.deliveredCount) * 100) : 0,
+      deliveryRate: b.total > 0 ? Math.round((b.delivered / b.total) * 100) : 0,
+      readRate: b.delivered > 0 ? Math.round((b.read / b.delivered) * 100) : 0,
     };
   }
 

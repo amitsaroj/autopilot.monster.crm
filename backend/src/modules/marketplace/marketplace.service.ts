@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -7,6 +7,8 @@ import { TenantPlugin } from '../../database/entities/tenant-plugin.entity';
 
 @Injectable()
 export class MarketplaceService {
+  private readonly logger = new Logger(MarketplaceService.name);
+
   constructor(
     @InjectRepository(Plugin)
     private readonly pluginRepository: Repository<Plugin>,
@@ -126,7 +128,7 @@ export class MarketplaceService {
   }
 
   async recordPurchase(_tenantId: string, appId: string, amount: number) {
-    const plugin = await this.getAppById(appId);
+    const plugin = await this.getApp(appId);
     const vendorTenantId = plugin.author || 'system-platform'; 
     const vendor = this.vendors.get(vendorTenantId);
 

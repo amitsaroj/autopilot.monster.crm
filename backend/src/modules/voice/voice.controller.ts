@@ -25,6 +25,7 @@ import {
 import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
 import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-phone-number.dto';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
+import { TwilioService } from './twilio.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
@@ -45,6 +46,7 @@ export class VoiceController {
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly tenantSettingsService: TenantSettingsService,
+    private readonly twilioService: TwilioService,
   ) {}
 
   @Get('calls')

@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Delete, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, UseGuards, Body } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, ResourcePermissions } from '../../common/decorators';
+import { TenantId, ResourcePermissions, Roles } from '../../common/decorators';
 import { Public } from '../../common/decorators/public.decorator';
 import { MarketplaceService } from './marketplace.service';
 

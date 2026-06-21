@@ -91,6 +91,13 @@ export class VoiceCampaignService {
     return this.campaignRepository.save(campaign);
   }
 
+  async cancel(tenantId: string, id: string): Promise<VoiceCampaign> {
+    const campaign = await this.findOne(tenantId, id);
+    campaign.status = VoiceCampaignStatus.COMPLETED;
+    campaign.completedAt = new Date();
+    return this.campaignRepository.save(campaign);
+  }
+
   async getStats(tenantId: string, id: string) {
     const campaign = await this.findOne(tenantId, id);
     const answerRate =
