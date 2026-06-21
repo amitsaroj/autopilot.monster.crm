@@ -28,6 +28,15 @@ export class Plugin extends BaseEntity {
   @Column({ default: false })
   isPremium!: boolean;
 
+  @Column({ name: 'price_monthly', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  priceMonthly?: number;
+
+  @Column({ name: 'vendor_id', nullable: true })
+  vendorId?: string;
+
+  @Column({ name: 'stripe_price_id', nullable: true })
+  stripePriceId?: string;
+
   @Column({ default: 'ACTIVE' })
   status!: string;
 

@@ -11,21 +11,36 @@ export class SubAdminMarketplaceService {
     @InjectRepository(TenantPlugin) private readonly tenantPluginRepo: Repository<TenantPlugin>,
   ) {}
 
-  async discover() {
-    return this.pluginRepo.find({ where: { status: 'ACTIVE' } });
+  async discover(tenantId: string) {
+    const plugins = await this.pluginRepo.find({ where: { status: 'ACTIVE' } });
+    const installations = await this.tenantPluginRepo.find({
+      where: { tenantId, isEnabled: true },
+    });
+    const installedIds = new Set(installations.map((item) => item.pluginId));
+
+    return plugins.map((plugin) => ({
+      ...plugin,
+      isInstalled: installedIds.has(plugin.id),
+    }));
   }
 
   async install(tenantId: string, pluginId: string) {
     const plugin = await this.pluginRepo.findOne({ where: { id: pluginId } });
     if (!plugin) throw new NotFoundException('Marketplace item not found');
-    
+
     const existing = await this.tenantPluginRepo.findOne({ where: { tenantId, pluginId } });
-    if (existing) return existing;
+    if (existing) {
+      existing.isEnabled = true;
+      existing.installedAt = new Date();
+      return this.tenantPluginRepo.save(existing);
+    }
 
     const tenantPlugin = this.tenantPluginRepo.create({
       tenantId,
       pluginId,
-      status: 'ENABLED'
+      isEnabled: true,
+      config: {},
+      installedAt: new Date(),
     });
     return this.tenantPluginRepo.save(tenantPlugin);
   }

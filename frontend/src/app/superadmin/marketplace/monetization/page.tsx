@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { adminMarketplaceService } from '@/services/admin-marketplace.service';
+import { adminInvoicesService, type AdminInvoice } from '@/services/admin-invoices.service';
+
 interface Transaction {
   id: string;
   pluginName: string;
@@ -27,13 +30,78 @@ interface Transaction {
   createdAt: string;
 }
 
+interface MonetizationStats {
+  grossVolume: number;
+  platformShare: number;
+  pendingPayouts: number;
+  efficiency: number;
+}
+
+const PLATFORM_SHARE_RATE = 0.3;
+
+function mapInvoiceStatus(status: string): Transaction['status'] {
+  if (status === 'PAID' || status === 'SETTLED') return 'SETTLED';
+  if (status === 'PENDING') return 'PENDING';
+  return 'DISPUTED';
+}
+
+function mapInvoiceToTransaction(invoice: AdminInvoice): Transaction {
+  const amount = invoice.total;
+  return {
+    id: invoice.number || invoice.id,
+    pluginName: `Invoice ${invoice.number}`,
+    amount,
+    revenueShare: amount * PLATFORM_SHARE_RATE,
+    developer: invoice.tenantId ?? 'Platform',
+    status: mapInvoiceStatus(invoice.status),
+    createdAt: invoice.createdAt,
+  };
+}
+
 export default function MarketplaceMonetizationPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>([
-     { id: 'TX-9901', pluginName: 'Identity Lattice Sync', amount: 49.00, revenueShare: 14.70, developer: 'Quasar Labs', status: 'SETTLED', createdAt: new Date().toISOString() },
-     { id: 'TX-9902', pluginName: 'CRM Forensic Toolkit', amount: 129.00, revenueShare: 38.70, developer: 'DeepMind Ext', status: 'PENDING', createdAt: new Date(Date.now() - 3600000).toISOString() },
-     { id: 'TX-9903', pluginName: 'Global Outreach Node', amount: 19.99, revenueShare: 6.00, developer: 'Unknown Actor', status: 'SETTLED', createdAt: new Date(Date.now() - 172800000).toISOString() },
-  ]);
-  const [loading, setLoading] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [stats, setStats] = useState<MonetizationStats>({
+    grossVolume: 0,
+    platformShare: 0,
+    pendingPayouts: 0,
+    efficiency: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [monetizationRes, invoicesRes] = await Promise.all([
+        adminMarketplaceService.getMonetization(),
+        adminInvoicesService.findAll(),
+      ]);
+
+      const monetization = monetizationRes.data;
+      const invoices = invoicesRes.data?.data ?? [];
+
+      const grossVolume = monetization?.grossVolume ?? 0;
+      const pendingPayouts = monetization?.pendingPayouts ?? 0;
+      const platformShare = monetization?.platformShare ?? 0;
+      const settledCount = invoices.filter((i) => i.status === 'PAID').length;
+      const efficiency = invoices.length > 0
+        ? Math.round((settledCount / invoices.length) * 1000) / 10
+        : 0;
+
+      setStats({ grossVolume, platformShare, pendingPayouts, efficiency });
+      setTransactions(invoices.map(mapInvoiceToTransaction));
+    } catch {
+      toast.error('Failed to load monetization data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
   if (loading) {
      return (
@@ -68,10 +136,10 @@ export default function MarketplaceMonetizationPage() {
       {/* Monetization Intelligence Ribbon */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
          {[
-           { label: 'Gross Marketplace Volume', value: '$12,482', icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-           { label: 'Platform Revenue Share', value: '$3,744', icon: TrendingUp, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-           { label: 'Pending Payouts', value: '$1,290', icon: Wallet, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-           { label: 'Monetization Efficiency', value: '99.2%', icon: Target, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+           { label: 'Gross Marketplace Volume', value: formatCurrency(stats.grossVolume), icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+           { label: 'Platform Revenue Share', value: formatCurrency(stats.platformShare), icon: TrendingUp, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+           { label: 'Pending Payouts', value: formatCurrency(stats.pendingPayouts), icon: Wallet, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+           { label: 'Monetization Efficiency', value: `${stats.efficiency}%`, icon: Target, color: 'text-blue-500', bg: 'bg-blue-500/10' },
          ].map((stat) => (
            <div key={stat.label} className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] group hover:bg-white/[0.03] transition-all relative overflow-hidden">
               <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-indigo-500/5 transition-colors" />
@@ -94,7 +162,11 @@ export default function MarketplaceMonetizationPage() {
                <h3 className="text-2xl font-black text-white uppercase tracking-tighter font-sans leading-none">Financial Forensics</h3>
                <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest mt-2 px-1">Audit: Structural Transactions</p>
             </div>
-            <button className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl text-gray-500 hover:text-white transition-all shadow-lg">
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl text-gray-500 hover:text-white transition-all shadow-lg"
+            >
                <RefreshCw className="w-6 h-6" />
             </button>
          </div>

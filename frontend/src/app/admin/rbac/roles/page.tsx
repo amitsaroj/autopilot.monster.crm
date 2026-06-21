@@ -1,34 +1,41 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ShieldCheck, Plus, Edit2, Trash2, Users,
-  Lock, CheckCircle2, Copy, ChevronDown, ChevronUp
+  Lock, ChevronDown, ChevronUp, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  userCount: number;
-  permissions: string[];
-  isSystem: boolean;
-  color: string;
-}
-
-const mockRoles: Role[] = [
-  { id: '1', name: 'SUPER_ADMIN', description: 'Full platform control across all tenants', userCount: 1, permissions: ['*'], isSystem: true, color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
-  { id: '2', name: 'TENANT_ADMIN', description: 'Full workspace management for a single tenant', userCount: 3, permissions: ['users.*', 'crm.*', 'billing.read', 'settings.*'], isSystem: true, color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
-  { id: '3', name: 'SALES_REP', description: 'CRM access for daily sales operations', userCount: 12, permissions: ['crm.contacts.*', 'crm.deals.*', 'crm.leads.*'], isSystem: false, color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
-  { id: '4', name: 'SUPPORT_AGENT', description: 'Inbox and ticket management access', userCount: 5, permissions: ['inbox.*', 'crm.contacts.read', 'support.*'], isSystem: false, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
-  { id: '5', name: 'ANALYST', description: 'Read-only analytics and reporting access', userCount: 2, permissions: ['analytics.read', 'crm.read', 'reports.read'], isSystem: false, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
-  { id: '6', name: 'VIEWER', description: 'Read-only access to CRM data', userCount: 1, permissions: ['crm.read'], isSystem: false, color: 'text-gray-400 bg-gray-500/10 border-gray-500/20' },
-];
+import { rbacService, type Role } from '@/services/rbac.service';
 
 export default function AdminRBACRolesPage() {
-  const [roles] = useState<Role[]>(mockRoles);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expandedRole, setExpandedRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await rbacService.getRoles();
+        const payload = res.data?.data ?? res.data;
+        setRoles(Array.isArray(payload) ? payload : payload?.data ?? []);
+      } catch {
+        toast.error('Failed to load roles');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -46,8 +53,8 @@ export default function AdminRBACRolesPage() {
         {roles.map(role => (
           <div key={role.id} className="rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all overflow-hidden">
             <div className="flex items-center gap-4 p-5 cursor-pointer" onClick={() => setExpandedRole(expandedRole === role.id ? null : role.id)}>
-              <div className={`p-2.5 rounded-xl ${role.color.split(' ')[1]} border ${role.color.split(' ')[2]} shrink-0`}>
-                <ShieldCheck className={`w-5 h-5 ${role.color.split(' ')[0]}`} />
+              <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 shrink-0">
+                <ShieldCheck className="w-5 h-5 text-indigo-400" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
@@ -56,14 +63,11 @@ export default function AdminRBACRolesPage() {
                     <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-white/[0.05] text-gray-500 border border-white/[0.08]">SYSTEM</span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500">{role.description}</p>
+                <p className="text-xs text-gray-500">{role.description ?? 'No description'}</p>
               </div>
               <div className="flex items-center gap-4 shrink-0">
                 <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                  <Users className="w-3.5 h-3.5" /> {role.userCount} user{role.userCount !== 1 ? 's' : ''}
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                  <Lock className="w-3.5 h-3.5" /> {role.permissions.length} perm{role.permissions.length !== 1 ? 's' : ''}
+                  <Lock className="w-3.5 h-3.5" /> {role.permissions?.length ?? 0} perm{(role.permissions?.length ?? 0) !== 1 ? 's' : ''}
                 </div>
                 <div className="flex items-center gap-1">
                   {!role.isSystem && (
@@ -83,14 +87,14 @@ export default function AdminRBACRolesPage() {
               </div>
             </div>
             {expandedRole === role.id && (
-              <div className="px-5 pb-5 border-t border-white/[0.05]">
-                <div className="pt-4">
-                  <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-3">Permissions</p>
-                  <div className="flex flex-wrap gap-2">
-                    {role.permissions.map(perm => (
-                      <span key={perm} className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[11px] font-mono text-indigo-300">{perm}</span>
-                    ))}
-                  </div>
+              <div className="px-5 pb-5 border-t border-white/[0.05] pt-4">
+                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Permissions</p>
+                <div className="flex flex-wrap gap-2">
+                  {(role.permissions ?? []).map(p => (
+                    <span key={p.id} className="px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] text-[10px] font-mono text-gray-400">
+                      {p.name}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}

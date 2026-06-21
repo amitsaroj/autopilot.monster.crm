@@ -5,11 +5,18 @@ import { ConfigService } from '@nestjs/config';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import OpenAI from 'openai';
 
-const mammoth = require('mammoth'); // For DOCX
+const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
 
-import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { QdrantConfig } from '../../config/qdrant.config';
 import { BillingService } from '../billing/billing.service';
+import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+
+const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
+  'gpt-4o': { input: 0.005, output: 0.015 },
+  'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
+  'text-embedding-3-small': { input: 0.00002, output: 0 },
+};
 
 @Injectable()
 export class RagService {
@@ -22,8 +29,10 @@ export class RagService {
     private configOrchestrator: ConfigOrchestratorService,
     private billingService: BillingService,
   ) {
+    const qdrantCfg = this.configService.get<QdrantConfig>('qdrant');
     this.qdrant = new QdrantClient({
-      url: this.configService.get('qdrant.url') || 'http://localhost:6333',
+      url: qdrantCfg?.url || 'http://localhost:6333',
+      ...(qdrantCfg?.apiKey ? { apiKey: qdrantCfg.apiKey } : {}),
     });
   }
 
@@ -42,17 +51,27 @@ export class RagService {
     return client;
   }
 
+  private async getEmbeddingModel(tenantId: string): Promise<string> {
+    const configured = await this.configOrchestrator.get(tenantId, 'ai_embedding_model');
+    return configured || 'text-embedding-3-small';
+  }
+
+  private async getDefaultChatModel(tenantId: string): Promise<string> {
+    const configured = await this.configOrchestrator.get(tenantId, 'ai_default_model');
+    return configured || 'gpt-4o';
+  }
+
   async processFileAndIndex(
     tenantId: string,
     fileBuffer: Buffer,
     fileName: string,
     mimeType: string,
+    knowledgeBaseId?: string,
   ) {
     this.logger.log(`Processing file ${fileName} (${mimeType}) for tenant ${tenantId}`);
 
     let text = '';
 
-    // 1. Parse based on MimeType
     if (mimeType.includes('pdf')) {
       const data = await pdfParse(fileBuffer);
       text = data.text;
@@ -63,7 +82,10 @@ export class RagService {
       text = fileBuffer.toString('utf-8');
     }
 
-    // 2. Advanced Chunking (1000 chars with 200 char overlap)
+    if (!text.trim()) {
+      return { success: false, chunksIndexed: 0, error: 'No extractable text in document' };
+    }
+
     const chunkSize = 1000;
     const overlap = 200;
     const chunks: string[] = [];
@@ -72,7 +94,6 @@ export class RagService {
       chunks.push(text.slice(i, i + chunkSize));
     }
 
-    // 3. Collection Management
     const collectionName = this.getCollectionName(tenantId);
     try {
       await this.qdrant.getCollection(collectionName);
@@ -83,21 +104,28 @@ export class RagService {
       });
     }
 
-    // 4. Batch Embed & Upsert
     const openai = await this.getOpenAIClient(tenantId);
+    const embeddingModel = await this.getEmbeddingModel(tenantId);
+    const documentId = crypto.randomUUID();
     const points = [];
+    let embeddingTokens = 0;
+
     for (let i = 0; i < chunks.length; i++) {
       try {
         const embeddingResponse = await openai.embeddings.create({
-          model: 'text-embedding-3-small',
+          model: embeddingModel,
           input: chunks[i],
         });
+
+        embeddingTokens += embeddingResponse.usage?.total_tokens ?? 0;
 
         points.push({
           id: crypto.randomUUID(),
           vector: embeddingResponse.data[0].embedding,
           payload: {
             tenantId,
+            knowledgeBaseId: knowledgeBaseId ?? null,
+            documentId,
             fileName,
             text: chunks[i],
             chunkIndex: i,
@@ -105,33 +133,67 @@ export class RagService {
           },
         });
 
-        // Batch every 20 points
         if (points.length >= 20 || i === chunks.length - 1) {
           await this.qdrant.upsert(collectionName, { wait: true, points: [...points] });
-          points.length = 0; // Clear array
+          points.length = 0;
         }
       } catch (err) {
         this.logger.error(`Failed to index chunk ${i} for ${fileName}`, err);
       }
     }
 
-    return { success: true, chunksIndexed: chunks.length };
+    if (tenantId && embeddingTokens > 0) {
+      await this.recordUsage(tenantId, embeddingTokens, embeddingModel, 0);
+    }
+
+    return {
+      success: true,
+      chunksIndexed: chunks.length,
+      documentId,
+      fileName,
+      embeddingTokens,
+    };
   }
 
-  async queryKnowledgeBase(tenantId: string, query: string, limit = 4) {
+  async queryKnowledgeBase(
+    tenantId: string,
+    query: string,
+    limit = 4,
+    knowledgeBaseIds?: string[],
+  ) {
     const collectionName = this.getCollectionName(tenantId);
     const openai = await this.getOpenAIClient(tenantId);
+    const embeddingModel = await this.getEmbeddingModel(tenantId);
+
     try {
       const embeddingResponse = await openai.embeddings.create({
-        model: 'text-embedding-3-small',
+        model: embeddingModel,
         input: query,
       });
+
+      const filter =
+        knowledgeBaseIds && knowledgeBaseIds.length > 0
+          ? {
+              must: [
+                {
+                  key: 'knowledgeBaseId',
+                  match: { any: knowledgeBaseIds },
+                },
+              ],
+            }
+          : undefined;
 
       const results = await this.qdrant.search(collectionName, {
         vector: embeddingResponse.data[0].embedding,
         limit,
         with_payload: true,
+        ...(filter ? { filter } : {}),
       });
+
+      const embeddingTokens = embeddingResponse.usage?.total_tokens ?? 0;
+      if (embeddingTokens > 0) {
+        await this.recordUsage(tenantId, embeddingTokens, embeddingModel, 0);
+      }
 
       return results.map((r) => r.payload?.['text']).join('\n\n---\n\n');
     } catch (err) {
@@ -140,10 +202,14 @@ export class RagService {
     }
   }
 
-  async generate(tenantId: string | undefined, prompt: string, options: any = {}) {
+  async generate(
+    tenantId: string | undefined,
+    prompt: string,
+    options: Record<string, unknown> = {},
+  ): Promise<string | null> {
     this.logger.log(`Generating text for prompt: ${prompt.slice(0, 50)}...`);
-    
-    const primaryModel = options.model || 'gpt-4o';
+
+    const primaryModel = typeof options.model === 'string' ? options.model : 'gpt-4o';
     const fallbackModel = 'gpt-4o-mini';
 
     try {
@@ -159,35 +225,99 @@ export class RagService {
     }
   }
 
-  private async _generateInternal(tenantId: string | undefined, prompt: string, model: string, options: any) {
+  private async _generateInternal(
+    tenantId: string | undefined,
+    prompt: string,
+    defaultModel: string,
+    options: any,
+  ) {
     const openai = await this.getOpenAIClient(tenantId);
+    const model =
+      typeof options.model === 'string'
+        ? options.model
+        : defaultModel;
+    const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
     const response = await openai.chat.completions.create({
-      model: model,
+      model,
       messages: [{ role: 'user', content: prompt }],
-      temperature: options.temperature || 0.7,
+      temperature,
     });
 
-    const usage = response.usage;
-    if (usage && tenantId) {
-      await this.billingService.trackUsage(tenantId, 'ai_tokens', usage.total_tokens);
+    const content = response.choices[0].message.content;
+    if (tenantId) {
+      await this.recordUsage(
+        tenantId,
+        response.usage?.prompt_tokens ?? 0,
+        model,
+        response.usage?.completion_tokens ?? 0,
+      );
     }
 
-    return response.choices[0].message.content;
+    return content;
+  }
+
+  async *streamGenerate(
+    tenantId: string | undefined,
+    prompt: string,
+    options: Record<string, unknown> = {},
+  ): AsyncGenerator<string> {
+    const openai = await this.getOpenAIClient(tenantId);
+    const model =
+      typeof options.model === 'string'
+        ? options.model
+        : tenantId
+          ? await this.getDefaultChatModel(tenantId)
+          : 'gpt-4o';
+    const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
+
+    const stream = await openai.chat.completions.create({
+      model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature,
+      stream: true,
+      stream_options: { include_usage: true },
+    });
+
+    let inputTokens = 0;
+    let outputTokens = 0;
+
+    for await (const chunk of stream) {
+      if (chunk.usage) {
+        inputTokens = chunk.usage.prompt_tokens ?? inputTokens;
+        outputTokens = chunk.usage.completion_tokens ?? outputTokens;
+      }
+      const content = chunk.choices[0]?.delta?.content;
+      if (content) {
+        yield content;
+      }
+    }
+
+    if (tenantId && (inputTokens > 0 || outputTokens > 0)) {
+      await this.recordUsage(tenantId, inputTokens, model, outputTokens);
+    }
   }
 
   async analyze(tenantId: string | undefined, text: string, task: string) {
     this.logger.log(`Analyzing text for task: ${task}`);
     const openai = await this.getOpenAIClient(tenantId);
+    const model = tenantId ? await this.getDefaultChatModel(tenantId) : 'gpt-4o';
     const prompt = `Task: ${task}\n\nText: ${text}\n\nProvide the analysis in JSON format.`;
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [{ role: 'system', content: 'You are an AI data analyst.' }, { role: 'user', content: prompt }],
+      model,
+      messages: [
+        { role: 'system', content: 'You are an AI data analyst.' },
+        { role: 'user', content: prompt },
+      ],
       response_format: { type: 'json_object' },
     });
 
-    const usage = response.usage;
-    if (usage && tenantId) {
-      await this.billingService.trackUsage(tenantId, 'ai_tokens', usage.total_tokens);
+    if (tenantId) {
+      await this.recordUsage(
+        tenantId,
+        response.usage?.prompt_tokens ?? 0,
+        model,
+        response.usage?.completion_tokens ?? 0,
+      );
     }
 
     return JSON.parse(response.choices[0].message.content || '{}');
@@ -202,15 +332,38 @@ export class RagService {
   }
 
   async getUsage(tenantId: string) {
-    const tokensUsed = await this.billingService.getUsage(tenantId, 'ai_tokens');
-    // Simplified cost calculation: $0.01 per 1k tokens (average)
-    const cost = (tokensUsed / 1000) * 0.01;
-    
+    const usage = await this.billingService.getUsageBreakdown(tenantId);
+    const aiTokens = Number(usage['ai_tokens'] ?? 0);
+    const aiCost = Number(usage['ai_cost'] ?? 0);
+
     return {
-      tokensUsed,
-      cost: Number(cost.toFixed(4)),
       tenantId,
+      tokensUsed: aiTokens,
+      cost: aiCost / 10000,
+      metrics: usage,
+      period: 'monthly',
     };
+  }
+
+  private async recordUsage(
+    tenantId: string,
+    inputTokens: number,
+    model: string,
+    outputTokens: number,
+  ): Promise<void> {
+    const totalTokens = inputTokens + outputTokens;
+    if (totalTokens <= 0) {
+      return;
+    }
+
+    const pricing = MODEL_COST_PER_1K[model] ?? MODEL_COST_PER_1K['gpt-4o'];
+    const cost =
+      (inputTokens / 1000) * pricing.input + (outputTokens / 1000) * pricing.output;
+
+    await this.billingService.trackUsage(tenantId, 'ai_tokens', totalTokens);
+    if (cost > 0) {
+      await this.billingService.trackUsage(tenantId, 'ai_cost', Math.round(cost * 10000));
+    }
   }
 
   private getCollectionName(tenantId: string): string {

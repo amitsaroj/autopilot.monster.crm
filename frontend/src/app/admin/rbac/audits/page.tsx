@@ -1,69 +1,76 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  Eye, Search, Filter, Clock, User, Shield,
-  AlertTriangle, CheckCircle2, ArrowRight, RefreshCw
+  Eye, Search, Clock, User, Shield,
+  AlertTriangle, CheckCircle2, RefreshCw, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
+import api from '@/lib/api/client';
 
-interface AccessEvent {
+interface AuditLog {
   id: string;
-  actor: string;
+  actorId?: string;
   action: string;
-  resource: string;
-  outcome: 'ALLOWED' | 'DENIED';
-  ip: string;
-  timestamp: string;
-  role: string;
+  resource?: string;
+  tenantId?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
 }
 
-const mockEvents: AccessEvent[] = [
-  { id: '1', actor: 'admin@workspace.com', action: 'UPDATE', resource: 'billing.subscription', outcome: 'ALLOWED', ip: '192.168.1.1', timestamp: new Date(Date.now() - 600000).toISOString(), role: 'TENANT_ADMIN' },
-  { id: '2', actor: 'sarah@workspace.com', action: 'DELETE', resource: 'crm.contacts', outcome: 'DENIED', ip: '10.0.0.42', timestamp: new Date(Date.now() - 1800000).toISOString(), role: 'SALES_REP' },
-  { id: '3', actor: 'priya@workspace.com', action: 'READ', resource: 'inbox', outcome: 'ALLOWED', ip: '172.16.0.5', timestamp: new Date(Date.now() - 3600000).toISOString(), role: 'SUPPORT_AGENT' },
-  { id: '4', actor: 'mike@workspace.com', action: 'READ', resource: 'analytics', outcome: 'ALLOWED', ip: '10.0.0.18', timestamp: new Date(Date.now() - 7200000).toISOString(), role: 'SALES_REP' },
-  { id: '5', actor: 'tom@workspace.com', action: 'WRITE', resource: 'settings', outcome: 'DENIED', ip: '192.168.1.55', timestamp: new Date(Date.now() - 10800000).toISOString(), role: 'ANALYST' },
-  { id: '6', actor: 'alex@workspace.com', action: 'READ', resource: 'crm.contacts', outcome: 'ALLOWED', ip: '10.0.1.22', timestamp: new Date(Date.now() - 14400000).toISOString(), role: 'VIEWER' },
-];
-
 export default function AdminRBACauditsPage() {
-  const [events] = useState<AccessEvent[]>(mockEvents);
+  const [events, setEvents] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [outcomeFilter, setOutcomeFilter] = useState('All');
 
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/logs/audit');
+      const payload = res.data?.data ?? res.data;
+      setEvents(Array.isArray(payload) ? payload : []);
+    } catch {
+      toast.error('Failed to load audit logs');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
   const filtered = events.filter(e => {
-    const matchSearch = e.actor.toLowerCase().includes(search.toLowerCase()) || e.resource.toLowerCase().includes(search.toLowerCase());
-    const matchOutcome = outcomeFilter === 'All' || e.outcome === outcomeFilter;
+    const actor = String(e.actorId ?? e.metadata?.actor ?? '');
+    const resource = String(e.resource ?? e.metadata?.resource ?? e.action);
+    const matchSearch =
+      actor.toLowerCase().includes(search.toLowerCase()) ||
+      resource.toLowerCase().includes(search.toLowerCase()) ||
+      e.action.toLowerCase().includes(search.toLowerCase());
+    const outcome = String(e.metadata?.outcome ?? 'ALLOWED');
+    const matchOutcome = outcomeFilter === 'All' || outcome === outcomeFilter;
     return matchSearch && matchOutcome;
   });
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Access Audits</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">RBAC Access Event Log</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Access Audit Log</h1>
+          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">RBAC Access Events</p>
         </div>
-        <button className="p-3 bg-white/[0.03] border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all">
+        <button onClick={fetchEvents} className="p-3 bg-white/[0.03] border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all">
           <RefreshCw className="w-4 h-4" />
         </button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-emerald-500/10"><CheckCircle2 className="w-5 h-5 text-emerald-400" /></div>
-          <div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Access Allowed</p>
-            <p className="text-2xl font-black text-white">{events.filter(e => e.outcome === 'ALLOWED').length}</p>
-          </div>
-        </div>
-        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-red-500/10"><AlertTriangle className="w-5 h-5 text-red-400" /></div>
-          <div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Access Denied</p>
-            <p className="text-2xl font-black text-white">{events.filter(e => e.outcome === 'DENIED').length}</p>
-          </div>
-        </div>
       </div>
 
       <div className="flex gap-3">
@@ -74,7 +81,7 @@ export default function AdminRBACauditsPage() {
         </div>
         <select value={outcomeFilter} onChange={e => setOutcomeFilter(e.target.value)}
           className="px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-xs text-gray-300 outline-none font-black uppercase tracking-widest">
-          {['All', 'ALLOWED', 'DENIED'].map(o => <option key={o} value={o}>{o}</option>)}
+          {['All', 'ALLOWED', 'DENIED'].map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
@@ -82,35 +89,38 @@ export default function AdminRBACauditsPage() {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-white/[0.05] bg-white/[0.02]">
-              {['Actor', 'Role', 'Action', 'Resource', 'Outcome', 'IP', 'Time'].map(h => (
-                <th key={h} className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">{h}</th>
+              {['Actor', 'Action', 'Resource', 'Outcome', 'Time'].map(h => (
+                <th key={h} className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.03]">
-            {filtered.map(e => (
-              <tr key={e.id} className="group hover:bg-white/[0.02] transition-colors">
-                <td className="px-5 py-4 text-xs text-gray-300">{e.actor}</td>
-                <td className="px-5 py-4">
-                  <span className="text-[10px] font-black text-indigo-300 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20 uppercase">{e.role.replace('_', ' ')}</span>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="text-xs font-mono text-amber-300">{e.action}</span>
-                </td>
-                <td className="px-5 py-4">
-                  <span className="text-xs font-mono text-gray-400">{e.resource}</span>
-                </td>
-                <td className="px-5 py-4">
-                  <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${e.outcome === 'ALLOWED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>{e.outcome}</span>
-                </td>
-                <td className="px-5 py-4 text-xs font-mono text-gray-500">{e.ip}</td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <Clock className="w-3 h-3" />{new Date(e.timestamp).toLocaleTimeString()}
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {filtered.map(event => {
+              const outcome = String(event.metadata?.outcome ?? 'ALLOWED');
+              return (
+                <tr key={event.id} className="group hover:bg-white/[0.02] transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <User className="w-3.5 h-3.5 text-gray-500" />
+                      <span className="text-xs text-gray-300 font-mono">{event.actorId ?? 'system'}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-xs font-black text-white uppercase">{event.action}</td>
+                  <td className="px-5 py-4 text-xs text-gray-400 font-mono">{event.resource ?? event.action}</td>
+                  <td className="px-5 py-4">
+                    <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest flex items-center gap-1 w-fit ${outcome === 'ALLOWED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                      {outcome === 'ALLOWED' ? <CheckCircle2 className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
+                      {outcome}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <Clock className="w-3 h-3" />{new Date(event.createdAt).toLocaleString()}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

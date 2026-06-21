@@ -2,10 +2,11 @@ import { Controller, Get, Post, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminMarketplaceService } from './sub-admin-marketplace.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles, TenantId } from '../../../common/decorators';
+import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
 
 @ApiTags('SubAdmin / Marketplace')
 @ApiBearerAuth()
+@ResourcePermissions('marketplace')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @Controller('sub-admin/marketplace')
@@ -14,8 +15,8 @@ export class SubAdminMarketplaceController {
 
   @Get('discover')
   @ApiOperation({ summary: 'Discover available marketplace items' })
-  async discover() {
-    const data = await this.marketplaceService.discover();
+  async discover(@TenantId() tenantId: string) {
+    const data = await this.marketplaceService.discover(tenantId);
     return { status: 200, message: 'Marketplace discovery synchronized', error: false, data };
   }
 

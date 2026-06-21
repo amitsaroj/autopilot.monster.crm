@@ -11,9 +11,11 @@ import {
   UseInterceptors,
   UploadedFile,
   Query,
+  Res,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { Response } from 'express';
 
 import { AgentService } from './agent.service';
 import { CampaignService } from './campaign.service';
@@ -38,15 +40,23 @@ import {
   SegmentService,
   CustomFieldService,
 } from './crm-support.service';
+import { ForecastService } from './forecast.service';
+import { QuoteLifecycleService } from './quote-lifecycle.service';
 import { CreateContactDto, CreateCompanyDto, CreateDealDto } from './dto/crm.dto';
-import { TenantId, Roles } from '../../common/decorators';
-import { Limit } from '../../common/decorators/limit.decorator';
+import { MoveDealStageDto, MarkDealLostDto, CreateContactNoteDto } from './dto/deal-lifecycle.dto';
+import { DealProductService } from './deal-product.service';
+import { AddDealProductDto } from './dto/deal-product.dto';
+import { SendQuoteDto } from './dto/quote-lifecycle.dto';
+import { LeadConversionService } from './services/lead-conversion.service';
+import { TenantId, Roles, ResourcePermissions, PlanFeature, Limit } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 
 @ApiTags('CRM & AI Agents')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('crm')
+@PlanFeature('crm')
 @Controller('crm')
 export class CrmController {
   constructor(
@@ -71,6 +81,10 @@ export class CrmController {
     private readonly tagService: TagService,
     private readonly segmentService: SegmentService,
     private readonly customFieldService: CustomFieldService,
+    private readonly forecastService: ForecastService,
+    private readonly quoteLifecycleService: QuoteLifecycleService,
+    private readonly dealProductService: DealProductService,
+    private readonly leadConversionService: LeadConversionService,
   ) {}
 
   // --- Agents ---
@@ -163,6 +177,7 @@ export class CrmController {
   }
 
   @Post('contacts')
+  @Limit('contacts_limit')
   @ApiOperation({ summary: 'Create contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   @Limit('contacts')
@@ -206,6 +221,77 @@ export class CrmController {
   async deleteContact(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.contactService.remove(tenantId, id);
     return { success: true };
+  }
+
+  @Get('contacts/:id/activities')
+  @ApiOperation({ summary: 'Get contact activity feed' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getContactActivities(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.contactService.getActivities(tenantId, id);
+    return { status: 200, message: 'Contact activities retrieved', error: false, data };
+  }
+
+  @Get('contacts/:id/deals')
+  @ApiOperation({ summary: 'Get deals linked to contact' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getContactDeals(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.contactService.getDeals(tenantId, id);
+    return { status: 200, message: 'Contact deals retrieved', error: false, data };
+  }
+
+  @Get('contacts/:id/notes')
+  @ApiOperation({ summary: 'Get notes for contact' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getContactNotes(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.contactService.getNotes(tenantId, id);
+    return { status: 200, message: 'Contact notes retrieved', error: false, data };
+  }
+
+  @Post('contacts/:id/notes')
+  @ApiOperation({ summary: 'Create note for contact' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async createContactNote(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: CreateContactNoteDto,
+  ) {
+    const data = await this.contactService.createNote(tenantId, id, dto);
+    return { status: 201, message: 'Note created', error: false, data };
+  }
+
+  @Get('contacts/:id/calls')
+  @ApiOperation({ summary: 'Get call history for contact' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getContactCalls(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.contactService.getCalls(tenantId, id);
+    return { status: 200, message: 'Contact calls retrieved', error: false, data };
+  }
+
+  @Get('contacts/:id/emails')
+  @ApiOperation({ summary: 'Get email history for contact' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getContactEmails(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.contactService.getEmails(tenantId, id);
+    return { status: 200, message: 'Contact emails retrieved', error: false, data };
+  }
+
+  @Get('contacts/:id/whatsapp')
+  @ApiOperation({ summary: 'Get WhatsApp history for contact' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getContactWhatsapp(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.contactService.getWhatsappMessages(tenantId, id);
+    return { status: 200, message: 'Contact WhatsApp messages retrieved', error: false, data };
+  }
+
+  @Post('contacts/merge')
+  @ApiOperation({ summary: 'Merge two contacts' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async mergeContacts(
+    @TenantId() tenantId: string,
+    @Body() body: { primaryId: string; secondaryId: string },
+  ) {
+    const data = await this.contactService.mergeContacts(tenantId, body.primaryId, body.secondaryId);
+    return { status: 200, message: 'Contacts merged', error: false, data };
   }
 
   // --- Companies ---
@@ -261,6 +347,30 @@ export class CrmController {
     return { success: true };
   }
 
+  @Get('companies/:id/contacts')
+  @ApiOperation({ summary: 'Get contacts at company' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getCompanyContacts(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.companyService.getContacts(tenantId, id);
+    return { status: 200, message: 'Company contacts retrieved', error: false, data };
+  }
+
+  @Get('companies/:id/deals')
+  @ApiOperation({ summary: 'Get deals for company' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getCompanyDeals(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.companyService.getDeals(tenantId, id);
+    return { status: 200, message: 'Company deals retrieved', error: false, data };
+  }
+
+  @Get('companies/:id/activities')
+  @ApiOperation({ summary: 'Get company activity timeline' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getCompanyActivities(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.companyService.getActivities(tenantId, id);
+    return { status: 200, message: 'Company activities retrieved', error: false, data };
+  }
+
 
   // --- Deals ---
 
@@ -279,6 +389,7 @@ export class CrmController {
   }
 
   @Post('deals')
+  @Limit('deals_limit')
   @ApiOperation({ summary: 'Create deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async createDeal(@TenantId() tenantId: string, @Body() dto: CreateDealDto) {
@@ -317,6 +428,78 @@ export class CrmController {
     return { success: true };
   }
 
+  @Patch('deals/:id/stage')
+  @ApiOperation({ summary: 'Move deal to another pipeline stage' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async moveDealStage(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: MoveDealStageDto,
+  ) {
+    const data = await this.dealService.moveStage(tenantId, id, dto.stageId, undefined, dto.reason);
+    return { status: 200, message: 'Deal stage updated', error: false, data };
+  }
+
+  @Patch('deals/:id/won')
+  @ApiOperation({ summary: 'Mark deal as won' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async markDealWon(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.dealService.markWon(tenantId, id);
+    return { status: 200, message: 'Deal marked as won', error: false, data };
+  }
+
+  @Patch('deals/:id/lost')
+  @ApiOperation({ summary: 'Mark deal as lost' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async markDealLost(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: MarkDealLostDto,
+  ) {
+    const data = await this.dealService.markLost(tenantId, id, dto.lostReason);
+    return { status: 200, message: 'Deal marked as lost', error: false, data };
+  }
+
+  @Get('deals/:id/products')
+  @ApiOperation({ summary: 'Get products linked to deal' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getDealProducts(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.dealProductService.listProducts(tenantId, id);
+    return { status: 200, message: 'Deal products retrieved', error: false, data };
+  }
+
+  @Get('deals/:id/activities')
+  @ApiOperation({ summary: 'Get activities linked to deal' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getDealActivities(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.activityService.findByDeal(tenantId, id);
+    return { status: 200, message: 'Deal activities retrieved', error: false, data };
+  }
+
+  @Post('deals/:id/products')
+  @ApiOperation({ summary: 'Add product to deal' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async addDealProduct(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: AddDealProductDto,
+  ) {
+    const data = await this.dealProductService.addProduct(tenantId, id, dto);
+    return { status: 201, message: 'Product added to deal', error: false, data };
+  }
+
+  @Delete('deals/:id/products/:productId')
+  @ApiOperation({ summary: 'Remove product from deal' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async removeDealProduct(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Param('productId') productId: string,
+  ) {
+    await this.dealProductService.removeProduct(tenantId, id, productId);
+    return { status: 200, message: 'Product removed from deal', error: false, data: null };
+  }
+
   @Post('campaigns/start')
   @ApiOperation({ summary: 'Start a bulk AI calling campaign' })
   startCampaign(
@@ -338,9 +521,9 @@ export class CrmController {
   @ApiOperation({ summary: 'Get unified calendar events' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCalendar(@TenantId() tenantId: string) {
-    const activities = await this.activityService.getCalendarEvents(tenantId);
+    const activities = await this.activityService.findAll(tenantId);
     const tasks = await this.taskService.findAll(tenantId);
-    
+
     return [
       ...activities.map((a: any) => ({
         id: a.id,
@@ -393,6 +576,20 @@ export class CrmController {
     };
   }
 
+  @Get('tasks/:id')
+  @ApiOperation({ summary: 'Get task by ID' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getTask(@TenantId() tenantId: string, @Param('id') id: string) {
+    return await this.taskService.findOne(tenantId, id);
+  }
+
+  @Put('tasks/:id')
+  @ApiOperation({ summary: 'Update task' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async updateTask(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+    return await this.taskService.update(tenantId, id, dto);
+  }
+
   @Delete('tasks/:id')
   @ApiOperation({ summary: 'Delete task' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
@@ -433,18 +630,24 @@ export class CrmController {
     };
   }
 
+  @Delete('notes/:id')
+  @ApiOperation({ summary: 'Delete note' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async deleteNote(@TenantId() tenantId: string, @Param('id') id: string) {
+    await this.noteService.remove(tenantId, id);
+    return { success: true };
+  }
+
   @Get('dashboard')
   @ApiOperation({ summary: 'Get CRM dashboard metrics' })
-  async getDashboard(@TenantId() _tenantId: string) {
+  async getDashboard(@TenantId() tenantId: string) {
+    const summary = await this.analyticsService.getSummary(tenantId);
     return {
-      status: 200,
-      message: 'Dashboard metrics retrieved',
-      error: false,
-      data: {
-        contactsCount: 0,
-        dealsValue: 0,
-        activeCampaigns: 0,
-      },
+      contactsCount: summary.totalContacts,
+      dealsValue: summary.totalRevenue,
+      activeCampaigns: summary.totalDeals,
+      totalLeads: summary.totalLeads,
+      winRate: summary.winRate,
     };
   }
 
@@ -520,6 +723,46 @@ export class CrmController {
   async deleteQuote(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.quoteService.remove(tenantId, id);
     return { success: true };
+  }
+
+  @Post('quotes/:id/send')
+  @ApiOperation({ summary: 'Send quote by email' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async sendQuote(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: SendQuoteDto,
+  ) {
+    const data = await this.quoteLifecycleService.send(tenantId, id, dto);
+    return { status: 200, message: 'Quote sent', error: false, data };
+  }
+
+  @Post('quotes/:id/accept')
+  @ApiOperation({ summary: 'Accept quote' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async acceptQuote(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.quoteLifecycleService.accept(tenantId, id);
+    return { status: 200, message: 'Quote accepted', error: false, data };
+  }
+
+  @Post('quotes/:id/decline')
+  @ApiOperation({ summary: 'Decline quote' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async declineQuote(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.quoteLifecycleService.decline(tenantId, id);
+    return { status: 200, message: 'Quote declined', error: false, data };
+  }
+
+  @Get('quotes/:id/pdf')
+  @ApiOperation({ summary: 'Download quote PDF' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async downloadQuotePdf(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const quote = await this.quoteLifecycleService.findOne(tenantId, id);
+    this.quoteLifecycleService.streamPdf(quote, res);
   }
 
   // --- Leads ---
@@ -607,14 +850,30 @@ export class CrmController {
   }
 
   @Post('leads/:id/convert')
-  @ApiOperation({ summary: 'Convert lead' })
+  @ApiOperation({ summary: 'Convert lead to contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async convertLead(@TenantId() _tenantId: string, @Param('id') _id: string) {
+  async convertLead(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body()
+    body: {
+      createCompany?: boolean;
+      createDeal?: boolean;
+      dealName?: string;
+      pipelineId?: string;
+    },
+  ) {
+    const result = await this.leadConversionService.convertLead(id, {
+      tenantId,
+      createCompany: body.createCompany ?? false,
+      createDeal: body.createDeal ?? false,
+      dealName: body.dealName,
+      pipelineId: body.pipelineId,
+    });
     return {
-      status: 200,
-      message: 'Lead conversion started',
-      error: false,
-      data: { success: true },
+      contactId: result.contact.id,
+      contact: result.contact,
+      companyId: result.companyId ?? null,
     };
   }
 
@@ -871,6 +1130,22 @@ export class CrmController {
     return await this.pipelineService.create(tenantId, dto);
   }
 
+  @Get('pipelines/:id')
+  @ApiOperation({ summary: 'Get pipeline by id' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getPipeline(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.pipelineService.findOne(tenantId, id);
+    return { status: 200, message: 'Pipeline retrieved', error: false, data };
+  }
+
+  @Put('pipelines/:id')
+  @ApiOperation({ summary: 'Update pipeline' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async updatePipeline(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+    const data = await this.pipelineService.update(tenantId, id, dto);
+    return { status: 200, message: 'Pipeline updated', error: false, data };
+  }
+
   @Post('pipelines/:id/stages')
   @ApiOperation({ summary: 'Create pipeline stage' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
@@ -959,5 +1234,38 @@ export class CrmController {
   async deleteCustomField(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.customFieldService.remove(tenantId, id);
     return { success: true };
+  }
+
+  // --- Forecast ---
+  @Get('forecast')
+  @ApiOperation({ summary: 'Weighted pipeline forecast' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getForecast(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
+    const data = await this.forecastService.getForecast(tenantId, pipelineId);
+    return { status: 200, message: 'Forecast retrieved', error: false, data };
+  }
+
+  @Get('forecast/by-stage')
+  @ApiOperation({ summary: 'Forecast grouped by pipeline stage' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getForecastByStage(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
+    const data = await this.forecastService.getByStage(tenantId, pipelineId);
+    return { status: 200, message: 'Forecast by stage retrieved', error: false, data };
+  }
+
+  @Get('forecast/by-owner')
+  @ApiOperation({ summary: 'Forecast grouped by deal owner' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getForecastByOwner(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
+    const data = await this.forecastService.getByOwner(tenantId, pipelineId);
+    return { status: 200, message: 'Forecast by owner retrieved', error: false, data };
+  }
+
+  @Get('forecast/historical')
+  @ApiOperation({ summary: 'Historical forecast accuracy' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
+  async getForecastHistorical(@TenantId() tenantId: string) {
+    const data = await this.forecastService.getHistorical(tenantId);
+    return { status: 200, message: 'Historical forecast retrieved', error: false, data };
   }
 }

@@ -22,9 +22,15 @@ export class AdminFeatureFlagsService {
   async updateGlobalFlag(key: string, enabled: boolean) {
     let flag = await this.settingRepo.findOne({ where: { key, group: 'FEATURE_FLAGS' } });
     if (!flag) {
-      flag = this.settingRepo.create({ key, value: enabled, group: 'FEATURE_FLAGS', isPublic: true });
+      flag = this.settingRepo.create({
+        key,
+        value: enabled,
+        group: 'FEATURE_FLAGS',
+        isPublic: true,
+      });
     } else {
       flag.value = enabled;
+      flag.group = 'FEATURE_FLAGS';
     }
     return this.settingRepo.save(flag);
   }

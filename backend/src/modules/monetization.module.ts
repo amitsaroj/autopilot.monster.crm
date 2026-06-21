@@ -3,20 +3,20 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PricingService } from './pricing/pricing.service';
 import { PricingRepository } from './pricing/pricing.repository';
 import { BillingService } from './billing/billing.service';
-import { WalletService } from './billing/wallet.service';
-import { CouponService } from './billing/coupon.service';
-import { PaypalService } from './billing/paypal.service';
-import { RazorpayService } from './billing/razorpay.service';
-import { BillingExtController } from './billing/billing-ext.controller';
+import { BillingController } from './billing/billing.controller';
 import { Plan } from '../database/entities/plan.entity';
 import { PlanFeature } from '../database/entities/plan-feature.entity';
 import { PlanLimit } from '../database/entities/plan-limit.entity';
 import { Subscription } from '../database/entities/subscription.entity';
 import { Invoice } from '../database/entities/invoice.entity';
 import { Payment } from '../database/entities/payment.entity';
+import { PaymentMethod } from '../database/entities/payment-method.entity';
 import { UsageRecord } from '../database/entities/usage-record.entity';
-import { Wallet, WalletTransaction } from '../database/entities/wallet.entity';
-import { Coupon } from '../database/entities/coupon.entity';
+import { Wallet } from '../database/entities/wallet.entity';
+import { WalletTransaction } from '../database/entities/wallet-transaction.entity';
+import { Tenant } from '../database/entities/tenant.entity';
+import { WalletService } from './billing/wallet.service';
+import { PlatformSetting } from '../database/entities/platform-setting.entity';
 
 import { MonetizationController } from './monetization.controller';
 
@@ -29,14 +29,16 @@ import { MonetizationController } from './monetization.controller';
       Subscription,
       Invoice,
       Payment,
+      PaymentMethod,
       UsageRecord,
       Wallet,
       WalletTransaction,
-      Coupon,
+      Tenant,
+      PlatformSetting,
     ]),
   ],
-  controllers: [MonetizationController, BillingExtController],
-  providers: [PricingService, PricingRepository, BillingService, WalletService, CouponService, PaypalService, RazorpayService],
-  exports: [PricingService, BillingService, WalletService, CouponService, PaypalService, RazorpayService],
+  controllers: [MonetizationController, BillingController],
+  providers: [PricingService, PricingRepository, BillingService, WalletService],
+  exports: [PricingService, BillingService, WalletService],
 })
 export class MonetizationModule {}

@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import { Providers } from '@/components/providers';
 import '@/app/globals.css';
 
-
-
 export const metadata: Metadata = {
   title: {
     default: 'AutopilotMonster CRM',

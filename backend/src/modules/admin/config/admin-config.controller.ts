@@ -2,9 +2,10 @@ import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/c
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminConfigService } from './admin-config.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles } from '../../../common/decorators';
+import { Roles, ResourcePermissions } from '../../../common/decorators';
 
 @ApiTags('Admin / Platform Configuration')
+@ResourcePermissions('admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')

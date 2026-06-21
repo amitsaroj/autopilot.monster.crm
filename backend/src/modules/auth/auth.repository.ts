@@ -8,6 +8,7 @@ import { SessionEntity } from './entities/session.entity';
 import { UserEntity, UserStatus, AuthProvider } from './entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Role } from '../../database/entities/role.entity';
+import { Permission } from '../../database/entities/permission.entity';
 import { UserRole } from '../../database/entities/user-role.entity';
 
 /**
@@ -27,6 +28,8 @@ export class AuthRepository {
     private readonly tenantRepo: Repository<Tenant>,
     @InjectRepository(Role)
     private readonly roleRepo: Repository<Role>,
+    @InjectRepository(Permission)
+    private readonly permissionRepo: Repository<Permission>,
     @InjectRepository(UserRole)
     private readonly userRoleRepo: Repository<UserRole>,
   ) {}
@@ -47,6 +50,7 @@ export class AuthRepository {
         'status',
         'tenantId',
         'isMfaEnabled',
+        'mfaSecret',
         'failedLoginAttempts',
         'lockedUntil',
         'firstName',
@@ -131,10 +135,32 @@ export class AuthRepository {
   }
 
   async findValidRefreshToken(userId: string, tenantId: string): Promise<RefreshTokenEntity[]> {
-    return this.tokenRepo.find({
-      where: { userId, tenantId, isRevoked: false },
-      select: ['id', 'tokenHash', 'expiresAt', 'sessionId'],
-    });
+    return this.tokenRepo
+      .createQueryBuilder('token')
+      .addSelect('token.tokenHash')
+      .where('token.userId = :userId', { userId })
+      .andWhere('token.tenantId = :tenantId', { tenantId })
+      .andWhere('token.isRevoked = false')
+      .andWhere('token.expiresAt > :now', { now: new Date() })
+      .getMany();
+  }
+
+  async revokeRefreshTokenByRawToken(
+    userId: string,
+    tenantId: string,
+    rawToken: string,
+  ): Promise<boolean> {
+    const validTokens = await this.findValidRefreshToken(userId, tenantId);
+    for (const valid of validTokens) {
+      if (await bcrypt.compare(rawToken, valid.tokenHash)) {
+        await this.revokeRefreshToken(valid.id, tenantId);
+        if (valid.sessionId) {
+          await this.deactivateSession(valid.sessionId, userId, tenantId);
+        }
+        return true;
+      }
+    }
+    return false;
   }
 
   async revokeRefreshToken(id: string, tenantId: string): Promise<void> {
@@ -152,8 +178,9 @@ export class AuthRepository {
     return this.sessionRepo.save(session);
   }
 
-  async deactivateSession(id: string, tenantId: string): Promise<void> {
-    await this.sessionRepo.update({ id, tenantId }, { isActive: false });
+  async deactivateSession(id: string, userId: string, tenantId: string): Promise<boolean> {
+    const result = await this.sessionRepo.update({ id, userId, tenantId }, { isActive: false });
+    return (result.affected ?? 0) > 0;
   }
 
   async deactivateAllUserSessions(userId: string, tenantId: string): Promise<void> {
@@ -180,6 +207,41 @@ export class AuthRepository {
   }
 
   // ─── RBAC ──────────────────────────────────────────────────────────────────
+
+  async bootstrapTenantAdminRole(tenantId: string, userId: string): Promise<void> {
+    const existingAssignment = await this.userRoleRepo.findOne({ where: { userId, tenantId } });
+    if (existingAssignment) {
+      return;
+    }
+
+    const permissions = await this.permissionRepo.find();
+    const tenantAdminPermissions = permissions.filter((permission) => permission.resource !== 'admin');
+
+    let role = await this.roleRepo.findOne({
+      where: { tenantId, name: 'TENANT_ADMIN' },
+      relations: ['permissions'],
+    });
+
+    if (!role) {
+      role = await this.roleRepo.save(
+        this.roleRepo.create({
+          tenantId,
+          name: 'TENANT_ADMIN',
+          description: 'Tenant Administrator',
+          isSystem: true,
+          permissions: tenantAdminPermissions,
+        }),
+      );
+    }
+
+    await this.userRoleRepo.save(
+      this.userRoleRepo.create({
+        tenantId,
+        userId,
+        roleId: role.id,
+      }),
+    );
+  }
 
   async fetchUserRolesWithPermissions(userId: string, tenantId: string): Promise<Role[]> {
     const userRoles = await this.userRoleRepo.find({ where: { userId, tenantId } });

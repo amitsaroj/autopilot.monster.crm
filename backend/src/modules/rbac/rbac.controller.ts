@@ -16,12 +16,13 @@ import { RbacService } from './rbac.service';
 import { CreateRoleDto, RoleFilterDto, PermissionFilterDto } from './dto/create-role.dto';
 import { RoleAssignmentDto } from './dto/role-assignment.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
-import { Roles, TenantId, CurrentUser } from '../../common/decorators';
+import { Roles, TenantId, CurrentUser, ResourcePermissions } from '../../common/decorators';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('RBAC')
 @Controller('rbac')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+@ResourcePermissions('users')
 @ApiBearerAuth()
 export class RbacController {
   constructor(private readonly rbacService: RbacService) {}

@@ -37,6 +37,8 @@ COPY --from=builder /app/dist ./dist
 
 EXPOSE 8000
 
-# Copy startup sequence allowing automated prestart (seed execution)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:8000/api/v1/health/ready',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+
 COPY package*.json ./
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/main"]

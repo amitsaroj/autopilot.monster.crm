@@ -55,11 +55,24 @@ export const useAuth = create<AuthState>()(
           const response = await authService.login(data);
           const authData = (response as any).data;
           
-          // First set tokens so the api request uses them
-          setToken(authData.accessToken, authData.refreshToken, authData.tenant?.id);
+          let tenantId = authData.tenant?.id;
+          if (!tenantId && authData.accessToken) {
+            try {
+              const payload = JSON.parse(atob(authData.accessToken.split('.')[1]));
+              tenantId = payload.tenantId;
+            } catch {
+              tenantId = undefined;
+            }
+          }
+
+          setToken(authData.accessToken, authData.refreshToken, tenantId);
           
           let userData = authData.user;
           let tenantData = authData.tenant || null;
+          
+          if (!tenantData && tenantId) {
+            tenantData = { id: tenantId };
+          }
           
           // If the backend didn't return user info directly, fetch it
           if (!userData) {

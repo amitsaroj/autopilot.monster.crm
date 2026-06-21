@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsObject, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsObject, IsOptional, IsBoolean, IsIn } from 'class-validator';
 
 export class CreateWorkflowDto {
   @ApiProperty()
@@ -11,16 +11,22 @@ export class CreateWorkflowDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty()
-  @IsString()
-  triggerEvent!: string;
+  @ApiPropertyOptional({ enum: ['voice', 'whatsapp'] })
+  @IsIn(['voice', 'whatsapp'])
+  @IsOptional()
+  type?: 'voice' | 'whatsapp';
 
   @ApiProperty()
   @IsObject()
-  definition!: any;
+  definition!: Record<string, unknown>;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  triggerEvent?: string;
 
   @ApiPropertyOptional()
   @IsBoolean()
   @IsOptional()
-  isActive?: boolean;
+  isPublished?: boolean;
 }

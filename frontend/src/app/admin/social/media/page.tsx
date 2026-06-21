@@ -1,22 +1,54 @@
 "use client";
 
-import { useState } from 'react';
-import { Image, Upload, Search, Trash2, Download, Filter, Eye, Video, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Image, Upload, Search, Trash2, Download, Filter, Eye, Video, FileText, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-const mockAssets = [
-  { id: '1', name: 'product-hero.png', type: 'IMAGE', size: '2.4MB', platform: 'All', used: 8, added: '2025-02-01', preview: '🖼' },
-  { id: '2', name: 'q1-results-banner.jpg', type: 'IMAGE', size: '1.8MB', platform: 'LinkedIn', used: 2, added: '2025-03-15', preview: '📊' },
-  { id: '3', name: 'demo-video-30s.mp4', type: 'VIDEO', size: '18MB', platform: 'All', used: 5, added: '2025-01-20', preview: '🎬' },
-  { id: '4', name: 'logo-dark.png', type: 'IMAGE', size: '120KB', platform: 'All', used: 24, added: '2024-12-01', preview: '🏷' },
-  { id: '5', name: 'case-study-acme.pdf', type: 'DOC', size: '3.2MB', platform: 'LinkedIn', used: 3, added: '2025-03-01', preview: '📄' },
-  { id: '6', name: 'twitter-banner.png', type: 'IMAGE', size: '890KB', platform: 'Twitter', used: 1, added: '2025-02-20', preview: '🐦' },
-];
+import { storageFileService, type StorageFile } from '@/services/storage-file.service';
 
 const TYPE_ICONS: Record<string, React.ElementType> = { IMAGE: Image, VIDEO: Video, DOC: FileText };
 
+function assetType(mime: string): string {
+  if (mime.startsWith('image/')) return 'IMAGE';
+  if (mime.startsWith('video/')) return 'VIDEO';
+  return 'DOC';
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
 export default function AdminSocialMediaPage() {
+  const [assets, setAssets] = useState<StorageFile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const filtered = mockAssets.filter(a => a.name.toLowerCase().includes(search.toLowerCase()));
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await storageFileService.list();
+        const files = res.data?.data ?? [];
+        setAssets(files.filter((f) => f.mimeType.startsWith('image/') || f.mimeType.startsWith('video/')));
+      } catch {
+        toast.error('Failed to load media assets');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
+  const filtered = assets.filter((a) => a.filename.toLowerCase().includes(search.toLowerCase()));
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -32,42 +64,36 @@ export default function AdminSocialMediaPage() {
 
       <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 focus-within:border-indigo-500/30 transition-all">
         <Search className="w-4 h-4 text-gray-500" />
-        <input type="text" placeholder="Search assets..." value={search} onChange={e => setSearch(e.target.value)}
+        <input type="text" placeholder="Search assets..." value={search} onChange={(e) => setSearch(e.target.value)}
           className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder:text-gray-600" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtered.map(asset => {
-          const Icon = TYPE_ICONS[asset.type] || Image;
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filtered.map((asset) => {
+          const type = assetType(asset.mimeType);
+          const Icon = TYPE_ICONS[type] ?? FileText;
           return (
-            <div key={asset.id} className="rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all group overflow-hidden">
-              <div className="h-32 bg-white/[0.03] flex items-center justify-center relative">
-                <span className="text-4xl">{asset.preview}</span>
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-all"><Eye className="w-4 h-4" /></button>
-                  <button className="p-2 rounded-lg bg-white/20 text-white hover:bg-white/30 transition-all"><Download className="w-4 h-4" /></button>
-                  <button className="p-2 rounded-lg bg-red-500/40 text-red-300 hover:bg-red-500/60 transition-all"><Trash2 className="w-4 h-4" /></button>
+            <div key={asset.id} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-xl bg-indigo-500/10">
+                  <Icon className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-white truncate">{asset.filename}</p>
+                  <p className="text-[10px] text-gray-600">{formatSize(asset.size)} · {type}</p>
                 </div>
               </div>
-              <div className="p-3">
-                <p className="text-xs font-bold text-white truncate mb-1">{asset.name}</p>
-                <div className="flex items-center justify-between text-[10px] text-gray-600">
-                  <span className="flex items-center gap-1"><Icon className="w-3 h-3" />{asset.type}</span>
-                  <span>{asset.size}</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-gray-600 mt-1">
-                  <span>{asset.platform}</span>
-                  <span>Used: {asset.used}x</span>
-                </div>
+              <div className="flex gap-2">
+                <button className="flex-1 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[10px] font-black text-white uppercase tracking-widest hover:bg-white/[0.08] transition-all flex items-center justify-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-indigo-400" /> View
+                </button>
+                <button className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-gray-600 hover:text-red-400 transition-all">
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           );
         })}
-
-        <div className="rounded-2xl border border-dashed border-white/[0.08] flex flex-col items-center justify-center gap-3 hover:border-indigo-500/30 transition-all group cursor-pointer h-[200px]">
-          <Upload className="w-8 h-8 text-gray-600 group-hover:text-indigo-400 transition-colors" />
-          <p className="text-xs font-black text-gray-600 group-hover:text-white transition-colors uppercase tracking-widest">Upload New</p>
-        </div>
       </div>
     </div>
   );

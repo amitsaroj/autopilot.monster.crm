@@ -6,4 +6,5 @@ export { PermissionGuard } from './permission.guard';
 export { FeatureGuard } from './feature.guard';
 export { LimitGuard } from './limit.guard';
 export { TenantGuard } from './tenant.guard';
+export { ActiveTenantGuard } from './active-tenant.guard';
 export { WsJwtGuard } from './ws-jwt.guard';

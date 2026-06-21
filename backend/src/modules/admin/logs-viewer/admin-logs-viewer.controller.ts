@@ -2,9 +2,10 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminLogsViewerService } from './admin-logs-viewer.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles } from '../../../common/decorators';
+import { Roles, ResourcePermissions } from '../../../common/decorators';
 
 @ApiTags('Admin / Logs Viewer')
+@ResourcePermissions('admin')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('SUPER_ADMIN')

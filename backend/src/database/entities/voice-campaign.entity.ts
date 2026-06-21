@@ -1,5 +1,13 @@
 import { Entity, Column, Index } from 'typeorm';
+
 import { BaseEntity } from './base.entity';
+
+export enum VoiceCampaignStatus {
+  DRAFT = 'DRAFT',
+  RUNNING = 'RUNNING',
+  PAUSED = 'PAUSED',
+  COMPLETED = 'COMPLETED',
+}
 
 @Entity('voice_campaigns')
 @Index(['tenantId', 'status'])
@@ -7,40 +15,21 @@ export class VoiceCampaign extends BaseEntity {
   @Column({ length: 255 })
   name!: string;
 
-  @Column({ type: 'text', nullable: true })
-  description?: string;
-
   @Column({
     type: 'enum',
-    enum: ['DRAFT', 'SCHEDULED', 'RUNNING', 'PAUSED', 'COMPLETED', 'CANCELLED'],
-    default: 'DRAFT',
+    enum: VoiceCampaignStatus,
+    default: VoiceCampaignStatus.DRAFT,
   })
-  status!: 'DRAFT' | 'SCHEDULED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+  status!: VoiceCampaignStatus;
 
-  @Column({ name: 'agent_id', type: 'uuid', nullable: true })
-  agentId?: string;
+  @Column({ name: 'from_number', length: 20 })
+  fromNumber!: string;
 
-  /** IDs of contacts/leads to call */
-  @Column({ name: 'target_list', type: 'jsonb', default: '[]' })
-  targetList!: string[];
+  @Column({ type: 'text' })
+  script!: string;
 
-  @Column({ name: 'total_calls', type: 'int', default: 0 })
-  totalCalls!: number;
-
-  @Column({ name: 'completed_calls', type: 'int', default: 0 })
-  completedCalls!: number;
-
-  @Column({ name: 'successful_calls', type: 'int', default: 0 })
-  successfulCalls!: number;
-
-  @Column({ name: 'max_retries', type: 'int', default: 3 })
-  maxRetries!: number;
-
-  @Column({ name: 'retry_interval_minutes', type: 'int', default: 60 })
-  retryIntervalMinutes!: number;
-
-  @Column({ name: 'calls_per_minute', type: 'int', default: 5 })
-  callsPerMinute!: number;
+  @Column({ name: 'contact_list_id', type: 'uuid', nullable: true })
+  contactListId?: string;
 
   @Column({ name: 'scheduled_at', type: 'timestamptz', nullable: true })
   scheduledAt?: Date;
@@ -51,6 +40,15 @@ export class VoiceCampaign extends BaseEntity {
   @Column({ name: 'completed_at', type: 'timestamptz', nullable: true })
   completedAt?: Date;
 
-  @Column({ type: 'jsonb', nullable: true })
-  settings?: Record<string, any>;
+  @Column({ name: 'total_contacts', type: 'integer', default: 0 })
+  totalContacts!: number;
+
+  @Column({ name: 'calls_made', type: 'integer', default: 0 })
+  callsMade!: number;
+
+  @Column({ name: 'calls_answered', type: 'integer', default: 0 })
+  callsAnswered!: number;
+
+  @Column({ name: 'calls_failed', type: 'integer', default: 0 })
+  callsFailed!: number;
 }

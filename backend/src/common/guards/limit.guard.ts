@@ -24,8 +24,8 @@ export class LimitGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
-    if (!request.user) return true; // Skip if no user context (e.g., public route)
-    
+    if (!request.user) return true;
+
     const { tenantId } = request.user;
     if (!tenantId) return false;
 
@@ -35,7 +35,7 @@ export class LimitGuard implements CanActivate {
 
       if (pricingService && billingService) {
         const limit = await pricingService.getLimit(tenantId, metric);
-        if (limit === -1) return true; // Unlimited
+        if (limit === -1) return true;
 
         const usage = await billingService.getUsage(tenantId, metric);
         const allowed = usage < limit;
@@ -49,7 +49,6 @@ export class LimitGuard implements CanActivate {
       }
     } catch (e: any) {
       if (e instanceof ForbiddenException) throw e;
-      // If services are not yet loaded, allow pass-through or handle gracefully
     }
 
     return true;

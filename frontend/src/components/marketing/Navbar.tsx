@@ -11,6 +11,7 @@ const navLinks = [
   {
     label: 'Product',
     children: [
+      { label: 'Overview', href: '/product' },
       { label: 'CRM', href: '/product/crm' },
       { label: 'AI Agents', href: '/product/ai' },
       { label: 'Voice AI', href: '/product/voice' },
@@ -18,11 +19,12 @@ const navLinks = [
       { label: 'Workflows', href: '/product/workflow' },
       { label: 'Analytics', href: '/product/analytics' },
       { label: 'Marketplace', href: '/product/marketplace' },
-    ]
+      { label: 'Integrations', href: '/integrations' },
+    ],
   },
-  { label: 'Services', href: '/services' },
+  { label: 'Features', href: '/features' },
   { label: 'Pricing', href: '/pricing' },
-
+  { label: 'Testimonials', href: '/testimonials' },
   { label: 'Blog', href: '/blog' },
 ];
 
@@ -70,7 +72,12 @@ export default function MarketingNavbar() {
                 onMouseEnter={() => setOpenDropdown(link.label)}
                 onMouseLeave={() => setOpenDropdown(null)}
               >
-                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05]">
+                <button
+                  type="button"
+                  aria-haspopup="true"
+                  aria-expanded={openDropdown === link.label}
+                  className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05]"
+                >
                   {link.label} <ChevronDown className="w-3.5 h-3.5" />
                 </button>
                 <AnimatePresence>
@@ -136,7 +143,11 @@ export default function MarketingNavbar() {
         <div className="lg:hidden flex items-center gap-2 shrink-0">
           <ThemeToggle variant="marketing" />
           <button
+            type="button"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-nav-menu"
+            aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
             className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -148,6 +159,7 @@ export default function MarketingNavbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
+            id="mobile-nav-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}

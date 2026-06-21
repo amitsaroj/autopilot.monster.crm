@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MessageSquare, Search, Filter, User, Bot,
   Clock, CheckCircle2, AlertTriangle, ArrowRight,
   ChevronRight, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { aiChatService } from '@/services/ai-chat.service';
 
 interface Conversation {
   id: string;
@@ -18,14 +21,6 @@ interface Conversation {
   updatedAt: string;
 }
 
-const mockConversations: Conversation[] = [
-  { id: '1', contact: 'Sarah Johnson', agent: 'Support Assistant', channel: 'WhatsApp', status: 'RESOLVED', messages: 12, lastMessage: 'Thanks for your help!', updatedAt: new Date(Date.now() - 3600000).toISOString() },
-  { id: '2', contact: 'Mike Chen', agent: 'Sales Qualifier Bot', channel: 'Web Chat', status: 'OPEN', messages: 6, lastMessage: 'Can you tell me more about pricing?', updatedAt: new Date(Date.now() - 1800000).toISOString() },
-  { id: '3', contact: 'Alex Rivera', agent: 'Support Assistant', channel: 'Email', status: 'ESCALATED', messages: 18, lastMessage: 'This issue needs human attention', updatedAt: new Date(Date.now() - 900000).toISOString() },
-  { id: '4', contact: 'Priya Patel', agent: 'Sales Qualifier Bot', channel: 'Web Chat', status: 'OPEN', messages: 4, lastMessage: 'I am interested in the Enterprise plan', updatedAt: new Date(Date.now() - 300000).toISOString() },
-  { id: '5', contact: 'Tom Williams', agent: 'Lead Nurture Agent', channel: 'Email', status: 'RESOLVED', messages: 9, lastMessage: 'Demo scheduled for Friday', updatedAt: new Date(Date.now() - 7200000).toISOString() },
-];
-
 const STATUS_STYLES: Record<string, string> = {
   OPEN: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -33,15 +28,49 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminAIConversationsPage() {
-  const [conversations] = useState<Conversation[]>(mockConversations);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await aiChatService.getConversations();
+        const items = Array.isArray(res.data) ? res.data : [];
+        setConversations(items.map((c: Record<string, unknown>) => ({
+          id: String(c.id),
+          contact: String(c.contactId ?? c.title ?? 'Conversation'),
+          agent: String(c.agentId ?? 'AI Agent'),
+          channel: String(c.channel ?? 'Web Chat'),
+          status: (c.status as Conversation['status']) ?? 'OPEN',
+          messages: Number(c.messageCount ?? 0),
+          lastMessage: String(c.summary ?? c.lastMessage ?? ''),
+          updatedAt: String(c.lastMessageAt ?? c.updatedAt ?? new Date().toISOString()),
+        })));
+      } catch {
+        toast.error('Failed to load conversations');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
 
   const filtered = conversations.filter(c => {
     const matchSearch = c.contact.toLowerCase().includes(search.toLowerCase()) || c.agent.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || c.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

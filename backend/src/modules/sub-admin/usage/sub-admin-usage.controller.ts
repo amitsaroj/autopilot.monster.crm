@@ -2,10 +2,11 @@ import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminUsageService } from './sub-admin-usage.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles, TenantId } from '../../../common/decorators';
+import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
 
 @ApiTags('SubAdmin / Usage')
 @ApiBearerAuth()
+@ResourcePermissions('analytics')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 @Controller('sub-admin/usage')

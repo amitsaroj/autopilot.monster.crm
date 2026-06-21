@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   MessageSquare, Search, Filter, User, Bot,
   Clock, CheckCircle2, Phone, Mail, ArrowRight,
-  Plus, MoreVertical, ChevronRight
+  Plus, MoreVertical, ChevronRight, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { whatsappConversationService, type WhatsAppConversation } from '@/services/whatsapp-conversation.service';
 
 interface InboxThread {
   id: string;
@@ -17,14 +20,6 @@ interface InboxThread {
   unread: number;
   updatedAt: string;
 }
-
-const mockThreads: InboxThread[] = [
-  { id: '1', contact: 'Sarah Johnson', channel: 'WhatsApp', lastMessage: 'Can you send over the pricing sheet?', status: 'OPEN', assignedTo: 'AI Agent', unread: 2, updatedAt: new Date(Date.now() - 600000).toISOString() },
-  { id: '2', contact: 'Mike Chen', channel: 'Email', lastMessage: 'Demo confirmed for Thursday 2PM', status: 'RESOLVED', assignedTo: 'Sales Team', unread: 0, updatedAt: new Date(Date.now() - 3600000).toISOString() },
-  { id: '3', contact: 'Priya Patel', channel: 'Chat', lastMessage: 'Having trouble logging in...', status: 'OPEN', assignedTo: 'Support Bot', unread: 3, updatedAt: new Date(Date.now() - 300000).toISOString() },
-  { id: '4', contact: 'Tom Williams', channel: 'Phone', lastMessage: 'Called regarding enterprise pricing', status: 'PENDING', assignedTo: 'Unassigned', unread: 0, updatedAt: new Date(Date.now() - 7200000).toISOString() },
-  { id: '5', contact: 'Alex Rivera', channel: 'WhatsApp', lastMessage: 'Thanks! Looking forward to the onboarding', status: 'RESOLVED', assignedTo: 'Customer Success', unread: 0, updatedAt: new Date(Date.now() - 86400000).toISOString() },
-];
 
 const CHANNEL_ICONS: Record<string, React.ElementType> = {
   WhatsApp: MessageSquare,
@@ -47,15 +42,49 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminCRMInboxPage() {
-  const [threads] = useState<InboxThread[]>(mockThreads);
+  const [threads, setThreads] = useState<InboxThread[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await whatsappConversationService.list();
+        const items = res.data?.data ?? [];
+        setThreads(items.map((c: WhatsAppConversation) => ({
+          id: c.phone,
+          contact: c.contactName ?? c.phone,
+          channel: 'WhatsApp' as const,
+          lastMessage: c.lastMessage ?? '',
+          status: 'OPEN' as const,
+          assignedTo: 'Unassigned',
+          unread: c.unreadCount,
+          updatedAt: c.lastMessageAt ?? new Date().toISOString(),
+        })));
+      } catch {
+        toast.error('Failed to load inbox');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
 
   const filtered = threads.filter(t => {
     const matchSearch = t.contact.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || t.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

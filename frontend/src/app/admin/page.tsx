@@ -25,7 +25,7 @@ export default function AdminIndexPage() {
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    fetch('/api/v1/admin/metrics/overview')
+    fetch('/api/v1/analytics/overview')
       .then(r => r.json())
       .then(j => { if (j.data) setStats(j.data); })
       .catch(() => {})

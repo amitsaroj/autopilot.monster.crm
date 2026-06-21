@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -51,10 +51,19 @@ api.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken });
-          const { accessToken } = response.data.data;
+          const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
+          const response = await axios.post(
+            `${api.defaults.baseURL}/auth/refresh`,
+            { refreshToken },
+            tenantId ? { headers: { 'x-tenant-id': tenantId } } : undefined,
+          );
+          const tokenData = response.data.data ?? response.data;
+          const { accessToken, refreshToken: newRefreshToken } = tokenData;
 
           document.cookie = `access_token=${accessToken}; path=/; max-age=86400; samesite=strict; secure`;
+          if (newRefreshToken) {
+            document.cookie = `refresh_token=${newRefreshToken}; path=/; max-age=604800; samesite=strict; secure`;
+          }
           api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
           return api(originalRequest);

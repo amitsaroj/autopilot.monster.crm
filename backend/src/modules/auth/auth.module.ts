@@ -1,4 +1,5 @@
 import type { JwtConfig } from '../../config/jwt.config';
+import { buildJwtModuleOptions } from '../../common/utils/jwt-signing.util';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -13,6 +14,7 @@ import { SessionEntity } from './entities/session.entity';
 import { UserEntity } from './entities/user.entity';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Role } from '../../database/entities/role.entity';
+import { Permission } from '../../database/entities/permission.entity';
 import { UserRole } from '../../database/entities/user-role.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -27,9 +29,11 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GithubStrategy } from './strategies/github.strategy';
 import { AppleStrategy } from './strategies/apple.strategy';
 import { MfaService } from './mfa.service';
+import { MonetizationModule } from '../monetization.module';
 
 @Module({
   imports: [
+    MonetizationModule,
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
@@ -38,10 +42,10 @@ import { MfaService } from './mfa.service';
       useFactory: (configService: ConfigService) => {
         const jwt = configService.get<JwtConfig>('jwt');
         if (jwt === undefined) throw new Error('JWT config missing');
-        return { secret: jwt.secret, signOptions: { expiresIn: jwt.expiresIn as any } };
+        return buildJwtModuleOptions(jwt);
       },
     }),
-    TypeOrmModule.forFeature([UserEntity, SessionEntity, RefreshTokenEntity, Tenant, Role, UserRole]),
+    TypeOrmModule.forFeature([UserEntity, SessionEntity, RefreshTokenEntity, Tenant, Role, Permission, UserRole]),
   ],
   controllers: [AuthController],
   providers: [

@@ -1,30 +1,28 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   FileText, Search, Plus, Filter, Download,
   Folder, File, Eye, Trash2, MoreVertical,
-  Image, Archive, ArrowRight, Clock, User
+  Image, Archive, ArrowRight, Clock, User, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface Document {
-  id: string;
-  name: string;
-  type: 'PDF' | 'DOCX' | 'IMAGE' | 'CSV' | 'OTHER';
-  size: string;
-  owner: string;
-  linkedTo: string;
-  tags: string[];
-  createdAt: string;
+import { storageFileService, type StorageFile } from '@/services/storage-file.service';
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const mockDocs: Document[] = [
-  { id: '1', name: 'Sales Proposal Q1 2025.pdf', type: 'PDF', size: '2.4 MB', owner: 'Sarah K.', linkedTo: 'Acme Corp Deal', tags: ['proposal', 'sales'], createdAt: new Date().toISOString() },
-  { id: '2', name: 'Contract_Acme_Corp.docx', type: 'DOCX', size: '345 KB', owner: 'Mike L.', linkedTo: 'Acme Corp', tags: ['contract', 'legal'], createdAt: new Date().toISOString() },
-  { id: '3', name: 'Product Screenshot.png', type: 'IMAGE', size: '1.2 MB', owner: 'Priya M.', linkedTo: 'TechStartup X', tags: ['demo'], createdAt: new Date().toISOString() },
-  { id: '4', name: 'Lead Export March.csv', type: 'CSV', size: '88 KB', owner: 'Admin', linkedTo: 'All Leads', tags: ['export', 'leads'], createdAt: new Date().toISOString() },
-  { id: '5', name: 'Partnership Agreement 2025.pdf', type: 'PDF', size: '5.1 MB', owner: 'CEO', linkedTo: 'GlobalSales Inc', tags: ['legal', 'partnership'], createdAt: new Date().toISOString() },
-];
+function fileType(mime: string): 'PDF' | 'DOCX' | 'IMAGE' | 'CSV' | 'OTHER' {
+  if (mime.includes('pdf')) return 'PDF';
+  if (mime.includes('word') || mime.includes('document')) return 'DOCX';
+  if (mime.startsWith('image/')) return 'IMAGE';
+  if (mime.includes('csv')) return 'CSV';
+  return 'OTHER';
+}
 
 const TYPE_ICONS: Record<string, React.ElementType> = {
   PDF: FileText,
@@ -43,10 +41,34 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function AdminCRMDocumentsPage() {
-  const [docs] = useState<Document[]>(mockDocs);
+  const [docs, setDocs] = useState<StorageFile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const filtered = docs.filter(d => d.name.toLowerCase().includes(search.toLowerCase()) || d.linkedTo.toLowerCase().includes(search.toLowerCase()));
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await storageFileService.list();
+        setDocs(res.data?.data ?? []);
+      } catch {
+        toast.error('Failed to load documents');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
+  const filtered = docs.filter(d => d.filename.toLowerCase().includes(search.toLowerCase()));
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -82,8 +104,9 @@ export default function AdminCRMDocumentsPage() {
           </thead>
           <tbody className="divide-y divide-white/[0.03]">
             {filtered.map(doc => {
-              const Icon = TYPE_ICONS[doc.type] || File;
-              const colorClass = TYPE_COLORS[doc.type] || 'text-gray-400 bg-gray-500/10';
+              const docType = fileType(doc.mimeType);
+              const Icon = TYPE_ICONS[docType] || File;
+              const colorClass = TYPE_COLORS[docType] || 'text-gray-400 bg-gray-500/10';
               return (
                 <tr key={doc.id} className="group hover:bg-white/[0.02] transition-colors">
                   <td className="px-5 py-4">
@@ -92,25 +115,21 @@ export default function AdminCRMDocumentsPage() {
                         <Icon className={`w-4 h-4 ${colorClass.split(' ')[0]}`} />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-white truncate max-w-[200px]">{doc.name}</p>
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          {doc.tags.map(t => (
-                            <span key={t} className="text-[9px] px-1.5 py-0.5 rounded bg-white/[0.04] text-gray-500 uppercase tracking-widest">{t}</span>
-                          ))}
-                        </div>
+                        <p className="text-sm font-bold text-white truncate max-w-[200px]">{doc.filename}</p>
+                        <span className="text-[9px] text-gray-600 font-mono">{doc.mimeType}</span>
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${colorClass.split(' ')[0]} ${colorClass.split(' ')[1]} border-current/20`}>{doc.type}</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${colorClass.split(' ')[0]} ${colorClass.split(' ')[1]} border-current/20`}>{docType}</span>
                   </td>
-                  <td className="px-5 py-4 text-xs text-gray-400">{doc.linkedTo}</td>
+                  <td className="px-5 py-4 text-xs text-gray-400">{doc.fileKey}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                      <User className="w-3 h-3" />{doc.owner}
+                      <User className="w-3 h-3" />Workspace
                     </div>
                   </td>
-                  <td className="px-5 py-4 text-xs text-gray-500 font-mono">{doc.size}</td>
+                  <td className="px-5 py-4 text-xs text-gray-500 font-mono">{formatSize(doc.size)}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
                       <Clock className="w-3 h-3" />{new Date(doc.createdAt).toLocaleDateString()}

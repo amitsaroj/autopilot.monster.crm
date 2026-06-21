@@ -36,9 +36,14 @@ export function proxy(request: NextRequest) {
       const payload = JSON.parse(decodedJson);
       
       const roles: string[] = payload.roles || [];
-      const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/superadmin');
-      
-      if (isAdminRoute && !roles.some(r => ['SUPER_ADMIN', 'ADMIN'].includes(r))) {
+      const isAdminRoute = pathname.startsWith('/admin');
+      const isSuperAdminRoute = pathname.startsWith('/superadmin');
+
+      if (isSuperAdminRoute && !roles.includes('SUPER_ADMIN')) {
+        return NextResponse.redirect(new URL('/403', request.url));
+      }
+
+      if (isAdminRoute && !roles.some(r => ['SUPER_ADMIN', 'TENANT_ADMIN', 'ADMIN'].includes(r))) {
         return NextResponse.redirect(new URL('/403', request.url));
       }
     } catch (e) {

@@ -2,11 +2,12 @@ import { Controller, Get, Post, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SearchService } from './search.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, ResourcePermissions } from '../../common/decorators';
 
 @ApiTags('Search')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('search')
 @Controller('search')
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
@@ -16,9 +17,11 @@ export class SearchController {
   async search(
     @TenantId() tenantId: string,
     @Query('q') query: string,
-    @Query('collection') collection: string = 'all',
+    @Query('types') types?: string,
+    @Query('collection') collection?: string,
   ) {
-    return this.searchService.search(tenantId, collection, query);
+    const resolvedCollection = types ?? collection ?? 'all';
+    return this.searchService.search(tenantId, resolvedCollection, query);
   }
 
   @Post('reindex')

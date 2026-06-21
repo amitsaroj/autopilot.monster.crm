@@ -3,10 +3,11 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagg
 import { SchedulerService } from './scheduler.service';
 import { CreateScheduledJobDto, UpdateScheduledJobDto } from './dto/scheduler.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
-import { Roles, TenantId } from '../../common/decorators';
+import { Roles, TenantId, ResourcePermissions } from '../../common/decorators';
 
 @ApiTags('Scheduler')
 @ApiBearerAuth()
+@ResourcePermissions('scheduler')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 @Controller('scheduler')
 export class SchedulerController {

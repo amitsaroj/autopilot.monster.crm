@@ -1,83 +1,116 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Wallet, WalletTransaction } from '../../database/entities/wallet.entity';
+
+import { Wallet } from '../../database/entities/wallet.entity';
+import {
+  WalletTransaction,
+  WalletTransactionType,
+} from '../../database/entities/wallet-transaction.entity';
+import { AddWalletCreditsDto } from './dto/wallet.dto';
 
 @Injectable()
 export class WalletService {
   constructor(
     @InjectRepository(Wallet)
-    private readonly walletRepo: Repository<Wallet>,
+    private readonly walletRepository: Repository<Wallet>,
     @InjectRepository(WalletTransaction)
-    private readonly txRepo: Repository<WalletTransaction>,
+    private readonly transactionRepository: Repository<WalletTransaction>,
   ) {}
 
-  async getOrCreate(tenantId: string): Promise<Wallet> {
-    let wallet = await this.walletRepo.findOne({ where: { tenantId } as any });
+  async getOrCreateWallet(tenantId: string): Promise<Wallet> {
+    let wallet = await this.walletRepository.findOne({ where: { tenantId } });
     if (!wallet) {
-      const created = this.walletRepo.create({ tenantId, balance: 0, currency: 'USD' } as any) as unknown as Wallet;
-      wallet = await this.walletRepo.save(created) as unknown as Wallet;
+      wallet = await this.walletRepository.save(
+        this.walletRepository.create({ tenantId, balance: 0, currency: 'USD' }),
+      );
     }
-    return wallet!;
+    return wallet;
   }
 
-  async getBalance(tenantId: string): Promise<{ balance: number; currency: string }> {
-    const wallet = await this.getOrCreate(tenantId);
-    return { balance: Number(wallet.balance), currency: wallet.currency };
+  async getWallet(tenantId: string): Promise<Wallet> {
+    return this.getOrCreateWallet(tenantId);
   }
 
-  async credit(tenantId: string, amount: number, source: WalletTransaction['source'], description?: string, referenceId?: string): Promise<WalletTransaction> {
-    if (amount <= 0) throw new BadRequestException('Amount must be positive');
-
-    const wallet = await this.getOrCreate(tenantId);
-    wallet.balance = Number(wallet.balance) + amount;
-    wallet.totalCredited = Number(wallet.totalCredited) + amount;
-    await this.walletRepo.save(wallet);
-
-    const tx = this.txRepo.create({
-      tenantId,
-      walletId: wallet.id,
-      type: 'CREDIT',
-      amount,
-      source,
-      description,
-      referenceId,
-    } as any) as unknown as WalletTransaction;
-    return this.txRepo.save(tx) as unknown as Promise<WalletTransaction>;
-  }
-
-  async debit(tenantId: string, amount: number, source: WalletTransaction['source'], description?: string, referenceId?: string): Promise<WalletTransaction> {
-    if (amount <= 0) throw new BadRequestException('Amount must be positive');
-
-    const wallet = await this.getOrCreate(tenantId);
-    if (Number(wallet.balance) < amount) {
-      throw new BadRequestException('Insufficient wallet balance');
-    }
-
-    wallet.balance = Number(wallet.balance) - amount;
-    wallet.totalDebited = Number(wallet.totalDebited) + amount;
-    await this.walletRepo.save(wallet);
-
-    const tx = this.txRepo.create({
-      tenantId,
-      walletId: wallet.id,
-      type: 'DEBIT',
-      amount,
-      source,
-      description,
-      referenceId,
-    } as any) as unknown as WalletTransaction;
-    return this.txRepo.save(tx) as unknown as Promise<WalletTransaction>;
-  }
-
-  async getTransactions(tenantId: string, page = 1, limit = 20): Promise<{ data: WalletTransaction[]; total: number }> {
-    const wallet = await this.getOrCreate(tenantId);
-    const [data, total] = await this.txRepo.findAndCount({
-      where: { walletId: wallet.id } as any,
+  async getTransactions(tenantId: string): Promise<WalletTransaction[]> {
+    const wallet = await this.getOrCreateWallet(tenantId);
+    return this.transactionRepository.find({
+      where: { tenantId, walletId: wallet.id },
       order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
+      take: 100,
     });
-    return { data, total };
+  }
+
+  async addCredits(tenantId: string, dto: AddWalletCreditsDto): Promise<Wallet> {
+    return this.walletRepository.manager.transaction(async (manager) => {
+      const walletRepo = manager.getRepository(Wallet);
+      const txRepo = manager.getRepository(WalletTransaction);
+
+      let wallet = await walletRepo.findOne({ where: { tenantId } });
+      if (!wallet) {
+        wallet = await walletRepo.save(
+          walletRepo.create({ tenantId, balance: 0, currency: 'USD' }),
+        );
+      }
+
+      const newBalance = Number(wallet.balance) + dto.amount;
+      wallet.balance = newBalance;
+      const saved = await walletRepo.save(wallet);
+
+      await txRepo.save(
+        txRepo.create({
+          tenantId,
+          walletId: wallet.id,
+          type: WalletTransactionType.CREDIT,
+          amount: dto.amount,
+          balanceAfter: newBalance,
+          description: dto.description ?? 'Credit added',
+          referenceId: dto.referenceId,
+        }),
+      );
+
+      return saved;
+    });
+  }
+
+  async debit(
+    tenantId: string,
+    amount: number,
+    description: string,
+    referenceId?: string,
+  ): Promise<Wallet> {
+    return this.walletRepository.manager.transaction(async (manager) => {
+      const walletRepo = manager.getRepository(Wallet);
+      const txRepo = manager.getRepository(WalletTransaction);
+
+      const wallet = await walletRepo.findOne({
+        where: { tenantId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!wallet) {
+        throw new BadRequestException('Wallet not found');
+      }
+      if (Number(wallet.balance) < amount) {
+        throw new BadRequestException('Insufficient wallet balance');
+      }
+
+      const newBalance = Number(wallet.balance) - amount;
+      wallet.balance = newBalance;
+      const saved = await walletRepo.save(wallet);
+
+      await txRepo.save(
+        txRepo.create({
+          tenantId,
+          walletId: wallet.id,
+          type: WalletTransactionType.DEBIT,
+          amount,
+          balanceAfter: newBalance,
+          description,
+          referenceId,
+        }),
+      );
+
+      return saved;
+    });
   }
 }

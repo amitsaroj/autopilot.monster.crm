@@ -35,14 +35,14 @@ export class AdminBillingService {
   async getStats() {
     const totalRevenue = await this.invoiceRepo
       .createQueryBuilder('invoice')
-      .select('SUM(invoice.amount)', 'total')
+      .select('SUM(invoice.total)', 'total')
       .where('invoice.status = :status', { status: 'PAID' })
       .getRawOne();
 
     const pendingRevenue = await this.invoiceRepo
       .createQueryBuilder('invoice')
-      .select('SUM(invoice.amount)', 'total')
-      .where('invoice.status = :status', { status: 'PENDING' })
+      .select('SUM(invoice.total)', 'total')
+      .where('invoice.status = :status', { status: 'OPEN' })
       .getRawOne();
 
     return {

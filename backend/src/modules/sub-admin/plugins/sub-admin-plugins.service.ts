@@ -13,7 +13,7 @@ export class SubAdminPluginsService {
 
   async findAll(tenantId: string) {
     return this.tenantPluginRepo.find({
-      where: { tenantId },
+      where: { tenantId, isEnabled: true },
       relations: ['plugin'],
     });
   }
@@ -24,21 +24,25 @@ export class SubAdminPluginsService {
 
     const existing = await this.tenantPluginRepo.findOne({ where: { tenantId, pluginId } });
     if (existing) {
-      existing.status = 'ENABLED';
+      existing.isEnabled = true;
+      existing.installedAt = new Date();
       return this.tenantPluginRepo.save(existing);
     }
 
     const tenantPlugin = this.tenantPluginRepo.create({
       tenantId,
       pluginId,
-      status: 'ENABLED',
+      isEnabled: true,
+      config: {},
+      installedAt: new Date(),
     });
     return this.tenantPluginRepo.save(tenantPlugin);
   }
 
   async disable(tenantId: string, pluginId: string) {
-    const plugin = await this.tenantPluginRepo.findOne({ where: { tenantId, pluginId } });
-    if (!plugin) throw new NotFoundException('Active plugin vector not found');
-    return this.tenantPluginRepo.delete(plugin.id);
+    const installation = await this.tenantPluginRepo.findOne({ where: { tenantId, pluginId } });
+    if (!installation) throw new NotFoundException('Active plugin not found');
+    installation.isEnabled = false;
+    return this.tenantPluginRepo.save(installation);
   }
 }

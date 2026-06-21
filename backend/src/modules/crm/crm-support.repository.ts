@@ -46,6 +46,10 @@ export class QuoteRepository extends BaseRepository<Quote> {
   constructor(@InjectRepository(Quote) repo: Repository<Quote>) {
     super(repo);
   }
+
+  findByViewToken(viewToken: string): Promise<Quote | null> {
+    return this.repository.findOne({ where: { viewToken } });
+  }
 }
 
 @Injectable()

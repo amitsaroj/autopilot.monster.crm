@@ -7,18 +7,21 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import type { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { assertAccessJwtConfigured, resolveJwtVerifyKey } from '../../../common/utils/jwt-signing.util';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(configService: ConfigService) {
     const jwt = configService.get<JwtConfig>('jwt');
-    if (jwt === undefined || jwt.secret === '') {
-      throw new Error('JWT secret is not configured');
+    if (jwt === undefined) {
+      throw new Error('JWT config missing');
     }
+    assertAccessJwtConfigured(jwt);
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwt.secret,
+      secretOrKey: resolveJwtVerifyKey(jwt, 'access'),
+      algorithms: [jwt.algorithm],
       issuer: 'autopilot.monster',
       audience: 'autopilot.monster.user',
     });

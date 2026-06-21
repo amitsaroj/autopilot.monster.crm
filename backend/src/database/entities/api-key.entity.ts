@@ -1,40 +1,27 @@
-import { Entity, Column, Index } from 'typeorm';
+import { Entity, Column } from 'typeorm';
+
 import { BaseEntity } from './base.entity';
 
 @Entity('api_keys')
-@Index(['tenantId', 'keyHash'], { unique: true })
 export class ApiKey extends BaseEntity {
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId!: string;
+
   @Column({ length: 255 })
   name!: string;
 
-  /** Only stored hashed — never store raw key */
-  @Column({ name: 'key_hash', length: 128 })
-  keyHash!: string;
-
-  /** Prefix for display, e.g. "sk_live_abc..." */
-  @Column({ name: 'key_prefix', length: 12 })
+  @Column({ name: 'key_prefix', length: 20 })
   keyPrefix!: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['ACTIVE', 'REVOKED', 'EXPIRED'],
-    default: 'ACTIVE',
-  })
-  status!: 'ACTIVE' | 'REVOKED' | 'EXPIRED';
+  @Column({ name: 'key_hash' })
+  keyHash!: string;
 
-  /** JSON array of allowed scopes, e.g. ["contacts:read","deals:write"] */
-  @Column({ type: 'jsonb', default: '["*"]' })
-  scopes!: string[];
-
-  @Column({ name: 'rate_limit', type: 'int', default: 1000 })
-  rateLimit!: number;
+  @Column({ type: 'text', array: true, default: '{}' })
+  permissions!: string[];
 
   @Column({ name: 'last_used_at', type: 'timestamptz', nullable: true })
   lastUsedAt?: Date;
 
   @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
   expiresAt?: Date;
-
-  @Column({ type: 'jsonb', nullable: true })
-  metadata?: Record<string, any>;
 }

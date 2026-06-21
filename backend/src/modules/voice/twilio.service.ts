@@ -19,6 +19,16 @@ export class TwilioService {
     private readonly voiceCallRepo: Repository<VoiceCall>,
   ) {}
 
+  async getFromNumber(tenantId: string): Promise<string> {
+    const { from } = await this.getClient(tenantId);
+    return from;
+  }
+
+  async hangUpCall(tenantId: string, callSid: string): Promise<void> {
+    const { client } = await this.getClient(tenantId);
+    await client.calls(callSid).update({ status: 'completed' });
+  }
+
   private async getClient(tenantId: string): Promise<{ client: twilio.Twilio; from: string }> {
     if (this.clients.has(tenantId)) {
       return { 
@@ -77,20 +87,27 @@ export class TwilioService {
     }
   }
 
-  async getCall(tenantId: string, sid: string): Promise<VoiceCall | null> {
-    return this.voiceCallRepo.findOne({ where: { tenantId, sid } });
-  }
+  validateWebhookSignature(
+    signature: string | undefined,
+    url: string,
+    params: Record<string, string>,
+  ): boolean {
+    const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN') ?? '';
+    const isMockToken = !authToken || authToken === 'mocktoken';
 
-  async updateCallStatus(sid: string, status: string, duration?: number, recordingUrl?: string) {
-    await this.voiceCallRepo.update({ sid }, { 
-      status, 
-      durationSeconds: duration, 
-      recordingUrl 
-    });
-  }
+    if (process.env.NODE_ENV === 'production' && isMockToken) {
+      return false;
+    }
 
-  async saveCall(call: VoiceCall): Promise<VoiceCall> {
-    return this.voiceCallRepo.save(call);
+    if (isMockToken) {
+      return true;
+    }
+
+    if (!signature) {
+      return false;
+    }
+
+    return twilio.validateRequest(authToken, signature, url, params);
   }
 
   generateIncomingStreamingTwiml(wssUrl: string): string {
@@ -101,26 +118,54 @@ export class TwilioService {
     return twiml.toString();
   }
 
-  generateIvrTwiml(options: any): string {
+  async purchasePhoneNumber(tenantId: string, phoneNumber: string): Promise<string> {
+    const { client } = await this.getClient(tenantId);
+    const purchased = await client.incomingPhoneNumbers.create({ phoneNumber });
+    return purchased.sid;
+  }
+
+  async releasePhoneNumber(tenantId: string, twilioSid: string): Promise<void> {
+    const { client } = await this.getClient(tenantId);
+    await client.incomingPhoneNumbers(twilioSid).remove();
+  }
+
+  async transferCall(tenantId: string, callSid: string, to: string): Promise<void> {
+    const { client } = await this.getClient(tenantId);
     const twiml = new twilio.twiml.VoiceResponse();
-    const gather = twiml.gather({
-      numDigits: 1,
-      action: '/api/v1/voice/ivr-callback',
-    });
-    gather.say(options.greeting || 'Welcome to Autopilot Monster. Press 1 for Sales, 2 for Support.');
+    twiml.say({ voice: 'Polly.Amy' }, 'Transferring your call now.');
+    twiml.dial(to);
+    await client.calls(callSid).update({ twiml: twiml.toString() });
+  }
+
+  generateRoutingTwiml(routingNumber: string, fallbackWssUrl: string): string {
+    const twiml = new twilio.twiml.VoiceResponse();
+    if (routingNumber) {
+      twiml.say({ voice: 'Polly.Amy' }, 'Connecting you to the next available agent.');
+      const dial = twiml.dial({ timeout: 20, action: '/v1/voice/twilio/routing-fallback' });
+      dial.number(routingNumber);
+      return twiml.toString();
+    }
+
+    twiml.say({ voice: 'Polly.Amy' }, 'Hello. Please hold while I connect you to an agent.');
+    const connect = twiml.connect();
+    connect.stream({ url: fallbackWssUrl });
     return twiml.toString();
   }
 
-  async extractSentimentStub(callSid: string, _tenantId?: string): Promise<{ sentiment: string; keywords: string[] }> {
-    this.logger.log(`[STUB] Extracting sentiment for call ${callSid}`);
-    return {
-      sentiment: 'POSITIVE',
-      keywords: ['interested', 'pricing', 'demo'],
-    };
-  }
+  async searchAvailableNumbers(
+    tenantId: string,
+    country: string,
+    areaCode?: string,
+  ): Promise<Array<{ phoneNumber: string; friendlyName: string }>> {
+    const { client } = await this.getClient(tenantId);
+    const numbers = await client.availablePhoneNumbers(country).local.list({
+      areaCode: areaCode ? parseInt(areaCode, 10) : undefined,
+      limit: 20,
+    });
 
-  async cloneVoiceStub(tenantId: string, sampleUrl: string): Promise<string> {
-    this.logger.log(`[STUB] Cloning voice for tenant ${tenantId} from ${sampleUrl}`);
-    return `voice_clone_${Date.now()}`;
+    return numbers.map((n) => ({
+      phoneNumber: n.phoneNumber,
+      friendlyName: n.friendlyName,
+    }));
   }
 }

@@ -1,33 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Package, Search, Plus, Edit2, Trash2,
-  Tag, DollarSign, BarChart3, ArrowUpRight,
-  Star, CheckCircle2, Archive, Eye
+  DollarSign, BarChart3,
+  CheckCircle2, Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  currency: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
-  dealsAttached: number;
-  revenue: number;
-  description: string;
-}
-
-const mockProducts: Product[] = [
-  { id: '1', name: 'Starter Plan', sku: 'PLN-001', category: 'Subscription', price: 49, currency: 'USD', status: 'ACTIVE', dealsAttached: 42, revenue: 31280, description: 'Up to 5 users, core CRM features' },
-  { id: '2', name: 'Growth Plan', sku: 'PLN-002', category: 'Subscription', price: 149, currency: 'USD', status: 'ACTIVE', dealsAttached: 28, revenue: 87340, description: 'Up to 25 users, AI features included' },
-  { id: '3', name: 'Enterprise Plan', sku: 'PLN-003', category: 'Subscription', price: 499, currency: 'USD', status: 'ACTIVE', dealsAttached: 12, revenue: 124500, description: 'Unlimited users, SSO, dedicated support' },
-  { id: '4', name: 'WhatsApp Add-on', sku: 'ADD-001', category: 'Add-on', price: 29, currency: 'USD', status: 'ACTIVE', dealsAttached: 18, revenue: 9860, description: 'WhatsApp Business API integration' },
-  { id: '5', name: 'AI Voice Module', sku: 'ADD-002', category: 'Add-on', price: 79, currency: 'USD', status: 'INACTIVE', dealsAttached: 0, revenue: 0, description: 'Advanced voice calling with AI transcription' },
-  { id: '6', name: 'Legacy Startup Pack', sku: 'PLN-000', category: 'Subscription', price: 19, currency: 'USD', status: 'ARCHIVED', dealsAttached: 5, revenue: 1900, description: 'Discontinued plan, legacy customers only' },
-];
+import { productService, type Product } from '@/services/product.service';
 
 const STATUS_STYLES: Record<string, string> = {
   ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -36,17 +17,42 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export default function AdminCRMProductsPage() {
-  const [products] = useState<Product[]>(mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await productService.getProducts();
+        const payload = res.data?.data ?? res.data;
+        setProducts(Array.isArray(payload) ? payload : payload?.data ?? []);
+      } catch {
+        toast.error('Failed to load products');
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
   const filtered = products.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || (p.sku ?? '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'All' || p.status === statusFilter;
     return matchSearch && matchStatus;
   });
 
-  const totalRevenue = products.reduce((s, p) => s + p.revenue, 0);
+  const totalRevenue = products.reduce((s, p) => s + Number(p.price ?? 0), 0);
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -64,8 +70,8 @@ export default function AdminCRMProductsPage() {
         {[
           { label: 'Total Products', value: products.length, icon: Package },
           { label: 'Active', value: products.filter(p => p.status === 'ACTIVE').length, icon: CheckCircle2 },
-          { label: 'Deals Attached', value: products.reduce((s, p) => s + p.dealsAttached, 0), icon: BarChart3 },
-          { label: 'Total Revenue', value: `$${(totalRevenue / 1000).toFixed(1)}K`, icon: DollarSign },
+          { label: 'Inactive', value: products.filter(p => p.status === 'INACTIVE').length, icon: BarChart3 },
+          { label: 'Catalog Value', value: `$${totalRevenue.toLocaleString()}`, icon: DollarSign },
         ].map(s => (
           <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
             <div className="p-3 rounded-xl bg-indigo-500/10"><s.icon className="w-5 h-5 text-indigo-400" /></div>
@@ -101,18 +107,18 @@ export default function AdminCRMProductsPage() {
             <div className="mb-2">
               <span className="text-[10px] font-mono text-gray-600">{product.sku}</span>
               <span className="text-gray-700 mx-2">·</span>
-              <span className="text-[10px] text-gray-500 uppercase tracking-widest">{product.category}</span>
+              <span className="text-[10px] text-gray-500 uppercase tracking-widest">{product.category ?? 'General'}</span>
             </div>
             <h3 className="text-base font-black text-white mb-1 group-hover:text-indigo-400 transition-colors">{product.name}</h3>
-            <p className="text-xs text-gray-500 mb-4 leading-relaxed">{product.description}</p>
+            <p className="text-xs text-gray-500 mb-4 leading-relaxed">{product.description ?? '—'}</p>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-[10px] text-gray-600 uppercase tracking-widest">Price</p>
-                <p className="text-xl font-black text-white">${product.price}<span className="text-xs text-gray-600 font-normal">/mo</span></p>
+                <p className="text-xl font-black text-white">{product.currency} {product.price}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-gray-600 uppercase tracking-widest">Revenue</p>
-                <p className="text-base font-black text-emerald-400">${product.revenue.toLocaleString()}</p>
+                <p className="text-[10px] text-gray-600 uppercase tracking-widest">Billing</p>
+                <p className="text-base font-black text-emerald-400">{product.billingType}</p>
               </div>
             </div>
             <div className="flex gap-2 pt-4 border-t border-white/[0.04]">

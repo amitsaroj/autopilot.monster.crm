@@ -15,25 +15,18 @@ export class Payment extends BaseEntity {
   @Column({ type: 'decimal', precision: 15, scale: 2 })
   amount!: number;
 
-  @Column({ length: 3 })
+  @Column({ length: 3, default: 'USD' })
   currency!: string;
 
-  @Column({
-    type: 'enum',
-    enum: ['SUCCEEDED', 'PENDING', 'FAILED', 'REFUNDED'],
-    default: 'PENDING',
-  })
+  @Column({ default: 'PENDING' })
   status!: 'SUCCEEDED' | 'PENDING' | 'FAILED' | 'REFUNDED';
 
-  @Column({ name: 'payment_method', length: 100, nullable: true })
-  paymentMethod?: string;
+  @Column({ default: 'stripe' })
+  provider!: string;
 
-  @Column({ name: 'stripe_payment_intent_id', nullable: true })
-  stripePaymentIntentId?: string;
+  @Column({ name: 'provider_payment_id', nullable: true })
+  providerPaymentId?: string;
 
-  @Column({ name: 'stripe_charge_id', nullable: true })
-  stripeChargeId?: string;
-
-  @Column({ name: 'failure_reason', type: 'text', nullable: true })
-  failureReason?: string;
+  @Column({ type: 'jsonb', default: {} })
+  metadata!: Record<string, unknown>;
 }

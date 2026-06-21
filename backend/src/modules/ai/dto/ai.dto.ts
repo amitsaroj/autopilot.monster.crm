@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsObject, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsObject, IsOptional, IsBoolean, IsArray, IsInt, Min, Max } from 'class-validator';
 
 export class GenerateDto {
   @ApiProperty()
@@ -9,7 +9,7 @@ export class GenerateDto {
   @ApiPropertyOptional()
   @IsObject()
   @IsOptional()
-  options?: any;
+  options?: Record<string, unknown>;
 }
 
 export class ChatDto {
@@ -26,6 +26,24 @@ export class ChatDto {
   @IsBoolean()
   @IsOptional()
   useRag?: boolean;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  agentId?: string;
+
+  @ApiPropertyOptional({ type: [String] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  knowledgeBaseIds?: string[];
+
+  @ApiPropertyOptional()
+  @IsInt()
+  @Min(0)
+  @Max(50)
+  @IsOptional()
+  memoryWindow?: number;
 }
 
 export class AnalyzeDto {

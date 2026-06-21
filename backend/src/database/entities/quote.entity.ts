@@ -74,4 +74,10 @@ export class Quote extends BaseEntity {
 
   @Column({ name: 'accepted_at', type: 'timestamptz', nullable: true })
   acceptedAt?: Date;
+
+  @Column({ name: 'declined_at', type: 'timestamptz', nullable: true })
+  declinedAt?: Date;
+
+  @Column({ name: 'view_token', length: 64, nullable: true })
+  viewToken?: string;
 }
