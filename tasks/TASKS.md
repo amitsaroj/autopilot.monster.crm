@@ -1,5 +1,10 @@
 ## COMPLETED
 
+- [x] Remove unused docs .md files
+  - id: TASK-036
+  - description: Removed 111 unused/duplicate markdown, txt, json, and shell script files from root, project-audit/, Docs/, .claude/, and scripts/.
+  - completed_at: 2026-07-06
+
 - [x] Super Admin Audit Swarm
   - id: TASK-035
   - description: Conduct end-to-end parallel audit of 15 Super Admin modules, generate audit logs, fix identified issues, and update matrices.
