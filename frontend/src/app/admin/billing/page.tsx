@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  CreditCard, Zap, ShieldCheck, CheckCircle2, 
+import api from '@/lib/api/client';
+import { parseApiData } from '@/lib/api/parse-response';
+import {
+  CreditCard, Zap, ShieldCheck, 
   AlertTriangle, ArrowRight, Download, Receipt, 
-  Users, Loader2, Globe, TrendingUp, History,
+  Users, Loader2, Globe, 
   ExternalLink, BarChart3, Wallet, Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -21,22 +23,36 @@ interface Usage {
   [key: string]: number;
 }
 
+interface Invoice {
+  id: string;
+  number: string;
+  total: number;
+  currency: string;
+  status: string;
+  paidAt?: string;
+  createdAt: string;
+}
+
 export default function RefinedAdminBillingPage() {
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<Subscription | null>(null);
   const [usage, setUsage] = useState<Usage>({});
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [subRes, usageRes] = await Promise.all([
-          fetch('/api/v1/monetization/subscription').then(res => res.ok ? res.json() : null),
-          fetch('/api/v1/monetization/usage/all').then(res => res.ok ? res.json() : {})
+        const [subRes, usageRes, invoicesRes] = await Promise.all([
+          api.get('/monetization/subscription'),
+          api.get('/monetization/usage'),
+          api.get('/monetization/invoices'),
         ]);
-        setSub(subRes);
-        setUsage(usageRes);
-      } catch (err) {
+        setSub(parseApiData<Subscription>(subRes) ?? (subRes.data as Subscription));
+        setUsage(parseApiData<Usage>(usageRes) ?? (usageRes.data as Usage) ?? {});
+        const invoiceList = parseApiData<Invoice[]>(invoicesRes) ?? (invoicesRes.data as Invoice[]) ?? [];
+        setInvoices(Array.isArray(invoiceList) ? invoiceList.slice(0, 3) : []);
+      } catch {
         toast.error('Failed to synchronize financial artifacts');
       } finally {
         setLoading(false);
@@ -48,9 +64,9 @@ export default function RefinedAdminBillingPage() {
   const handlePortal = async () => {
     setActionLoading('portal');
     try {
-      const res = await fetch('/api/v1/monetization/portal', { method: 'POST' });
-      const data = await res.json();
-      if (data.url) {
+      const res = await api.post('/monetization/portal');
+      const data = res.data?.data ?? res.data;
+      if (data?.url) {
         window.location.href = data.url;
       } else {
         toast.error('Failed to initiate secure portal session');
@@ -156,9 +172,9 @@ export default function RefinedAdminBillingPage() {
                
                <div className="space-y-6">
                   {[
-                    { label: 'CRM Identity Quota', usage: usage['contacts'] || 0, limit: 10000, color: 'bg-indigo-500' },
-                    { label: 'AI Execution Time', usage: usage['tasks'] || 0, limit: 1000, color: 'bg-emerald-500' },
-                    { label: 'Cloud Persistence', usage: usage['storage'] || 0, limit: 5000, color: 'bg-purple-500' },
+                    { label: 'CRM Identity Quota', usage: usage['contacts_limit'] || 0, limit: 10000, color: 'bg-indigo-500' },
+                    { label: 'AI Token Usage', usage: usage['ai_tokens'] || 0, limit: 500000, color: 'bg-emerald-500' },
+                    { label: 'Workflow Runs', usage: usage['workflow_runs'] || 0, limit: 5000, color: 'bg-purple-500' },
                   ].map((item) => (
                     <div key={item.label} className="space-y-2">
                        <div className="flex justify-between items-end">
@@ -208,23 +224,30 @@ export default function RefinedAdminBillingPage() {
             </div>
             
             <div className="space-y-4">
-               {[1, 2, 3].map((i) => (
-                 <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/[0.02] group-hover:border-white/5 transition-all">
+               {invoices.length === 0 ? (
+                 <p className="text-xs text-gray-500 italic">No invoices recorded yet.</p>
+               ) : (
+                 invoices.map((invoice) => (
+                 <div key={invoice.id} className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/[0.02] group-hover:border-white/5 transition-all">
                     <div className="flex items-center gap-4">
                        <div className="p-2 rounded-xl bg-white/5 text-gray-500">
                           <Receipt className="w-4 h-4" />
                        </div>
                        <div>
-                          <p className="text-xs font-black text-white uppercase tracking-tighter">Invoice Artifact #1029{i}</p>
-                          <p className="text-[9px] text-gray-600 font-mono">DATE: APR 0{i}, 2026</p>
+                          <p className="text-xs font-black text-white uppercase tracking-tighter">{invoice.number}</p>
+                          <p className="text-[9px] text-gray-600 font-mono">
+                            DATE: {new Date(invoice.paidAt ?? invoice.createdAt).toLocaleDateString()}
+                          </p>
                        </div>
                     </div>
                     <div className="text-right">
-                       <p className="text-xs font-black text-white">$499.00</p>
-                       <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest">Paid</p>
+                       <p className="text-xs font-black text-white">
+                         {invoice.currency} {Number(invoice.total).toFixed(2)}
+                       </p>
+                       <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest">{invoice.status}</p>
                     </div>
                  </div>
-               ))}
+               )))}
             </div>
          </div>
 

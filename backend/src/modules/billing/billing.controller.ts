@@ -196,6 +196,9 @@ export class BillingController {
     if (!signature) {
       throw new BadRequestException('Missing signature');
     }
-    return this.billingService.handleWebhook(signature, req.rawBody as Buffer);
+    if (!req.rawBody?.length) {
+      throw new BadRequestException('Missing request body');
+    }
+    return this.billingService.handleWebhook(signature, req.rawBody);
   }
 }

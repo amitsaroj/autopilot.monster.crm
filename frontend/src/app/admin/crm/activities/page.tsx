@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -35,8 +36,8 @@ export default function ActivitiesManagementPage() {
   const fetchActivities = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/crm/activities');
-      const json = await res.json();
+      const res = await api.get('/crm/activities');
+      const json = res.data;
       if (json.data) setActivities(json.data);
     } catch (e) {
       toast.error('Failed to synchronize activity artifacts');

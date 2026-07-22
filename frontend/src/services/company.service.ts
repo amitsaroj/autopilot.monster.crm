@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import type { CrmListParams } from '../lib/api/pagination';
 
 export interface Company {
   id: string;
@@ -41,7 +42,8 @@ export interface CompanyActivity {
 }
 
 export const companyService = {
-  getCompanies: () => api.get('/crm/companies'),
+  getCompanies: (params?: CrmListParams) =>
+    params ? api.get('/crm/companies', { params }) : api.get('/crm/companies'),
 
   getCompany: (id: string) => api.get(`/crm/companies/${id}`),
 

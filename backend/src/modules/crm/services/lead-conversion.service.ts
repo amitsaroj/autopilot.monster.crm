@@ -7,6 +7,7 @@ import { Contact, ContactStatus } from '../../../database/entities/contact.entit
 import { Company } from '../../../database/entities/company.entity';
 import { Deal, DealStatus } from '../../../database/entities/deal.entity';
 import { Pipeline } from '../../../database/entities/pipeline.entity';
+import { EVENT_NAMES } from '../../../events/event.constants';
 
 @Injectable()
 export class LeadConversionService {
@@ -77,13 +78,13 @@ export class LeadConversionService {
              tenantId: options.tenantId,
            });
            const savedDeal = await manager.save(deal);
-           this.eventEmitter.emit('deal.created', { deal: savedDeal, tenantId: options.tenantId });
+           this.eventEmitter.emit(EVENT_NAMES.DEAL_CREATED, { deal: savedDeal, tenantId: options.tenantId });
         }
       }
 
       // 4. Finalize Lead (Soft Delete or Status change)
       await manager.update(Lead, lead.id, { status: 'CONVERTED' });
-      this.eventEmitter.emit('contact.created', { contact: savedContact, tenantId: options.tenantId });
+      this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, { contact: savedContact, tenantId: options.tenantId });
 
       return { contact: savedContact, companyId };
     });

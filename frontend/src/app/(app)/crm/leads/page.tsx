@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Search, Trash2, Edit2, Loader2, Target, Filter, Rocket } from "lucide-react";
 import LeadConversionModal from "@/components/crm/LeadConversionModal";
 import { toast } from "sonner";
 import api from "@/lib/api/client";
+import { ListPagination } from "@/components/ui/ListPagination";
+import { usePaginatedCrmList } from "@/hooks/usePaginatedCrmList";
+import { leadService } from "@/services/lead.service";
 
 interface Lead {
   id: string;
@@ -19,11 +22,26 @@ interface Lead {
 }
 
 export default function LeadsPage() {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const fetchLeads = useCallback(
+    (params: Parameters<typeof leadService.getLeads>[0]) => leadService.getLeads(params),
+    [],
+  );
+
+  const {
+    items: leads,
+    meta,
+    page,
+    setPage,
+    search,
+    setSearch,
+    loading,
+    error,
+    reload,
+  } = usePaginatedCrmList<Lead>(fetchLeads);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -34,23 +52,11 @@ export default function LeadsPage() {
   });
   const [conversionLead, setConversionLead] = useState<Lead | null>(null);
 
-  const fetchLeads = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/crm/leads");
-      if (res.data?.data) {
-        setLeads(res.data.data);
-      }
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to synchronize lead vectors");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchLeads();
-  }, []);
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +69,7 @@ export default function LeadsPage() {
         toast.success("Lead vector initialized");
       }
       setIsModalOpen(false);
-      fetchLeads();
+      reload();
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Vector initialization failed");
     }
@@ -74,7 +80,7 @@ export default function LeadsPage() {
     try {
       await api.delete(`/crm/leads/${id}`);
       toast.success("Lead vector dissolved");
-      fetchLeads();
+      reload();
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Dissolution failed");
     }
@@ -105,11 +111,6 @@ export default function LeadsPage() {
     });
     setIsModalOpen(true);
   };
-
-  const filteredLeads = leads.filter((l) => 
-    (l.firstName + " " + l.lastName).toLowerCase().includes(search.toLowerCase()) ||
-    l.email.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
@@ -152,7 +153,19 @@ export default function LeadsPage() {
         <div className="flex h-[40vh] items-center justify-center">
           <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
         </div>
+      ) : error ? (
+        <div className="py-20 text-center">
+          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={() => reload()}
+            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+          >
+            Retry
+          </button>
+        </div>
       ) : (
+        <div className="space-y-8">
         <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -166,7 +179,7 @@ export default function LeadsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filteredLeads.map((lead) => (
+                {leads.map((lead) => (
                   <tr key={lead.id} className="hover:bg-white/[0.01] transition-colors group">
                     <td className="p-6">
                       <div className="flex items-center gap-4">
@@ -215,7 +228,7 @@ export default function LeadsPage() {
                     </td>
                   </tr>
                 ))}
-                {filteredLeads.length === 0 && (
+                {leads.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-20 text-center text-gray-500 font-black text-xs uppercase tracking-widest">
                        No lead vectors detected currently.
@@ -225,6 +238,8 @@ export default function LeadsPage() {
               </tbody>
             </table>
           </div>
+        </div>
+        <ListPagination meta={meta} page={page} onPageChange={setPage} />
         </div>
       )}
 
@@ -284,7 +299,7 @@ export default function LeadsPage() {
         isOpen={!!conversionLead}
         lead={conversionLead}
         onClose={() => setConversionLead(null)}
-        onSuccess={fetchLeads}
+        onSuccess={reload}
       />
     </div>
   );

@@ -195,4 +195,8 @@ export class VoiceCallService {
     }
     return call;
   }
+
+  async findByRecordingUrl(tenantId: string, audioUrl: string): Promise<VoiceCall | null> {
+    return this.voiceCallRepository.findByRecordingUrl(tenantId, audioUrl);
+  }
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -33,8 +34,8 @@ export default function NotesManagementPage() {
   const fetchNotes = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/crm/notes');
-      const json = await res.json();
+      const res = await api.get('/crm/notes');
+      const json = res.data;
       if (json.data) setNotes(json.data);
     } catch (e) {
       toast.error('Failed to synchronize knowledge artifacts');

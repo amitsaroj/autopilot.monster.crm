@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -39,8 +40,8 @@ export default function PipelinesManagementPage() {
   const fetchPipelines = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/crm/pipelines');
-      const json = await res.json();
+      const res = await api.get('/crm/pipelines');
+      const json = res.data;
       if (json.data) setPipelines(json.data);
     } catch (e) {
       toast.error('Failed to synchronize pipeline artifacts');

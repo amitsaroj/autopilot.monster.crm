@@ -78,13 +78,22 @@ jobs:
           echo "INSTANCE_ID=$(terraform output -raw instance_id)" >> $GITHUB_ENV
           echo "ELASTIC_IP=$(terraform output -raw elastic_ip)" >> $GITHUB_ENV
 
-      # --- BUILD & PUSH DOCKER IMAGE ---
-      - name: Build and Push Docker Image
+      # --- BUILD & PUSH DOCKER IMAGES (API + UI) ---
+      - name: Build and Push API Image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
           tags: ghcr.io/${{ github.repository }}/api:latest
+
+      - name: Build and Push UI Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/ui:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://api.autopilot.monster/api/v1
 
       # --- UPLOAD CONFIG FILES TO S3 ---
       - name: Sync Config to S3
@@ -105,13 +114,13 @@ jobs:
             --instance-ids "${{ env.INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters "commands=[
-              \"sudo mkdir -p /home/ubuntu/app/nginx /home/ubuntu/app/backend /home/ubuntu/app/certbot/conf /home/ubuntu/app/certbot/www\",
+              \"sudo mkdir -p /home/ubuntu/app/nginx/ssl /home/ubuntu/app/backend /home/ubuntu/app/certbot/conf /home/ubuntu/app/certbot/www\",
               \"sudo chown -R ubuntu:ubuntu /home/ubuntu/app\",
               \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/docker-compose.prod.yml /home/ubuntu/app/docker-compose.prod.yml\",
               \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/nginx/nginx.conf /home/ubuntu/app/nginx/nginx.conf\",
               \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production /home/ubuntu/app/backend/.env.production\",
               \"cd /home/ubuntu/app\",
-              \"echo GITHUB_REPOSITORY=${REPO_LOWER} > .env\",
+              \"printf 'GITHUB_REPOSITORY=%s\\nDOMAIN=%s\\nNEXT_PUBLIC_API_URL=%s\\n' '${REPO_LOWER}' 'api.autopilot.monster' 'https://api.autopilot.monster/api/v1' > .env\",
               \"sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}\",
               \"sudo docker compose -f docker-compose.prod.yml pull\",
               \"sudo docker compose -f docker-compose.prod.yml run --rm api npm run migrate:prod\",

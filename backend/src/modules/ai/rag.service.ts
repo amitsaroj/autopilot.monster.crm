@@ -10,6 +10,7 @@ const pdfParse = require('pdf-parse');
 
 import { QdrantConfig } from '../../config/qdrant.config';
 import { BillingService } from '../billing/billing.service';
+import { resolveUsagePeriodBounds } from '../billing/usage-period.util';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 
 const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
@@ -335,6 +336,7 @@ export class RagService {
     const usage = await this.billingService.getUsageBreakdown(tenantId);
     const aiTokens = Number(usage['ai_tokens'] ?? 0);
     const aiCost = Number(usage['ai_cost'] ?? 0);
+    const { periodStart } = resolveUsagePeriodBounds('MONTHLY');
 
     return {
       tenantId,
@@ -342,6 +344,7 @@ export class RagService {
       cost: aiCost / 10000,
       metrics: usage,
       period: 'monthly',
+      periodStart: periodStart.toISOString(),
     };
   }
 

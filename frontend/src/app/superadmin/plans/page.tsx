@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   CreditCard, Zap, ShieldCheck, Plus, Pencil, Trash2, 
   Check, X, Globe, DollarSign, Layout, Layers, Loader2,
   ArrowRight, Info, AlertTriangle
@@ -30,17 +31,13 @@ export default function PlansManagementPage() {
 
   const handleCreatePlan = async () => {
     try {
-      const res = await fetch('/api/v1/monetization/admin/plans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPlan)
-      });
-      if (res.ok) {
+      const res = await api.post('/monetization/admin/plans', newPlan);
+      if (res.status >= 200 && res.status < 300) {
         toast.success('Plan created successfully');
         setShowCreateModal(false);
         // Refresh plans
-        const listRes = await fetch('/api/v1/monetization/plans');
-        const json = await listRes.json();
+        const listRes = await api.get('/monetization/plans');
+        const json = listRes.data;
         setPlans(json.data || json);
       } else {
         toast.error('Failed to create plan');
@@ -53,8 +50,8 @@ export default function PlansManagementPage() {
   useEffect(() => {
     async function fetchPlans() {
       try {
-        const res = await fetch('/api/v1/monetization/plans');
-        const json = await res.json();
+        const res = await api.get('/monetization/plans');
+        const json = res.data;
         if (json.data || Array.isArray(json)) setPlans(json.data || json);
       } catch (e) {
         toast.error('Failed to sync pricing data');

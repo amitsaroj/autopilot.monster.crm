@@ -34,6 +34,24 @@ export interface AppConfig {
   stripe: {
     secretKey: string;
     webhookSecret: string;
+    prices: {
+      starterMonthly: string;
+      starterAnnual: string;
+      proMonthly: string;
+      proAnnual: string;
+      enterpriseMonthly: string;
+      enterpriseAnnual: string;
+    };
+  };
+  paypal: {
+    clientId: string;
+    clientSecret: string;
+    webhookId: string;
+  };
+  razorpay: {
+    keyId: string;
+    keySecret: string;
+    webhookSecret: string;
   };
 }
 
@@ -73,6 +91,24 @@ export const appConfig = registerAs(
     stripe: {
       secretKey: process.env['STRIPE_SECRET_KEY'] ?? '',
       webhookSecret: process.env['STRIPE_WEBHOOK_SECRET'] ?? '',
+      prices: {
+        starterMonthly: process.env['STRIPE_PRICE_STARTER_MONTHLY'] ?? '',
+        starterAnnual: process.env['STRIPE_PRICE_STARTER_ANNUAL'] ?? '',
+        proMonthly: process.env['STRIPE_PRICE_PRO_MONTHLY'] ?? '',
+        proAnnual: process.env['STRIPE_PRICE_PRO_ANNUAL'] ?? '',
+        enterpriseMonthly: process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'] ?? '',
+        enterpriseAnnual: process.env['STRIPE_PRICE_ENTERPRISE_ANNUAL'] ?? '',
+      },
+    },
+    paypal: {
+      clientId: process.env['PAYPAL_CLIENT_ID'] ?? '',
+      clientSecret: process.env['PAYPAL_CLIENT_SECRET'] ?? '',
+      webhookId: process.env['PAYPAL_WEBHOOK_ID'] ?? '',
+    },
+    razorpay: {
+      keyId: process.env['RAZORPAY_KEY_ID'] ?? '',
+      keySecret: process.env['RAZORPAY_KEY_SECRET'] ?? '',
+      webhookSecret: process.env['RAZORPAY_WEBHOOK_SECRET'] ?? '',
     },
   }),
 );

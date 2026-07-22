@@ -8,6 +8,9 @@ import { Deal, DealStatus } from '../../database/entities/deal.entity';
 import { PipelineStage } from '../../database/entities/pipeline-stage.entity';
 import { PipelineService } from './pipeline.service';
 import { EVENT_NAMES } from '../../events/event.constants';
+import { CrmListQueryDto } from './dto/crm.dto';
+import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
+import { toPaginatedResult } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class DealService {
@@ -32,6 +35,20 @@ export class DealService {
     });
   }
 
+  async findPaginated(
+    tenantId: string,
+    query: CrmListQueryDto,
+  ): Promise<IPaginatedResult<Deal>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const [data, total] = await this.repository.findFiltered(tenantId, {
+      ...query,
+      page,
+      limit,
+    });
+    return toPaginatedResult(data, total, page, limit);
+  }
+
   async findOne(tenantId: string, id: string): Promise<Deal> {
     const deal = await this.repository.findOne(tenantId, {
       where: { id },
@@ -50,11 +67,15 @@ export class DealService {
   }
 
   async update(tenantId: string, id: string, data: Partial<Deal>): Promise<Deal> {
-    return this.repository.updateWithTenant(tenantId, id, data);
+    const deal = await this.repository.updateWithTenant(tenantId, id, data);
+    this.eventEmitter.emit(EVENT_NAMES.DEAL_UPDATED, { deal, tenantId });
+    return deal;
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
+    await this.findOne(tenantId, id);
     await this.repository.delete(tenantId, id);
+    this.eventEmitter.emit(EVENT_NAMES.DEAL_DELETED, { tenantId, deal: { id } });
   }
 
   async getBoard(tenantId: string, pipelineId?: string) {

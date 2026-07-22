@@ -62,10 +62,10 @@ export class MonetizationController {
   @Post('webhook')
   @Public()
   @ApiOperation({ summary: 'Stripe Webhook' })
-  async handleWebhook(@Body() _body: unknown, @Headers('stripe-signature') sig: string, @Req() req: { rawBody: Buffer }) {
+  async handleWebhook(@Body() _body: unknown, @Headers('stripe-signature') sig: string, @Req() req: { rawBody?: Buffer }) {
     if (!sig) throw new BadRequestException('Missing signature');
-    const rawBody = req.rawBody;
-    return this.billingService.handleWebhook(sig, rawBody);
+    if (!req.rawBody?.length) throw new BadRequestException('Missing request body');
+    return this.billingService.handleWebhook(sig, req.rawBody);
   }
 
   // --- Management (SuperAdmin) ---

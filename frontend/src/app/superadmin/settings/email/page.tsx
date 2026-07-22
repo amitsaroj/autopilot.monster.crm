@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Mail, Send, ShieldCheck, Database, 
   Server, Globe, RefreshCw, Loader2, 
   CheckCircle2, AlertCircle, XCircle, 
@@ -40,8 +41,8 @@ export default function GlobalEmailSettingsPage() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/v1/admin/settings/email');
-        const json = await res.json();
+        const res = await api.get('/admin/settings/email');
+        const json = res.data;
         if (json.data) setSettings(prev => ({ ...prev, ...json.data }));
       } catch (e) {
         toast.error('Failed to sync communication artifacts');
@@ -56,12 +57,8 @@ export default function GlobalEmailSettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch('/api/v1/admin/settings/email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-      if (res.ok) {
+      const res = await api.post('/admin/settings/email', settings);
+      if (res.status >= 200 && res.status < 300) {
         toast.success('Communication manifest committed successfully');
       } else {
         toast.error('Failed to commit SMTP configuration');
@@ -77,12 +74,8 @@ export default function GlobalEmailSettingsPage() {
     if (!testEmail) return toast.error('Verification target email required');
     setTesting(true);
     try {
-      const res = await fetch('/api/v1/admin/settings/email/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: testEmail }),
-      });
-      if (res.ok) {
+      const res = await api.post('/admin/settings/email/test', {to: testEmail});
+      if (res.status >= 200 && res.status < 300) {
         toast.success('Test artifact dispatched successfully');
       } else {
         toast.error('SMTP Authentication failure during dispatch');

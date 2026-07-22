@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Zap, Search, Filter, Shield, Clock, 
   Terminal, Globe, Database, ArrowRight,
   RefreshCw, Loader2, CheckCircle2, AlertCircle,
@@ -28,8 +29,8 @@ export default function TenantApiSettingsPage() {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/settings/integrations');
-      const json = await res.json();
+      const res = await api.get('/settings/integrations');
+      const json = res.data;
       if (json.data) setSettings(json.data);
     } catch (e) {
       toast.error('Failed to sync integration artifacts');

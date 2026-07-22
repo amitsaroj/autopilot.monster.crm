@@ -16,4 +16,6 @@ export const userService = {
   getUser: (id: string) => api.get(`/users/${id}`),
   updateUser: (id: string, data: Partial<User>) => api.patch(`/users/${id}`, data),
   inviteUser: (data: { email: string; roleId: string }) => api.post('/users/invite', data),
+  getGroups: () => api.get('/users/groups'),
+  getGroup: (id: string) => api.get(`/users/groups/${id}`),
 };

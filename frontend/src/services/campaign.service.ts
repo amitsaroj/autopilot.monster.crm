@@ -34,7 +34,7 @@ export interface Campaign {
 }
 
 export const campaignService = {
-  getCampaigns: () => api.get('/crm/campaigns'),
+  getCampaigns: (params?: { type?: string }) => api.get('/crm/campaigns', { params }),
   getCampaign: (id: string) => api.get(`/crm/campaigns/${id}`),
   createCampaign: (data: Partial<Campaign>) => api.post('/crm/campaigns', data),
   updateCampaign: (id: string, data: Partial<Campaign>) => api.patch(`/crm/campaigns/${id}`, data),

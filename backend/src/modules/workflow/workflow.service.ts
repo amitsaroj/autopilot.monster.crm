@@ -1,6 +1,7 @@
-import { InjectQueue } from '@nestjs/bullmq';
+import { InjectQueue } from '@nestjs/bull';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { Queue } from 'bullmq';
+import { Queue } from 'bull';
+import { JOB_NAMES, QUEUE_NAMES } from '../../queue/queue.constants';
 import { WorkflowRepository } from './workflow.repository';
 import { CreateWorkflowDto } from './dto/workflow.dto';
 import { Flow } from '../../database/entities/flow.entity';
@@ -10,7 +11,7 @@ export class WorkflowService {
   private readonly logger = new Logger(WorkflowService.name);
 
   constructor(
-    @InjectQueue('workflows') private readonly workflowQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.WORKFLOW) private readonly workflowQueue: Queue,
     private readonly workflowRepo: WorkflowRepository,
   ) {}
 
@@ -153,7 +154,7 @@ export class WorkflowService {
       });
 
       const job = await this.workflowQueue.add(
-        'execute-workflow',
+        JOB_NAMES.EXECUTE_WORKFLOW,
         {
           workflowId: flow.id,
           tenantId,
@@ -191,7 +192,7 @@ export class WorkflowService {
     });
 
     const job = await this.workflowQueue.add(
-      'execute-workflow',
+      JOB_NAMES.EXECUTE_WORKFLOW,
       {
         workflowId: execution.flowId,
         tenantId,

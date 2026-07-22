@@ -32,6 +32,6 @@ import { VoicePhoneNumber } from '../../database/entities/voice-phone-number.ent
     VoiceCampaignService,
     VoicePhoneNumberService,
   ],
-  exports: [TwilioModule, VoiceCallService, VoiceCampaignService, VoicePhoneNumberService],
+  exports: [TwilioModule, VoiceCallService, VoiceCallRepository, VoiceCampaignService, VoicePhoneNumberService],
 })
 export class VoiceModule {}

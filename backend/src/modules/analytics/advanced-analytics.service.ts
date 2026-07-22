@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Deal } from '../../database/entities/deal.entity';
+import { Deal, DealStatus } from '../../database/entities/deal.entity';
 import { Contact } from '../../database/entities/contact.entity';
 import { Lead } from '../../database/entities/lead.entity';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { Campaign } from '../../database/entities/campaign.entity';
+import { ForecastService } from '../crm/forecast.service';
 
 @Injectable()
 export class AdvancedAnalyticsService {
@@ -20,53 +21,53 @@ export class AdvancedAnalyticsService {
     private readonly callRepo: Repository<VoiceCall>,
     @InjectRepository(Campaign)
     private readonly campaignRepo: Repository<Campaign>,
+    private readonly forecastService: ForecastService,
   ) {}
 
-  /** Revenue analytics — won deals by time period */
   async getRevenueSummary(tenantId: string, startDate: string, endDate: string) {
     const deals = await this.dealRepo
       .createQueryBuilder('d')
       .select([
-        "DATE_TRUNC('day', d.closed_at) as date",
+        "DATE_TRUNC('day', d.actual_close_date) as date",
         'SUM(d.value) as revenue',
         'COUNT(*) as deal_count',
       ])
       .where('d.tenant_id = :tenantId', { tenantId })
-      .andWhere('d.stage = :stage', { stage: 'WON' })
-      .andWhere('d.closed_at BETWEEN :start AND :end', { start: startDate, end: endDate })
-      .groupBy("DATE_TRUNC('day', d.closed_at)")
+      .andWhere('d.status = :status', { status: DealStatus.WON })
+      .andWhere('d.actual_close_date BETWEEN :start AND :end', { start: startDate, end: endDate })
+      .groupBy("DATE_TRUNC('day', d.actual_close_date)")
       .orderBy('date', 'ASC')
       .getRawMany();
 
     return deals;
   }
 
-  /** Pipeline analytics — deals per stage, conversion rates */
   async getPipelineAnalytics(tenantId: string) {
     const stages = await this.dealRepo
       .createQueryBuilder('d')
-      .select(['d.stage as stage', 'COUNT(*) as count', 'SUM(d.value) as total_value'])
+      .leftJoin('d.stage', 'stage')
+      .select(['stage.name as stage_name', 'COUNT(*) as count', 'SUM(d.value) as total_value'])
       .where('d.tenant_id = :tenantId', { tenantId })
       .andWhere('d.deleted_at IS NULL')
-      .groupBy('d.stage')
+      .andWhere('d.status = :status', { status: DealStatus.OPEN })
+      .groupBy('stage.name')
       .getRawMany();
 
-    const totalDeals = stages.reduce((sum: number, s: any) => sum + Number(s.count), 0);
-    return stages.map((s: any) => ({
-      stage: s.stage,
-      count: Number(s.count),
-      totalValue: Number(s.total_value || 0),
-      percentage: totalDeals > 0 ? Math.round((Number(s.count) / totalDeals) * 100) : 0,
+    const totalDeals = stages.reduce((sum: number, stageRow) => sum + Number(stageRow.count), 0);
+    return stages.map((stageRow) => ({
+      stage: stageRow.stage_name ?? 'Unknown',
+      count: Number(stageRow.count),
+      totalValue: Number(stageRow.total_value || 0),
+      percentage: totalDeals > 0 ? Math.round((Number(stageRow.count) / totalDeals) * 100) : 0,
     }));
   }
 
-  /** CRM overview — contacts, leads, deals stats */
   async getCrmOverview(tenantId: string) {
     const [contactCount, leadCount, dealCount, wonDeals] = await Promise.all([
-      this.contactRepo.count({ where: { tenantId } as any }),
-      this.leadRepo.count({ where: { tenantId } as any }),
-      this.dealRepo.count({ where: { tenantId } as any }),
-      this.dealRepo.count({ where: { tenantId, stage: 'WON' } as any }),
+      this.contactRepo.count({ where: { tenantId } }),
+      this.leadRepo.count({ where: { tenantId } }),
+      this.dealRepo.count({ where: { tenantId } }),
+      this.dealRepo.count({ where: { tenantId, status: DealStatus.WON } }),
     ]);
 
     return {
@@ -78,14 +79,13 @@ export class AdvancedAnalyticsService {
     };
   }
 
-  /** Voice analytics — call volume, duration, success rates */
   async getVoiceAnalytics(tenantId: string, startDate: string, endDate: string) {
     const calls = await this.callRepo
       .createQueryBuilder('c')
       .select([
         "DATE_TRUNC('day', c.created_at) as date",
         'COUNT(*) as call_count',
-        'AVG(c.duration) as avg_duration',
+        'AVG(c.duration_seconds) as avg_duration',
       ])
       .where('c.tenant_id = :tenantId', { tenantId })
       .andWhere('c.created_at BETWEEN :start AND :end', { start: startDate, end: endDate })
@@ -96,89 +96,48 @@ export class AdvancedAnalyticsService {
     return calls;
   }
 
-  /** Team performance — activities and deals per user */
   async getTeamPerformance(tenantId: string) {
     const performance = await this.dealRepo
       .createQueryBuilder('d')
       .select([
-        'd.assigned_to as user_id',
+        'd.owner_id as user_id',
         'COUNT(*) as total_deals',
-        "SUM(CASE WHEN d.stage = 'WON' THEN 1 ELSE 0 END) as won_deals",
-        "SUM(CASE WHEN d.stage = 'WON' THEN d.value ELSE 0 END) as revenue",
+        'SUM(CASE WHEN d.status = :wonStatus THEN 1 ELSE 0 END) as won_deals',
+        'SUM(CASE WHEN d.status = :wonStatus THEN d.value ELSE 0 END) as revenue',
       ])
       .where('d.tenant_id = :tenantId', { tenantId })
-      .andWhere('d.assigned_to IS NOT NULL')
+      .andWhere('d.owner_id IS NOT NULL')
       .andWhere('d.deleted_at IS NULL')
-      .groupBy('d.assigned_to')
+      .setParameter('wonStatus', DealStatus.WON)
+      .groupBy('d.owner_id')
       .orderBy('revenue', 'DESC')
       .getRawMany();
 
-    return performance.map((p: any) => ({
-      userId: p.user_id,
-      totalDeals: Number(p.total_deals),
-      wonDeals: Number(p.won_deals),
-      revenue: Number(p.revenue || 0),
-      winRate: Number(p.total_deals) > 0
-        ? Math.round((Number(p.won_deals) / Number(p.total_deals)) * 100)
-        : 0,
+    return performance.map((row) => ({
+      userId: row.user_id,
+      totalDeals: Number(row.total_deals),
+      wonDeals: Number(row.won_deals),
+      revenue: Number(row.revenue || 0),
+      winRate:
+        Number(row.total_deals) > 0
+          ? Math.round((Number(row.won_deals) / Number(row.total_deals)) * 100)
+          : 0,
     }));
   }
 
-  /** Forecasting — projected revenue based on pipeline weighted values */
   async getForecast(tenantId: string) {
-    const pipeline = await this.dealRepo
-      .createQueryBuilder('d')
-      .select([
-        'd.stage as stage',
-        'SUM(d.value) as total_value',
-        'COUNT(*) as count',
-      ])
-      .where('d.tenant_id = :tenantId', { tenantId })
-      .andWhere("d.stage NOT IN ('WON', 'LOST')")
-      .andWhere('d.deleted_at IS NULL')
-      .groupBy('d.stage')
-      .getRawMany();
-
-    const weights: Record<string, number> = {
-      QUALIFICATION: 0.1,
-      PROPOSAL: 0.3,
-      NEGOTIATION: 0.6,
-      CONTRACT: 0.8,
-    };
-
-    let weightedForecast = 0;
-    const stageForecasts = pipeline.map((s: any) => {
-      const weight = weights[s.stage] || 0.2;
-      const weighted = Number(s.total_value || 0) * weight;
-      weightedForecast += weighted;
-      return {
-        stage: s.stage,
-        totalValue: Number(s.total_value || 0),
-        count: Number(s.count),
-        weight,
-        weightedValue: Math.round(weighted),
-      };
-    });
-
-    return {
-      stages: stageForecasts,
-      totalWeightedForecast: Math.round(weightedForecast),
-    };
+    return this.forecastService.getForecast(tenantId);
   }
 
-  /** Custom Report Builder */
-  async buildCustomReport(_tenantId: string, config: any) {
-    // Stub for custom report builder
+  async buildCustomReport(_tenantId: string, config: Record<string, unknown>) {
     return {
-      name: config.name || 'Custom Report',
+      name: config.name ?? 'Custom Report',
       data: [{ metric: 'Sample', value: 100 }],
-      generatedAt: new Date()
+      generatedAt: new Date(),
     };
   }
 
-  /** Dashboard Widgets Configuration */
   async getDashboardWidgets(_tenantId: string) {
-    // Stub for fetching dashboard widgets layout
     return [
       { id: 'widget_1', type: 'REVENUE_CHART', position: { x: 0, y: 0, w: 6, h: 4 } },
       { id: 'widget_2', type: 'PIPELINE_FUNNEL', position: { x: 6, y: 0, w: 6, h: 4 } },
@@ -186,59 +145,51 @@ export class AdvancedAnalyticsService {
     ];
   }
 
-  /** Automated Scheduled Reports */
-  async scheduleReport(_tenantId: string, config: any) {
-    // Stub for scheduling reports
+  async scheduleReport(_tenantId: string, config: Record<string, unknown>) {
     return {
       reportId: 'rep_123',
-      schedule: config.schedule || '0 0 * * 1', // Weekly by default
-      status: 'SCHEDULED'
+      schedule: config.schedule ?? '0 0 * * 1',
+      status: 'SCHEDULED',
     };
   }
 
-  /** ROI Report */
   async getRoiReport(tenantId: string) {
-    const campaigns = await this.campaignRepo.find({ where: { tenantId } as any });
-    const deals = await this.dealRepo.find({ where: { tenantId, stage: 'WON' } as any });
+    const campaigns = await this.campaignRepo.find({ where: { tenantId } });
+    const deals = await this.dealRepo.find({ where: { tenantId, status: DealStatus.WON } });
 
-    const totalRevenue = deals.reduce((sum, d) => sum + Number(d.value || 0), 0);
+    const totalRevenue = deals.reduce((sum, deal) => sum + Number(deal.value || 0), 0);
 
     if (campaigns.length === 0) {
-      // Provide realistic demo data if no campaigns are created yet
       return {
-        totalBudget: 15000,
-        totalSpent: 12450,
+        totalBudget: 0,
+        totalSpent: 0,
         totalRevenue,
-        netProfit: totalRevenue - 12450,
-        roiPercentage: 12450 > 0 ? Math.round(((totalRevenue - 12450) / 12450) * 100 * 100) / 100 : 0,
-        campaignBreakdown: [
-          { id: '1', name: 'Q2 AI Voice Outbound', type: 'VOICE', budget: 5000, spent: 4200, leads: 120, qualified: 45 },
-          { id: '2', name: 'WhatsApp Product Launch', type: 'WHATSAPP', budget: 3000, spent: 2800, leads: 500, qualified: 150 },
-          { id: '3', name: 'Email Newsletter Drip', type: 'EMAIL', budget: 2000, spent: 1950, leads: 1500, qualified: 220 },
-          { id: '4', name: 'SMS Discount Offer', type: 'SMS', budget: 5000, spent: 3500, leads: 800, qualified: 95 }
-        ],
+        netProfit: totalRevenue,
+        roiPercentage: 0,
+        campaignBreakdown: [],
         generatedAt: new Date(),
       };
     }
 
     let totalBudget = 0;
     let totalSpent = 0;
-    const campaignBreakdown = campaigns.map(c => {
-      totalBudget += Number(c.budget || 0);
-      totalSpent += Number(c.spent || 0);
+    const campaignBreakdown = campaigns.map((campaign) => {
+      totalBudget += Number(campaign.budget || 0);
+      totalSpent += Number(campaign.spent || 0);
       return {
-        id: c.id,
-        name: c.name,
-        type: c.type,
-        budget: Number(c.budget || 0),
-        spent: Number(c.spent || 0),
-        leads: c.totalLeads,
-        qualified: c.qualifiedLeads,
+        id: campaign.id,
+        name: campaign.name,
+        type: campaign.type,
+        budget: Number(campaign.budget || 0),
+        spent: Number(campaign.spent || 0),
+        leads: campaign.totalLeads,
+        qualified: campaign.qualifiedLeads,
       };
     });
 
     const netProfit = totalRevenue - totalSpent;
-    const roiPercentage = totalSpent > 0 ? (netProfit / totalSpent) * 100 : totalRevenue > 0 ? 100 : 0;
+    const roiPercentage =
+      totalSpent > 0 ? (netProfit / totalSpent) * 100 : totalRevenue > 0 ? 100 : 0;
 
     return {
       totalBudget,
@@ -251,31 +202,30 @@ export class AdvancedAnalyticsService {
     };
   }
 
-  /** AI vs Human Comparison Report */
   async getAiVsHumanReport(tenantId: string) {
-    const calls = await this.callRepo.find({ where: { tenantId } as any });
+    const calls = await this.callRepo.find({ where: { tenantId } });
 
     if (calls.length === 0) {
       return {
         ai: {
-          totalCalls: 1450,
-          avgDurationSeconds: 45,
-          totalCost: 72.50,
-          avgCostPerCall: 0.05,
-          successRate: 88,
-          conversionRate: 14.2,
+          totalCalls: 0,
+          avgDurationSeconds: 0,
+          totalCost: 0,
+          avgCostPerCall: 0,
+          successRate: 0,
+          conversionRate: 0,
         },
         human: {
-          totalCalls: 420,
-          avgDurationSeconds: 165,
-          totalCost: 462.00,
-          avgCostPerCall: 1.10,
-          successRate: 82,
-          conversionRate: 15.5,
+          totalCalls: 0,
+          avgDurationSeconds: 0,
+          totalCost: 0,
+          avgCostPerCall: 0,
+          successRate: 0,
+          conversionRate: 0,
         },
         savings: {
-          totalSaved: 389.50,
-          efficiencyGainMultiplier: 3.5,
+          totalSaved: 0,
+          efficiencyGainMultiplier: 0,
         },
         generatedAt: new Date(),
       };
@@ -290,27 +240,25 @@ export class AdvancedAnalyticsService {
     let aiSuccessCount = 0;
     let humanSuccessCount = 0;
 
-    calls.forEach(call => {
-      // If call transcript has AI tag, or is low cost, classify as AI call
-      const isAi = call.transcript?.includes('AI:') || call.costAmount < 0.2;
+    for (const call of calls) {
+      const isAi = Boolean(call.transcript?.includes('AI:')) || Number(call.costAmount) < 0.2;
       if (isAi) {
-        aiCallsCount++;
+        aiCallsCount += 1;
         aiDurationSum += call.durationSeconds || 0;
         aiCostSum += Number(call.costAmount || 0);
-        if (call.status === 'completed' && (call.durationSeconds || 0) > 20) {
-          aiSuccessCount++;
+        if (call.status === 'COMPLETED' && (call.durationSeconds || 0) > 20) {
+          aiSuccessCount += 1;
         }
       } else {
-        humanCallsCount++;
+        humanCallsCount += 1;
         humanDurationSum += call.durationSeconds || 0;
-        // Human call cost simulated as $0.40/min
-        const simulatedCost = ((call.durationSeconds || 0) / 60) * 0.40;
+        const simulatedCost = ((call.durationSeconds || 0) / 60) * 0.4;
         humanCostSum += simulatedCost;
-        if (call.status === 'completed' && (call.durationSeconds || 0) > 30) {
-          humanSuccessCount++;
+        if (call.status === 'COMPLETED' && (call.durationSeconds || 0) > 30) {
+          humanSuccessCount += 1;
         }
       }
-    });
+    }
 
     const totalSaved = humanCostSum - aiCostSum;
 
@@ -321,26 +269,29 @@ export class AdvancedAnalyticsService {
         totalCost: Math.round(aiCostSum * 100) / 100,
         avgCostPerCall: aiCallsCount > 0 ? Math.round((aiCostSum / aiCallsCount) * 100) / 100 : 0,
         successRate: aiCallsCount > 0 ? Math.round((aiSuccessCount / aiCallsCount) * 100) : 0,
-        conversionRate: 12.5,
+        conversionRate: 0,
       },
       human: {
         totalCalls: humanCallsCount,
-        avgDurationSeconds: humanCallsCount > 0 ? Math.round(humanDurationSum / humanCallsCount) : 0,
+        avgDurationSeconds:
+          humanCallsCount > 0 ? Math.round(humanDurationSum / humanCallsCount) : 0,
         totalCost: Math.round(humanCostSum * 100) / 100,
-        avgCostPerCall: humanCallsCount > 0 ? Math.round((humanCostSum / humanCallsCount) * 100) / 100 : 0,
-        successRate: humanCallsCount > 0 ? Math.round((humanSuccessCount / humanCallsCount) * 100) : 0,
-        conversionRate: 14.8,
+        avgCostPerCall:
+          humanCallsCount > 0 ? Math.round((humanCostSum / humanCallsCount) * 100) / 100 : 0,
+        successRate:
+          humanCallsCount > 0 ? Math.round((humanSuccessCount / humanCallsCount) * 100) : 0,
+        conversionRate: 0,
       },
       savings: {
         totalSaved: Math.round(totalSaved * 100) / 100,
-        efficiencyGainMultiplier: humanCallsCount > 0 ? Math.round((aiCallsCount / humanCallsCount) * 10) / 10 : 0,
+        efficiencyGainMultiplier:
+          humanCallsCount > 0 ? Math.round((aiCallsCount / humanCallsCount) * 10) / 10 : 0,
       },
       generatedAt: new Date(),
     };
   }
 
-  /** Helper to generate a minimal valid PDF Buffer with text */
-  private generatePDFBytes(title: string, data: any): Buffer {
+  private generatePDFBytes(title: string, data: unknown): Buffer {
     const lines = [
       `Title: ${title}`,
       `Generated At: ${new Date().toISOString()}`,
@@ -349,27 +300,27 @@ export class AdvancedAnalyticsService {
     ];
 
     if (Array.isArray(data)) {
-      data.forEach((item) => {
+      for (const item of data) {
         lines.push(JSON.stringify(item));
-      });
-    } else {
-      Object.entries(data).forEach(([key, val]) => {
+      }
+    } else if (data && typeof data === 'object') {
+      for (const [key, val] of Object.entries(data)) {
         if (val && typeof val === 'object') {
           lines.push(`${key.toUpperCase()}:`);
-          Object.entries(val).forEach(([k, v]) => {
-            lines.push(`  ${k}: ${v}`);
-          });
+          for (const [nestedKey, nestedVal] of Object.entries(val as Record<string, unknown>)) {
+            lines.push(`  ${nestedKey}: ${nestedVal}`);
+          }
         } else {
           lines.push(`${key.toUpperCase()}: ${val}`);
         }
-      });
+      }
     }
 
     let streamContent = 'BT\n/F1 12 Tf\n14 TL\n50 750 Td\n';
-    lines.forEach((line) => {
+    for (const line of lines) {
       const escaped = line.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
       streamContent += `(${escaped}) Tj T*\n`;
-    });
+    }
     streamContent += 'ET';
 
     const object1 = `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`;
@@ -377,7 +328,8 @@ export class AdvancedAnalyticsService {
     const object3 = `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R >>\nendobj\n`;
     const object4 = `4 0 obj\n<< /Length ${streamContent.length} >>\nstream\n${streamContent}\nendstream\nendobj\n`;
 
-    const body = `%PDF-1.4\n` +
+    const body =
+      `%PDF-1.4\n` +
       object1 +
       object2 +
       object3 +
@@ -398,10 +350,9 @@ export class AdvancedAnalyticsService {
     return Buffer.from(body, 'utf-8');
   }
 
-  /** Export specific report as PDF */
   async exportReportPdf(tenantId: string, reportType: string): Promise<Buffer> {
     let title = 'Analytics Report';
-    let data: any = {};
+    let data: unknown;
 
     if (reportType === 'roi') {
       title = 'ROI & Campaign Performance Report';
@@ -411,7 +362,11 @@ export class AdvancedAnalyticsService {
       data = await this.getAiVsHumanReport(tenantId);
     } else if (reportType === 'revenue') {
       title = 'Revenue Summary Report';
-      data = await this.getRevenueSummary(tenantId, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), new Date().toISOString());
+      data = await this.getRevenueSummary(
+        tenantId,
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+        new Date().toISOString(),
+      );
     } else if (reportType === 'pipeline') {
       title = 'Sales Pipeline Analytics Report';
       data = await this.getPipelineAnalytics(tenantId);

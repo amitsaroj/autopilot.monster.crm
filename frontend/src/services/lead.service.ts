@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import type { CrmListParams } from '../lib/api/pagination';
 
 export enum LeadStatus {
   NEW = 'NEW',
@@ -23,7 +24,8 @@ export interface Lead {
 }
 
 export const leadService = {
-  getLeads: () => api.get('/crm/leads'),
+  getLeads: (params?: CrmListParams) =>
+    params ? api.get('/crm/leads', { params }) : api.get('/crm/leads'),
   getLead: (id: string) => api.get(`/crm/leads/${id}`),
   createLead: (data: Partial<Lead>) => api.post('/crm/leads', data),
   updateLead: (id: string, data: Partial<Lead>) => api.patch(`/crm/leads/${id}`, data),

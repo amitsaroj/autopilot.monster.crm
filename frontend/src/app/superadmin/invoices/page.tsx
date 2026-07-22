@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   CreditCard, Search, Filter, Download, Receipt, 
   ArrowRight, CheckCircle2, XCircle, Clock, 
   MoreVertical, Building2, Calendar, DollarSign,
@@ -30,8 +31,8 @@ export default function GlobalInvoicesPage() {
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/invoices');
-      const json = await res.json();
+      const res = await api.get('/admin/invoices');
+      const json = res.data;
       if (json.data) setInvoices(json.data);
     } catch (e) {
       toast.error('Failed to sync platform financial records');

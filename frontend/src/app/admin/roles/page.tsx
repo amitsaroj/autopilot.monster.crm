@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Shield, ShieldCheck, ShieldAlert, Plus, Pencil, 
   Trash2, Lock, Unlock, Settings, Users, 
   CheckCircle2, ChevronRight, Search, Loader2,
@@ -25,8 +26,8 @@ export default function TenantRolesPage() {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/rbac/roles');
-      const json = await res.json();
+      const res = await api.get('/rbac/roles');
+      const json = res.data;
       if (json.data) setRoles(json.data);
     } catch (e) {
       toast.error('Failed to sync security definitions');

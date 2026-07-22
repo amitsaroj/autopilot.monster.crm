@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Search, Trash2, Edit2, Loader2, Globe, Building2, User } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api/client";
+import { ListPagination } from "@/components/ui/ListPagination";
+import { usePaginatedCrmList } from "@/hooks/usePaginatedCrmList";
+import { companyService } from "@/services/company.service";
 
 interface Company {
   id: string;
@@ -13,34 +16,37 @@ interface Company {
 }
 
 export default function CompaniesPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  const fetchCompanies = useCallback(
+    (params: Parameters<typeof companyService.getCompanies>[0]) => companyService.getCompanies(params),
+    [],
+  );
+
+  const {
+    items: companies,
+    meta,
+    page,
+    setPage,
+    search,
+    setSearch,
+    loading,
+    error,
+    reload,
+  } = usePaginatedCrmList<Company>(fetchCompanies);
+
   const [formData, setFormData] = useState({
     name: "",
     website: "",
     industry: "",
   });
 
-  const fetchCompanies = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/crm/companies");
-      if (res.data?.data) {
-        setCompanies(res.data.data);
-      }
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to synchronize lattice data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchCompanies();
-  }, []);
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +59,7 @@ export default function CompaniesPage() {
         toast.success("Lattice block initialized");
       }
       setIsModalOpen(false);
-      fetchCompanies();
+      reload();
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Configuration failed");
     }
@@ -64,7 +70,7 @@ export default function CompaniesPage() {
     try {
       await api.delete(`/crm/companies/${id}`);
       toast.success("Lattice dissolved");
-      fetchCompanies();
+      reload();
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Dissolution failed");
     }
@@ -85,11 +91,6 @@ export default function CompaniesPage() {
     });
     setIsModalOpen(true);
   };
-
-  const filteredCompanies = companies.filter((c) => 
-    c.name.toLowerCase().includes(search.toLowerCase()) || 
-    c.industry?.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
@@ -127,9 +128,21 @@ export default function CompaniesPage() {
         <div className="flex h-[40vh] items-center justify-center">
           <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
         </div>
+      ) : error ? (
+        <div className="py-20 text-center">
+          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={() => reload()}
+            className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+          >
+            Retry
+          </button>
+        </div>
       ) : (
+        <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-           {filteredCompanies.map((company) => (
+           {companies.map((company) => (
              <div key={company.id} className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all group flex flex-col justify-between relative overflow-hidden backdrop-blur-sm">
                 <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-indigo-500/5 transition-colors pointer-events-none" />
                 
@@ -168,11 +181,13 @@ export default function CompaniesPage() {
                 </div>
              </div>
            ))}
-           {filteredCompanies.length === 0 && (
+           {companies.length === 0 && (
              <div className="col-span-1 md:col-span-2 lg:col-span-3 py-20 text-center">
                  <p className="text-gray-500 font-black text-xs uppercase tracking-widest">No lattice nodes detected currently.</p>
              </div>
            )}
+        </div>
+        <ListPagination meta={meta} page={page} onPageChange={setPage} />
         </div>
       )}
 

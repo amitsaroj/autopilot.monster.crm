@@ -24,7 +24,7 @@ function toTwilioParams(body: Record<string, unknown>): Record<string, string> {
 }
 
 @SkipThrottle()
-@Controller('v1/voice/twilio')
+@Controller('voice/twilio')
 export class TwilioController {
   constructor(
     private readonly twilioService: TwilioService,
@@ -52,7 +52,12 @@ export class TwilioController {
       (await this.voicePhoneNumberService.findTenantIdByNumber(toNumber)) ?? 'default';
     const routingNumber = await this.configOrchestrator.get(tenantId, 'voice_routing_number', '');
     const wssUrl = `wss://${host}/voice/stream?tenantId=${tenantId}`;
-    const twiml = this.twilioService.generateRoutingTwiml(String(routingNumber ?? ''), wssUrl);
+    const routingFallbackUrl = `${req.protocol}://${host}/api/v1/voice/twilio/routing-fallback`;
+    const twiml = this.twilioService.generateRoutingTwiml(
+      String(routingNumber ?? ''),
+      wssUrl,
+      routingFallbackUrl,
+    );
 
     res.type('text/xml');
     res.send(twiml);

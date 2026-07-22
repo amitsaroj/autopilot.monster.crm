@@ -1,9 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Search, Trash2, Edit2, Loader2, User, Mail, Phone, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api/client";
+import { ListPagination } from "@/components/ui/ListPagination";
+import { usePaginatedCrmList } from "@/hooks/usePaginatedCrmList";
+import { parsePaginatedResponse } from "@/lib/api/pagination";
+import { companyService } from "@/services/company.service";
+import { contactService } from "@/services/contact.service";
 
 interface Company {
   id: string;
@@ -23,13 +28,27 @@ interface Contact {
 }
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState<Contact[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
+  const fetchContacts = useCallback(
+    (params: Parameters<typeof contactService.getContacts>[0]) => contactService.getContacts(params),
+    [],
+  );
+
+  const {
+    items: contacts,
+    meta,
+    page,
+    setPage,
+    search,
+    setSearch,
+    loading,
+    error,
+    reload,
+  } = usePaginatedCrmList<Contact>(fetchContacts);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -38,25 +57,18 @@ export default function ContactsPage() {
     companyId: "",
   });
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [contactRes, companyRes] = await Promise.all([
-        api.get("/crm/contacts"),
-        api.get("/crm/companies"),
-      ]);
-      if (contactRes.data?.data) setContacts(contactRes.data.data);
-      if (companyRes.data?.data) setCompanies(companyRes.data.data);
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || "Failed to synchronize node data");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    companyService
+      .getCompanies({ page: 1, limit: 100 })
+      .then((res) => setCompanies(parsePaginatedResponse<Company>(res).data))
+      .catch(() => toast.error("Failed to load companies"));
+  }, []);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +81,7 @@ export default function ContactsPage() {
         toast.success("Identity node injected");
       }
       setIsModalOpen(false);
-      fetchData();
+      reload();
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Node injection failed");
     }
@@ -80,7 +92,7 @@ export default function ContactsPage() {
     try {
       await api.delete(`/crm/contacts/${id}`);
       toast.success("Identity erased");
-      fetchData();
+      reload();
     } catch (e: any) {
       toast.error(e.response?.data?.message || "Erasure failed");
     }
@@ -103,11 +115,6 @@ export default function ContactsPage() {
     });
     setIsModalOpen(true);
   };
-
-  const filteredContacts = contacts.filter((c) => 
-    (c.firstName + " " + c.lastName).toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase())
-  );
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
@@ -145,9 +152,21 @@ export default function ContactsPage() {
         <div className="flex h-[40vh] items-center justify-center">
           <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
         </div>
+      ) : error ? (
+        <div className="py-20 text-center">
+          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={() => reload()}
+            className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+          >
+            Retry
+          </button>
+        </div>
       ) : (
+        <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-           {filteredContacts.map((contact) => {
+           {contacts.map((contact) => {
              const thisCompany = companies.find((c) => c.id === contact.companyId) || contact.company;
              return (
              <div key={contact.id} className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all group flex flex-col justify-between relative overflow-hidden">
@@ -191,11 +210,13 @@ export default function ContactsPage() {
                 </div>
              </div>
            )})}
-           {filteredContacts.length === 0 && (
+           {contacts.length === 0 && (
              <div className="col-span-1 md:col-span-2 lg:col-span-3 py-20 text-center text-sans">
                  <p className="text-gray-500 font-black text-xs uppercase tracking-widest">No identity artifacts found.</p>
              </div>
            )}
+        </div>
+        <ListPagination meta={meta} page={page} onPageChange={setPage} />
         </div>
       )}
 

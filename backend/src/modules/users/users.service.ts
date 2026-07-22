@@ -1,12 +1,14 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { UsersRepository } from './users.repository';
 import { UpdateUserDto, InviteUserDto } from './dto/users.dto';
 import { UserEntity } from '../auth/entities/user.entity';
 import { TeamGroup } from '../../database/entities/team-group.entity';
 import { Invitation } from '../../database/entities/invitation.entity';
-import { v4 as uuidv4 } from 'uuid';
+import { EVENT_NAMES } from '../../events/event.constants';
 
 @Injectable()
 export class UsersService {
@@ -14,6 +16,7 @@ export class UsersService {
     private readonly usersRepo: UsersRepository,
     @InjectRepository(TeamGroup)
     private readonly groupRepository: Repository<TeamGroup>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async findAll(tenantId: string): Promise<UserEntity[]> {
@@ -26,9 +29,23 @@ export class UsersService {
     return user;
   }
 
-  async update(id: string, tenantId: string, dto: UpdateUserDto): Promise<UserEntity> {
+  async update(
+    id: string,
+    tenantId: string,
+    dto: UpdateUserDto,
+    actorId?: string,
+  ): Promise<UserEntity> {
     await this.findOne(id, tenantId);
-    return this.usersRepo.update(id, tenantId, dto as any);
+    const updated = await this.usersRepo.update(id, tenantId, dto as any);
+    this.eventEmitter.emit(EVENT_NAMES.USER_UPDATED, {
+      name: EVENT_NAMES.USER_UPDATED,
+      tenantId,
+      actorId: actorId ?? null,
+      payload: { userId: id, changes: dto },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+    return updated;
   }
 
   async inviteUser(tenantId: string, invitedBy: string, dto: InviteUserDto): Promise<Invitation> {
@@ -39,7 +56,7 @@ export class UsersService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
 
-    return this.usersRepo.createInvitation({
+    const invitation = await this.usersRepo.createInvitation({
       email: dto.email,
       tenantId,
       roleId: dto.roleId,
@@ -48,6 +65,17 @@ export class UsersService {
       expiresAt,
       status: 'PENDING',
     });
+
+    this.eventEmitter.emit(EVENT_NAMES.USER_INVITED, {
+      name: EVENT_NAMES.USER_INVITED,
+      tenantId,
+      actorId: invitedBy,
+      payload: { invitationId: invitation.id, email: dto.email, roleId: dto.roleId },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+
+    return invitation;
   }
 
   async getInvitations(tenantId: string): Promise<Invitation[]> {

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -11,6 +16,7 @@ import { PaymentMethod } from '../../database/entities/payment-method.entity';
 import { Plan } from '../../database/entities/plan.entity';
 import { AppConfig } from '../../config/app.config';
 import { resolveUsagePeriodBounds, UsagePeriod } from './usage-period.util';
+import { resolveStripePriceId, stripePriceConfigHint } from './stripe-price.util';
 
 @Injectable()
 export class BillingService {
@@ -36,16 +42,45 @@ export class BillingService {
       throw new Error('STRIPE_SECRET_KEY is missing');
     }
     this.stripe = new Stripe(stripeConfig.secretKey, {
-      apiVersion: '2025-01-27' as any,
+      apiVersion: '2025-01-27' as Stripe.LatestApiVersion,
     });
+  }
+
+  private getStripePrices(): AppConfig['stripe']['prices'] {
+    return (
+      this.configService.get<AppConfig['stripe']>('app.stripe')?.prices ?? {
+        starterMonthly: '',
+        starterAnnual: '',
+        proMonthly: '',
+        proAnnual: '',
+        enterpriseMonthly: '',
+        enterpriseAnnual: '',
+      }
+    );
+  }
+
+  private resolvePlanStripePriceId(
+    plan: Plan,
+    billingCycle: 'MONTHLY' | 'ANNUAL',
+  ): string {
+    const dbPriceId =
+      billingCycle === 'MONTHLY' ? plan.stripePriceIdMonthly : plan.stripePriceIdAnnual;
+    const priceId = resolveStripePriceId(plan.slug, billingCycle, dbPriceId, this.getStripePrices());
+
+    if (!priceId) {
+      throw new BadRequestException(
+        `Stripe price ID for plan "${plan.slug}" (${billingCycle}) is not configured. ${stripePriceConfigHint(plan.slug, billingCycle)}`,
+      );
+    }
+
+    return priceId;
   }
 
   async createCheckoutSession(tenantId: string, planId: string, billingCycle: 'MONTHLY' | 'ANNUAL') {
     const plan = await this.planRepo.findOne({ where: { id: planId } });
     if (!plan) throw new NotFoundException('Plan not found');
 
-    const priceId = billingCycle === 'MONTHLY' ? plan.stripePriceIdMonthly : plan.stripePriceIdAnnual;
-    if (!priceId) throw new BadRequestException(`Stripe price ID for ${billingCycle} not configured`);
+    const priceId = this.resolvePlanStripePriceId(plan, billingCycle);
 
     const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as any });
     
@@ -87,7 +122,11 @@ export class BillingService {
     return { url: session.url };
   }
 
-  async handleWebhook(signature: string, payload: Buffer) {
+  async handleWebhook(signature: string, payload: Buffer | undefined) {
+    if (!payload?.length) {
+      throw new BadRequestException('Missing request body');
+    }
+
     const webhookSecret = this.configService.get<string>('app.stripe.webhookSecret');
     const nodeEnv = this.configService.get<string>('app.nodeEnv');
     if (!webhookSecret) {
@@ -101,8 +140,9 @@ export class BillingService {
 
     try {
       event = this.stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-    } catch (err: any) {
-      throw new BadRequestException(`Webhook Error: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid signature';
+      throw new BadRequestException(`Webhook Error: ${message}`);
     }
 
     switch (event.type) {
@@ -119,7 +159,11 @@ export class BillingService {
       case 'charge.refunded':
         await this.handleChargeRefunded(event.data.object as Stripe.Charge);
         break;
+      default:
+        break;
     }
+
+    return { received: true, type: event.type };
   }
 
   private async handleCheckoutComplete(session: Stripe.Checkout.Session) {
@@ -520,11 +564,7 @@ export class BillingService {
       throw new NotFoundException('Plan not found');
     }
 
-    const priceId =
-      sub.billingCycle === 'MONTHLY' ? plan.stripePriceIdMonthly : plan.stripePriceIdAnnual;
-    if (!priceId) {
-      throw new BadRequestException('Target plan price not configured in Stripe');
-    }
+    const priceId = this.resolvePlanStripePriceId(plan, sub.billingCycle as 'MONTHLY' | 'ANNUAL');
 
     const stripeSub = await this.stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
     const itemId = stripeSub.items.data[0]?.id;

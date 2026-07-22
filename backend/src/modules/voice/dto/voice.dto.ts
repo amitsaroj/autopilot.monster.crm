@@ -70,3 +70,15 @@ export class SynthesizeDto {
   @IsOptional()
   voice?: string;
 }
+
+export class TranscribeDto {
+  @ApiProperty({ description: 'Recording URL or call recording endpoint path' })
+  @IsString()
+  audioUrl!: string;
+}
+
+export class CloneVoiceDto {
+  @ApiProperty()
+  @IsString()
+  sampleUrl!: string;
+}

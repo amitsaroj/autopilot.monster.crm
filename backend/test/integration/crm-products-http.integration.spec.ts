@@ -38,7 +38,7 @@ describe('HTTP E2E — CRM products (secured)', () => {
       .set(headers)
       .send({
         name: `E2E Product ${Date.now()}`,
-        unitPrice: 99.99,
+        price: 99.99,
         currency: 'USD',
       });
 
@@ -53,7 +53,7 @@ describe('HTTP E2E — CRM products (secured)', () => {
     const updateRes = await request(app.getHttpServer())
       .put(`/api/v1/crm/products/${productId}`)
       .set(headers)
-      .send({ name: 'Updated Product', unitPrice: 149.99 });
+      .send({ name: 'Updated Product', price: 149.99 });
     expect(updateRes.status).toBe(200);
 
     const listRes = await request(app.getHttpServer()).get('/api/v1/crm/products').set(headers);

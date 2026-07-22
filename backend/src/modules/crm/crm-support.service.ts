@@ -16,12 +16,17 @@ import {
 import { ContactRepository } from './contact.repository';
 import { DealRepository } from './deal.repository';
 import { DealStatus } from '../../database/entities/deal.entity';
+import { toPaginatedResult } from '../../common/utils/pagination.util';
+import { CreateActivityDto, CrmListQueryDto } from './dto/crm.dto';
 
 @Injectable()
 export class ActivityService {
   constructor(private readonly repo: ActivityRepository) {}
-  create(tid: string, dto: any) {
-    return this.repo.create(tid, dto);
+  create(tid: string, dto: CreateActivityDto) {
+    return this.repo.create(tid, {
+      ...dto,
+      occurredAt: dto.occurredAt ? new Date(dto.occurredAt) : new Date(),
+    });
   }
   findAll(tid: string) {
     return this.repo.findAll(tid);
@@ -42,6 +47,28 @@ export class TaskCrmService {
   }
   findAll(tid: string) {
     return this.repo.findAll(tid);
+  }
+  async findPaginated(tid: string, query: { page?: number; limit?: number; search?: string; status?: string }) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const [data, total] = await this.repo.findAndCount(tid, {
+      where: {
+        ...(query.status ? { status: query.status as never } : {}),
+      },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    let rows = data;
+    let count = total;
+    if (query.search) {
+      const all = await this.repo.findAll(tid);
+      const needle = query.search.toLowerCase();
+      const matched = all.filter((t) => t.title?.toLowerCase().includes(needle));
+      count = matched.length;
+      rows = matched.slice((page - 1) * limit, page * limit);
+    }
+    return toPaginatedResult(rows, count, page, limit);
   }
   findOne(tid: string, id: string) {
     return this.repo.findById(tid, id);
@@ -77,6 +104,34 @@ export class ProductService {
   findAll(tid: string) {
     return this.repo.findAll(tid);
   }
+  async findPaginated(tid: string, query: CrmListQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const [data, total] = await this.repo.findAndCount(tid, {
+      where: {
+        ...(query.status ? { status: query.status as never } : {}),
+      },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    if (!query.search) {
+      return toPaginatedResult(data, total, page, limit);
+    }
+    const all = await this.repo.findAll(tid);
+    const needle = query.search.toLowerCase();
+    const matched = all.filter(
+      (p) =>
+        p.name?.toLowerCase().includes(needle) ||
+        p.sku?.toLowerCase().includes(needle),
+    );
+    return toPaginatedResult(
+      matched.slice((page - 1) * limit, page * limit),
+      matched.length,
+      page,
+      limit,
+    );
+  }
   findOne(tid: string, id: string) {
     return this.repo.findById(tid, id);
   }
@@ -96,6 +151,30 @@ export class QuoteService {
   }
   findAll(tid: string) {
     return this.repo.findAll(tid);
+  }
+  async findPaginated(tid: string, query: CrmListQueryDto) {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const [data, total] = await this.repo.findAndCount(tid, {
+      where: {
+        ...(query.status ? { status: query.status as never } : {}),
+      },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    if (!query.search) {
+      return toPaginatedResult(data, total, page, limit);
+    }
+    const all = await this.repo.findAll(tid);
+    const needle = query.search.toLowerCase();
+    const matched = all.filter((q) => q.number?.toLowerCase().includes(needle));
+    return toPaginatedResult(
+      matched.slice((page - 1) * limit, page * limit),
+      matched.length,
+      page,
+      limit,
+    );
   }
   findOne(tid: string, id: string) {
     return this.repo.findById(tid, id);

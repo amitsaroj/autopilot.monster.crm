@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api/client';
 import {
   CreditCard, Search, Loader2, Building2, Calendar,
   CheckCircle2, XCircle, Clock, RefreshCw, ArrowRight,
@@ -27,8 +28,8 @@ export default function GlobalSubscriptionsPage() {
   const fetchSubscriptions = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/subscriptions');
-      const json = await res.json();
+      const res = await api.get('/admin/subscriptions');
+      const json = res.data;
       if (json.data) setSubscriptions(json.data);
     } catch {
       toast.error('Failed to load subscriptions');

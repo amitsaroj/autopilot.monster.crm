@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Settings, Globe, Shield, Mail, Bell, 
   Save, RefreshCw, Loader2, CheckCircle2, 
   HelpCircle, Trash2, Camera, Link as LinkIcon,
@@ -37,8 +38,8 @@ export default function GlobalGeneralSettingsPage() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/v1/admin/settings/system');
-        const json = await res.json();
+        const res = await api.get('/admin/settings/system');
+        const json = res.data;
         if (json.data) setSettings(prev => ({ ...prev, ...json.data }));
       } catch (e) {
         toast.error('Failed to sync platform configuration');
@@ -53,12 +54,8 @@ export default function GlobalGeneralSettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch('/api/v1/admin/settings/system', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-      if (res.ok) {
+      const res = await api.post('/admin/settings/system', settings);
+      if (res.status >= 200 && res.status < 300) {
         toast.success('Platform metadata synchronized successfully');
       } else {
         toast.error('Failed to commit systemic configuration');

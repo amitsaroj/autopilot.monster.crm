@@ -34,6 +34,7 @@ import { DatabaseModule } from './database/database.module';
 import { LoggerModule } from './logger/logger.module';
 import { HealthModule } from './health/health.module';
 import { QueueModule } from './queue/queue.module';
+import { QueueProcessorsModule } from './queue/processors/queue-processors.module';
 import { EventBusModule } from './events/event-bus.module';
 import { EmailModule } from './shared/email/email.module';
 
@@ -57,6 +58,7 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SupportModule } from './modules/support/support.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { DataJobsModule } from './modules/data-jobs/data-jobs.module';
+import { DeveloperModule } from './modules/developer/developer.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -100,6 +102,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     HealthModule,
     CacheModule,
     QueueModule,
+    QueueProcessorsModule,
     EventBusModule,
     EmailModule,
 
@@ -124,6 +127,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     SupportModule,
     AnalyticsModule,
     DataJobsModule,
+    DeveloperModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

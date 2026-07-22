@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import type { CrmListParams } from '../lib/api/pagination';
 
 export interface Contact {
   id: string;
@@ -17,7 +18,8 @@ export interface Contact {
 }
 
 export const contactService = {
-  getContacts: () => api.get('/crm/contacts'),
+  getContacts: (params?: CrmListParams) =>
+    params ? api.get('/crm/contacts', { params }) : api.get('/crm/contacts'),
   getContact: (id: string) => api.get(`/crm/contacts/${id}`),
   createContact: (data: Partial<Contact>) => api.post('/crm/contacts', data),
   updateContact: (id: string, data: Partial<Contact>) => api.put(`/crm/contacts/${id}`, data),

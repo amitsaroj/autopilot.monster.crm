@@ -1,7 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contact } from '../../database/entities/contact.entity';
+import { ContactService } from './contact.service';
+import { CheckDuplicateDto } from './dto/crm.dto';
 
 export interface DuplicateGroup {
   key: string;
@@ -17,54 +19,60 @@ export class DuplicateDetectionService {
   constructor(
     @InjectRepository(Contact)
     private readonly contactRepo: Repository<Contact>,
+    private readonly contactService: ContactService,
   ) {}
 
-  /**
-   * Scan for duplicates based on email, phone, or name similarity
-   */
   async findDuplicates(tenantId: string): Promise<DuplicateGroup[]> {
     const groups: DuplicateGroup[] = [];
 
-    // 1. Email-based duplicates
     const emailDupes = await this.contactRepo
       .createQueryBuilder('c')
-      .select(['c.email', 'COUNT(*) as cnt'])
+      .select('c.email', 'email')
+      .addSelect('COUNT(*)', 'cnt')
       .where('c.tenant_id = :tenantId', { tenantId })
       .andWhere('c.email IS NOT NULL')
       .andWhere('c.deleted_at IS NULL')
       .groupBy('c.email')
       .having('COUNT(*) > 1')
-      .getRawMany();
+      .getRawMany<{ email: string; cnt: string }>();
 
     for (const row of emailDupes) {
       const contacts = await this.contactRepo.find({
-        where: { tenantId, email: row.c_email } as any,
+        where: { tenantId, email: row.email },
       });
       groups.push({
-        key: `email:${row.c_email}`,
+        key: `email:${row.email}`,
         contacts,
         matchScore: 100,
         matchFields: ['email'],
       });
     }
 
-    // 2. Phone-based duplicates
     const phoneDupes = await this.contactRepo
       .createQueryBuilder('c')
-      .select(['c.phone', 'COUNT(*) as cnt'])
+      .select('c.phone', 'phone')
+      .addSelect('COUNT(*)', 'cnt')
       .where('c.tenant_id = :tenantId', { tenantId })
       .andWhere('c.phone IS NOT NULL')
+      .andWhere("c.phone <> ''")
       .andWhere('c.deleted_at IS NULL')
       .groupBy('c.phone')
       .having('COUNT(*) > 1')
-      .getRawMany();
+      .getRawMany<{ phone: string; cnt: string }>();
 
     for (const row of phoneDupes) {
       const contacts = await this.contactRepo.find({
-        where: { tenantId, phone: row.c_phone } as any,
+        where: { tenantId, phone: row.phone },
       });
+      const alreadyCovered = groups.some((g) =>
+        g.contacts.every((c) => contacts.some((m) => m.id === c.id)) &&
+        contacts.every((c) => g.contacts.some((m) => m.id === c.id)),
+      );
+      if (alreadyCovered) {
+        continue;
+      }
       groups.push({
-        key: `phone:${row.c_phone}`,
+        key: `phone:${row.phone}`,
         contacts,
         matchScore: 95,
         matchFields: ['phone'],
@@ -74,54 +82,40 @@ export class DuplicateDetectionService {
     return groups;
   }
 
-  /**
-   * Check if a new contact is a potential duplicate before creation
-   */
-  async checkForDuplicate(tenantId: string, data: { email?: string; phone?: string; firstName?: string; lastName?: string }): Promise<Contact[]> {
+  async checkForDuplicate(tenantId: string, data: CheckDuplicateDto): Promise<Contact[]> {
     const matches: Contact[] = [];
 
     if (data.email) {
       const emailMatches = await this.contactRepo.find({
-        where: { tenantId, email: data.email } as any,
+        where: { tenantId, email: data.email },
       });
       matches.push(...emailMatches);
     }
 
     if (data.phone) {
       const phoneMatches = await this.contactRepo.find({
-        where: { tenantId, phone: data.phone } as any,
+        where: { tenantId, phone: data.phone },
       });
-      for (const m of phoneMatches) {
-        if (!matches.find(e => e.id === m.id)) matches.push(m);
+      for (const match of phoneMatches) {
+        if (!matches.find((existing) => existing.id === match.id)) {
+          matches.push(match);
+        }
       }
     }
 
     return matches;
   }
 
-  /**
-   * Merge two contacts — primary keeps, secondary is soft-deleted
-   */
   async mergeContacts(tenantId: string, primaryId: string, secondaryId: string): Promise<Contact> {
-    const primary = await this.contactRepo.findOne({ where: { id: primaryId, tenantId } as any });
-    const secondary = await this.contactRepo.findOne({ where: { id: secondaryId, tenantId } as any });
+    const primary = await this.contactRepo.findOne({ where: { id: primaryId, tenantId } });
+    const secondary = await this.contactRepo.findOne({ where: { id: secondaryId, tenantId } });
 
     if (!primary || !secondary) {
-      throw new Error('One or both contacts not found');
+      throw new NotFoundException('One or both contacts not found');
     }
 
-    // Merge fields: fill in blanks on primary from secondary
-    const fieldsToMerge: (keyof Contact)[] = ['email', 'phone', 'company'];
-    for (const field of fieldsToMerge) {
-      if (!primary[field] && secondary[field]) {
-        (primary as any)[field] = secondary[field];
-      }
-    }
-
-    await this.contactRepo.save(primary);
-    await this.contactRepo.softRemove(secondary);
-
+    const merged = await this.contactService.mergeContacts(tenantId, primaryId, secondaryId);
     this.logger.log(`Merged contact ${secondaryId} into ${primaryId}`);
-    return primary;
+    return merged;
   }
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -32,8 +33,8 @@ export default function KnowledgeBasePage() {
   const fetchArticles = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/support/articles');
-      const json = await res.json();
+      const res = await api.get('/support/articles');
+      const json = res.data;
       if (json.data) setArticles(json.data);
     } catch (e) {
       toast.error('Failed to synchronize knowledge artifacts');

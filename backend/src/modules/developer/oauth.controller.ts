@@ -4,10 +4,11 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OAuthService } from './oauth.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
-import { Public } from '../../common/decorators/public.decorator';
+import { Public, ResourcePermissions, Roles, TenantId } from '../../common/decorators';
+import { CreateOAuthAppDto } from '../tenant-settings/dto/developer-settings.dto';
 
 @ApiTags('Developer - OAuth')
+@ResourcePermissions('settings')
 @Controller('developer/oauth')
 export class OAuthController {
   constructor(private readonly oauthService: OAuthService) {}
@@ -15,9 +16,10 @@ export class OAuthController {
   @Post('apps')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, TenantGuard)
+  @Roles('TENANT_ADMIN')
   @ApiOperation({ summary: 'Register a new OAuth Application' })
-  async createApp(@TenantId() tenantId: string, @Body() dto: any) {
-    return this.oauthService.createApp(tenantId, dto);
+  async createApp(@TenantId() tenantId: string, @Body() dto: CreateOAuthAppDto) {
+    return this.oauthService.createApp(tenantId, { ...dto, scopes: dto.scopes ?? ['*'] });
   }
 
   @Get('apps')

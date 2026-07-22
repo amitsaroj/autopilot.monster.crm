@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Users, Search, Filter, Mail, Shield, 
   MapPin, Calendar, MoreVertical, UserX, 
   Key, CheckCircle2, AlertCircle, Loader2,
@@ -30,8 +31,8 @@ export default function GlobalUsersPage() {
   const fetchUsers = async (query = '') => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/admin/users?search=${query}`);
-      const json = await res.json();
+      const res = await api.get(`/admin/users?search=${query}`);
+      const json = res.data;
       if (json.data) setUsers(json.data);
     } catch (e) {
       toast.error('Failed to sync global user directory');

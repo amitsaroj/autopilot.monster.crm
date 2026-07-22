@@ -21,6 +21,7 @@ export class CreateWhatsappBroadcastDto {
   contactFilter?: {
     tags?: string[];
     status?: string[];
+    segmentIds?: string[];
     customField?: { key: string; value: string };
   };
 

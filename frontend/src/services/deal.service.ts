@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import type { CrmListParams } from '../lib/api/pagination';
 
 export interface Deal {
   id: string;
@@ -22,7 +23,8 @@ export interface Deal {
 }
 
 export const dealService = {
-  getDeals: () => api.get('/crm/deals'),
+  getDeals: (params?: CrmListParams) =>
+    params ? api.get('/crm/deals', { params }) : api.get('/crm/deals'),
   getBoard: (pipelineId?: string) => api.get('/crm/deals/board', { params: { pipelineId } }),
   getDeal: (id: string) => api.get(`/crm/deals/${id}`),
   createDeal: (data: Partial<Deal>) => api.post('/crm/deals', data),

@@ -14,13 +14,14 @@ import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity
 import { WhatsAppTemplate } from '../../database/entities/whatsapp-template.entity';
 import { WhatsAppBroadcast } from '../../database/entities/whatsapp-broadcast.entity';
 import { Contact } from '../../database/entities/contact.entity';
+import { Segment } from '../../database/entities/segment.entity';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
 
 @Module({
   imports: [
     ConfigModule,
     BullModule.registerQueue({ name: QUEUE_NAMES.WHATSAPP }),
-    TypeOrmModule.forFeature([WhatsAppMessage, WhatsAppTemplate, WhatsAppBroadcast, Contact]),
+    TypeOrmModule.forFeature([WhatsAppMessage, WhatsAppTemplate, WhatsAppBroadcast, Contact, Segment]),
   ],
   controllers: [MetaWebhookController, WhatsappController],
   providers: [

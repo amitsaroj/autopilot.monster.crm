@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api/client';
 import {
   Save, Loader2, ShieldCheck, HardDrive, Activity, Cloud, Download,
 } from 'lucide-react';
@@ -41,8 +42,8 @@ export default function WorkspaceDataManagementPage() {
   const handleExport = async (type: string) => {
     setTriggering(true);
     try {
-      const res = await fetch(`/api/v1/crm/export/${type}`);
-      const json = await res.json();
+      const res = await api.get(`/crm/export/${type}`);
+      const json = res.data;
       if (json.data) {
         const blob = new Blob([json.data], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);

@@ -16,6 +16,7 @@ import * as bcrypt from 'bcryptjs';
 
 import { seedDemoCrmData, seedDemoSubscription } from './seed-demo-data';
 import { seedMarketplacePlugins } from './seed-marketplace-plugins';
+import { readStripePriceFromEnv } from '../modules/billing/stripe-price.util';
 
 const DEMO_PASSWORD = 'SecureP@ssw0rd!';
 
@@ -90,13 +91,52 @@ async function seed() {
 
     // 4. PLANS, FEATURES, LIMITS
     const plansData = [
-      { name: 'Free', slug: 'FREE', priceMonthly: 0, priceAnnual: 0, limitContacts: 100, limitUsers: 1, limitAiTokens: 1000, features: ['crm', 'analytics', 'billing'], stripePriceIdMonthly: null, stripePriceIdAnnual: null },
-      { name: 'Starter', slug: 'STARTER', priceMonthly: 29, priceAnnual: 290, limitContacts: 1000, limitUsers: 5, limitAiTokens: 50000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'billing', 'export'], stripePriceIdMonthly: 'price_starter_monthly_placeholder', stripePriceIdAnnual: 'price_starter_annual_placeholder' },
-      { name: 'Pro', slug: 'PRO', priceMonthly: 99, priceAnnual: 990, limitContacts: 10000, limitUsers: 20, limitAiTokens: 500000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'billing', 'storage', 'export', 'import'], stripePriceIdMonthly: 'price_pro_monthly_placeholder', stripePriceIdAnnual: 'price_pro_annual_placeholder' },
-      { name: 'Enterprise', slug: 'ENTERPRISE', priceMonthly: 499, priceAnnual: 4990, limitContacts: -1, limitUsers: -1, limitAiTokens: -1, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'marketplace', 'billing', 'storage', 'export', 'import'], stripePriceIdMonthly: 'price_ent_monthly_placeholder', stripePriceIdAnnual: 'price_ent_annual_placeholder' },
+      {
+        name: 'Free',
+        slug: 'FREE',
+        priceMonthly: 0,
+        priceAnnual: 0,
+        limitContacts: 100,
+        limitUsers: 1,
+        limitAiTokens: 1000,
+        features: ['crm', 'analytics', 'billing'],
+      },
+      {
+        name: 'Starter',
+        slug: 'STARTER',
+        priceMonthly: 29,
+        priceAnnual: 290,
+        limitContacts: 1000,
+        limitUsers: 5,
+        limitAiTokens: 50000,
+        features: ['crm', 'analytics', 'workflow', 'whatsapp', 'billing', 'export'],
+      },
+      {
+        name: 'Pro',
+        slug: 'PRO',
+        priceMonthly: 99,
+        priceAnnual: 990,
+        limitContacts: 10000,
+        limitUsers: 20,
+        limitAiTokens: 500000,
+        features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'billing', 'storage', 'export', 'import'],
+      },
+      {
+        name: 'Enterprise',
+        slug: 'ENTERPRISE',
+        priceMonthly: 499,
+        priceAnnual: 4990,
+        limitContacts: -1,
+        limitUsers: -1,
+        limitAiTokens: -1,
+        features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'marketplace', 'billing', 'storage', 'export', 'import'],
+      },
     ];
 
     for (const pd of plansData) {
+      const stripePriceIdMonthly = readStripePriceFromEnv(pd.slug, 'MONTHLY');
+      const stripePriceIdAnnual = readStripePriceFromEnv(pd.slug, 'ANNUAL');
+
       let plan = await planRepo.findOneBy({ slug: pd.slug });
       if (!plan) {
         plan = planRepo.create({
@@ -106,8 +146,8 @@ async function seed() {
           priceAnnual: pd.priceAnnual,
           currency: 'USD',
           status: 'ACTIVE',
-          stripePriceIdMonthly: pd.stripePriceIdMonthly as string,
-          stripePriceIdAnnual: pd.stripePriceIdAnnual as string,
+          stripePriceIdMonthly: stripePriceIdMonthly ?? undefined,
+          stripePriceIdAnnual: stripePriceIdAnnual ?? undefined,
         });
         await planRepo.save(plan);
         console.log(`Created Plan: ${pd.name}`);
@@ -126,6 +166,22 @@ async function seed() {
         // Features
         const featuresEnts = pd.features.map(f => featureRepo.create({ planId: plan!.id, featureKey: f, enabled: true, config: {} }));
         await featureRepo.save(featuresEnts);
+      } else {
+        let priceUpdated = false;
+        if (stripePriceIdMonthly) {
+          plan.stripePriceIdMonthly = stripePriceIdMonthly;
+          priceUpdated = true;
+        }
+        if (stripePriceIdAnnual) {
+          plan.stripePriceIdAnnual = stripePriceIdAnnual;
+          priceUpdated = true;
+        }
+        if (priceUpdated) {
+          await planRepo.save(plan);
+          console.log(`Updated Stripe price IDs for plan: ${pd.name}`);
+        } else {
+          console.log(`Plan already exists: ${pd.name}`);
+        }
       }
     }
 

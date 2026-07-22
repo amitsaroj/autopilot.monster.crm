@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -37,8 +38,8 @@ export default function PlatformErrorForensicsPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/logs/errors');
-      const json = await res.json();
+      const res = await api.get('/admin/logs/errors');
+      const json = res.data;
       if (json.data && Array.isArray(json.data.items)) setLogs(json.data.items);
       else if (Array.isArray(json.data)) setLogs(json.data);
     } catch (e) {

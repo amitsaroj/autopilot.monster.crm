@@ -8,7 +8,6 @@ import {
   Patch,
   UseGuards,
   Res,
-  NotFoundException,
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -18,7 +17,9 @@ import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
 import {
   CallDto,
+  CloneVoiceDto,
   SynthesizeDto,
+  TranscribeDto,
   TransferCallDto,
   UpdateVoiceSettingsDto,
 } from './dto/voice.dto';
@@ -27,7 +28,7 @@ import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { TwilioService } from './twilio.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
+import { TenantId, PlanFeature, ResourcePermissions, Public } from '../../common/decorators';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { TenantSettingsService } from '../tenant-settings/tenant-settings.service';
 
@@ -145,15 +146,22 @@ export class VoiceController {
 
   @Post('transcribe')
   @ApiOperation({ summary: 'Convert audio to text' })
-  async transcribe(@Body() dto: { audioUrl?: string }) {
-    if (!dto.audioUrl) {
-      throw new NotFoundException('audioUrl is required');
+  async transcribe(@TenantId() tenantId: string, @Body() dto: TranscribeDto) {
+    const call = await this.voiceCallService.findByRecordingUrl(tenantId, dto.audioUrl);
+    if (!call?.transcript) {
+      return {
+        status: 202,
+        message: 'Transcription pending',
+        error: false,
+        data: { text: null, audioUrl: dto.audioUrl },
+      };
     }
+
     return {
       status: 200,
-      message: 'Transcription pending',
+      message: 'Transcription retrieved',
       error: false,
-      data: { text: null, audioUrl: dto.audioUrl },
+      data: { text: call.transcript, audioUrl: dto.audioUrl },
     };
   }
 
@@ -339,14 +347,15 @@ export class VoiceController {
 
   @Post('clone')
   @ApiOperation({ summary: 'Create a voice clone from sample audio' })
-  async cloneVoice(@TenantId() tenantId: string, @Body() dto: { sampleUrl: string }) {
+  async cloneVoice(@TenantId() tenantId: string, @Body() dto: CloneVoiceDto) {
     const voiceId = await this.twilioService.cloneVoiceStub(tenantId, dto.sampleUrl);
     return { success: true, voiceId };
   }
 
+  @Public()
   @Post('ivr-callback')
   @ApiOperation({ summary: 'Twilio IVR webhook callback' })
-  async ivrCallback(@Body() body: Record<string, any>, @Res() res: Response) {
+  async ivrCallback(@Body() body: Record<string, unknown>, @Res() res: Response) {
     // Generate IVR or route call
     const twiml = this.twilioService.generateIvrTwiml(body);
     res.type('text/xml').send(twiml);

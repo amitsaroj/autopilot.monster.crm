@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api/client';
 import {
-  Users, Building2, CreditCard, Activity, TrendingUp,
-  ShieldCheck, Zap, AlertTriangle, ArrowUpRight,
-  Settings, Globe, BarChart3, CheckCircle2, Loader2,
-  ArrowRight, Brain, Workflow, MessageSquare, Phone
+  Users, Building2, CreditCard, TrendingUp,
+  ShieldCheck, Settings, BarChart3, CheckCircle2, Loader2,
+  ArrowRight, Brain, Workflow, MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,18 +25,18 @@ export default function AdminIndexPage() {
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
-    fetch('/api/v1/analytics/overview')
-      .then(r => r.json())
+    api.get('/analytics/overview')
+      .then(r => r.data)
       .then(j => { if (j.data) setStats(j.data); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   const kpis = [
-    { label: 'Total Users', value: stats?.users ?? '—', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10', trend: '+12' },
-    { label: 'Active Contacts', value: stats?.contacts ?? '—', icon: Building2, color: 'text-indigo-400', bg: 'bg-indigo-500/10', trend: '+84' },
-    { label: 'MRR', value: stats?.mrr ? `$${stats.mrr.toLocaleString()}` : '—', icon: CreditCard, color: 'text-emerald-400', bg: 'bg-emerald-500/10', trend: '+8%' },
-    { label: 'Open Issues', value: stats?.openIssues ?? '0', icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10', trend: '' },
+    { label: 'Contacts', value: stats?.contacts ?? '—', icon: Building2, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+    { label: 'Leads', value: stats?.leads ?? '—', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { label: 'Open Deals', value: stats?.openDeals ?? '—', icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { label: 'Pipeline Value', value: stats?.pipelineValue != null ? `$${Number(stats.pipelineValue).toLocaleString()}` : '—', icon: CreditCard, color: 'text-amber-400', bg: 'bg-amber-500/10' },
   ];
 
   if (loading) {
@@ -61,11 +61,6 @@ export default function AdminIndexPage() {
               <div className={`p-2.5 rounded-xl ${kpi.bg}`}>
                 <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
               </div>
-              {kpi.trend && (
-                <span className="text-[10px] font-black text-emerald-400 flex items-center gap-0.5 uppercase">
-                  <ArrowUpRight className="w-3 h-3" />{kpi.trend}
-                </span>
-              )}
             </div>
             <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{kpi.label}</p>
             <p className="text-2xl font-black text-white mt-1">{kpi.value}</p>

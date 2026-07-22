@@ -16,6 +16,11 @@ import { Wallet } from '../database/entities/wallet.entity';
 import { WalletTransaction } from '../database/entities/wallet-transaction.entity';
 import { Tenant } from '../database/entities/tenant.entity';
 import { WalletService } from './billing/wallet.service';
+import { CouponService } from './billing/coupon.service';
+import { BillingExtController } from './billing/billing-ext.controller';
+import { PaypalService } from './billing/paypal.service';
+import { RazorpayService } from './billing/razorpay.service';
+import { Coupon } from '../database/entities/coupon.entity';
 import { PlatformSetting } from '../database/entities/platform-setting.entity';
 
 import { MonetizationController } from './monetization.controller';
@@ -35,10 +40,19 @@ import { MonetizationController } from './monetization.controller';
       WalletTransaction,
       Tenant,
       PlatformSetting,
+      Coupon,
     ]),
   ],
-  controllers: [MonetizationController, BillingController],
-  providers: [PricingService, PricingRepository, BillingService, WalletService],
-  exports: [PricingService, BillingService, WalletService],
+  controllers: [MonetizationController, BillingController, BillingExtController],
+  providers: [
+    PricingService,
+    PricingRepository,
+    BillingService,
+    WalletService,
+    CouponService,
+    PaypalService,
+    RazorpayService,
+  ],
+  exports: [PricingService, BillingService, WalletService, CouponService],
 })
 export class MonetizationModule {}

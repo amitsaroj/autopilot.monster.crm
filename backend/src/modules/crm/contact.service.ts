@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ContactRepository } from './contact.repository';
-import { CreateContactDto } from './dto/crm.dto';
+import { CreateContactDto, CrmListQueryDto, UpdateContactDto } from './dto/crm.dto';
 import { CreateContactNoteDto } from './dto/deal-lifecycle.dto';
 import { Contact } from '../../database/entities/contact.entity';
 import { Activity } from '../../database/entities/activity.entity';
@@ -14,6 +14,8 @@ import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
 import { DealService } from './deal.service';
 import { EVENT_NAMES } from '../../events/event.constants';
+import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
+import { toPaginatedResult } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class ContactService {
@@ -43,6 +45,20 @@ export class ContactService {
     return this.contactRepository.findAll(tenantId);
   }
 
+  async findPaginated(
+    tenantId: string,
+    query: CrmListQueryDto,
+  ): Promise<IPaginatedResult<Contact>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const [data, total] = await this.contactRepository.findFiltered(tenantId, {
+      ...query,
+      page,
+      limit,
+    });
+    return toPaginatedResult(data, total, page, limit);
+  }
+
   async findOne(tenantId: string, id: string): Promise<Contact> {
     const contact = await this.contactRepository.findById(tenantId, id);
     if (!contact) {
@@ -51,7 +67,8 @@ export class ContactService {
     return contact;
   }
 
-  async update(tenantId: string, id: string, dto: Partial<CreateContactDto>): Promise<Contact> {
+  async update(tenantId: string, id: string, dto: UpdateContactDto): Promise<Contact> {
+    await this.findOne(tenantId, id);
     const contact = await this.contactRepository.updateWithTenant(tenantId, id, dto);
     this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId });
     return contact;
@@ -76,7 +93,9 @@ export class ContactService {
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
+    await this.findOne(tenantId, id);
     await this.contactRepository.delete(tenantId, id);
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_DELETED, { tenantId, contact: { id } });
   }
 
   async getActivities(tenantId: string, contactId: string): Promise<Activity[]> {
@@ -159,7 +178,7 @@ export class ContactService {
     secondaryId: string,
   ): Promise<Contact> {
     if (primaryId === secondaryId) {
-      throw new NotFoundException('Cannot merge contact with itself');
+      throw new BadRequestException('Cannot merge contact with itself');
     }
 
     const primary = await this.findOne(tenantId, primaryId);
@@ -180,6 +199,13 @@ export class ContactService {
     await this.dealService.reassignContact(tenantId, secondaryId, primaryId);
     await this.contactRepository.delete(tenantId, secondaryId);
 
-    return this.findOne(tenantId, primaryId);
+    const merged = await this.findOne(tenantId, primaryId);
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_MERGED, {
+      tenantId,
+      primaryId,
+      secondaryId,
+      contact: merged,
+    });
+    return merged;
   }
 }

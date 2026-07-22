@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -39,11 +40,11 @@ export default function RbacManagementPage() {
     setLoading(true);
     try {
       const [rolesRes, permsRes] = await Promise.all([
-        fetch('/api/v1/rbac/roles'),
-        fetch('/api/v1/rbac/permissions')
+        api.get('/rbac/roles'),
+        api.get('/rbac/permissions')
       ]);
-      const rolesJson = await rolesRes.json();
-      const permsJson = await permsRes.json();
+      const rolesJson = rolesRes.data;
+      const permsJson = permsRes.data;
       setRoles(rolesJson.data || []);
       setPermissions(permsJson.data || []);
     } catch (e) {

@@ -18,7 +18,9 @@ import { Response } from 'express';
 import { RagService } from './rag.service';
 import { KnowledgeBaseService } from './knowledge-base.service';
 import { ConversationService } from './conversation.service';
+import { AiInferenceQueueService } from './ai-inference-queue.service';
 import { GenerateDto, ChatDto, AnalyzeDto } from './dto/ai.dto';
+import { CreateLegacyKnowledgeBaseDto } from './dto/knowledge-base.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
@@ -33,6 +35,7 @@ export class AiController {
     private readonly ragService: RagService,
     private readonly kbService: KnowledgeBaseService,
     private readonly chatService: ConversationService,
+    private readonly aiInferenceQueue: AiInferenceQueueService,
   ) {}
 
   @Post('generate')
@@ -40,6 +43,21 @@ export class AiController {
   async generate(@TenantId() tenantId: string, @Body() dto: GenerateDto) {
     const reply = await this.ragService.generate(tenantId, dto.prompt, dto.options);
     return { status: 200, message: 'Generated', error: false, data: { reply } };
+  }
+
+  @Post('generate/async')
+  @ApiOperation({ summary: 'Queue text completion for async processing' })
+  async generateAsync(@TenantId() tenantId: string, @Body() dto: GenerateDto) {
+    const job = await this.aiInferenceQueue.enqueue(tenantId, dto.prompt, {
+      model: typeof dto.options?.model === 'string' ? dto.options.model : undefined,
+      context: dto.options,
+    });
+    return {
+      status: 202,
+      message: 'Inference queued',
+      error: false,
+      data: { jobId: job.id, status: 'queued' },
+    };
   }
 
   @Post('chat')
@@ -97,7 +115,23 @@ export class AiController {
   @Get('usage')
   @ApiOperation({ summary: 'Get AI usage statistics' })
   async getUsage(@TenantId() tenantId: string) {
-    const data = await this.ragService.getUsage(tenantId);
+    const [usage, conversations, knowledgeBases] = await Promise.all([
+      this.ragService.getUsage(tenantId),
+      this.chatService.findPaginated(tenantId, 1, 1),
+      this.kbService.findAll(tenantId),
+    ]);
+
+    const embeddings = knowledgeBases.reduce((sum, kb) => {
+      const totalChunks = kb.indexMeta?.totalChunks;
+      return sum + (typeof totalChunks === 'number' ? totalChunks : 0);
+    }, 0);
+
+    const data = {
+      ...usage,
+      conversations: conversations.total,
+      embeddings,
+    };
+
     return { status: 200, message: 'Usage retrieved', error: false, data };
   }
 
@@ -127,10 +161,10 @@ export class AiController {
 
   @Post('kb')
   @ApiOperation({ summary: 'Create a knowledge base' })
-  async createKB(@TenantId() tenantId: string, @Body() data: { name: string; description?: string }) {
+  async createKB(@TenantId() tenantId: string, @Body() dto: CreateLegacyKnowledgeBaseDto) {
     const kb = await this.kbService.create(tenantId, {
-      name: data.name,
-      description: data.description,
+      name: dto.name,
+      description: dto.description,
       sourceType: 'FILE',
     });
     return { status: 201, message: 'Knowledge base created', error: false, data: kb };

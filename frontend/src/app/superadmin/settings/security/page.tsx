@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Shield, Key, Lock, Unlock, Eye, 
   Terminal, Database, Globe, RefreshCw, 
   Loader2, CheckCircle2, AlertCircle, 
@@ -43,8 +44,8 @@ export default function GlobalSecuritySettingsPage() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const res = await fetch('/api/v1/admin/settings/security');
-        const json = await res.json();
+        const res = await api.get('/admin/settings/security');
+        const json = res.data;
         if (json.data) setSettings(prev => ({ ...prev, ...json.data }));
       } catch (e) {
         toast.error('Failed to sync security artifacts');
@@ -58,12 +59,8 @@ export default function GlobalSecuritySettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/v1/admin/settings/security', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-      if (res.ok) {
+      const res = await api.post('/admin/settings/security', settings);
+      if (res.status >= 200 && res.status < 300) {
         toast.success('Security manifest synchronized successfully');
       } else {
         toast.error('Failed to commit security configuration');

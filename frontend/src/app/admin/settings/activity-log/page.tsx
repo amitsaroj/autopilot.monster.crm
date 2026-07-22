@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -33,8 +34,8 @@ export default function WorkspaceActivityLogPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/logs/audit');
-      const json = await res.json();
+      const res = await api.get('/logs/audit');
+      const json = res.data;
       if (Array.isArray(json)) setLogs(json);
       else if (json.data) setLogs(json.data);
     } catch (e) {

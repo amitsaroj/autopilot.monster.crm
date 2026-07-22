@@ -1,11 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuditLog } from '../../database/entities/audit-log.entity';
 import { OnEvent } from '@nestjs/event-emitter';
+import { AuditLog } from '../../database/entities/audit-log.entity';
+import { EVENT_NAMES } from '../../events/event.constants';
 
 @Injectable()
 export class AuditLogService {
+  private readonly logger = new Logger(AuditLogService.name);
+
   constructor(
     @InjectRepository(AuditLog)
     private readonly logRepo: Repository<AuditLog>,
@@ -16,12 +19,12 @@ export class AuditLogService {
     return this.logRepo.save(log);
   }
 
-  @OnEvent('audit.log', { async: true })
+  @OnEvent(EVENT_NAMES.AUDIT_LOG, { async: true })
   async handleAuditLogEvent(payload: Partial<AuditLog>) {
     try {
       await this.log(payload);
     } catch (error) {
-      console.error('Failed to write audit log event', error);
+      this.logger.error('Failed to write audit log event', error instanceof Error ? error.stack : undefined);
     }
   }
 

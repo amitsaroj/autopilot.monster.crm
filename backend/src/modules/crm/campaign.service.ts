@@ -1,19 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 
 import { AgentService } from './agent.service';
 import { LeadService } from './lead.service';
-import { TwilioService } from '../voice/twilio.service';
+import { VoiceCallService } from '../voice/voice-call.service';
 
 @Injectable()
 export class CampaignService {
   private readonly logger = new Logger(CampaignService.name);
 
   constructor(
-    private twilioService: TwilioService,
+    @Inject(forwardRef(() => VoiceCallService))
+    private readonly voiceCallService: VoiceCallService,
     private leadService: LeadService,
     private agentService: AgentService,
-    private configService: ConfigService,
   ) {}
 
   /**
@@ -26,8 +25,6 @@ export class CampaignService {
     const agent = await this.agentService.findOne(tenantId, agentId);
     if (!agent) throw new Error('Agent not found');
 
-    const appUrl = this.configService.get('APP_URL') || 'https://autopilot.monster';
-
     // Batch process calls (simple loop for now, could be queue-based)
     const results = [];
     for (const leadId of leadIds) {
@@ -35,14 +32,18 @@ export class CampaignService {
         const lead = await this.leadService.findOne(tenantId, leadId);
         if (!lead || !lead.phone) continue;
 
-        // Construct the WSS URL for the Twilio Stream connection
-        // Format: wss://<domain>/voice/stream?tenantId=<id>&agentId=<id>&leadId=<id>
-        const wssUrl = `${appUrl.replace('https', 'wss')}/voice/stream?tenantId=${tenantId}&agentId=${agentId}&leadId=${leadId}`;
+        const wssUrl = this.voiceCallService.buildStreamUrl(tenantId, {
+          agentId,
+          leadId,
+        });
 
-        const callSid = await this.twilioService.initiateOutboundCall(tenantId, lead.phone, wssUrl);
-        results.push({ leadId, status: 'initiated', callSid });
+        const call = await this.voiceCallService.initiateOutbound(tenantId, {
+          to: lead.phone,
+          wssUrl,
+        });
+        results.push({ leadId, status: 'initiated', callSid: call.sid });
 
-        this.logger.log(`Call initiated for lead ${leadId}: ${callSid}`);
+        this.logger.log(`Call initiated for lead ${leadId}: ${call.sid}`);
       } catch (err: any) {
         this.logger.error(`Failed to initiate call for lead ${leadId}`, err);
         results.push({ leadId, status: 'failed', error: err.message });

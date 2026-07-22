@@ -1,11 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import twilio from 'twilio';
 
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
-import { VoiceCall } from '../../database/entities/voice-call.entity';
 
 @Injectable()
 export class TwilioService {
@@ -15,8 +12,6 @@ export class TwilioService {
   constructor(
     private configService: ConfigService,
     private configOrchestrator: ConfigOrchestratorService,
-    @InjectRepository(VoiceCall)
-    private readonly voiceCallRepo: Repository<VoiceCall>,
   ) {}
 
   async getFromNumber(tenantId: string): Promise<string> {
@@ -53,6 +48,19 @@ export class TwilioService {
     return { client, from };
   }
 
+  async sendSms(tenantId: string, to: string, body: string): Promise<string> {
+    this.logger.log(`Sending SMS to ${to} for tenant ${tenantId}`);
+
+    const { client, from } = await this.getClient(tenantId);
+    try {
+      const message = await client.messages.create({ to, from, body });
+      return message.sid;
+    } catch (err) {
+      this.logger.error(`Failed to send SMS to ${to}`, err);
+      throw err;
+    }
+  }
+
   async initiateOutboundCall(tenantId: string, to: string, wssUrl: string) {
     this.logger.log(`Initiating stream call to ${to} for tenant ${tenantId}`);
 
@@ -68,17 +76,6 @@ export class TwilioService {
         from,
         record: true,
       });
-
-      // Persist Call Record
-      const voiceCall = this.voiceCallRepo.create({
-        tenantId,
-        sid: call.sid,
-        from,
-        to,
-        direction: 'OUTBOUND',
-        status: 'INITIATED',
-      });
-      await this.voiceCallRepo.save(voiceCall);
 
       return call.sid;
     } catch (err) {
@@ -137,11 +134,15 @@ export class TwilioService {
     await client.calls(callSid).update({ twiml: twiml.toString() });
   }
 
-  generateRoutingTwiml(routingNumber: string, fallbackWssUrl: string): string {
+  generateRoutingTwiml(
+    routingNumber: string,
+    fallbackWssUrl: string,
+    routingFallbackUrl: string,
+  ): string {
     const twiml = new twilio.twiml.VoiceResponse();
     if (routingNumber) {
       twiml.say({ voice: 'Polly.Amy' }, 'Connecting you to the next available agent.');
-      const dial = twiml.dial({ timeout: 20, action: '/v1/voice/twilio/routing-fallback' });
+      const dial = twiml.dial({ timeout: 20, action: routingFallbackUrl });
       dial.number(routingNumber);
       return twiml.toString();
     }

@@ -8,7 +8,7 @@ import { Response } from 'express';
 @ApiTags('Analytics - Advanced')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
-@Controller('analytics')
+@Controller('analytics/advanced')
 export class AdvancedAnalyticsController {
   constructor(private readonly analyticsService: AdvancedAnalyticsService) {}
 

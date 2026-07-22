@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api/client';
 import {
   ShieldCheck, Search, Filter, RefreshCw, Download,
   AlertTriangle, CheckCircle2, XCircle, Clock, User,
@@ -48,8 +49,8 @@ export default function SystemAuditsPage() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/v1/admin/audit-logs?search=${search}&category=${category}&outcome=${outcome}`);
-      const json = await res.json();
+      const res = await api.get(`/admin/audit-logs?search=${search}&category=${category}&outcome=${outcome}`);
+      const json = res.data;
       if (json.data) setLogs(json.data);
     } catch {
       toast.error('Failed to load audit logs');

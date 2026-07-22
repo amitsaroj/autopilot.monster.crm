@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsObject, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateKnowledgeBaseDto {
   @ApiProperty()
@@ -48,8 +48,13 @@ export class UpdateKnowledgeBaseDto {
   indexMeta?: Record<string, unknown>;
 }
 
-export class UploadKnowledgeBaseDocumentDto {
+export class CreateLegacyKnowledgeBaseDto {
   @ApiProperty()
-  @IsUUID()
-  knowledgeBaseId!: string;
+  @IsString()
+  name!: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  description?: string;
 }

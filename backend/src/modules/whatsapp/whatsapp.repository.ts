@@ -23,4 +23,8 @@ export class WhatsappMessageRepository extends BaseRepository<WhatsAppMessage> {
       order: { createdAt: 'ASC' },
     });
   }
+
+  async updateStatusByMessageSid(messageSid: string, status: string): Promise<void> {
+    await this.repository.update({ messageSid }, { status });
+  }
 }

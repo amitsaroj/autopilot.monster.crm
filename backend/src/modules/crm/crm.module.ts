@@ -32,13 +32,19 @@ import { CustomField } from '../../database/entities/custom-field.entity';
 import { DealHistory } from '../../database/entities/deal-history.entity';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
+import { Conversation } from '../../database/entities/conversation.entity';
+import { Message } from '../../database/entities/message.entity';
 import { UserEntity } from '../auth/entities/user.entity';
 import { DealProduct } from '../../database/entities/deal-product.entity';
 import { ForecastService } from './forecast.service';
 import { QuoteLifecycleService } from './quote-lifecycle.service';
 import { QuotePublicController } from './quote-public.controller';
 import { CrmReportsController } from './controllers/crm-reports.controller';
+import { OmnichannelController } from './omnichannel.controller';
+import { OmnichannelService } from './omnichannel.service';
 import { DealProductService } from './deal-product.service';
+import { DuplicateController } from './controllers/duplicate.controller';
+import { DuplicateDetectionService } from './duplicate-detection.service';
 
 import { ContactService } from './contact.service';
 import { ContactRepository } from './contact.repository';
@@ -77,6 +83,7 @@ import {
   CustomFieldRepository,
 } from './crm-support.repository';
 import { TwilioModule } from '../voice/twilio.module';
+import { VoiceModule } from '../voice/voice.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
 import { EmailModule } from '../../shared/email/email.module';
 
@@ -106,14 +113,25 @@ import { EmailModule } from '../../shared/email/email.module';
       UserEntity,
       VoiceCall,
       WhatsAppMessage,
+      Conversation,
+      Message,
       DealProduct,
     ]),
     forwardRef(() => WhatsappModule),
+    forwardRef(() => VoiceModule),
     TwilioModule,
     EmailModule,
   ],
-  controllers: [CrmController, QuotePublicController, CrmReportsController],
+  controllers: [
+    CrmController,
+    QuotePublicController,
+    CrmReportsController,
+    OmnichannelController,
+    DuplicateController,
+  ],
   providers: [
+    OmnichannelService,
+    DuplicateDetectionService,
     AgentService,
     FlowService,
     LeadService,

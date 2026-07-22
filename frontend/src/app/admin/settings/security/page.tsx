@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
+import api from '@/lib/api/client';
+import {
   Plus, Search, Filter, Layers, 
   Settings, Trash2, Globe, ShieldCheck, 
   RefreshCw, Loader2, CheckCircle2, 
@@ -27,11 +28,9 @@ export default function WorkspaceSecuritySettingsPage() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      // Persistence via generic settings endpoint
-      await fetch('/api/v1/settings/integrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'security_policy', value: settings, group: 'SECURITY' })
+      await api.post('/settings/integrations', {
+        key: 'security_policy',
+        value: settings,
       });
       toast.success('Security artifacts synchronized successfully');
     } catch (e) {

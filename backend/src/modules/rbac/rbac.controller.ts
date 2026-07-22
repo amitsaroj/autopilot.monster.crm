@@ -43,8 +43,12 @@ export class RbacController {
   @Post('roles')
   @ApiOperation({ summary: 'Create a custom role' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async createRole(@TenantId() tenantId: string, @Body() createRoleDto: CreateRoleDto) {
-    return this.rbacService.createRole(tenantId, createRoleDto);
+  async createRole(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() createRoleDto: CreateRoleDto,
+  ) {
+    return this.rbacService.createRole(tenantId, createRoleDto, actor.userId);
   }
 
   @Get('roles')
@@ -64,10 +68,11 @@ export class RbacController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async updateRole(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
     @Body() updateRoleDto: Partial<CreateRoleDto>,
   ) {
-    return this.rbacService.updateRole(tenantId, id, updateRoleDto);
+    return this.rbacService.updateRole(tenantId, id, updateRoleDto, actor.userId);
   }
 
   @Delete('roles/:id')
@@ -92,7 +97,11 @@ export class RbacController {
   @Post('revoke')
   @ApiOperation({ summary: 'Revoke role from user' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async revokeRole(@TenantId() tenantId: string, @Body() dto: RoleAssignmentDto) {
-    return this.rbacService.revokeRole(tenantId, dto.userId, dto.roleId);
+  async revokeRole(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() dto: RoleAssignmentDto,
+  ) {
+    return this.rbacService.revokeRole(tenantId, dto.userId, dto.roleId, actor.userId);
   }
 }

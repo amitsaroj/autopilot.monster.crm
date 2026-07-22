@@ -1,74 +1,70 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { 
-  Plus, Search, Filter, Layers, 
-  Settings, Trash2, Globe, ShieldCheck, 
-  RefreshCw, Loader2, CheckCircle2, 
-  AlertCircle, XCircle, ArrowRight, Activity, 
-  Server, Cpu, Layout, ExternalLink, Package,
-  Zap, Download, Star, Users, Link as LinkIcon,
-  Shield, History, User, Clock, Terminal,
-  Database, AlertTriangle, FilterX, HelpCircle,
-  Eye, CornerDownRight, SquareAsterisk,
-  DollarSign, Briefcase, TrendingUp, BarChart3,
-  MousePointer2, MessageSquare, Phone,
-  Mail, Users2, Rocket, Workflow, Target,
-  FileText, Coins, Award, Building2
+import { useCallback, useEffect } from 'react';
+import {
+  Plus, Search, Filter,
+  RefreshCw, Loader2,
+  Eye, Clock,
+  DollarSign, Briefcase, TrendingUp,
+  Workflow, Target,
+  Coins, Award
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ListPagination } from '@/components/ui/ListPagination';
+import { usePaginatedCrmList } from '@/hooks/usePaginatedCrmList';
+import { dealService } from '@/services/deal.service';
 
 interface Deal {
   id: string;
   name: string;
   value: number;
-  stage: string;
+  stage?: string;
+  stageId?: string;
   probability: number;
-  expectedCloseDate: string;
-  contact?: { name: string };
+  expectedCloseDate?: string;
+  contact?: { name: string; firstName?: string; lastName?: string };
   company?: { name: string };
+  status?: string;
   createdAt: string;
 }
 
 export default function AdministrativeDealIntelligencePage() {
-  const [deals, setDeals] = useState<Deal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const fetchDeals = useCallback(
+    (params: Parameters<typeof dealService.getDeals>[0]) => dealService.getDeals(params),
+    [],
+  );
 
-  const fetchDeals = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch('/api/v1/crm/deals');
-      const json = await res.json();
-      if (json.data) setDeals(json.data);
-    } catch (e) {
-      toast.error('Failed to synchronize deal intelligence artifacts');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    items: deals,
+    meta,
+    page,
+    setPage,
+    search,
+    setSearch,
+    loading,
+    error,
+    reload,
+  } = usePaginatedCrmList<Deal>(fetchDeals);
 
   useEffect(() => {
-    fetchDeals();
-  }, []);
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
-  const getStageBadge = (stage: string) => {
-    const s = stage.toLowerCase();
+  const getStageBadge = (stage?: string) => {
+    const s = (stage ?? '').toLowerCase();
     if (s.includes('closed')) return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
     if (s.includes('negotiation')) return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
     if (s.includes('discovery')) return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
     return 'bg-white/5 text-gray-500 border-white/10';
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
-      </div>
-    );
-  }
-
   const totalValue = deals.reduce((acc, d) => acc + (d.value || 0), 0);
+  const getStageLabel = (deal: Deal) => deal.stage ?? deal.status ?? 'UNRANKED';
+  const getContactLabel = (deal: Deal) =>
+    deal.contact?.name ??
+    ([deal.contact?.firstName, deal.contact?.lastName].filter(Boolean).join(' ') || 'Identity Unknown');
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
@@ -86,7 +82,7 @@ export default function AdministrativeDealIntelligencePage() {
            <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Manage financial artifacts, pipeline forensics & stage-velocity dispatches</p>
         </div>
         <div className="flex items-center gap-4">
-           <button onClick={fetchDeals} className="p-3 bg-white/[0.03] border border-white/5 rounded-xl text-gray-500 hover:text-white transition-all">
+           <button onClick={() => reload()} className="p-3 bg-white/[0.03] border border-white/5 rounded-xl text-gray-500 hover:text-white transition-all">
               <RefreshCw className="w-5 h-5" />
            </button>
            <button className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2 group">
@@ -99,8 +95,8 @@ export default function AdministrativeDealIntelligencePage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
          {[
            { label: 'Pipeline Volume', value: `$${(totalValue / 1000).toFixed(1)}k`, icon: Coins, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-           { label: 'Active Deals', value: deals.length, icon: Briefcase, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-           { label: 'Closing Velocity', value: 'Moderate', icon: Activity, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+           { label: 'Active Deals', value: meta.total, icon: Briefcase, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+           { label: 'Closing Velocity', value: 'Moderate', icon: TrendingUp, color: 'text-amber-500', bg: 'bg-amber-500/10' },
            { label: 'Structural Yield', value: 'OPTIMAL', icon: Target, color: 'text-blue-500', bg: 'bg-blue-500/10' },
          ].map((stat) => (
            <div key={stat.label} className="p-6 rounded-[32px] bg-white/[0.01] border border-white/[0.05] flex items-center gap-6 group hover:bg-white/[0.02] transition-all relative overflow-hidden">
@@ -139,6 +135,23 @@ export default function AdministrativeDealIntelligencePage() {
       </div>
 
       {/* Deal Feed */}
+      {loading ? (
+        <div className="flex h-[40vh] items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        </div>
+      ) : error ? (
+        <div className="py-20 text-center">
+          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{error}</p>
+          <button
+            type="button"
+            onClick={() => reload()}
+            className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+      <div className="space-y-8">
       <div className="p-10 rounded-[60px] bg-white/[0.01] border border-white/[0.05] relative overflow-hidden shadow-2xl">
          <div className="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500/5 rounded-full blur-[100px]" />
          
@@ -172,8 +185,8 @@ export default function AdministrativeDealIntelligencePage() {
                           </div>
                        </td>
                        <td className="py-8 px-4">
-                          <span className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${getStageBadge(deal.stage)}`}>
-                             {deal.stage || 'UNRANKED'}
+                          <span className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${getStageBadge(getStageLabel(deal))}`}>
+                             {getStageLabel(deal)}
                           </span>
                        </td>
                        <td className="py-8 px-4">
@@ -186,12 +199,12 @@ export default function AdministrativeDealIntelligencePage() {
                        </td>
                        <td className="py-8 px-4">
                           <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest flex items-center gap-2 leading-none">
-                             <Clock className="w-4 h-4 opacity-40 shrink-0" /> {new Date(deal.expectedCloseDate).toLocaleDateString()}
+                             <Clock className="w-4 h-4 opacity-40 shrink-0" /> {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : '—'}
                           </span>
                        </td>
                        <td className="py-8 px-4">
                           <div className="space-y-1.5">
-                             <p className="text-[10px] text-white font-black uppercase tracking-widest leading-none">{deal.contact?.name || 'Identity Unknown'}</p>
+                             <p className="text-[10px] text-white font-black uppercase tracking-widest leading-none">{getContactLabel(deal)}</p>
                              <p className="text-[10px] text-gray-700 font-medium uppercase tracking-tighter italic opacity-60">{deal.company?.name || 'Company Anonymous'}</p>
                           </div>
                        </td>
@@ -221,6 +234,9 @@ export default function AdministrativeDealIntelligencePage() {
             )}
          </div>
       </div>
+      <ListPagination meta={meta} page={page} onPageChange={setPage} />
+      </div>
+      )}
 
       {/* operational Persistence Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
