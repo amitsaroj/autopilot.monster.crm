@@ -2,9 +2,17 @@ import Link from 'next/link';
 
 const socialLinks = [
   { label: 'AutopilotMonster on X', href: 'https://twitter.com/autopilotcrm', abbr: 'X' },
-  { label: 'AutopilotMonster on LinkedIn', href: 'https://www.linkedin.com/company/autopilotmonster', abbr: 'In' },
+  {
+    label: 'AutopilotMonster on LinkedIn',
+    href: 'https://www.linkedin.com/company/autopilotmonster',
+    abbr: 'In',
+  },
   { label: 'AutopilotMonster on GitHub', href: 'https://github.com/autopilotmonster', abbr: 'GH' },
-  { label: 'AutopilotMonster on YouTube', href: 'https://www.youtube.com/@autopilotmonster', abbr: 'YT' },
+  {
+    label: 'AutopilotMonster on YouTube',
+    href: 'https://www.youtube.com/@autopilotmonster',
+    abbr: 'YT',
+  },
 ];
 
 const footerSections = [
@@ -64,7 +72,10 @@ export default function MarketingFooter() {
                 <span className="text-white font-black text-sm">A</span>
               </div>
               <span className="text-gray-900 dark:text-white font-bold text-lg">
-                Autopilot<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400">Monster</span>
+                Autopilot
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400">
+                  Monster
+                </span>
               </span>
             </Link>
             <p className="text-sm text-gray-500 dark:text-gray-500 leading-relaxed max-w-xs">
@@ -113,7 +124,10 @@ export default function MarketingFooter() {
           </p>
           <div className="flex items-center gap-6">
             <span className="text-xs text-gray-400 dark:text-gray-600 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" aria-hidden="true" />{' '}
+              <span
+                className="w-2 h-2 rounded-full bg-green-500 animate-pulse"
+                aria-hidden="true"
+              />{' '}
               All systems operational
             </span>
           </div>

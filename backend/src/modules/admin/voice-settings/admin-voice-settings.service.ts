@@ -13,8 +13,10 @@ export class AdminVoiceSettingsService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'VOICE' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       elevenLabsKey: config['elevenlabs_key'] || '',
       twilioVoiceSid: config['twilio_voice_sid'] || '',

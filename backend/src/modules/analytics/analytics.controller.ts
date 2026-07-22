@@ -1,6 +1,9 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Response } from 'express';
+
 import { AnalyticsService } from './analytics.service';
+import { AdvancedAnalyticsService } from './advanced-analytics.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 
@@ -11,7 +14,10 @@ import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorat
 @PlanFeature('analytics')
 @Controller('analytics')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(
+    private readonly analyticsService: AnalyticsService,
+    private readonly advancedAnalyticsService: AdvancedAnalyticsService,
+  ) {}
 
   @Get('overview')
   @ApiOperation({ summary: 'Dashboard KPI summary' })
@@ -94,4 +100,36 @@ export class AnalyticsController {
     return { status: 200, message: 'Metrics retrieved', error: false, data };
   }
 
+  @Get('roi')
+  @ApiOperation({ summary: 'Campaign ROI analytics' })
+  async getRoi(@TenantId() tenantId: string) {
+    const data = await this.advancedAnalyticsService.getRoiReport(tenantId);
+    return { status: 200, message: 'ROI analytics retrieved', error: false, data };
+  }
+
+  @Get('ai-vs-human')
+  @ApiOperation({ summary: 'AI vs human agent performance comparison' })
+  async getAiVsHuman(@TenantId() tenantId: string) {
+    const data = await this.advancedAnalyticsService.getAiVsHumanReport(tenantId);
+    return { status: 200, message: 'AI vs human analytics retrieved', error: false, data };
+  }
+
+  @Get('export-pdf')
+  @ApiOperation({ summary: 'Export analytics report as PDF' })
+  async exportPdf(
+    @TenantId() tenantId: string,
+    @Query('reportType') reportType: string,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.advancedAnalyticsService.exportReportPdf(
+      tenantId,
+      reportType ?? 'overview',
+    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="report_${reportType ?? 'overview'}_${Date.now()}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
+  }
 }

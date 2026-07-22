@@ -1,11 +1,12 @@
-import { Processor, WorkerHost, InjectQueue } from '@nestjs/bullmq';
+import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
-import { Job, Queue } from 'bullmq';
+import { Job, Queue } from 'bull';
 
+import { JOB_NAMES, QUEUE_NAMES } from '../../queue/queue.constants';
 import { WorkflowRepository } from './workflow.repository';
 import { WorkflowExecutorService, WorkflowStepResult } from './workflow-executor.service';
 
-interface WorkflowJobData {
+export interface WorkflowJobData {
   workflowId: string;
   tenantId: string;
   eventName: string;
@@ -14,19 +15,18 @@ interface WorkflowJobData {
   startStepIndex?: number;
 }
 
-@Processor('workflows')
-export class WorkflowProcessor extends WorkerHost {
+@Processor(QUEUE_NAMES.WORKFLOW)
+export class WorkflowProcessor {
   private readonly logger = new Logger(WorkflowProcessor.name);
 
   constructor(
-    @InjectQueue('workflows') private readonly workflowQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.WORKFLOW) private readonly workflowQueue: Queue,
     private readonly workflowRepo: WorkflowRepository,
     private readonly executor: WorkflowExecutorService,
-  ) {
-    super();
-  }
+  ) {}
 
-  async process(job: Job<WorkflowJobData, { status: string }>): Promise<{ status: string }> {
+  @Process(JOB_NAMES.EXECUTE_WORKFLOW)
+  async handleExecuteWorkflow(job: Job<WorkflowJobData>): Promise<{ status: string }> {
     const { workflowId, tenantId, eventName, payload, executionId, startStepIndex = 0 } = job.data;
     this.logger.log(`Executing workflow job ${job.id} (${workflowId}) for event: ${eventName}`);
 
@@ -93,7 +93,7 @@ export class WorkflowProcessor extends WorkerHost {
           }
 
           await this.workflowQueue.add(
-            'execute-workflow',
+            JOB_NAMES.EXECUTE_WORKFLOW,
             {
               workflowId,
               tenantId,

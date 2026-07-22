@@ -21,6 +21,12 @@ export interface Subscription {
   stripeCustomerId?: string;
 }
 
+export interface BillingRecovery {
+  status: string;
+  canRetryPayment: boolean;
+  hasPaymentMethod: boolean;
+}
+
 export interface Invoice {
   id: string;
   number: string;
@@ -49,6 +55,8 @@ export const billingService = {
   createCheckout: (planId: string, billingCycle: 'MONTHLY' | 'ANNUAL' = 'MONTHLY') =>
     api.post<{ url: string }>('/monetization/upgrade', { planId, billingCycle }),
   getPortal: () => api.post<{ url: string }>('/monetization/portal'),
+  getRecovery: () => api.get<{ data: BillingRecovery }>('/billing/subscription/recovery'),
+  retryPayment: () => api.post<{ data: { url: string; status: string } }>('/billing/subscription/retry-payment'),
   downgrade: (planId: string) => api.post('/billing/subscription/downgrade', { planId }),
   cancel: (atPeriodEnd = true) => api.post('/billing/subscription/cancel', { atPeriodEnd }),
   reactivate: () => api.post('/billing/subscription/reactivate'),

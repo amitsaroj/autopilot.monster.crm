@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, In, Repository } from 'typeorm';
 
 import { DealRepository } from './deal.repository';
 import { Deal, DealStatus } from '../../database/entities/deal.entity';
 import { PipelineStage } from '../../database/entities/pipeline-stage.entity';
+import { UserEntity } from '../auth/entities/user.entity';
 import { PipelineService } from './pipeline.service';
 import { EVENT_NAMES } from '../../events/event.constants';
+import { CrmListQueryDto } from './dto/crm.dto';
+import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
+import { toPaginatedResult } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class DealService {
@@ -17,6 +21,8 @@ export class DealService {
     private readonly eventEmitter: EventEmitter2,
     @InjectRepository(PipelineStage)
     private readonly stageRepository: Repository<PipelineStage>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
   ) {}
 
   async findAll(tenantId: string, pipelineId?: string): Promise<Deal[]> {
@@ -32,6 +38,17 @@ export class DealService {
     });
   }
 
+  async findPaginated(tenantId: string, query: CrmListQueryDto): Promise<IPaginatedResult<Deal>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const [data, total] = await this.repository.findFiltered(tenantId, {
+      ...query,
+      page,
+      limit,
+    });
+    return toPaginatedResult(data, total, page, limit);
+  }
+
   async findOne(tenantId: string, id: string): Promise<Deal> {
     const deal = await this.repository.findOne(tenantId, {
       where: { id },
@@ -43,18 +60,22 @@ export class DealService {
     return deal;
   }
 
-  async create(tenantId: string, data: Partial<Deal>): Promise<Deal> {
+  async create(tenantId: string, data: Partial<Deal>, actorId?: string): Promise<Deal> {
     const deal = await this.repository.create(tenantId, data);
-    this.eventEmitter.emit(EVENT_NAMES.DEAL_CREATED, { deal, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.DEAL_CREATED, { deal, tenantId, actorId });
     return deal;
   }
 
-  async update(tenantId: string, id: string, data: Partial<Deal>): Promise<Deal> {
-    return this.repository.updateWithTenant(tenantId, id, data);
+  async update(tenantId: string, id: string, data: Partial<Deal>, actorId?: string): Promise<Deal> {
+    const deal = await this.repository.updateWithTenant(tenantId, id, data);
+    this.eventEmitter.emit(EVENT_NAMES.DEAL_UPDATED, { deal, tenantId, actorId });
+    return deal;
   }
 
-  async remove(tenantId: string, id: string): Promise<void> {
+  async remove(tenantId: string, id: string, actorId?: string): Promise<void> {
+    await this.findOne(tenantId, id);
     await this.repository.delete(tenantId, id);
+    this.eventEmitter.emit(EVENT_NAMES.DEAL_DELETED, { tenantId, deal: { id }, actorId });
   }
 
   async getBoard(tenantId: string, pipelineId?: string) {
@@ -70,12 +91,27 @@ export class DealService {
     }
 
     const deals = await this.findAll(tenantId, pipeline.id);
+    const ownerIds = [
+      ...new Set(
+        deals.map((deal) => deal.ownerId).filter((ownerId): ownerId is string => Boolean(ownerId)),
+      ),
+    ];
+    const owners =
+      ownerIds.length > 0
+        ? await this.userRepository.find({ where: { tenantId, id: In(ownerIds) } })
+        : [];
+    const ownerMap = new Map(owners.map((owner) => [owner.id, owner.fullName]));
 
     return {
       pipeline,
       stages: pipeline.stages.map((stage) => ({
         ...stage,
-        deals: deals.filter((deal) => deal.stageId === stage.id),
+        deals: deals
+          .filter((deal) => deal.stageId === stage.id)
+          .map((deal) => ({
+            ...deal,
+            ownerName: deal.ownerId ? (ownerMap.get(deal.ownerId) ?? 'Unassigned') : 'Unassigned',
+          })),
       })),
     };
   }
@@ -104,6 +140,7 @@ export class DealService {
       oldStageId,
       newStageId: stageId,
       tenantId,
+      actorId: changedBy,
       changedBy,
       reason,
     });
@@ -125,6 +162,7 @@ export class DealService {
       oldStageId,
       newStageId: deal.stageId,
       tenantId,
+      actorId: changedBy,
       changedBy,
     });
 
@@ -151,6 +189,7 @@ export class DealService {
       oldStageId,
       newStageId: deal.stageId,
       tenantId,
+      actorId: changedBy,
       changedBy,
       reason: lostReason,
     });
@@ -166,7 +205,11 @@ export class DealService {
     });
   }
 
-  async reassignContact(tenantId: string, fromContactId: string, toContactId: string): Promise<void> {
+  async reassignContact(
+    tenantId: string,
+    fromContactId: string,
+    toContactId: string,
+  ): Promise<void> {
     const deals = await this.repository.findAll(tenantId, { where: { contactId: fromContactId } });
     for (const deal of deals) {
       await this.repository.updateWithTenant(tenantId, deal.id, { contactId: toContactId });

@@ -13,16 +13,19 @@ export class AdminSystemSettingsService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'SYSTEM' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     // Defaults if empty
     return {
       platformName: config['platform_name'] || 'Autopilot Monster',
       maintenanceMode: config['maintenance_mode'] || false,
-      allowRegistration: config['allow_registration'] !== undefined ? config['allow_registration'] : true,
+      allowRegistration:
+        config['allow_registration'] !== undefined ? config['allow_registration'] : true,
       contactEmail: config['contact_email'] || 'admin@autopilot.monster',
       logoUrl: config['logo_url'] || '',
-      ...config
+      ...config,
     };
   }
 

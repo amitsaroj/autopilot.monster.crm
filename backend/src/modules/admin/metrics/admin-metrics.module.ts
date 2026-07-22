@@ -9,10 +9,7 @@ import { Invoice } from '../../../database/entities/invoice.entity';
 import { MonetizationModule } from '../../monetization.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Tenant, User, Subscription, Invoice]),
-    MonetizationModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Tenant, User, Subscription, Invoice]), MonetizationModule],
   controllers: [AdminMetricsController],
   providers: [AdminMetricsService],
   exports: [AdminMetricsService],

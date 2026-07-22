@@ -55,11 +55,7 @@ export class WalletService {
     page: number,
     limit: number,
   ): Promise<{ data: WalletTransaction[]; total: number }>;
-  async getTransactions(
-    tenantId: string,
-    page?: number,
-    limit?: number,
-  ): Promise<any> {
+  async getTransactions(tenantId: string, page?: number, limit?: number): Promise<any> {
     const wallet = await this.getOrCreateWallet(tenantId);
 
     if (page !== undefined || limit !== undefined) {

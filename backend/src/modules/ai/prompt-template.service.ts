@@ -10,9 +10,18 @@ export class PromptTemplateService {
     private readonly templateRepo: Repository<PromptTemplate>,
   ) {}
 
-  async create(tenantId: string, dto: Partial<PromptTemplate>): Promise<PromptTemplate> {
-    const template = this.templateRepo.create({ ...dto, tenantId } as any) as unknown as PromptTemplate;
-    return this.templateRepo.save(template) as unknown as Promise<PromptTemplate>;
+  async create(
+    tenantId: string,
+    dto: Pick<PromptTemplate, 'name' | 'template'> &
+      Partial<Pick<PromptTemplate, 'category' | 'description' | 'variables' | 'isDefault'>>,
+  ): Promise<PromptTemplate> {
+    const template = this.templateRepo.create({
+      ...dto,
+      tenantId,
+      category: dto.category ?? 'general',
+      variables: dto.variables ?? [],
+    });
+    return this.templateRepo.save(template);
   }
 
   async findAll(tenantId: string, category?: string): Promise<PromptTemplate[]> {
@@ -36,10 +45,19 @@ export class PromptTemplateService {
     return result;
   }
 
-  async update(tenantId: string, id: string, dto: Partial<PromptTemplate>): Promise<PromptTemplate> {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: Partial<
+      Pick<
+        PromptTemplate,
+        'name' | 'template' | 'category' | 'description' | 'variables' | 'isDefault'
+      >
+    >,
+  ): Promise<PromptTemplate> {
     const t = await this.findOne(tenantId, id);
     Object.assign(t, dto);
-    return this.templateRepo.save(t) as unknown as Promise<PromptTemplate>;
+    return this.templateRepo.save(t);
   }
 
   async remove(tenantId: string, id: string): Promise<void> {

@@ -31,15 +31,11 @@ describe('HTTP E2E — Users (secured)', () => {
   it('GET /users and /users/me return team data', async () => {
     if (!ctx.postgresAvailable) return;
 
-    const listRes = await request(ctx.app.getHttpServer())
-      .get('/api/v1/users')
-      .set(ctx.headers);
+    const listRes = await request(ctx.app.getHttpServer()).get('/api/v1/users').set(ctx.headers);
     expect(listRes.status).toBe(200);
     expect(Array.isArray(extractResponseData(listRes.body))).toBe(true);
 
-    const meRes = await request(ctx.app.getHttpServer())
-      .get('/api/v1/users/me')
-      .set(ctx.headers);
+    const meRes = await request(ctx.app.getHttpServer()).get('/api/v1/users/me').set(ctx.headers);
     expect(meRes.status).toBe(200);
     expect(extractResponseData<{ email: string }>(meRes.body).email).toBeDefined();
   });

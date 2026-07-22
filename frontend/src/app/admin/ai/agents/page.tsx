@@ -1,9 +1,16 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import {
-  Bot, Plus, Search, Play, Pause, Trash2,
-  Settings, Loader2, MessageSquare,
+  Bot,
+  Plus,
+  Search,
+  Play,
+  Pause,
+  Trash2,
+  Settings,
+  Loader2,
+  MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,9 +67,7 @@ export default function AdminAIAgentsPage() {
     }
   };
 
-  const filtered = agents.filter((a) =>
-    a.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = agents.filter((a) => a.name.toLowerCase().includes(search.toLowerCase()));
 
   if (loading) {
     return (
@@ -83,14 +88,39 @@ export default function AdminAIAgentsPage() {
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total Agents', value: agents.length, icon: Bot, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-          { label: 'Active', value: agents.filter((a) => a.isActive).length, icon: Bot, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'Inactive', value: agents.filter((a) => !a.isActive).length, icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+          {
+            label: 'Total Agents',
+            value: agents.length,
+            icon: Bot,
+            color: 'text-purple-400',
+            bg: 'bg-purple-500/10',
+          },
+          {
+            label: 'Active',
+            value: agents.filter((a) => a.isActive).length,
+            icon: Bot,
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-500/10',
+          },
+          {
+            label: 'Inactive',
+            value: agents.filter((a) => !a.isActive).length,
+            icon: MessageSquare,
+            color: 'text-blue-400',
+            bg: 'bg-blue-500/10',
+          },
         ].map((s) => (
-          <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4">
-            <div className={`p-3 rounded-xl ${s.bg}`}><s.icon className={`w-5 h-5 ${s.color}`} /></div>
+          <div
+            key={s.label}
+            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4"
+          >
+            <div className={`p-3 rounded-xl ${s.bg}`}>
+              <s.icon className={`w-5 h-5 ${s.color}`} />
+            </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{s.label}</p>
+              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                {s.label}
+              </p>
               <p className="text-2xl font-black text-white">{s.value}</p>
             </div>
           </div>
@@ -113,7 +143,10 @@ export default function AdminAIAgentsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((agent) => (
-            <div key={agent.id} className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-purple-500/20 transition-all">
+            <div
+              key={agent.id}
+              className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:border-purple-500/20 transition-all"
+            >
               <div className="flex justify-between items-start mb-5">
                 <div className="p-3 rounded-xl bg-purple-500/10">
                   <Bot className="w-6 h-6 text-purple-400" />

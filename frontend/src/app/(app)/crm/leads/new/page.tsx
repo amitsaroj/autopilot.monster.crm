@@ -51,7 +51,10 @@ export default function NewLeadPage() {
   return (
     <div className="space-y-6 animate-fade-in max-w-2xl">
       <div className="flex items-center gap-3">
-        <Link href="/crm/leads" className="p-2 rounded-lg border border-border hover:bg-muted transition-colors">
+        <Link
+          href="/crm/leads"
+          className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
@@ -60,14 +63,19 @@ export default function NewLeadPage() {
         </div>
       </div>
 
-      <form onSubmit={(e) => void handleSubmit(e)} className="rounded-xl border border-border bg-card p-6 space-y-4">
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="rounded-xl border border-border bg-card p-6 space-y-4"
+      >
         <h2 className="text-sm font-semibold flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-[hsl(246,80%,60%)]" />
           Lead Details
         </h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">First Name *</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              First Name *
+            </label>
             <input
               required
               value={form.firstName}
@@ -76,7 +84,9 @@ export default function NewLeadPage() {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Last Name</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              Last Name
+            </label>
             <input
               value={form.lastName}
               onChange={(e) => setForm({ ...form, lastName: e.target.value })}
@@ -105,27 +115,39 @@ export default function NewLeadPage() {
             <label className="text-xs font-medium text-muted-foreground block mb-1">Company</label>
             <input
               value={form.metadata.company_name}
-              onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, company_name: e.target.value } })}
+              onChange={(e) =>
+                setForm({ ...form, metadata: { ...form.metadata, company_name: e.target.value } })
+              }
               className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Job Title</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              Job Title
+            </label>
             <input
               value={form.metadata.job_title}
-              onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, job_title: e.target.value } })}
+              onChange={(e) =>
+                setForm({ ...form, metadata: { ...form.metadata, job_title: e.target.value } })
+              }
               className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Lead Source</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              Lead Source
+            </label>
             <select
               value={form.metadata.source}
-              onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, source: e.target.value } })}
+              onChange={(e) =>
+                setForm({ ...form, metadata: { ...form.metadata, source: e.target.value } })
+              }
               className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
             >
               {['Website', 'LinkedIn', 'Referral', 'Cold Outreach', 'Event', 'Partner'].map((o) => (
-                <option key={o} value={o}>{o}</option>
+                <option key={o} value={o}>
+                  {o}
+                </option>
               ))}
             </select>
           </div>
@@ -137,7 +159,9 @@ export default function NewLeadPage() {
               className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
             >
               {Object.values(LeadStatus).map((s) => (
-                <option key={s} value={s}>{s}</option>
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
           </div>
@@ -146,7 +170,9 @@ export default function NewLeadPage() {
             <textarea
               rows={3}
               value={form.metadata.notes}
-              onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, notes: e.target.value } })}
+              onChange={(e) =>
+                setForm({ ...form, metadata: { ...form.metadata, notes: e.target.value } })
+              }
               className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)] resize-none"
             />
           </div>
@@ -160,7 +186,10 @@ export default function NewLeadPage() {
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Create Lead
           </button>
-          <Link href="/crm/leads" className="px-4 py-2.5 border border-border text-sm rounded-lg hover:bg-muted transition-colors">
+          <Link
+            href="/crm/leads"
+            className="px-4 py-2.5 border border-border text-sm rounded-lg hover:bg-muted transition-colors"
+          >
             Cancel
           </Link>
         </div>

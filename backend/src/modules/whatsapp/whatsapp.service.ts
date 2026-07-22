@@ -1,13 +1,16 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 import { randomUUID } from 'crypto';
 import { Repository } from 'typeorm';
 
 import { WhatsappMessageRepository } from './whatsapp.repository';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
 import { Contact } from '../../database/entities/contact.entity';
+import { EVENT_NAMES } from '../../events/event.constants';
+import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 
 export type WhatsappConversationStatus = 'OPEN' | 'RESOLVED';
 
@@ -23,22 +26,30 @@ export interface WhatsappConversationSummary {
   status: WhatsappConversationStatus;
 }
 
+export interface WhatsappFlowNodeDefinition {
+  type: string;
+  label: string;
+  configSchema: Record<string, string>;
+}
+
+const DEFAULT_SLA_MS = 15 * 60 * 1000;
+
 @Injectable()
 export class WhatsappService {
   private readonly logger = new Logger(WhatsappService.name);
   private readonly verifyToken: string;
-  private readonly apiToken: string;
-  private readonly phoneId: string;
+  private readonly isProduction: boolean;
 
   constructor(
     private configService: ConfigService,
     private readonly messageRepository: WhatsappMessageRepository,
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>,
+    private readonly configOrchestrator: ConfigOrchestratorService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
-    this.verifyToken = this.configService.get('META_WEBHOOK_VERIFY_TOKEN') || 'my_secure_token_123';
-    this.apiToken = this.configService.get('WHATSAPP_TOKEN') || '';
-    this.phoneId = this.configService.get('WHATSAPP_PHONE_ID') || '';
+    this.verifyToken = this.configService.get('META_WEBHOOK_VERIFY_TOKEN') || '';
+    this.isProduction = process.env.NODE_ENV === 'production';
   }
 
   getVerifyToken(): string {
@@ -52,7 +63,17 @@ export class WhatsappService {
       const entry = (payload.entry as Array<Record<string, unknown>> | undefined)?.[0];
       const changes = (entry?.changes as Array<Record<string, unknown>> | undefined)?.[0];
       const value = changes?.value as Record<string, unknown> | undefined;
-      const messages = value?.messages as Array<Record<string, unknown>> | undefined;
+      if (!value) {
+        return;
+      }
+
+      const statuses = value.statuses as Array<Record<string, unknown>> | undefined;
+      if (statuses?.length) {
+        await this.processDeliveryStatuses(statuses);
+        return;
+      }
+
+      const messages = value.messages as Array<Record<string, unknown>> | undefined;
       const message = messages?.[0];
 
       if (!message) {
@@ -70,23 +91,59 @@ export class WhatsappService {
       await this.messageRepository.create(tenantId, {
         messageSid,
         from: senderPhone,
-        to: String((value?.metadata as { display_phone_number?: string } | undefined)?.display_phone_number ?? ''),
+        to: String(
+          (value?.metadata as { display_phone_number?: string } | undefined)
+            ?.display_phone_number ?? '',
+        ),
         body: messageText,
         direction: 'INBOUND',
         status: 'DELIVERED',
         mediaUrls,
+      });
+
+      const contact = senderPhone ? await this.findContactByPhone(tenantId, senderPhone) : null;
+
+      this.eventEmitter.emit(EVENT_NAMES.MESSAGE_RECEIVED, {
+        tenantId,
+        channel: 'whatsapp',
+        phone: senderPhone,
+        body: messageText,
+        messageSid,
+        contactId: contact?.id,
       });
     } catch (err) {
       this.logger.error('Failed to parse Meta webhook payload', err);
     }
   }
 
-  async sendTextMessage(tenantId: string, to: string, text: string, wabaId?: string): Promise<WhatsAppMessage> {
-    const phoneId = wabaId || this.phoneId;
+  private async processDeliveryStatuses(statuses: Array<Record<string, unknown>>): Promise<void> {
+    for (const statusEntry of statuses) {
+      const messageSid = String(statusEntry.id ?? '');
+      const status = String(statusEntry.status ?? '').toUpperCase();
+      if (!messageSid || !status) {
+        continue;
+      }
+      await this.messageRepository.updateStatusByMessageSid(messageSid, status);
+    }
+  }
 
-    if (this.apiToken && phoneId) {
+  async sendTextMessage(
+    tenantId: string,
+    to: string,
+    text: string,
+    wabaId?: string,
+  ): Promise<WhatsAppMessage> {
+    const credentials = await this.getTenantCredentials(tenantId, wabaId);
+
+    if (!credentials.accessToken || !credentials.phoneNumberId) {
+      throw new BadRequestException(
+        `WhatsApp credentials are not fully configured for tenant ${tenantId}`,
+      );
+    }
+
+    try {
       await axios.post(
-        `https://graph.facebook.com/v19.0/${phoneId}/messages`,
+        `https://graph.facebook.com/v19.0/${credentials.phoneNumberId}/messages`,
         {
           messaging_product: 'whatsapp',
           to,
@@ -95,20 +152,81 @@ export class WhatsappService {
         },
         {
           headers: {
-            Authorization: `Bearer ${this.apiToken}`,
+            Authorization: `Bearer ${credentials.accessToken}`,
             'Content-Type': 'application/json',
           },
         },
       );
-    } else {
-      this.logger.warn(`WhatsApp credentials missing for tenant ${tenantId}; storing outbound message only`);
+    } catch (error) {
+      const detail = isAxiosError(error)
+        ? String(error.response?.data ?? error.message)
+        : error instanceof Error
+          ? error.message
+          : 'Meta API request failed';
+      this.logger.error(`WhatsApp send failed for tenant ${tenantId}: ${detail}`);
+      throw new BadRequestException(`WhatsApp send failed: ${detail}`);
     }
 
     return this.messageRepository.create(tenantId, {
       messageSid: `local_${randomUUID()}`,
-      from: phoneId || 'system',
+      from: credentials.phoneNumberId,
       to,
       body: text,
+      direction: 'OUTBOUND',
+      status: 'SENT',
+    });
+  }
+
+  async sendTemplateMessage(
+    tenantId: string,
+    to: string,
+    templateName: string,
+    language: string,
+    components: unknown[] = [],
+    wabaId?: string,
+  ): Promise<WhatsAppMessage> {
+    const credentials = await this.getTenantCredentials(tenantId, wabaId);
+    if (!credentials.accessToken || !credentials.phoneNumberId) {
+      throw new BadRequestException(
+        `WhatsApp credentials are not fully configured for tenant ${tenantId}`,
+      );
+    }
+
+    try {
+      await axios.post(
+        `https://graph.facebook.com/v19.0/${credentials.phoneNumberId}/messages`,
+        {
+          messaging_product: 'whatsapp',
+          to,
+          type: 'template',
+          template: {
+            name: templateName,
+            language: { code: language },
+            components,
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    } catch (error) {
+      const detail = isAxiosError(error)
+        ? String(error.response?.data ?? error.message)
+        : error instanceof Error
+          ? error.message
+          : 'Meta API request failed';
+      this.logger.error(`WhatsApp template send failed for tenant ${tenantId}: ${detail}`);
+      throw new BadRequestException(`WhatsApp template send failed: ${detail}`);
+    }
+
+    return this.messageRepository.create(tenantId, {
+      messageSid: `local_${randomUUID()}`,
+      from: credentials.phoneNumberId,
+      to,
+      body: `[Template: ${templateName}]`,
       direction: 'OUTBOUND',
       status: 'SENT',
     });
@@ -122,7 +240,10 @@ export class WhatsappService {
 
   async listConversations(tenantId: string): Promise<WhatsappConversationSummary[]> {
     const messages = await this.listMessages(tenantId);
-    const conversations = new Map<string, WhatsappConversationSummary & { inboundSinceReply: number }>();
+    const conversations = new Map<
+      string,
+      WhatsappConversationSummary & { inboundSinceReply: number }
+    >();
     const contacts = await this.contactRepository.find({ where: { tenantId } });
     const contactByPhone = new Map<string, Contact>();
 
@@ -179,7 +300,11 @@ export class WhatsappService {
     return this.messageRepository.findConversation(tenantId, phone);
   }
 
-  async assignConversation(tenantId: string, phone: string, assigneeId: string): Promise<WhatsappConversationSummary> {
+  async assignConversation(
+    tenantId: string,
+    phone: string,
+    assigneeId: string,
+  ): Promise<WhatsappConversationSummary> {
     const contact = await this.findOrCreateContactByPhone(tenantId, phone);
     contact.ownerId = assigneeId;
     contact.customFields = {
@@ -275,20 +400,104 @@ export class WhatsappService {
     );
   }
 
-  async calculateInboxSLA(tenantId: string): Promise<{ averageResponseTimeMs: number; breached: number }> {
-    this.logger.log(`[STUB] Calculating shared inbox SLA for tenant ${tenantId}`);
-    return {
-      averageResponseTimeMs: 120000, // 2 minutes
-      breached: 5
-    };
+  async calculateInboxSLA(
+    tenantId: string,
+  ): Promise<{ averageResponseTimeMs: number; breached: number }> {
+    const slaThresholdMs = Number(this.configService.get('WHATSAPP_SLA_MS')) || DEFAULT_SLA_MS;
+    const messages = await this.messageRepository.findAll(tenantId, {
+      order: { createdAt: 'ASC' },
+    });
+
+    const responseTimesMs: number[] = [];
+    const lastInboundByPhone = new Map<string, Date>();
+
+    for (const message of messages) {
+      const phone = message.direction === 'INBOUND' ? message.from : message.to;
+
+      if (message.direction === 'INBOUND') {
+        lastInboundByPhone.set(phone, message.createdAt);
+        continue;
+      }
+
+      const inboundAt = lastInboundByPhone.get(phone);
+      if (!inboundAt) {
+        continue;
+      }
+
+      const responseMs = message.createdAt.getTime() - inboundAt.getTime();
+      if (responseMs >= 0) {
+        responseTimesMs.push(responseMs);
+        lastInboundByPhone.delete(phone);
+      }
+    }
+
+    const breached = responseTimesMs.filter((ms) => ms > slaThresholdMs).length;
+    const averageResponseTimeMs =
+      responseTimesMs.length > 0
+        ? Math.round(responseTimesMs.reduce((sum, ms) => sum + ms, 0) / responseTimesMs.length)
+        : 0;
+
+    return { averageResponseTimeMs, breached };
   }
 
-  async getFlowBuilderNodes(tenantId: string): Promise<any[]> {
-    this.logger.log(`[STUB] Fetching flow builder nodes for tenant ${tenantId}`);
+  getFlowBuilderNodes(_tenantId: string): WhatsappFlowNodeDefinition[] {
     return [
-      { id: 'node_1', type: 'TRIGGER_KEYWORD', config: { keyword: 'START' } },
-      { id: 'node_2', type: 'SEND_TEMPLATE', config: { templateId: 'welcome_message' } },
-      { id: 'node_3', type: 'AWAIT_RESPONSE', config: { timeoutMinutes: 10 } }
+      { type: 'TRIGGER_KEYWORD', label: 'Keyword Trigger', configSchema: { keyword: 'string' } },
+      { type: 'SEND_MESSAGE', label: 'Send Message', configSchema: { text: 'string' } },
+      { type: 'SEND_TEMPLATE', label: 'Send Template', configSchema: { templateId: 'uuid' } },
+      {
+        type: 'CONDITION',
+        label: 'Condition Branch',
+        configSchema: { field: 'string', operator: 'string', value: 'string' },
+      },
+      {
+        type: 'AWAIT_RESPONSE',
+        label: 'Await Response',
+        configSchema: { timeoutMinutes: 'number' },
+      },
+      { type: 'ASSIGN_AGENT', label: 'Assign Agent', configSchema: { assigneeId: 'uuid' } },
+      { type: 'RESOLVE', label: 'Resolve Conversation', configSchema: {} },
     ];
+  }
+
+  private async getTenantCredentials(
+    tenantId: string,
+    requestedPhoneNumberId?: string,
+  ): Promise<{ accessToken: string; phoneNumberId: string; businessAccountId: string }> {
+    const accessToken = String(
+      (await this.configOrchestrator.get(tenantId, 'whatsapp_access_token')) ||
+        this.configService.get<string>('WHATSAPP_TOKEN') ||
+        '',
+    ).trim();
+    const configuredPhoneNumberId = String(
+      (await this.configOrchestrator.get(tenantId, 'whatsapp_phone_number_id')) ||
+        this.configService.get<string>('WHATSAPP_PHONE_ID') ||
+        '',
+    ).trim();
+    const businessAccountId = String(
+      (await this.configOrchestrator.get(tenantId, 'whatsapp_business_account_id')) ||
+        (await this.configOrchestrator.get(tenantId, 'whatsapp_business_id')) ||
+        this.configService.get<string>('WHATSAPP_BUSINESS_ACCOUNT_ID') ||
+        '',
+    ).trim();
+
+    if (
+      requestedPhoneNumberId &&
+      configuredPhoneNumberId &&
+      requestedPhoneNumberId !== configuredPhoneNumberId
+    ) {
+      throw new BadRequestException(
+        `Requested WhatsApp phone number is not allowed for tenant ${tenantId}`,
+      );
+    }
+
+    const phoneNumberId = (requestedPhoneNumberId || configuredPhoneNumberId || '').trim();
+    if (this.isProduction && (!accessToken || !phoneNumberId || !businessAccountId)) {
+      this.logger.error(
+        `Missing WhatsApp production credentials for tenant ${tenantId} (token/phone/businessAccount)`,
+      );
+    }
+
+    return { accessToken, phoneNumberId, businessAccountId };
   }
 }

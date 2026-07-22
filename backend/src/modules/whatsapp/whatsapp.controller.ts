@@ -4,13 +4,16 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappTemplateService } from './whatsapp-template.service';
 import { WhatsappBroadcastService } from './whatsapp-broadcast.service';
-import { SendWhatsappDto } from './dto/whatsapp.dto';
+import { SendWhatsappDto, SendWhatsappTemplateDto } from './dto/whatsapp.dto';
 import { CreateWhatsappTemplateDto, UpdateWhatsappTemplateDto } from './dto/whatsapp-template.dto';
 import {
   CreateWhatsappBroadcastDto,
   ScheduleWhatsappBroadcastDto,
 } from './dto/whatsapp-broadcast.dto';
-import { AssignWhatsappConversationDto } from './dto/whatsapp-conversation.dto';
+import {
+  AssignWhatsappConversationDto,
+  SendConversationMessageDto,
+} from './dto/whatsapp-conversation.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
@@ -39,6 +42,20 @@ export class WhatsappController {
     return { status: 201, message: 'Message sent', error: false, data };
   }
 
+  @Post('send-template')
+  @ApiOperation({ summary: 'Send a WhatsApp template message' })
+  async sendTemplateMessage(@TenantId() tenantId: string, @Body() dto: SendWhatsappTemplateDto) {
+    const data = await this.whatsappService.sendTemplateMessage(
+      tenantId,
+      dto.to,
+      dto.templateName,
+      dto.language ?? 'en_US',
+      dto.components ?? [],
+      dto.wabaId,
+    );
+    return { status: 201, message: 'Template message sent', error: false, data };
+  }
+
   @Get('messages')
   @ApiOperation({ summary: 'Get WhatsApp message history' })
   async getMessages(@TenantId() tenantId: string) {
@@ -65,7 +82,7 @@ export class WhatsappController {
   async sendConversationMessage(
     @TenantId() tenantId: string,
     @Param('phone') phone: string,
-    @Body() dto: { message: string; wabaId?: string },
+    @Body() dto: SendConversationMessageDto,
   ) {
     const data = await this.whatsappService.sendTextMessage(
       tenantId,
@@ -189,12 +206,14 @@ export class WhatsappController {
   @Get('inbox/sla')
   @ApiOperation({ summary: 'Get shared inbox SLA metrics' })
   async getInboxSLA(@TenantId() tenantId: string) {
-    return this.whatsappService.calculateInboxSLA(tenantId);
+    const data = await this.whatsappService.calculateInboxSLA(tenantId);
+    return { status: 200, message: 'Inbox SLA retrieved', error: false, data };
   }
 
   @Get('flow-builder/nodes')
   @ApiOperation({ summary: 'Get flow builder node definitions' })
   async getFlowNodes(@TenantId() tenantId: string) {
-    return this.whatsappService.getFlowBuilderNodes(tenantId);
+    const data = this.whatsappService.getFlowBuilderNodes(tenantId);
+    return { status: 200, message: 'Flow builder nodes retrieved', error: false, data };
   }
 }

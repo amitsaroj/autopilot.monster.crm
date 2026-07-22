@@ -4,10 +4,7 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-import {
-  notificationService,
-  NotificationPreferences,
-} from '@/services/notification.service';
+import { notificationService, NotificationPreferences } from '@/services/notification.service';
 
 export function NotificationPreferencesForm() {
   const [prefs, setPrefs] = useState<NotificationPreferences>({

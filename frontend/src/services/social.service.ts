@@ -9,9 +9,9 @@ export enum SocialPlatform {
 
 export const socialService = {
   getPosts: () => api.get('/social/posts'),
-  
+
   schedulePost: (data: any) => api.post('/social/schedule', data),
-  
+
   deletePost: (id: string) => api.delete(`/social/posts/${id}`),
 
   getAnalytics: () => api.get('/social/analytics'),

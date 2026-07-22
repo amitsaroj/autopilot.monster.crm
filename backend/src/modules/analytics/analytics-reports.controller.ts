@@ -1,22 +1,10 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 import { AnalyticsReportService } from './analytics-report.service';
-import {
-  CreateAnalyticsReportDto,
-  UpdateAnalyticsReportDto,
-} from './dto/analytics-report.dto';
+import { CreateAnalyticsReportDto, UpdateAnalyticsReportDto } from './dto/analytics-report.dto';
 
 @ApiTags('Analytics Reports')
 @ResourcePermissions('analytics')

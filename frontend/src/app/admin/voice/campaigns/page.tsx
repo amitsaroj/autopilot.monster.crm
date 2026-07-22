@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Plus, Search, Trash2, Loader2, Volume2, PhoneCall, PlayCircle } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from 'react';
+import { Plus, Search, Trash2, Loader2, Volume2, PhoneCall, PlayCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
-import { voiceCampaignService, VoiceCampaign } from "@/services/voice-campaign.service";
+import { voiceCampaignService, VoiceCampaign } from '@/services/voice-campaign.service';
 
 export default function VoiceCampaignsPage() {
   const [campaigns, setCampaigns] = useState<VoiceCampaign[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -18,7 +18,7 @@ export default function VoiceCampaignsPage() {
       const res = await voiceCampaignService.list();
       setCampaigns(res.data?.data ?? []);
     } catch {
-      toast.error("Failed to load campaigns");
+      toast.error('Failed to load campaigns');
     } finally {
       setLoading(false);
     }
@@ -29,23 +29,23 @@ export default function VoiceCampaignsPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this campaign?")) return;
+    if (!confirm('Delete this campaign?')) return;
     try {
       await voiceCampaignService.remove(id);
-      toast.success("Campaign deleted");
+      toast.success('Campaign deleted');
       void load();
     } catch {
-      toast.error("Delete failed");
+      toast.error('Delete failed');
     }
   };
 
   const handleStart = async (id: string) => {
     try {
       await voiceCampaignService.start(id);
-      toast.success("Campaign started");
+      toast.success('Campaign started');
       void load();
     } catch {
-      toast.error("Failed to start campaign");
+      toast.error('Failed to start campaign');
     }
   };
 
@@ -65,7 +65,9 @@ export default function VoiceCampaignsPage() {
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight text-sans">Campaign Intelligence</h1>
+          <h1 className="text-3xl font-black text-white tracking-tight text-sans">
+            Campaign Intelligence
+          </h1>
           <p className="text-gray-500 text-sm mt-1">Manage voice campaigns</p>
         </div>
       </div>
@@ -108,10 +110,10 @@ export default function VoiceCampaignsPage() {
                 <h3 className="text-xl font-black text-white mb-2">{camp.name}</h3>
                 <span
                   className={cn(
-                    "inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase border",
-                    camp.status === "RUNNING"
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-white/5 text-gray-500 border-white/10",
+                    'inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase border',
+                    camp.status === 'RUNNING'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-white/5 text-gray-500 border-white/10',
                   )}
                 >
                   {camp.status}

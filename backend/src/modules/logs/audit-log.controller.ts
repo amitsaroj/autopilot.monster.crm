@@ -7,7 +7,7 @@ import { Roles, TenantId } from '../../common/decorators';
 @ApiTags('Logs')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
-@Controller('logs')
+@Controller('logs/audit')
 export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}
 
@@ -15,13 +15,25 @@ export class AuditLogController {
   @ApiOperation({ summary: 'Get audit logs' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async getLogs(@TenantId() tenantId: string) {
-    return this.auditLogService.findByTenant(tenantId);
+    const data = await this.auditLogService.findByTenant(tenantId);
+    return {
+      status: 200,
+      message: 'Audit logs retrieved',
+      error: false,
+      data,
+    };
   }
 
   @Get('platform')
   @ApiOperation({ summary: 'Get platform-wide audit logs' })
   @Roles('SUPER_ADMIN')
   async getPlatformLogs() {
-    return this.auditLogService.findAll();
+    const data = await this.auditLogService.findAll();
+    return {
+      status: 200,
+      message: 'Platform audit logs retrieved',
+      error: false,
+      data,
+    };
   }
 }

@@ -50,7 +50,9 @@ export default function WhatsAppTemplatesPage() {
             <span className="text-foreground">Templates</span>
           </div>
           <h1 className="text-2xl font-bold">Message Templates</h1>
-          <p className="text-sm text-muted-foreground mt-1">Meta-approved templates for broadcasts and workflows.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Meta-approved templates for broadcasts and workflows.
+          </p>
         </div>
         <Link
           href="/whatsapp/templates/new"

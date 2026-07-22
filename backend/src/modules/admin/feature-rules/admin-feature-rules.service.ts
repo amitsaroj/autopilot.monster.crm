@@ -13,8 +13,10 @@ export class AdminFeatureRulesService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'FEATURE_RULES' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       enableAiAgents: config['fr_enable_ai'] ?? true,
       enableBulkSms: config['fr_enable_sms'] ?? true,

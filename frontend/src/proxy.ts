@@ -1,19 +1,49 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/health', '/mfa', '/401', '/403'];
+const publicRoutes = [
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/health',
+  '/mfa',
+  '/401',
+  '/403',
+];
 const marketingRoutes = [
-  '/pricing', '/features', '/contact', '/about', '/services', '/product', 
-  '/legal', '/resources', '/company', '/blog', '/careers', '/cookies', 
-  '/docs', '/partners', '/privacy', '/security', '/sla', '/terms', '/demo'
+  '/pricing',
+  '/features',
+  '/contact',
+  '/about',
+  '/services',
+  '/product',
+  '/legal',
+  '/resources',
+  '/company',
+  '/blog',
+  '/careers',
+  '/cookies',
+  '/docs',
+  '/partners',
+  '/privacy',
+  '/security',
+  '/sla',
+  '/terms',
+  '/demo',
 ];
 
 export function proxy(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value;
   const { pathname } = request.nextUrl;
 
-  const isMarketingRoute = pathname === '/' || marketingRoutes.some(route => pathname.startsWith(route));
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route)) || isMarketingRoute || pathname.startsWith('/public/');
+  const isMarketingRoute =
+    pathname === '/' || marketingRoutes.some((route) => pathname.startsWith(route));
+  const isPublicRoute =
+    publicRoutes.some((route) => pathname.startsWith(route)) ||
+    isMarketingRoute ||
+    pathname.startsWith('/public/');
 
   // Protect internal routes
   if (!isPublicRoute && !token) {
@@ -22,7 +52,10 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/mfa');
+  const isAuthRoute =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/mfa');
   // Prevent authenticated users from accessing auth pages
   if (isAuthRoute && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -34,7 +67,7 @@ export function proxy(request: NextRequest) {
       const payloadBase64 = token.split('.')[1];
       const decodedJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
       const payload = JSON.parse(decodedJson);
-      
+
       const roles: string[] = payload.roles || [];
       const isAdminRoute = pathname.startsWith('/admin');
       const isSuperAdminRoute = pathname.startsWith('/superadmin');
@@ -43,7 +76,10 @@ export function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL('/403', request.url));
       }
 
-      if (isAdminRoute && !roles.some(r => ['SUPER_ADMIN', 'TENANT_ADMIN', 'ADMIN'].includes(r))) {
+      if (
+        isAdminRoute &&
+        !roles.some((r) => ['SUPER_ADMIN', 'TENANT_ADMIN', 'ADMIN'].includes(r))
+      ) {
         return NextResponse.redirect(new URL('/403', request.url));
       }
     } catch (e) {

@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { 
-  Building2, 
-  Globe, 
-  Phone, 
-  Briefcase, 
-  Tag, 
-  Clock, 
-  Save, 
+import {
+  Building2,
+  Globe,
+  Phone,
+  Briefcase,
+  Tag,
+  Clock,
+  Save,
   ArrowLeft,
   Loader2,
   Trash2,
@@ -16,7 +16,7 @@ import {
   MapPin,
   TrendingUp,
   Users,
-  ExternalLink
+  ExternalLink,
 } from 'lucide-react';
 import { companyService, Company } from '@/services/company.service';
 import toast from 'react-hot-toast';
@@ -87,22 +87,22 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <div className="mb-8 flex items-center justify-between">
-        <Link 
-          href="/crm/companies" 
+        <Link
+          href="/crm/companies"
           className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Companies
         </Link>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={handleDelete}
             className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition"
             title="Delete Company"
           >
             <Trash2 className="w-5 h-5" />
           </button>
-          <button 
+          <button
             type="submit"
             form="company-form"
             disabled={isSaving}
@@ -124,11 +124,16 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
             <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
               {company?.name}
             </h2>
-            <p className="text-sm text-gray-500 mb-6">{company?.industry || 'Unspecified Industry'}</p>
-            
+            <p className="text-sm text-gray-500 mb-6">
+              {company?.industry || 'Unspecified Industry'}
+            </p>
+
             <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {company?.tags?.map(tag => (
-                <span key={tag} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border">
+              {company?.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border"
+                >
                   {tag}
                 </span>
               ))}
@@ -139,9 +144,13 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
 
             <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-border text-left">
               {company?.website && (
-                <a 
-                  href={company.website.startsWith('http') ? company.website : `https://${company.website}`} 
-                  target="_blank" 
+                <a
+                  href={
+                    company.website.startsWith('http')
+                      ? company.website
+                      : `https://${company.website}`
+                  }
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 hover:text-indigo-600 transition"
                 >
@@ -183,33 +192,43 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Edit Form */}
         <div className="lg:col-span-2">
-          <form id="company-form" onSubmit={handleUpdate} className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden">
+          <form
+            id="company-form"
+            onSubmit={handleUpdate}
+            className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden"
+          >
             <div className="p-8 space-y-8">
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Company Name</label>
+                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  Company Name
+                </label>
                 <input
                   required
                   value={formData.name || ''}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Domain</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Domain
+                  </label>
                   <input
                     value={formData.domain || ''}
-                    onChange={e => setFormData({ ...formData, domain: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                     placeholder="example.com"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Website</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Website
+                  </label>
                   <input
                     value={formData.website || ''}
-                    onChange={e => setFormData({ ...formData, website: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                     placeholder="https://example.com"
                   />
@@ -218,19 +237,23 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Industry</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Industry
+                  </label>
                   <input
                     value={formData.industry || ''}
-                    onChange={e => setFormData({ ...formData, industry: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                     placeholder="e.g. Technology"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Size Range</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Size Range
+                  </label>
                   <select
                     value={formData.sizeRange}
-                    onChange={e => setFormData({ ...formData, sizeRange: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, sizeRange: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
                   >
                     <option value="">Select Size...</option>
@@ -246,18 +269,22 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">City</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    City
+                  </label>
                   <input
                     value={formData.city || ''}
-                    onChange={e => setFormData({ ...formData, city: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Country</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Country
+                  </label>
                   <input
                     value={formData.country || ''}
-                    onChange={e => setFormData({ ...formData, country: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                   />
                 </div>

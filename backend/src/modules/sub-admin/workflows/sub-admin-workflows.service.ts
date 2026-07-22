@@ -5,9 +5,7 @@ import { Flow } from '../../../database/entities/flow.entity';
 
 @Injectable()
 export class SubAdminWorkflowsService {
-  constructor(
-    @InjectRepository(Flow) private readonly workflowRepo: Repository<Flow>,
-  ) {}
+  constructor(@InjectRepository(Flow) private readonly workflowRepo: Repository<Flow>) {}
 
   async findAll(tenantId: string) {
     return this.workflowRepo.find({ where: { tenantId } });

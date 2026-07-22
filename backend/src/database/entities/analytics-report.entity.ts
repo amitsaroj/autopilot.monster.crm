@@ -29,7 +29,12 @@ export class AnalyticsReport extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ name: 'report_type', type: 'varchar', length: 50, default: AnalyticsReportType.OVERVIEW })
+  @Column({
+    name: 'report_type',
+    type: 'varchar',
+    length: 50,
+    default: AnalyticsReportType.OVERVIEW,
+  })
   reportType!: AnalyticsReportType;
 
   @Column({ type: 'jsonb', default: '{}' })

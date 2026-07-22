@@ -11,7 +11,7 @@ import type { IApiResponse } from '../interfaces/api-response.interface';
 export class AllExceptionsFilter implements ExceptionFilter {
   catch(_exception: unknown, host: ArgumentsHost): void {
     console.error('Unhandled Exception:', _exception);
-    
+
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
 

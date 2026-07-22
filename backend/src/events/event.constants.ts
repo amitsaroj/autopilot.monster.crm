@@ -11,11 +11,22 @@ export const EVENT_NAMES = {
   USER_VERIFIED: 'user.verified',
   USER_MFA_ENABLED: 'user.mfa.enabled',
   USER_MFA_DISABLED: 'user.mfa.disabled',
+  USER_INVITED: 'user.invited',
+  USER_UPDATED: 'user.updated',
+
+  // Audit (direct write path)
+  AUDIT_LOG: 'audit.log',
 
   // Tenant
   TENANT_CREATED: 'tenant.created',
   TENANT_UPDATED: 'tenant.updated',
   TENANT_SUSPENDED: 'tenant.suspended',
+
+  // RBAC
+  ROLE_CREATED: 'role.created',
+  ROLE_UPDATED: 'role.updated',
+  ROLE_ASSIGNED: 'role.assigned',
+  ROLE_REVOKED: 'role.revoked',
 
   // Billing
   SUBSCRIPTION_CREATED: 'subscription.created',
@@ -30,8 +41,18 @@ export const EVENT_NAMES = {
   CONTACT_CREATED: 'contact.created',
   CONTACT_UPDATED: 'contact.updated',
   CONTACT_DELETED: 'contact.deleted',
+  CONTACT_MERGED: 'contact.merged',
+  COMPANY_CREATED: 'company.created',
+  COMPANY_UPDATED: 'company.updated',
+  COMPANY_DELETED: 'company.deleted',
+  COMPANY_MERGED: 'company.merged',
   DEAL_CREATED: 'deal.created',
+  DEAL_UPDATED: 'deal.updated',
+  DEAL_DELETED: 'deal.deleted',
   DEAL_STAGE_CHANGED: 'deal.stage.changed',
+  LEAD_CREATED: 'lead.created',
+  LEAD_UPDATED: 'lead.updated',
+  LEAD_DELETED: 'lead.deleted',
 
   // Workflow
   WORKFLOW_STARTED: 'workflow.started',

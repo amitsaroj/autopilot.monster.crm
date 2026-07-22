@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Body, UseGuards, Param, Patch, Delete, Headers, Req, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Param,
+  Patch,
+  Delete,
+  Headers,
+  Req,
+  BadRequestException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard, TenantGuard, RolesGuard } from '../common/guards';
 import { PricingService } from './pricing/pricing.service';
@@ -48,7 +60,10 @@ export class MonetizationController {
   @Post('upgrade')
   @ApiOperation({ summary: 'Upgrade subscription' })
   @UseGuards(JwtAuthGuard, TenantGuard)
-  upgrade(@TenantId() tenantId: string, @Body() dto: { planId: string; billingCycle: 'MONTHLY' | 'ANNUAL' }) {
+  upgrade(
+    @TenantId() tenantId: string,
+    @Body() dto: { planId: string; billingCycle: 'MONTHLY' | 'ANNUAL' },
+  ) {
     return this.billingService.createCheckoutSession(tenantId, dto.planId, dto.billingCycle);
   }
 
@@ -62,10 +77,14 @@ export class MonetizationController {
   @Post('webhook')
   @Public()
   @ApiOperation({ summary: 'Stripe Webhook' })
-  async handleWebhook(@Body() _body: unknown, @Headers('stripe-signature') sig: string, @Req() req: { rawBody: Buffer }) {
+  async handleWebhook(
+    @Body() _body: unknown,
+    @Headers('stripe-signature') sig: string,
+    @Req() req: { rawBody?: Buffer },
+  ) {
     if (!sig) throw new BadRequestException('Missing signature');
-    const rawBody = req.rawBody;
-    return this.billingService.handleWebhook(sig, rawBody);
+    if (!req.rawBody?.length) throw new BadRequestException('Missing request body');
+    return this.billingService.handleWebhook(sig, req.rawBody);
   }
 
   // --- Management (SuperAdmin) ---

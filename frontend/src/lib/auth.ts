@@ -1,9 +1,9 @@
 // ─── Canonical token helpers ─────────────────────────────────────────────────
 // Client-side only (browser cookies).  For Server Components use next/headers.
 
-const COOKIE_ACCESS  = 'access_token';
+const COOKIE_ACCESS = 'access_token';
 const COOKIE_REFRESH = 'refresh_token';
-const COOKIE_TENANT  = 'tenant_id';
+const COOKIE_TENANT = 'tenant_id';
 const COOKIE_MAX_AGE = 86400; // 24 h
 
 function parseCookie(name: string): string | null {
@@ -62,11 +62,10 @@ export function decodeToken(token: string) {
       atob(base64)
         .split('')
         .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .join(''),
     );
     return JSON.parse(jsonPayload);
   } catch (e) {
     return null;
   }
 }
-

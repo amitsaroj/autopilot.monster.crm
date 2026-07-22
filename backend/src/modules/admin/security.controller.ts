@@ -1,5 +1,13 @@
 import {
-  Controller, Get, Post, Delete, Body, Param, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SecurityService } from './security.service';
@@ -17,7 +25,10 @@ export class SecurityController {
   // --- IP Whitelist ---
   @Post('ip-whitelist')
   @ApiOperation({ summary: 'Add IP to whitelist' })
-  async addIp(@TenantId() tenantId: string, @Body() body: { ipAddress: string; description?: string }) {
+  async addIp(
+    @TenantId() tenantId: string,
+    @Body() body: { ipAddress: string; description?: string },
+  ) {
     return this.securityService.addIp(tenantId, body.ipAddress, body.description);
   }
 
@@ -37,8 +48,17 @@ export class SecurityController {
   // --- Consent ---
   @Post('consent')
   @ApiOperation({ summary: 'Record consent' })
-  async recordConsent(@TenantId() tenantId: string, @Body() body: { contactId: string; consentType: string; granted: boolean; source?: string }) {
-    return this.securityService.recordConsent(tenantId, body.contactId, body.consentType, body.granted, body.source);
+  async recordConsent(
+    @TenantId() tenantId: string,
+    @Body() body: { contactId: string; consentType: string; granted: boolean; source?: string },
+  ) {
+    return this.securityService.recordConsent(
+      tenantId,
+      body.contactId,
+      body.consentType,
+      body.granted,
+      body.source,
+    );
   }
 
   @Get('consent/:contactId')
@@ -49,7 +69,11 @@ export class SecurityController {
 
   @Post('consent/:contactId/revoke')
   @ApiOperation({ summary: 'Revoke consent' })
-  async revokeConsent(@TenantId() tenantId: string, @Param('contactId') contactId: string, @Body() body: { consentType: string }) {
+  async revokeConsent(
+    @TenantId() tenantId: string,
+    @Param('contactId') contactId: string,
+    @Body() body: { consentType: string },
+  ) {
     return this.securityService.revokeConsent(tenantId, contactId, body.consentType);
   }
 

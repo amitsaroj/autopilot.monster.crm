@@ -5,9 +5,13 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import jsonwebtoken from 'jsonwebtoken';
 
 import type { JwtPayload } from '../interfaces/jwt-payload.interface';
-import { assertAccessJwtConfigured, resolveJwtVerifyKey } from '../../../common/utils/jwt-signing.util';
+import {
+  assertAccessJwtConfigured,
+  resolveJwtVerifyKey,
+} from '../../../common/utils/jwt-signing.util';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -20,7 +24,24 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: resolveJwtVerifyKey(jwt, 'access'),
+      secretOrKeyProvider: (_request, rawJwtToken, done) => {
+        try {
+          const tokenHeader = jsonwebtoken.decode(rawJwtToken, { complete: true }) as {
+            header?: { kid?: string };
+          } | null;
+          const tokenKid = tokenHeader?.header?.kid;
+          const usePreviousKey =
+            jwt.algorithm === 'RS256' &&
+            Boolean(jwt.previousPublicKey) &&
+            Boolean(jwt.previousKeyId) &&
+            tokenKid === jwt.previousKeyId;
+
+          const key = usePreviousKey ? jwt.previousPublicKey : resolveJwtVerifyKey(jwt, 'access');
+          done(null, key);
+        } catch {
+          done(new UnauthorizedException('Invalid token header'));
+        }
+      },
       algorithms: [jwt.algorithm],
       issuer: 'autopilot.monster',
       audience: 'autopilot.monster.user',

@@ -26,7 +26,8 @@ export class AdminMetricsService {
       this.tenantRepo.count(),
       this.userRepo.count(),
       this.subscriptionRepo.count({ where: { status: 'ACTIVE' } }),
-      this.invoiceRepo.createQueryBuilder('invoice')
+      this.invoiceRepo
+        .createQueryBuilder('invoice')
         .select('SUM(invoice.total)', 'total')
         .where('invoice.status = :status', { status: 'PAID' })
         .getRawOne(),

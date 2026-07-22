@@ -33,14 +33,22 @@ export default function PipelineDetailPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Link href="/crm/pipelines" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        href="/crm/pipelines"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Pipelines
       </Link>
       <h1 className="page-title">{pipeline.name}</h1>
-      <p className="text-sm text-muted-foreground">{pipeline.currency} · {pipeline.isDefault ? 'Default' : 'Custom'}</p>
+      <p className="text-sm text-muted-foreground">
+        {pipeline.currency} · {pipeline.isDefault ? 'Default' : 'Custom'}
+      </p>
       <div className="space-y-2">
         {pipeline.stages.map((stage) => (
-          <div key={stage.id} className="rounded-xl border border-border bg-card p-4 flex justify-between">
+          <div
+            key={stage.id}
+            className="rounded-xl border border-border bg-card p-4 flex justify-between"
+          >
             <span className="font-medium text-sm">{stage.name}</span>
             <span className="text-xs text-muted-foreground">{stage.probability}%</span>
           </div>

@@ -1,25 +1,6 @@
 import api from '../lib/api/client';
 import { parseApiData } from '../lib/api/parse-response';
 
-export interface AnalyticsSummary {
-  totalDeals: number;
-  totalRevenue: number;
-  totalLeads: number;
-  totalContacts: number;
-  winRate: number;
-}
-
-export interface PipelineData {
-  name: string;
-  value: number;
-  amount: number;
-}
-
-export interface LeadFunnel {
-  name: string;
-  count: number;
-}
-
 export interface AnalyticsOverview {
   contacts: number;
   leads: number;
@@ -31,12 +12,15 @@ export interface AnalyticsOverview {
   whatsappMessages: number;
 }
 
-export interface CrmAnalytics {
-  contacts: number;
-  leads: number;
-  deals: number;
-  conversionRate: number;
+export interface PipelineStageStat {
+  stage: string;
+  count: number;
+  value: number;
 }
+
+/** @deprecated Prefer PipelineStageStat */
+export type PipelineStageAnalytics = PipelineStageStat;
+export type PipelineData = PipelineStageStat;
 
 export interface RevenueAnalytics {
   mrr: number;
@@ -44,30 +28,40 @@ export interface RevenueAnalytics {
   wonDealCount: number;
 }
 
-export interface PipelineStageAnalytics {
-  stage: string;
-  count: number;
-  value: number;
-}
-
 export interface TeamMemberAnalytics {
   ownerId: string;
   deals: number;
   won: number;
-  value: number;
   winRate: number;
+  value: number;
 }
 
 export interface VoiceAnalytics {
   totalCalls: number;
   completedCalls: number;
+  inboundCalls?: number;
+  outboundCalls?: number;
+  missedCalls?: number;
   averageDuration: number;
+  totalCost?: number;
+  sentiment?: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
 }
 
 export interface WhatsappAnalytics {
   total: number;
   inbound: number;
   outbound: number;
+}
+
+export interface CrmAnalytics {
+  contacts: number;
+  leads: number;
+  deals: number;
+  conversionRate: number;
 }
 
 export interface AiUsageAnalytics {
@@ -77,20 +71,104 @@ export interface AiUsageAnalytics {
   periodStart: string;
 }
 
-export const analyticsService = {
-  getSummary: () => api.get('/crm/analytics/summary'),
-  getPipeline: () => api.get('/crm/analytics/pipeline'),
-  getLeads: () => api.get('/crm/analytics/leads'),
+export interface AnalyticsSummary {
+  totalContacts?: number;
+  totalLeads?: number;
+  totalDeals?: number;
+  totalRevenue?: number;
+  winRate?: number;
+  revenue?: number;
+}
 
-  getOverview: async () => parseApiData<AnalyticsOverview>(await api.get('/analytics/overview')),
-  getCrm: async () => parseApiData<CrmAnalytics>(await api.get('/analytics/crm')),
-  getRevenue: async () => parseApiData<RevenueAnalytics>(await api.get('/analytics/revenue')),
-  getPipelineStages: async () =>
-    parseApiData<PipelineStageAnalytics[]>(await api.get('/analytics/pipeline')),
-  getTeam: async () => parseApiData<TeamMemberAnalytics[]>(await api.get('/analytics/team')),
-  getVoice: async () => parseApiData<VoiceAnalytics>(await api.get('/analytics/voice')),
-  getWhatsapp: async () => parseApiData<WhatsappAnalytics>(await api.get('/analytics/whatsapp')),
-  getAiUsage: async () => parseApiData<AiUsageAnalytics>(await api.get('/analytics/ai')),
-  getForecast: async (pipelineId?: string) =>
-    parseApiData<Record<string, unknown>>(await api.get('/analytics/forecast', { params: { pipelineId } })),
+export interface LeadFunnel {
+  name?: string;
+  stage: string;
+  count: number;
+  value?: number;
+}
+
+export interface ForecastSummary {
+  totalPipeline: number;
+  totalForecast: number;
+  dealCount: number;
+  onTrackCount: number;
+  atRiskCount: number;
+  currency: string;
+}
+
+export interface RoiReport {
+  totalBudget: number;
+  totalSpent: number;
+  totalRevenue: number;
+  netProfit: number;
+  roiPercentage: number;
+  campaignBreakdown: Array<{
+    id: string;
+    name: string;
+    type: string;
+    budget: number;
+    spent: number;
+    leads: number;
+    qualified: number;
+  }>;
+  generatedAt: string;
+}
+
+export const analyticsService = {
+  getOverview: async () => {
+    const res = await api.get('/analytics/overview');
+    return parseApiData<AnalyticsOverview>(res);
+  },
+  getPipeline: async () => {
+    const res = await api.get('/analytics/pipeline');
+    return parseApiData<PipelineStageStat[]>(res) ?? [];
+  },
+  getPipelineStages: async () => analyticsService.getPipeline(),
+  getRevenue: async () => {
+    const res = await api.get('/analytics/revenue');
+    return parseApiData<RevenueAnalytics>(res);
+  },
+  getTeam: async () => {
+    const res = await api.get('/analytics/team');
+    return parseApiData<TeamMemberAnalytics[]>(res) ?? [];
+  },
+  getVoice: async () => {
+    const res = await api.get('/analytics/voice');
+    return parseApiData<VoiceAnalytics>(res);
+  },
+  getWhatsapp: async () => {
+    const res = await api.get('/analytics/whatsapp');
+    return parseApiData<WhatsappAnalytics>(res);
+  },
+  getCrm: async () => {
+    const res = await api.get('/analytics/crm');
+    return parseApiData<CrmAnalytics>(res);
+  },
+  getAiUsage: async () => {
+    const res = await api.get('/analytics/ai');
+    return parseApiData<AiUsageAnalytics>(res);
+  },
+  getForecast: async (pipelineId?: string) => {
+    const res = await api.get('/analytics/forecast', { params: { pipelineId } });
+    return parseApiData<ForecastSummary>(res);
+  },
+  getRoi: async () => {
+    const res = await api.get('/analytics/roi');
+    return parseApiData<RoiReport>(res);
+  },
+  exportPdf: async (reportType: string) => {
+    const res = await api.get('/analytics/export-pdf', {
+      params: { reportType },
+      responseType: 'blob',
+    });
+    return res.data as Blob;
+  },
+  getSummary: async () => {
+    const res = await api.get('/analytics/overview');
+    return res;
+  },
+  getLeads: async () => {
+    const res = await api.get('/analytics/crm');
+    return res;
+  },
 };

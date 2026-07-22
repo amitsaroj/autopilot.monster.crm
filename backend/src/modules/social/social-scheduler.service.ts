@@ -21,17 +21,18 @@ export class SocialSchedulerService {
     for (const post of pendingPosts) {
       try {
         this.logger.log(`Publishing post ${post.id} to ${post.platform}`);
-        
-        // Dispatch to platform-specific publisher
+
         await this.publishToExternalPlatform(post);
 
         await this.socialService.updatePost(post.tenantId, post.id, {
           status: SocialPostStatus.POSTED,
         });
-        
+
         this.logger.log(`Post ${post.id} successfully published.`);
       } catch (error: any) {
-        this.logger.error(`Failed to fulfill post ${post.id}: ${error?.message || 'Unknown error'}`);
+        this.logger.error(
+          `Failed to fulfill post ${post.id}: ${error?.message || 'Unknown error'}`,
+        );
         await this.socialService.updatePost(post.tenantId, post.id, {
           status: SocialPostStatus.FAILED,
           failReason: error?.message || 'Unknown error',
@@ -50,8 +51,7 @@ export class SocialSchedulerService {
         const pageToken = process.env.FACEBOOK_PAGE_TOKEN;
         const pageId = process.env.FACEBOOK_PAGE_ID;
         if (!pageToken || !pageId) {
-          this.logger.warn(`Facebook/Instagram credentials not configured — skipping publish for post ${post.id}`);
-          return;
+          throw new Error('Facebook/Instagram credentials not configured');
         }
         const res = await fetch(`https://graph.facebook.com/v17.0/${pageId}/feed`, {
           method: 'POST',
@@ -71,13 +71,12 @@ export class SocialSchedulerService {
       case 'TWITTER': {
         const bearerToken = process.env.TWITTER_BEARER_TOKEN;
         if (!bearerToken) {
-          this.logger.warn(`Twitter credentials not configured — skipping publish for post ${post.id}`);
-          return;
+          throw new Error('Twitter credentials not configured');
         }
         const res = await fetch('https://api.twitter.com/2/tweets', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${bearerToken}`,
+            Authorization: `Bearer ${bearerToken}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ text: post.content }),
@@ -93,13 +92,12 @@ export class SocialSchedulerService {
         const accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
         const authorUrn = process.env.LINKEDIN_AUTHOR_URN;
         if (!accessToken || !authorUrn) {
-          this.logger.warn(`LinkedIn credentials not configured — skipping publish for post ${post.id}`);
-          return;
+          throw new Error('LinkedIn credentials not configured');
         }
         const res = await fetch('https://api.linkedin.com/v2/ugcPosts', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
             'X-Restli-Protocol-Version': '2.0.0',
           },
@@ -123,7 +121,7 @@ export class SocialSchedulerService {
       }
 
       default:
-        this.logger.warn(`Unsupported platform: ${platform}`);
+        throw new Error(`Unsupported platform: ${platform}`);
     }
   }
 }

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Phone,
   ArrowRight,
@@ -13,53 +13,56 @@ import {
   TrendingUp,
   CheckCircle2,
   Loader2,
-} from "lucide-react";
-import { toast } from "sonner";
-import { parseApiData } from "@/lib/api/parse-response";
-import { analyticsService } from "@/services/analytics.service";
-import { voicePhoneNumberService, type VoicePhoneNumber } from "@/services/voice-phone-number.service";
-import { voiceCallService, type VoiceCall } from "@/services/voice-call.service";
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { parseApiData } from '@/lib/api/parse-response';
+import { analyticsService } from '@/services/analytics.service';
+import {
+  voicePhoneNumberService,
+  type VoicePhoneNumber,
+} from '@/services/voice-phone-number.service';
+import { voiceCallService, type VoiceCall } from '@/services/voice-call.service';
 
 const VOICE_MODULES = [
   {
-    label: "Phone Numbers",
-    href: "/admin/voice/numbers",
+    label: 'Phone Numbers',
+    href: '/admin/voice/numbers',
     icon: Hash,
-    desc: "Manage voice number inventory",
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10",
+    desc: 'Manage voice number inventory',
+    color: 'text-indigo-400',
+    bg: 'bg-indigo-500/10',
   },
   {
-    label: "Call Recordings",
-    href: "/voice/logs",
+    label: 'Call Recordings',
+    href: '/voice/logs',
     icon: Mic,
-    desc: "Call logs and recordings",
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
+    desc: 'Call logs and recordings',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   {
-    label: "Transcripts",
-    href: "/voice/transcripts",
+    label: 'Transcripts',
+    href: '/voice/transcripts',
     icon: BarChart3,
-    desc: "AI call transcripts",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
+    desc: 'AI call transcripts',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
   },
   {
-    label: "Voice Analytics",
-    href: "/analytics/voice",
+    label: 'Voice Analytics',
+    href: '/analytics/voice',
     icon: TrendingUp,
-    desc: "Call volume and performance",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
+    desc: 'Call volume and performance',
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10',
   },
   {
-    label: "Voice Settings",
-    href: "/voice/settings",
+    label: 'Voice Settings',
+    href: '/voice/settings',
     icon: Settings,
-    desc: "IVR and routing config",
-    color: "text-gray-400",
-    bg: "bg-gray-500/10",
+    desc: 'IVR and routing config',
+    color: 'text-gray-400',
+    bg: 'bg-gray-500/10',
   },
 ];
 
@@ -94,7 +97,7 @@ export default function AdminVoicePage() {
           setVoiceStats(analytics);
         }
       } catch {
-        toast.error("Failed to load voice dashboard");
+        toast.error('Failed to load voice dashboard');
       } finally {
         setLoading(false);
       }
@@ -102,7 +105,7 @@ export default function AdminVoicePage() {
     void load();
   }, []);
 
-  const activeNumbers = numbers.filter((n) => n.status === "ACTIVE").length;
+  const activeNumbers = numbers.filter((n) => n.status === 'ACTIVE').length;
   const connectRate =
     voiceStats.totalCalls > 0
       ? Math.round((voiceStats.completedCalls / voiceStats.totalCalls) * 100)
@@ -110,32 +113,32 @@ export default function AdminVoicePage() {
 
   const liveStats = [
     {
-      label: "Numbers Active",
+      label: 'Numbers Active',
       value: String(activeNumbers),
       icon: Hash,
-      color: "text-indigo-400",
-      bg: "bg-indigo-500/10",
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-500/10',
     },
     {
-      label: "Total Calls",
+      label: 'Total Calls',
       value: String(voiceStats.totalCalls),
       icon: Phone,
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
     },
     {
-      label: "Avg Duration",
+      label: 'Avg Duration',
       value: formatDuration(Math.round(voiceStats.averageDuration)),
       icon: Clock,
-      color: "text-amber-400",
-      bg: "bg-amber-500/10",
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10',
     },
     {
-      label: "Connect Rate",
+      label: 'Connect Rate',
       value: `${connectRate}%`,
       icon: CheckCircle2,
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10",
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
     },
   ];
 
@@ -204,7 +207,8 @@ export default function AdminVoicePage() {
               </h3>
               <p className="text-xs text-gray-500 leading-relaxed mb-4">{mod.desc}</p>
               <div className="flex items-center gap-1 text-[10px] font-black text-gray-600 group-hover:text-indigo-400 transition-colors uppercase tracking-widest">
-                Open <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                Open{' '}
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
           ))}
@@ -232,9 +236,9 @@ export default function AdminVoicePage() {
                   <span className="text-[10px] text-gray-600 uppercase">{n.country}</span>
                   <span
                     className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase tracking-widest ${
-                      n.status === "ACTIVE"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                      n.status === 'ACTIVE'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     }`}
                   >
                     {n.status}

@@ -1,20 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import {
-  MessageSquare,
-  Zap,
-  Star,
-  ArrowUpRight,
-  Activity,
-  Loader2,
-  Bot,
-} from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { toast } from "sonner";
-import { analyticsService } from "@/services/analytics.service";
-import { aiAgentService, type Agent } from "@/services/ai-agent.service";
-import { parseApiData } from "@/lib/api/parse-response";
+import { useEffect, useState } from 'react';
+import { MessageSquare, Zap, Star, ArrowUpRight, Activity, Loader2, Bot } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { toast } from 'sonner';
+import { analyticsService } from '@/services/analytics.service';
+import { aiAgentService, type Agent } from '@/services/ai-agent.service';
+import { parseApiData } from '@/lib/api/parse-response';
 
 function formatTokens(value: number): string {
   if (value >= 1_000_000) {
@@ -32,7 +24,7 @@ export default function AdminAIAnalyticsPage() {
     tokensUsed: 0,
     messagesSent: 0,
     totalCost: 0,
-    periodStart: "",
+    periodStart: '',
   });
   const [agents, setAgents] = useState<Agent[]>([]);
 
@@ -49,7 +41,7 @@ export default function AdminAIAnalyticsPage() {
         }
         setAgents(parseApiData<Agent[]>(agentsRes) ?? []);
       } catch {
-        toast.error("Failed to load AI analytics");
+        toast.error('Failed to load AI analytics');
       } finally {
         setLoading(false);
       }
@@ -67,38 +59,38 @@ export default function AdminAIAnalyticsPage() {
 
   const stats = [
     {
-      label: "Messages Sent",
+      label: 'Messages Sent',
       value: usage.messagesSent.toLocaleString(),
       icon: MessageSquare,
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
     },
     {
-      label: "Active Agents",
+      label: 'Active Agents',
       value: String(agents.filter((a) => a.isActive).length),
       icon: Bot,
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10",
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
     },
     {
-      label: "Total Agents",
+      label: 'Total Agents',
       value: String(agents.length),
       icon: Star,
-      color: "text-indigo-400",
-      bg: "bg-indigo-500/10",
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-500/10',
     },
     {
-      label: "Tokens This Period",
+      label: 'Tokens This Period',
       value: formatTokens(usage.tokensUsed),
       icon: Zap,
-      color: "text-amber-400",
-      bg: "bg-amber-500/10",
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10',
     },
   ];
 
   const tokenChart = [
     {
-      label: "Current Period",
+      label: 'Current Period',
       tokens: usage.tokensUsed,
     },
   ];
@@ -150,17 +142,18 @@ export default function AdminAIAnalyticsPage() {
               <YAxis stroke="#ffffff20" fontSize={10} tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "#0b0f19",
-                  border: "1px solid #ffffff10",
-                  borderRadius: "12px",
-                  fontSize: "12px",
+                  backgroundColor: '#0b0f19',
+                  border: '1px solid #ffffff10',
+                  borderRadius: '12px',
+                  fontSize: '12px',
                 }}
               />
               <Bar dataKey="tokens" fill="#f59e0b" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           <p className="text-[10px] text-gray-600 mt-4 uppercase tracking-widest">
-            Period start: {usage.periodStart ? new Date(usage.periodStart).toLocaleDateString() : "—"}
+            Period start:{' '}
+            {usage.periodStart ? new Date(usage.periodStart).toLocaleDateString() : '—'}
           </p>
         </div>
 
@@ -201,7 +194,7 @@ export default function AdminAIAnalyticsPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-white/[0.05]">
-                {["Agent", "Voice", "Status", "Created"].map((h) => (
+                {['Agent', 'Voice', 'Status', 'Created'].map((h) => (
                   <th
                     key={h}
                     className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest"
@@ -220,11 +213,11 @@ export default function AdminAIAnalyticsPage() {
                     <span
                       className={`text-[10px] font-black px-2 py-0.5 rounded-full border uppercase ${
                         row.isActive
-                          ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                          : "text-gray-400 bg-white/5 border-white/10"
+                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                          : 'text-gray-400 bg-white/5 border-white/10'
                       }`}
                     >
-                      {row.isActive ? "ACTIVE" : "PAUSED"}
+                      {row.isActive ? 'ACTIVE' : 'PAUSED'}
                     </span>
                   </td>
                   <td className="px-5 py-4 text-sm text-gray-400">

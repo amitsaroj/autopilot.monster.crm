@@ -57,14 +57,10 @@ describe('HTTP E2E — Support tickets (secured)', () => {
       .send({ status: 'IN_PROGRESS' });
     expect(updateRes.status).toBe(200);
 
-    const listRes = await request(app.getHttpServer())
-      .get('/api/v1/support/tickets')
-      .set(headers);
+    const listRes = await request(app.getHttpServer()).get('/api/v1/support/tickets').set(headers);
     expect(listRes.status).toBe(200);
 
-    const statsRes = await request(app.getHttpServer())
-      .get('/api/v1/support/stats')
-      .set(headers);
+    const statsRes = await request(app.getHttpServer()).get('/api/v1/support/stats').set(headers);
     expect(statsRes.status).toBe(200);
 
     const deleteRes = await request(app.getHttpServer())
@@ -95,9 +91,7 @@ describe('HTTP E2E — Support tickets (secured)', () => {
       .set(headers);
     expect(getRes.status).toBe(200);
 
-    const listRes = await request(app.getHttpServer())
-      .get('/api/v1/support/articles')
-      .set(headers);
+    const listRes = await request(app.getHttpServer()).get('/api/v1/support/articles').set(headers);
     expect(listRes.status).toBe(200);
 
     const deleteRes = await request(app.getHttpServer())

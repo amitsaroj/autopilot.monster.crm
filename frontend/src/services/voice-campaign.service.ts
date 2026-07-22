@@ -8,6 +8,7 @@ export interface VoiceCampaign {
   status: VoiceCampaignStatus;
   fromNumber: string;
   script: string;
+  contactListId?: string;
   totalContacts: number;
   callsMade: number;
   callsAnswered: number;
@@ -19,11 +20,17 @@ export interface VoiceCampaign {
 export const voiceCampaignService = {
   list: () => api.get<{ data: VoiceCampaign[] }>('/voice/campaigns'),
   get: (id: string) => api.get<{ data: VoiceCampaign }>(`/voice/campaigns/${id}`),
-  create: (payload: Partial<VoiceCampaign>) =>
-    api.post<{ data: VoiceCampaign }>('/voice/campaigns', payload),
+  create: (payload: {
+    name: string;
+    fromNumber: string;
+    script: string;
+    contactListId?: string;
+    scheduledAt?: string;
+  }) => api.post<{ data: VoiceCampaign }>('/voice/campaigns', payload),
   remove: (id: string) => api.delete(`/voice/campaigns/${id}`),
   start: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/start`),
   pause: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/pause`),
   resume: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/resume`),
-  getStats: (id: string) => api.get<{ data: Record<string, unknown> }>(`/voice/campaigns/${id}/stats`),
+  getStats: (id: string) =>
+    api.get<{ data: Record<string, unknown> }>(`/voice/campaigns/${id}/stats`),
 };

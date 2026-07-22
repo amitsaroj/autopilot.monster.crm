@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -11,7 +11,7 @@ import {
   ArrowDownRight,
   Activity,
   Loader2,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -22,11 +22,11 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-} from "recharts";
-import Link from "next/link";
-import { toast } from "sonner";
-import { parseApiData } from "@/lib/api/parse-response";
-import { crmReportService } from "@/services/crm-report.service";
+} from 'recharts';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { parseApiData } from '@/lib/api/parse-response';
+import { crmReportService } from '@/services/crm-report.service';
 
 interface CrmSummary {
   totalDeals: number;
@@ -74,7 +74,7 @@ export default function AdminCRMDashboardPage() {
         setPipelineData(pipeline.map((p) => ({ stage: p.name, count: p.value })));
         setRevenueData(parseApiData<RevenuePoint[]>(revenueRes) ?? []);
       } catch {
-        toast.error("Failed to load CRM dashboard");
+        toast.error('Failed to load CRM dashboard');
       } finally {
         setLoading(false);
       }
@@ -96,39 +96,39 @@ export default function AdminCRMDashboardPage() {
 
   const kpis = [
     {
-      label: "Total Contacts",
+      label: 'Total Contacts',
       value: (summary?.totalContacts ?? 0).toLocaleString(),
       icon: Users,
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
-      trend: "",
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
+      trend: '',
       up: true,
     },
     {
-      label: "Open Deals",
+      label: 'Open Deals',
       value: String(openDeals),
       icon: Target,
-      color: "text-indigo-400",
-      bg: "bg-indigo-500/10",
-      trend: "",
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-500/10',
+      trend: '',
       up: true,
     },
     {
-      label: "Total Revenue",
+      label: 'Total Revenue',
       value: formatCurrency(summary?.totalRevenue ?? 0),
       icon: CreditCard,
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10",
-      trend: "",
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
+      trend: '',
       up: true,
     },
     {
-      label: "Win Rate",
+      label: 'Win Rate',
       value: `${Math.round(summary?.winRate ?? 0)}%`,
       icon: TrendingUp,
-      color: "text-amber-400",
-      bg: "bg-amber-500/10",
-      trend: "",
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10',
+      trend: '',
       up: (summary?.winRate ?? 0) >= 30,
     },
   ];
@@ -154,7 +154,7 @@ export default function AdminCRMDashboardPage() {
               </div>
               {kpi.trend && (
                 <span
-                  className={`text-[10px] font-black flex items-center gap-0.5 ${kpi.up ? "text-emerald-400" : "text-red-400"}`}
+                  className={`text-[10px] font-black flex items-center gap-0.5 ${kpi.up ? 'text-emerald-400' : 'text-red-400'}`}
                 >
                   {kpi.up ? (
                     <ArrowUpRight className="w-3 h-3" />
@@ -206,12 +206,12 @@ export default function AdminCRMDashboardPage() {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#0b0f19",
-                    border: "1px solid #ffffff10",
-                    borderRadius: "12px",
-                    fontSize: "12px",
+                    backgroundColor: '#0b0f19',
+                    border: '1px solid #ffffff10',
+                    borderRadius: '12px',
+                    fontSize: '12px',
                   }}
-                  formatter={(v) => [`$${Number(v).toLocaleString()}`, "Revenue"]}
+                  formatter={(v) => [`$${Number(v).toLocaleString()}`, 'Revenue']}
                 />
                 <Area
                   type="monotone"
@@ -253,10 +253,10 @@ export default function AdminCRMDashboardPage() {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#0b0f19",
-                    border: "1px solid #ffffff10",
-                    borderRadius: "12px",
-                    fontSize: "12px",
+                    backgroundColor: '#0b0f19',
+                    border: '1px solid #ffffff10',
+                    borderRadius: '12px',
+                    fontSize: '12px',
                   }}
                 />
                 <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} />
@@ -269,25 +269,25 @@ export default function AdminCRMDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {[
           {
-            label: "Total Leads",
+            label: 'Total Leads',
             count: summary?.totalLeads ?? 0,
             icon: Activity,
-            href: "/admin/crm/leads",
-            color: "text-blue-400",
+            href: '/admin/crm/leads',
+            color: 'text-blue-400',
           },
           {
-            label: "Total Deals",
+            label: 'Total Deals',
             count: summary?.totalDeals ?? 0,
             icon: Target,
-            href: "/admin/crm/deals",
-            color: "text-emerald-400",
+            href: '/admin/crm/deals',
+            color: 'text-emerald-400',
           },
           {
-            label: "Contacts",
+            label: 'Contacts',
             count: summary?.totalContacts ?? 0,
             icon: Users,
-            href: "/admin/crm/contacts",
-            color: "text-indigo-400",
+            href: '/admin/crm/contacts',
+            color: 'text-indigo-400',
           },
         ].map((card) => (
           <Link

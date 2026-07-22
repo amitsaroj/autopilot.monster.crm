@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useCallback, useRef } from 'react';
 import ReactFlow, {
@@ -57,7 +57,7 @@ export function FlowBuilder() {
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
+    [setEdges],
   );
 
   const onDragOver = useCallback((event: React.DragEvent) => {
@@ -92,13 +92,13 @@ export function FlowBuilder() {
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance, setNodes]
+    [reactFlowInstance, setNodes],
   );
 
   return (
     <div className="w-full h-[800px] flex flex-col md:flex-row bg-gray-50 dark:bg-[#0b0f19] rounded-2xl border border-gray-200 dark:border-white/[0.08] overflow-hidden shadow-2xl">
       <NodeSidebar />
-      
+
       <div className="flex-1 relative" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodes}
@@ -115,8 +115,11 @@ export function FlowBuilder() {
         >
           <Background color="#aaa" gap={20} />
           <Controls />
-          <Panel position="top-right" className="bg-white/80 dark:bg-black/40 backdrop-blur-md p-2 rounded-lg border border-gray-200 dark:border-white/10">
-            <button 
+          <Panel
+            position="top-right"
+            className="bg-white/80 dark:bg-black/40 backdrop-blur-md p-2 rounded-lg border border-gray-200 dark:border-white/10"
+          >
+            <button
               onClick={() => console.log('Saving flow...', { nodes, edges })}
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-indigo-500/20"
             >
@@ -148,7 +151,9 @@ function NodeSidebar() {
 
   return (
     <div className="w-full md:w-64 p-6 bg-white dark:bg-[#111827] border-b md:border-b-0 md:border-r border-gray-200 dark:border-white/[0.08] z-10">
-      <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6">Components</h3>
+      <h3 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-6">
+        Components
+      </h3>
       <div className="grid grid-cols-2 md:grid-cols-1 gap-3">
         {nodeItems.map((item) => (
           <div
@@ -157,17 +162,20 @@ function NodeSidebar() {
             onDragStart={(event) => onDragStart(event, item.type)}
             draggable
           >
-            <div className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center text-white shadow-lg shadow-black/10`}>
+            <div
+              className={`w-8 h-8 rounded-lg ${item.color} flex items-center justify-center text-white shadow-lg shadow-black/10`}
+            >
               {item.icon}
             </div>
             {item.label}
           </div>
         ))}
       </div>
-      
+
       <div className="mt-8 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
         <p className="text-xs text-orange-600 dark:text-orange-400 leading-relaxed">
-          <strong>Tip:</strong> Drag nodes onto the canvas and connect them to design your AI agent's conversation logic.
+          <strong>Tip:</strong> Drag nodes onto the canvas and connect them to design your AI
+          agent's conversation logic.
         </p>
       </div>
     </div>

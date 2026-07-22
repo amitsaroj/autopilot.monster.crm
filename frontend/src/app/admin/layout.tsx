@@ -16,10 +16,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     const payloadBase64 = token.split('.')[1];
     const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
     const payload = JSON.parse(decodedJson);
-    
+
     const roles: string[] = payload.roles || [];
     // Admins or SuperAdmins can access tenant admin pages
-    if (!roles.some(r => ['ADMIN', 'SUPER_ADMIN', 'TENANT_ADMIN'].includes(r))) {
+    if (!roles.some((r) => ['ADMIN', 'SUPER_ADMIN', 'TENANT_ADMIN'].includes(r))) {
       redirect('/403');
     }
   } catch (e) {

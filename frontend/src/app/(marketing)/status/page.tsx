@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -42,7 +42,11 @@ export default function StatusPage() {
       }
       setChecks(items);
       setOverall(
-        json.status === 'ok' ? 'operational' : items.some((c) => c.status === 'error') ? 'degraded' : 'unknown',
+        json.status === 'ok'
+          ? 'operational'
+          : items.some((c) => c.status === 'error')
+            ? 'degraded'
+            : 'unknown',
       );
       setLastChecked(new Date().toLocaleString());
     } catch {
@@ -85,7 +89,11 @@ export default function StatusPage() {
                 <AlertCircle className="w-6 h-6 text-amber-500" />
               )}
               <span className="text-lg font-bold text-gray-900 dark:text-white capitalize">
-                {loading ? 'Checking…' : overall === 'operational' ? 'All systems operational' : 'Service degraded'}
+                {loading
+                  ? 'Checking…'
+                  : overall === 'operational'
+                    ? 'All systems operational'
+                    : 'Service degraded'}
               </span>
             </div>
             <button
@@ -97,9 +105,7 @@ export default function StatusPage() {
             </button>
           </div>
 
-          {lastChecked && (
-            <p className="text-xs text-gray-500">Last checked: {lastChecked}</p>
-          )}
+          {lastChecked && <p className="text-xs text-gray-500">Last checked: {lastChecked}</p>}
 
           <div className="space-y-3">
             {checks.length === 0 && !loading && (
@@ -122,7 +128,11 @@ export default function StatusPage() {
                         : 'text-gray-500'
                   }`}
                 >
-                  {check.status === 'ok' ? 'Operational' : check.status === 'error' ? 'Down' : 'Unknown'}
+                  {check.status === 'ok'
+                    ? 'Operational'
+                    : check.status === 'error'
+                      ? 'Down'
+                      : 'Unknown'}
                 </span>
               </div>
             ))}

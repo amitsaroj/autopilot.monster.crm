@@ -1,89 +1,81 @@
 import {
-  Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Query, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { WalletService } from './wallet.service';
 import { CouponService } from './coupon.service';
 import { JwtAuthGuard, TenantGuard, RolesGuard } from '../../common/guards';
-import { Roles, TenantId } from '../../common/decorators';
+import { Roles, TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 
-@ApiTags('Wallet & Coupons')
+@ApiTags('Billing Coupons')
 @ApiBearerAuth()
+@ResourcePermissions('billing')
+@PlanFeature('billing')
 @UseGuards(JwtAuthGuard, TenantGuard)
-@Controller('billing')
+@Controller('billing/coupons')
 export class BillingExtController {
-  constructor(
-    private readonly walletService: WalletService,
-    private readonly couponService: CouponService,
-  ) {}
+  constructor(private readonly couponService: CouponService) {}
 
-  // --- Wallet ---
-  @Get('wallet')
-  @ApiOperation({ summary: 'Get wallet balance' })
-  async getBalance(@TenantId() tenantId: string) {
-    return this.walletService.getBalance(tenantId);
-  }
-
-  @Post('wallet/topup')
-  @ApiOperation({ summary: 'Top up wallet credits' })
-  async topUp(@TenantId() tenantId: string, @Body() body: { amount: number; description?: string }) {
-    return this.walletService.credit(tenantId, body.amount, 'TOPUP', body.description);
-  }
-
-  @Get('wallet/transactions')
-  @ApiOperation({ summary: 'Get wallet transaction history' })
-  async getTransactions(
-    @TenantId() tenantId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.walletService.getTransactions(tenantId, Number(page) || 1, Number(limit) || 20);
-  }
-
-  // --- Coupons ---
-  @Post('coupons')
+  @Post()
   @Roles('TENANT_ADMIN')
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Create a coupon' })
-  async createCoupon(@TenantId() tenantId: string, @Body() dto: any) {
-    return this.couponService.create(tenantId, dto);
+  async createCoupon(@TenantId() tenantId: string, @Body() dto: Record<string, unknown>) {
+    const data = await this.couponService.create(tenantId, dto);
+    return { status: 201, message: 'Coupon created', error: false, data };
   }
 
-  @Get('coupons')
+  @Get()
   @ApiOperation({ summary: 'List all coupons' })
   async listCoupons(@TenantId() tenantId: string) {
-    return this.couponService.findAll(tenantId);
+    const data = await this.couponService.findAll(tenantId);
+    return { status: 200, message: 'Coupons retrieved', error: false, data };
   }
 
-  @Post('coupons/validate')
+  @Post('validate')
   @ApiOperation({ summary: 'Validate a coupon code' })
   async validateCoupon(
     @TenantId() tenantId: string,
     @Body() body: { code: string; amount?: number },
   ) {
-    return this.couponService.validate(tenantId, body.code, body.amount);
+    const data = await this.couponService.validate(tenantId, body.code, body.amount);
+    return { status: 200, message: 'Coupon validated', error: false, data };
   }
 
-  @Post('coupons/:code/redeem')
+  @Post(':code/redeem')
   @ApiOperation({ summary: 'Redeem a coupon' })
   async redeemCoupon(@TenantId() tenantId: string, @Param('code') code: string) {
-    return this.couponService.redeem(tenantId, code);
+    const data = await this.couponService.redeem(tenantId, code);
+    return { status: 200, message: 'Coupon redeemed', error: false, data };
   }
 
-  @Patch('coupons/:id')
+  @Patch(':id')
   @Roles('TENANT_ADMIN')
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Update a coupon' })
-  async updateCoupon(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
-    return this.couponService.update(tenantId, id, dto);
+  async updateCoupon(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: Record<string, unknown>,
+  ) {
+    const data = await this.couponService.update(tenantId, id, dto);
+    return { status: 200, message: 'Coupon updated', error: false, data };
   }
 
-  @Delete('coupons/:id')
+  @Delete(':id')
   @Roles('TENANT_ADMIN')
   @UseGuards(RolesGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a coupon' })
   async deleteCoupon(@TenantId() tenantId: string, @Param('id') id: string) {
-    return this.couponService.remove(tenantId, id);
+    await this.couponService.remove(tenantId, id);
   }
 }

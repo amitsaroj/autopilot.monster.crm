@@ -56,8 +56,16 @@ export default function DealForecastPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Pipeline', value: `$${(forecast.totalPipeline / 1000).toFixed(1)}k`, icon: DollarSign },
-          { label: 'Weighted Forecast', value: `$${(forecast.totalForecast / 1000).toFixed(1)}k`, icon: TrendingUp },
+          {
+            label: 'Total Pipeline',
+            value: `$${(forecast.totalPipeline / 1000).toFixed(1)}k`,
+            icon: DollarSign,
+          },
+          {
+            label: 'Weighted Forecast',
+            value: `$${(forecast.totalForecast / 1000).toFixed(1)}k`,
+            icon: TrendingUp,
+          },
           { label: 'On Track', value: String(forecast.onTrackCount), icon: Target },
           { label: 'At Risk', value: String(forecast.atRiskCount), icon: AlertCircle },
         ].map((stat) => (
@@ -84,12 +92,18 @@ export default function DealForecastPage() {
               <tr key={deal.id} className="border-t border-border">
                 <td className="px-4 py-3">{deal.name}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded text-xs ${stageColor[deal.stageName] ?? 'bg-muted'}`}>
+                  <span
+                    className={`px-2 py-0.5 rounded text-xs ${stageColor[deal.stageName] ?? 'bg-muted'}`}
+                  >
                     {deal.stageName}
                   </span>
                 </td>
-                <td className="px-4 py-3">{deal.currency} {deal.value.toLocaleString()}</td>
-                <td className="px-4 py-3 text-right">{deal.currency} {deal.forecastedValue.toLocaleString()}</td>
+                <td className="px-4 py-3">
+                  {deal.currency} {deal.value.toLocaleString()}
+                </td>
+                <td className="px-4 py-3 text-right">
+                  {deal.currency} {deal.forecastedValue.toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>

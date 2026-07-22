@@ -16,12 +16,24 @@ export default function CrmTimelinePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void api.get('/crm/activities').then((r) => {
-      setItems((r as { data: { data: Activity[] } }).data?.data ?? (r as { data: Activity[] }).data ?? []);
-    }).finally(() => setLoading(false));
+    void api
+      .get('/crm/activities')
+      .then((r) => {
+        setItems(
+          (r as { data: { data: Activity[] } }).data?.data ??
+            (r as { data: Activity[] }).data ??
+            [],
+        );
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 py-8">
@@ -30,7 +42,9 @@ export default function CrmTimelinePage() {
         {items.map((a) => (
           <li key={a.id} className="rounded-xl border border-border bg-card p-4">
             <p className="font-medium">{a.subject}</p>
-            <p className="text-xs text-muted-foreground">{a.type} · {new Date(a.occurredAt).toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">
+              {a.type} · {new Date(a.occurredAt).toLocaleString()}
+            </p>
           </li>
         ))}
       </ul>

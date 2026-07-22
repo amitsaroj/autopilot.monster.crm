@@ -45,7 +45,15 @@ import { MonetizationModule } from '../monetization.module';
         return buildJwtModuleOptions(jwt);
       },
     }),
-    TypeOrmModule.forFeature([UserEntity, SessionEntity, RefreshTokenEntity, Tenant, Role, Permission, UserRole]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      SessionEntity,
+      RefreshTokenEntity,
+      Tenant,
+      Role,
+      Permission,
+      UserRole,
+    ]),
   ],
   controllers: [AuthController],
   providers: [

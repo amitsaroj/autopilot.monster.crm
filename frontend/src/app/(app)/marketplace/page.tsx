@@ -22,9 +22,7 @@ export default function MarketplacePage() {
           marketplaceService.listInstalled(),
         ]);
         setApps(appsRes.data?.data ?? []);
-        const ids = new Set(
-          (installedRes.data?.data ?? []).map((item) => item.pluginId),
-        );
+        const ids = new Set((installedRes.data?.data ?? []).map((item) => item.pluginId));
         setInstalledIds(ids);
       } catch {
         toast.error('Failed to load marketplace');
@@ -108,7 +106,9 @@ export default function MarketplacePage() {
                 <span className="px-1.5 py-0.5 bg-muted rounded">{app.category}</span>
               )}
               {app.isPremium && (
-                <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-600 rounded">Premium</span>
+                <span className="px-1.5 py-0.5 bg-yellow-500/10 text-yellow-600 rounded">
+                  Premium
+                </span>
               )}
             </div>
           </Link>

@@ -49,7 +49,9 @@ export default function VoiceTranscriptsPage() {
             <div key={item.id} className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-4 w-4 text-muted-foreground" />
-                <p className="text-sm font-medium">{item.from} → {item.to}</p>
+                <p className="text-sm font-medium">
+                  {item.from} → {item.to}
+                </p>
                 <span className="text-xs text-muted-foreground ml-auto">
                   {new Date(item.createdAt).toLocaleString()}
                 </span>

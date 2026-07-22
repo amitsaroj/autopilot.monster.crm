@@ -29,7 +29,7 @@ export const agentService = {
   createAgent: (data: Partial<Agent>) => api.post('/crm/agents', data),
   updateAgent: (id: string, data: Partial<Agent>) => api.patch(`/crm/agents/${id}`, data),
   deleteAgent: (id: string) => api.delete(`/crm/agents/${id}`),
-  
+
   // Templates
   getTemplates: () => api.get('/crm/agents/templates'),
   installTemplate: (id: string) => api.post(`/crm/agents/templates/${id}/install`, {}),

@@ -54,7 +54,7 @@ export const useAuth = create<AuthState>()(
         try {
           const response = await authService.login(data);
           const authData = (response as any).data;
-          
+
           let tenantId = authData.tenant?.id;
           if (!tenantId && authData.accessToken) {
             try {
@@ -66,29 +66,30 @@ export const useAuth = create<AuthState>()(
           }
 
           setToken(authData.accessToken, authData.refreshToken, tenantId);
-          
+
           let userData = authData.user;
           let tenantData = authData.tenant || null;
-          
+
           if (!tenantData && tenantId) {
             tenantData = { id: tenantId };
           }
-          
+
           // If the backend didn't return user info directly, fetch it
           if (!userData) {
             const userResponse = await api.get('/users/me');
             // Handle doublely nested data from interceptors
-            userData = userResponse.data?.data?.data || userResponse.data?.data || userResponse.data;
+            userData =
+              userResponse.data?.data?.data || userResponse.data?.data || userResponse.data;
             tenantData = { id: userData.tenantId };
           }
-          
+
           try {
             const payload = JSON.parse(atob(authData.accessToken.split('.')[1]));
             userData.roles = payload.roles || [];
           } catch (e) {
             userData.roles = [];
           }
-          
+
           set({
             user: userData,
             tenant: tenantData,
@@ -99,22 +100,22 @@ export const useAuth = create<AuthState>()(
             mfaPendingEmail: null,
             mfaPendingPassword: null,
           });
-          
+
           return userData;
         } catch (error: any) {
           const message = error.response?.data?.message;
           if (message === 'MFA code required') {
-            set({ 
-              mfaPendingEmail: data.email, 
+            set({
+              mfaPendingEmail: data.email,
               mfaPendingPassword: data.password,
-              isLoading: false 
+              isLoading: false,
             });
             window.location.href = '/mfa';
             return;
           }
-          set({ 
-            error: message || 'Login failed', 
-            isLoading: false 
+          set({
+            error: message || 'Login failed',
+            isLoading: false,
           });
           throw error;
         }
@@ -132,9 +133,9 @@ export const useAuth = create<AuthState>()(
             isLoading: false,
           });
         } catch (error: any) {
-          set({ 
-            error: error.response?.data?.message || 'Registration failed', 
-            isLoading: false 
+          set({
+            error: error.response?.data?.message || 'Registration failed',
+            isLoading: false,
           });
           throw error;
         }
@@ -171,6 +172,6 @@ export const useAuth = create<AuthState>()(
         mfaPendingEmail: state.mfaPendingEmail,
         mfaPendingPassword: state.mfaPendingPassword,
       }),
-    }
-  )
+    },
+  ),
 );

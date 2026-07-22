@@ -20,6 +20,13 @@ export abstract class BaseRepository<T extends { tenantId: string }> {
     });
   }
 
+  async findAndCount(tenantId: string, options?: FindManyOptions<T>): Promise<[T[], number]> {
+    return this.repository.findAndCount({
+      ...options,
+      where: { ...options?.where, tenantId } as any,
+    });
+  }
+
   async findOne(tenantId: string, options: FindOneOptions<T>): Promise<T | null> {
     return this.repository.findOne({
       ...options,

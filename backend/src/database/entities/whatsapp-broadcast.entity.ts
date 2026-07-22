@@ -24,6 +24,7 @@ export class WhatsAppBroadcast extends BaseEntity {
   contactFilter!: {
     tags?: string[];
     status?: string[];
+    segmentIds?: string[];
     customField?: { key: string; value: string };
   };
 

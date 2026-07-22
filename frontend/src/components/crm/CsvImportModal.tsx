@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  X, 
-  Upload, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  X,
+  Upload,
+  CheckCircle2,
+  AlertCircle,
   ArrowRight,
   Database,
   FileSpreadsheet,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -38,16 +38,19 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
       const reader = new FileReader();
       reader.onload = (event) => {
         const text = event.target?.result as string;
-        const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+        const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
         if (lines.length > 0) {
-          const cols = lines[0].split(',').map(h => h.trim());
+          const cols = lines[0].split(',').map((h) => h.trim());
           setHeaders(cols);
-          
+
           // Initial auto-mapping
           const newMapping: Record<string, string> = {};
-          const targetFields = entityType === 'lead' ? ['firstName', 'lastName', 'email', 'phone'] : ['firstName', 'lastName', 'email', 'phone', 'jobTitle'];
-          targetFields.forEach(field => {
-            const match = cols.find(h => h.toLowerCase().includes(field.toLowerCase()));
+          const targetFields =
+            entityType === 'lead'
+              ? ['firstName', 'lastName', 'email', 'phone']
+              : ['firstName', 'lastName', 'email', 'phone', 'jobTitle'];
+          targetFields.forEach((field) => {
+            const match = cols.find((h) => h.toLowerCase().includes(field.toLowerCase()));
             if (match) newMapping[field] = match;
           });
           setMapping(newMapping);
@@ -114,7 +117,7 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="bg-white dark:bg-card w-full max-w-2xl rounded-[32px] shadow-2xl overflow-hidden border border-gray-100 dark:border-white/5"
@@ -125,11 +128,18 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
               <FileSpreadsheet className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-gray-900 dark:text-white">Import {entityType === 'lead' ? 'Leads' : 'Contacts'}</h2>
-              <p className="text-sm text-gray-500 font-bold">Upload a CSV file to bulk populate your CRM.</p>
+              <h2 className="text-xl font-black text-gray-900 dark:text-white">
+                Import {entityType === 'lead' ? 'Leads' : 'Contacts'}
+              </h2>
+              <p className="text-sm text-gray-500 font-bold">
+                Upload a CSV file to bulk populate your CRM.
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-xl transition"
+          >
             <X className="w-6 h-6 text-gray-400" />
           </button>
         </div>
@@ -140,18 +150,20 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
               <div className="w-16 h-16 rounded-full bg-white dark:bg-card shadow-sm flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Upload className="w-8 h-8 text-indigo-600" />
               </div>
-              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">Drop your CSV here</h3>
+              <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">
+                Drop your CSV here
+              </h3>
               <p className="text-sm text-gray-500 font-bold mb-8 text-center max-w-[280px]">
                 Make sure your first row contains headers like name, email, etc.
               </p>
-              <input 
-                type="file" 
-                accept=".csv" 
+              <input
+                type="file"
+                accept=".csv"
                 onChange={handleFileChange}
-                className="hidden" 
-                id="csv-upload" 
+                className="hidden"
+                id="csv-upload"
               />
-              <label 
+              <label
                 htmlFor="csv-upload"
                 className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition cursor-pointer active:scale-95"
               >
@@ -165,24 +177,42 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
               <div className="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-800/50 flex items-center gap-4">
                 <Database className="w-6 h-6 text-indigo-600" />
                 <div>
-                  <p className="text-xs font-black uppercase tracking-widest text-indigo-600">Step 2: Field Mapping</p>
-                  <p className="text-sm font-bold text-gray-600 dark:text-gray-300">Map your CSV columns to CRM fields.</p>
+                  <p className="text-xs font-black uppercase tracking-widest text-indigo-600">
+                    Step 2: Field Mapping
+                  </p>
+                  <p className="text-sm font-bold text-gray-600 dark:text-gray-300">
+                    Map your CSV columns to CRM fields.
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-3 max-h-[300px] overflow-y-auto px-1 custom-scrollbar">
-                {(entityType === 'lead' ? ['firstName', 'lastName', 'email', 'phone'] : ['firstName', 'lastName', 'email', 'phone', 'jobTitle']).map(field => (
-                  <div key={field} className="flex items-center justify-between p-4 bg-white dark:bg-card border border-gray-100 dark:border-white/5 rounded-2xl group hover:border-indigo-200 transition">
-                    <span className="text-sm font-black text-gray-700 dark:text-gray-300 capitalize">{field.replace(/([A-Z])/g, ' $1')}</span>
+                {(entityType === 'lead'
+                  ? ['firstName', 'lastName', 'email', 'phone']
+                  : ['firstName', 'lastName', 'email', 'phone', 'jobTitle']
+                ).map((field) => (
+                  <div
+                    key={field}
+                    className="flex items-center justify-between p-4 bg-white dark:bg-card border border-gray-100 dark:border-white/5 rounded-2xl group hover:border-indigo-200 transition"
+                  >
+                    <span className="text-sm font-black text-gray-700 dark:text-gray-300 capitalize">
+                      {field.replace(/([A-Z])/g, ' $1')}
+                    </span>
                     <div className="flex items-center gap-3">
                       <ArrowRight className="w-4 h-4 text-gray-300" />
-                      <select 
-                        value={mapping[field] || ''} 
-                        onChange={(e) => setMapping(prev => ({ ...prev, [field]: e.target.value }))}
+                      <select
+                        value={mapping[field] || ''}
+                        onChange={(e) =>
+                          setMapping((prev) => ({ ...prev, [field]: e.target.value }))
+                        }
                         className="bg-gray-50 dark:bg-white/5 border-none rounded-xl text-xs font-bold px-4 py-2 focus:ring-2 ring-indigo-500/20"
                       >
                         <option value="">Select Column</option>
-                        {headers.map(h => <option key={h} value={h}>{h}</option>)}
+                        {headers.map((h) => (
+                          <option key={h} value={h}>
+                            {h}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -190,13 +220,13 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
               </div>
 
               <div className="pt-4 flex items-center gap-4">
-                <button 
+                <button
                   onClick={() => setStep('upload')}
                   className="flex-1 py-4 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-white rounded-2xl font-black hover:bg-gray-200 transition"
                 >
                   Back
                 </button>
-                <button 
+                <button
                   onClick={handleImport}
                   className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition active:scale-95 flex items-center justify-center gap-2"
                 >
@@ -210,7 +240,9 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
           {step === 'importing' && (
             <div className="h-full flex flex-col items-center justify-center animate-pulse">
               <Loader2 className="w-16 h-16 text-indigo-600 animate-spin mb-6" />
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white">Processing Data...</h3>
+              <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+                Processing Data...
+              </h3>
               <p className="text-gray-500 font-bold mt-2">Uploading and indexing your records.</p>
             </div>
           )}

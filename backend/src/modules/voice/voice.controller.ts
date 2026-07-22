@@ -8,7 +8,6 @@ import {
   Patch,
   UseGuards,
   Res,
-  NotFoundException,
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -16,9 +15,12 @@ import { Response } from 'express';
 
 import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
+import { VoiceAiService } from './voice-ai.service';
 import {
   CallDto,
+  CloneVoiceDto,
   SynthesizeDto,
+  TranscribeDto,
   TransferCallDto,
   UpdateVoiceSettingsDto,
 } from './dto/voice.dto';
@@ -27,7 +29,7 @@ import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { TwilioService } from './twilio.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
+import { TenantId, PlanFeature, ResourcePermissions, Public } from '../../common/decorators';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { TenantSettingsService } from '../tenant-settings/tenant-settings.service';
 
@@ -44,6 +46,7 @@ export class VoiceController {
     private readonly voiceCallService: VoiceCallService,
     private readonly voiceCampaignService: VoiceCampaignService,
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
+    private readonly voiceAiService: VoiceAiService,
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly tenantSettingsService: TenantSettingsService,
     private readonly twilioService: TwilioService,
@@ -134,27 +137,16 @@ export class VoiceController {
 
   @Post('synthesize')
   @ApiOperation({ summary: 'Convert text to speech' })
-  async synthesize(@Body() dto: SynthesizeDto, @Res() res: Response) {
-    res.json({
-      status: 200,
-      message: 'Synthesis queued',
-      error: false,
-      data: { text: dto.text, voice: dto.voice ?? 'default' },
-    });
+  async synthesize(@TenantId() tenantId: string, @Body() dto: SynthesizeDto) {
+    const data = await this.voiceAiService.synthesize(tenantId, dto.text, dto.voice ?? 'alloy');
+    return { status: 200, message: 'Speech synthesized', error: false, data };
   }
 
   @Post('transcribe')
   @ApiOperation({ summary: 'Convert audio to text' })
-  async transcribe(@Body() dto: { audioUrl?: string }) {
-    if (!dto.audioUrl) {
-      throw new NotFoundException('audioUrl is required');
-    }
-    return {
-      status: 200,
-      message: 'Transcription pending',
-      error: false,
-      data: { text: null, audioUrl: dto.audioUrl },
-    };
+  async transcribe(@TenantId() tenantId: string, @Body() dto: TranscribeDto) {
+    const data = await this.voiceAiService.transcribe(tenantId, dto.audioUrl);
+    return { status: 200, message: 'Transcription completed', error: false, data };
   }
 
   @Get('profiles')
@@ -334,19 +326,21 @@ export class VoiceController {
   @Get('calls/:id/sentiment')
   @ApiOperation({ summary: 'Extract sentiment and keywords from a completed call' })
   async getSentiment(@TenantId() tenantId: string, @Param('id') id: string) {
-    return this.twilioService.extractSentimentStub(id, tenantId);
+    const data = await this.voiceAiService.analyzeSentiment(tenantId, id);
+    return { status: 200, message: 'Sentiment analyzed', error: false, data };
   }
 
   @Post('clone')
   @ApiOperation({ summary: 'Create a voice clone from sample audio' })
-  async cloneVoice(@TenantId() tenantId: string, @Body() dto: { sampleUrl: string }) {
-    const voiceId = await this.twilioService.cloneVoiceStub(tenantId, dto.sampleUrl);
-    return { success: true, voiceId };
+  async cloneVoice(@TenantId() tenantId: string, @Body() dto: CloneVoiceDto) {
+    const data = await this.voiceAiService.cloneVoice(tenantId, dto.sampleUrl);
+    return { status: 201, message: 'Voice clone created', error: false, data };
   }
 
+  @Public()
   @Post('ivr-callback')
   @ApiOperation({ summary: 'Twilio IVR webhook callback' })
-  async ivrCallback(@Body() body: Record<string, any>, @Res() res: Response) {
+  async ivrCallback(@Body() body: Record<string, unknown>, @Res() res: Response) {
     // Generate IVR or route call
     const twiml = this.twilioService.generateIvrTwiml(body);
     res.type('text/xml').send(twiml);

@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { 
-  Package, 
-  Trash2, 
-  Save, 
+import {
+  Package,
+  Trash2,
+  Save,
   ArrowLeft,
   Loader2,
   DollarSign,
@@ -14,7 +14,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Hash,
-  Info
+  Info,
 } from 'lucide-react';
 import { productService, Product, BillingType } from '@/services/product.service';
 import toast from 'react-hot-toast';
@@ -85,21 +85,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <div className="mb-8 flex items-center justify-between">
-        <Link 
-          href="/crm/products" 
+        <Link
+          href="/crm/products"
           className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Catalog
         </Link>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={handleDelete}
             className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition underline text-[10px] font-black uppercase tracking-widest"
           >
             Delete Product
           </button>
-          <button 
+          <button
             type="submit"
             form="product-form"
             disabled={isSaving}
@@ -124,23 +124,33 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <p className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 mb-6 uppercase tracking-[0.2em]">
               SKU: {product?.sku || 'N/A'}
             </p>
-            
+
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-full text-[10px] font-black text-gray-500 border border-gray-100 dark:border-border uppercase tracking-widest">
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                product?.status === 'ACTIVE' ? "bg-emerald-500" : "bg-gray-300"
-              )} />
+              <div
+                className={cn(
+                  'w-2 h-2 rounded-full',
+                  product?.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-gray-300',
+                )}
+              />
               {product?.status}
             </div>
 
             <div className="mt-8 pt-8 border-t border-gray-50 dark:border-border grid grid-cols-2 gap-4">
               <div className="text-center">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">Standard Price</p>
-                <p className="text-lg font-black text-gray-900 dark:text-white">${Number(product?.price).toLocaleString()}</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">
+                  Standard Price
+                </p>
+                <p className="text-lg font-black text-gray-900 dark:text-white">
+                  ${Number(product?.price).toLocaleString()}
+                </p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">Billing Cycle</p>
-                <p className="text-xs font-black text-indigo-600">{product?.billingType.replace('_', ' ')}</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-1">
+                  Billing Cycle
+                </p>
+                <p className="text-xs font-black text-indigo-600">
+                  {product?.billingType.replace('_', ' ')}
+                </p>
               </div>
             </div>
           </div>
@@ -152,7 +162,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 Pricebook Ready
               </h3>
               <p className="text-xs text-emerald-100 leading-relaxed font-medium">
-                This product is currently listed in your master pricebook and available for all sales quotes.
+                This product is currently listed in your master pricebook and available for all
+                sales quotes.
               </p>
             </div>
             <div className="absolute -right-4 -bottom-4 opacity-10">
@@ -163,40 +174,52 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Right Column: Edit Form */}
         <div className="lg:col-span-2">
-          <form id="product-form" onSubmit={handleUpdate} className="bg-white dark:bg-card rounded-[40px] border border-gray-100 dark:border-border shadow-soft overflow-hidden">
+          <form
+            id="product-form"
+            onSubmit={handleUpdate}
+            className="bg-white dark:bg-card rounded-[40px] border border-gray-100 dark:border-border shadow-soft overflow-hidden"
+          >
             <div className="p-8 space-y-8">
               <div className="flex items-center gap-3">
                 <div className="w-1 h-8 bg-indigo-600 rounded-full" />
-                <h3 className="text-lg font-black text-gray-900 dark:text-white">Product Specifications</h3>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                  Product Specifications
+                </h3>
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Product Name</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  Product Name
+                </label>
                 <input
                   required
                   value={formData.name || ''}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Category</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Category
+                  </label>
                   <input
                     value={formData.category || ''}
-                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold"
                     placeholder="e.g. Software, Hardware"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">SKU / Item Code</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    SKU / Item Code
+                  </label>
                   <div className="relative">
                     <Hash className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       value={formData.sku || ''}
-                      onChange={e => setFormData({ ...formData, sku: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
                       className="w-full pl-12 pr-6 py-4 rounded-2xl border border-gray-100 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold"
                     />
                   </div>
@@ -204,38 +227,48 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Description</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  Description
+                </label>
                 <textarea
                   value={formData.description || ''}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold min-h-[120px] resize-none"
                 />
               </div>
 
               <div className="flex items-center gap-3">
                 <div className="w-1 h-8 bg-emerald-500 rounded-full" />
-                <h3 className="text-lg font-black text-gray-900 dark:text-white">Pricing & Billing</h3>
+                <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                  Pricing & Billing
+                </h3>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Unit Price ({formData.currency})</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Unit Price ({formData.currency})
+                  </label>
                   <div className="relative">
                     <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="number"
                       step="0.01"
                       value={formData.price || 0}
-                      onChange={e => setFormData({ ...formData, price: Number(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                       className="w-full pl-12 pr-6 py-4 rounded-2xl border border-gray-100 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">Billing Frequency</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Billing Frequency
+                  </label>
                   <select
                     value={formData.billingType}
-                    onChange={e => setFormData({ ...formData, billingType: e.target.value as any })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, billingType: e.target.value as any })
+                    }
                     className="w-full px-6 py-4 rounded-2xl border border-gray-100 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-bold appearance-none"
                   >
                     <option value={BillingType.ONE_TIME}>One Time</option>
@@ -248,7 +281,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100 flex items-start gap-4">
                 <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                 <div className="text-xs font-semibold text-blue-700 leading-relaxed">
-                  Standardized pricing ensures consistency across all sales quotes. Updating the price here will affect all future quotes but will not retrospectively change existing ones.
+                  Standardized pricing ensures consistency across all sales quotes. Updating the
+                  price here will affect all future quotes but will not retrospectively change
+                  existing ones.
                 </div>
               </div>
             </div>

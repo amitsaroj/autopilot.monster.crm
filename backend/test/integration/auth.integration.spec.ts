@@ -62,7 +62,11 @@ describe('Auth integration (service)', () => {
     mockAuthRepository.findUserByEmail.mockResolvedValue(null);
 
     await expect(
-      authService.login({ email: 'missing@example.com', password: 'secret' }, TENANT_A, '127.0.0.1'),
+      authService.login(
+        { email: 'missing@example.com', password: 'secret' },
+        TENANT_A,
+        '127.0.0.1',
+      ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 });

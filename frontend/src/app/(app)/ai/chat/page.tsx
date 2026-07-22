@@ -104,9 +104,10 @@ export default function AIChatPage() {
             >
               <p className="whitespace-pre-wrap leading-relaxed">
                 {msg.content}
-                {streaming && i === messages.length - 1 && msg.role === 'assistant' && !msg.content && (
-                  <Loader2 className="h-4 w-4 animate-spin inline" />
-                )}
+                {streaming &&
+                  i === messages.length - 1 &&
+                  msg.role === 'assistant' &&
+                  !msg.content && <Loader2 className="h-4 w-4 animate-spin inline" />}
               </p>
             </div>
           </div>

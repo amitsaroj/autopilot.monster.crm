@@ -51,7 +51,9 @@ function CallsList({ contactId }: { contactId: string }) {
       {items.map((call) => (
         <div key={call.id} className="rounded-xl border border-border bg-card p-4">
           <div className="flex justify-between">
-            <p className="font-medium">{call.direction} · {call.status}</p>
+            <p className="font-medium">
+              {call.direction} · {call.status}
+            </p>
             <span className="text-xs text-muted-foreground">
               {new Date(call.createdAt).toLocaleString()}
             </span>

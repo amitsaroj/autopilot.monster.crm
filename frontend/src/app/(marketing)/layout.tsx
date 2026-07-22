@@ -10,11 +10,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function MarketingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0b0f19] text-gray-900 dark:text-white selection:bg-indigo-500/30">
       <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />

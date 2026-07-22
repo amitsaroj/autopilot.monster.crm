@@ -1,10 +1,21 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsUUID } from 'class-validator';
+import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class AssignWhatsappConversationDto {
   @ApiProperty()
   @IsUUID()
   assigneeId!: string;
+}
+
+export class SendConversationMessageDto {
+  @ApiProperty()
+  @IsString()
+  message!: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  wabaId?: string;
 }
 
 export class ResolveWhatsappConversationDto {

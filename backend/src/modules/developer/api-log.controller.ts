@@ -2,11 +2,13 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ApiLogService } from './api-log.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { ResourcePermissions, Roles, TenantId } from '../../common/decorators';
 
 @ApiTags('Developer - Logs')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('settings')
+@Roles('TENANT_ADMIN')
 @Controller('developer/logs')
 export class ApiLogController {
   constructor(private readonly logService: ApiLogService) {}

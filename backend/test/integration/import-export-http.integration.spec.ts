@@ -2,7 +2,11 @@
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 
-import { createTestApp, isMinioReachable, isPostgresReachable } from '../e2e/helpers/app-test.helper';
+import {
+  createTestApp,
+  isMinioReachable,
+  isPostgresReachable,
+} from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
 import { authRequestHeaders, loginTestUser } from '../e2e/helpers/auth-test.helper';
 
@@ -17,9 +21,7 @@ async function waitForJob(
   const headers = authRequestHeaders(tenantId, accessToken);
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
-    const res = await request(app.getHttpServer())
-      .get(`/api/v1/${path}/${jobId}`)
-      .set(headers);
+    const res = await request(app.getHttpServer()).get(`/api/v1/${path}/${jobId}`).set(headers);
 
     const job = res.body.data as Record<string, unknown>;
     if (job?.status === 'COMPLETED') {

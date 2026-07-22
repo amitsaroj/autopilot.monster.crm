@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -15,9 +15,7 @@ type TestimonialsPageContentProps = {
   testimonials: Testimonial[];
 };
 
-export default function TestimonialsPageContent({
-  testimonials,
-}: TestimonialsPageContentProps) {
+export default function TestimonialsPageContent({ testimonials }: TestimonialsPageContentProps) {
   return (
     <div className="pt-32 pb-20">
       <div className="max-w-6xl mx-auto px-6">

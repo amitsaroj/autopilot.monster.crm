@@ -33,7 +33,7 @@ export default function LoginPage() {
     try {
       const user = await login(data);
       toast.success('Welcome back!');
-      
+
       const roles = user?.roles || [];
       if (roles.includes('SUPER_ADMIN')) {
         router.push('/superadmin');
@@ -54,31 +54,42 @@ export default function LoginPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
           <Zap className="w-5 h-5 text-white" />
         </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">AutopilotMonster</span>
+        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
+          AutopilotMonster
+        </span>
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">Welcome back</h1>
-      <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">Sign in to your workspace</p>
+      <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">
+        Sign in to your workspace
+      </p>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Email</label>
+          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            Email
+          </label>
           <input
             {...register('email')}
             type="email"
             placeholder="autopilot.monster@gmail.com"
             disabled={isLoading}
             className={cn(
-              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-              errors.email && "border-red-500 focus:ring-red-500"
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              errors.email && 'border-red-500 focus:ring-red-500',
             )}
           />
           {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
         </div>
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-gray-900 dark:text-foreground">Password</label>
-            <Link href="/forgot-password" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+            <label className="text-sm font-medium text-gray-900 dark:text-foreground">
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+            >
               Forgot password?
             </Link>
           </div>
@@ -88,11 +99,13 @@ export default function LoginPage() {
             placeholder="••••••••"
             disabled={isLoading}
             className={cn(
-              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-              errors.password && "border-red-500 focus:ring-red-500"
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              errors.password && 'border-red-500 focus:ring-red-500',
             )}
           />
-          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
+          )}
         </div>
 
         <button
@@ -116,7 +129,9 @@ export default function LoginPage() {
           <span className="w-full border-t border-gray-200 dark:border-border"></span>
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white dark:bg-card px-3 text-gray-500 font-medium">Or continue with</span>
+          <span className="bg-white dark:bg-card px-3 text-gray-500 font-medium">
+            Or continue with
+          </span>
         </div>
       </div>
 
@@ -172,10 +187,12 @@ export default function LoginPage() {
         </a>
       </div>
 
-
       <p className="mt-6 text-center text-sm text-gray-500 dark:text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+        <Link
+          href="/register"
+          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+        >
           Get started
         </Link>
       </p>

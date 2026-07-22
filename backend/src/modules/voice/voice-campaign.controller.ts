@@ -1,21 +1,34 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+
 import { VoiceCampaignService } from './voice-campaign.service';
+import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
 @ApiTags('Voice Campaigns')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('voice')
+@PlanFeature('voice')
 @Controller('voice/campaigns')
 export class VoiceCampaignController {
   constructor(private readonly campaignService: VoiceCampaignService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create outbound voice campaign' })
-  async create(@TenantId() tenantId: string, @Body() dto: any) {
+  async create(@TenantId() tenantId: string, @Body() dto: CreateVoiceCampaignDto) {
     return this.campaignService.create(tenantId, dto);
   }
 
@@ -57,7 +70,11 @@ export class VoiceCampaignController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update campaign settings' })
-  async update(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+  async update(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateVoiceCampaignDto,
+  ) {
     return this.campaignService.update(tenantId, id, dto);
   }
 

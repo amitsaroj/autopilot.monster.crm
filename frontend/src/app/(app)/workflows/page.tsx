@@ -33,9 +33,7 @@ export default function WorkflowsPage() {
 
   const activeCount = workflows.filter((w) => w.isPublished).length;
   const today = new Date().toDateString();
-  const runsToday = executions.filter(
-    (e) => new Date(e.startedAt).toDateString() === today,
-  ).length;
+  const runsToday = executions.filter((e) => new Date(e.startedAt).toDateString() === today).length;
   const errors24h = executions.filter((e) => {
     const started = new Date(e.startedAt).getTime();
     return e.status === 'FAILED' && Date.now() - started < 86400000;
@@ -64,10 +62,16 @@ export default function WorkflowsPage() {
           <p className="page-description">Automate repetitive tasks and processes</p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/workflows/templates" className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors">
+          <Link
+            href="/workflows/templates"
+            className="px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors"
+          >
             Browse Templates
           </Link>
-          <Link href="/workflows/builder" className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
+          <Link
+            href="/workflows/builder"
+            className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+          >
             <Plus className="h-4 w-4" /> New Workflow
           </Link>
         </div>
@@ -87,7 +91,9 @@ export default function WorkflowsPage() {
       </div>
 
       {workflows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No workflows yet. Create one to get started.</p>
+        <p className="text-sm text-muted-foreground">
+          No workflows yet. Create one to get started.
+        </p>
       ) : (
         <div className="rounded-xl border border-border bg-card overflow-hidden">
           <table className="w-full text-sm">
@@ -111,15 +117,24 @@ export default function WorkflowsPage() {
                         <div className="p-1.5 rounded-lg bg-[hsl(246,80%,60%)]/10">
                           <Zap className="h-3.5 w-3.5 text-[hsl(246,80%,60%)]" />
                         </div>
-                        <Link href={`/workflows/${w.id}`} className="font-medium hover:text-[hsl(246,80%,60%)]">
+                        <Link
+                          href={`/workflows/${w.id}`}
+                          className="font-medium hover:text-[hsl(246,80%,60%)]"
+                        >
                           {w.name}
                         </Link>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{w.type}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${w.isPublished ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                        {w.isPublished ? <CheckCircle className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${w.isPublished ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}
+                      >
+                        {w.isPublished ? (
+                          <CheckCircle className="h-3 w-3" />
+                        ) : (
+                          <Pause className="h-3 w-3" />
+                        )}
                         {w.isPublished ? 'Active' : 'Draft'}
                       </span>
                     </td>
@@ -127,7 +142,8 @@ export default function WorkflowsPage() {
                     <td className="px-4 py-3">
                       {stats.errors > 0 ? (
                         <span className="flex items-center gap-1 text-red-500 text-xs">
-                          <AlertCircle className="h-3 w-3" />{stats.errors}
+                          <AlertCircle className="h-3 w-3" />
+                          {stats.errors}
                         </span>
                       ) : (
                         <span className="text-green-500 text-xs">0</span>

@@ -6,7 +6,9 @@ import { CoreModule } from '../../../src/app.module';
 
 const legacyTestAppGuard = {
   canActivate: (context: {
-    switchToHttp: () => { getRequest: () => Record<string, unknown> & { headers?: Record<string, string> } };
+    switchToHttp: () => {
+      getRequest: () => Record<string, unknown> & { headers?: Record<string, string> };
+    };
   }) => {
     const req = context.switchToHttp().getRequest();
     if (!req.tenantId) {

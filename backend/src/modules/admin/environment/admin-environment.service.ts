@@ -11,7 +11,7 @@ export class AdminEnvironmentService {
     const sensitiveKeywords = ['KEY', 'SECRET', 'PASSWORD', 'TOKEN', 'AUTH', 'DB', 'DATABASE'];
 
     for (const key in env) {
-      const isSensitive = sensitiveKeywords.some(keyword => key.toUpperCase().includes(keyword));
+      const isSensitive = sensitiveKeywords.some((keyword) => key.toUpperCase().includes(keyword));
       redactedEnv[key] = isSensitive ? '********' : env[key] || '';
     }
 

@@ -4,7 +4,11 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
-import { authRequestHeaders, extractResponseData, loginTestUser } from '../e2e/helpers/auth-test.helper';
+import {
+  authRequestHeaders,
+  extractResponseData,
+  loginTestUser,
+} from '../e2e/helpers/auth-test.helper';
 
 describe('HTTP Integration — AI Platform', () => {
   let app: INestApplication;
@@ -58,9 +62,7 @@ describe('HTTP Integration — AI Platform', () => {
     const agent = extractResponseData<{ id: string; name: string }>(agentRes.body);
     expect(agent.id).toBeDefined();
 
-    const listRes = await request(app.getHttpServer())
-      .get('/api/v1/ai/agents')
-      .set(headers);
+    const listRes = await request(app.getHttpServer()).get('/api/v1/ai/agents').set(headers);
     expect(listRes.status).toBe(200);
 
     const promptRes = await request(app.getHttpServer())
@@ -72,13 +74,9 @@ describe('HTTP Integration — AI Platform', () => {
     const prompt = extractResponseData<{ id: string }>(promptRes.body);
     expect(prompt.id).toBeDefined();
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/ai/agents/${agent.id}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/ai/agents/${agent.id}`).set(headers);
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/ai/prompts/${prompt.id}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/ai/prompts/${prompt.id}`).set(headers);
   });
 
   it('Knowledge base lifecycle', async () => {
@@ -100,9 +98,7 @@ describe('HTTP Integration — AI Platform', () => {
       .set(headers);
     expect(listRes.status).toBe(200);
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/ai/knowledge-bases/${kb.id}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/ai/knowledge-bases/${kb.id}`).set(headers);
   });
 
   it('GET /api/v1/ai/usage returns usage metrics', async () => {
@@ -113,9 +109,54 @@ describe('HTTP Integration — AI Platform', () => {
       .set(authRequestHeaders(tenantId, accessToken));
 
     expect(response.status).toBe(200);
-    const usage = extractResponseData<{ tokensUsed: number; cost: number }>(response.body);
+    const usage = extractResponseData<{
+      tokensUsed: number;
+      cost: number;
+      conversations: number;
+      embeddings: number;
+    }>(response.body);
     expect(typeof usage.tokensUsed).toBe('number');
     expect(typeof usage.cost).toBe('number');
+    expect(typeof usage.conversations).toBe('number');
+    expect(typeof usage.embeddings).toBe('number');
+  });
+
+  it('POST /api/v1/ai/templates creates prompt template', async () => {
+    if (!postgresAvailable) return;
+
+    const headers = authRequestHeaders(tenantId, accessToken);
+
+    const createRes = await request(app.getHttpServer())
+      .post('/api/v1/ai/templates')
+      .set(headers)
+      .send({
+        name: 'Audit Template',
+        template: 'Hello {{name}}',
+        category: 'general',
+      });
+
+    expect([200, 201]).toContain(createRes.status);
+    const template = extractResponseData<{ id: string; name: string }>(createRes.body);
+    expect(template.id).toBeDefined();
+
+    const listRes = await request(app.getHttpServer()).get('/api/v1/ai/templates').set(headers);
+    expect(listRes.status).toBe(200);
+
+    await request(app.getHttpServer()).delete(`/api/v1/ai/templates/${template.id}`).set(headers);
+  });
+
+  it('POST /api/v1/ai/generate/async queues inference job', async () => {
+    if (!postgresAvailable) return;
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/ai/generate/async')
+      .set(authRequestHeaders(tenantId, accessToken))
+      .send({ prompt: 'Say hello in one word.' });
+
+    expect([200, 202]).toContain(response.status);
+    const data = extractResponseData<{ jobId: string | number; status: string }>(response.body);
+    expect(data.jobId).toBeDefined();
+    expect(data.status).toBe('queued');
   });
 
   it('GET /api/v1/ai/conversations returns paginated list', async () => {

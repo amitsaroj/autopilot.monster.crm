@@ -1,5 +1,5 @@
 import { ForbiddenException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { ModuleRef, Reflector } from '@nestjs/core';
 
 import { LimitGuard } from './limit.guard';
 import { METADATA_KEYS } from '../constants/app.constants';
@@ -8,19 +8,24 @@ describe('LimitGuard', () => {
   const reflector = new Reflector();
   const pricingService = {
     getLimit: jest.fn(),
-    getLimitPeriod: jest.fn(),
   };
   const billingService = {
     getUsage: jest.fn(),
     trackUsage: jest.fn(),
   };
+  const moduleRef = {
+    get: jest.fn((token: string) => {
+      if (token === 'PricingService') return pricingService;
+      if (token === 'BillingService') return billingService;
+      return undefined;
+    }),
+  };
 
   let guard: LimitGuard;
 
   beforeEach(() => {
-    guard = new LimitGuard(reflector, pricingService as never, billingService as never);
+    guard = new LimitGuard(reflector, moduleRef as unknown as ModuleRef);
     jest.clearAllMocks();
-    pricingService.getLimitPeriod.mockResolvedValue('TOTAL');
   });
 
   function buildContext(metric?: string, tenantId?: string) {
@@ -44,20 +49,24 @@ describe('LimitGuard', () => {
     expect(billingService.getUsage).not.toHaveBeenCalled();
   });
 
-  it('allows when limit is unconfigured (<= 0)', async () => {
+  it('blocks when configured limit is zero', async () => {
     pricingService.getLimit.mockResolvedValue(0);
-    await expect(guard.canActivate(buildContext('deals_limit', 'tenant-1'))).resolves.toBe(true);
+    billingService.getUsage.mockResolvedValue(0);
+
+    await expect(guard.canActivate(buildContext('deals_limit', 'tenant-1'))).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
   });
 
   it('blocks when usage reached configured limit', async () => {
     pricingService.getLimit.mockResolvedValue(100);
     billingService.getUsage.mockResolvedValue(100);
 
-    await expect(guard.canActivate(buildContext('contacts_limit', 'tenant-1'))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      guard.canActivate(buildContext('contacts_limit', 'tenant-1')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
     expect(pricingService.getLimit).toHaveBeenCalledWith('tenant-1', 'contacts_limit');
-    expect(billingService.getUsage).toHaveBeenCalledWith('tenant-1', 'contacts_limit', 'TOTAL');
+    expect(billingService.getUsage).toHaveBeenCalledWith('tenant-1', 'contacts_limit');
   });
 
   it('allows when usage is below configured limit', async () => {

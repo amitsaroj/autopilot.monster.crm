@@ -1,65 +1,103 @@
-import { Activity, Zap, MessageSquare, Phone, Mail, Database, HardDrive, ArrowUpRight } from 'lucide-react';
+'use client';
 
-const usageItems = [
-  { label: 'Contacts', used: 2840, limit: 50000, unit: 'contacts', icon: Activity, color: 'bg-blue-500' },
-  { label: 'Emails Sent', used: 8420, limit: 50000, unit: 'emails/mo', icon: Mail, color: 'bg-green-500' },
-  { label: 'AI Chat Messages', used: 4200, limit: 10000, unit: 'messages/mo', icon: Zap, color: 'bg-[hsl(246,80%,60%)]' },
-  { label: 'WhatsApp Messages', used: 3180, limit: 10000, unit: 'messages/mo', icon: MessageSquare, color: 'bg-green-600' },
-  { label: 'Call Minutes', used: 642, limit: 2000, unit: 'minutes/mo', icon: Phone, color: 'bg-orange-500' },
-  { label: 'Storage', used: 2.8, limit: 50, unit: 'GB', icon: HardDrive, color: 'bg-purple-500' },
-  { label: 'API Calls', used: 48200, limit: 500000, unit: 'calls/mo', icon: Database, color: 'bg-yellow-500' },
-];
+import { useEffect, useState } from 'react';
+import { Activity, Loader2, AlertCircle, Zap } from 'lucide-react';
+import Link from 'next/link';
+import { billingService } from '@/services/billing.service';
+import { parseApiData } from '@/lib/api/parse-response';
+
+function formatKey(key: string): string {
+  return key
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function UsagePage() {
+  const [usage, setUsage] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await billingService.getUsage();
+        setUsage(parseApiData<Record<string, number>>(res) ?? res.data ?? {});
+      } catch {
+        setUsage({});
+        setError('Unable to load usage data.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    void load();
+  }, []);
+
+  const entries = Object.entries(usage).sort(([a], [b]) => a.localeCompare(b));
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header">
         <div>
           <h1 className="page-title">Usage</h1>
-          <p className="page-description">Resource consumption for October 2024 · Enterprise Plan</p>
+          <p className="page-description">Resource consumption for your workspace</p>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {usageItems.map((u) => {
-          const pct = Math.round((u.used / u.limit) * 100);
-          const warn = pct >= 80;
-          return (
-            <div key={u.label} className="rounded-xl border border-border bg-card p-5">
-              <div className="flex items-center gap-4 mb-3">
-                <div className={`p-2.5 rounded-xl ${u.color}/10`}>
-                  <u.icon className={`h-4 w-4 ${u.color.replace('bg-', 'text-')}`} />
+      {loading && (
+        <div className="flex justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="rounded-xl border border-border bg-card p-6 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+          <p className="text-sm text-muted-foreground">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && entries.length === 0 && (
+        <div className="rounded-xl border border-border bg-card p-12 text-center">
+          <Activity className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+          <p className="text-sm font-medium text-foreground">No usage recorded yet</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Usage metrics will appear here as your workspace consumes resources.
+          </p>
+        </div>
+      )}
+
+      {!loading && !error && entries.length > 0 && (
+        <div className="space-y-4">
+          {entries.map(([key, value]) => (
+            <div key={key} className="rounded-xl border border-border bg-card p-5">
+              <div className="flex items-center gap-4">
+                <div className="p-2.5 rounded-xl bg-[hsl(246,80%,60%)]/10">
+                  <Activity className="h-4 w-4 text-[hsl(246,80%,60%)]" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-baseline">
-                    <p className="font-semibold text-foreground">{u.label}</p>
-                    <p className="text-sm text-muted-foreground">{u.used.toLocaleString()} / {u.limit.toLocaleString()} {u.unit}</p>
-                  </div>
+                <div className="flex-1 flex justify-between items-baseline">
+                  <p className="font-semibold text-foreground">{formatKey(key)}</p>
+                  <p className="text-sm font-bold text-foreground">{value.toLocaleString()}</p>
                 </div>
-                <span className={`text-sm font-bold ${warn ? 'text-red-400' : 'text-foreground'}`}>{pct}%</span>
               </div>
-              <div className="h-2.5 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${warn ? 'bg-red-500' : u.color}`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              {warn && (
-                <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
-                  <ArrowUpRight className="h-3 w-3" />Approaching limit — consider upgrading your plan
-                </p>
-              )}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className="rounded-xl border border-[hsl(246,80%,60%)]/20 bg-[hsl(246,80%,60%)]/5 p-5">
         <p className="text-sm font-semibold text-foreground mb-1">Need more capacity?</p>
-        <p className="text-sm text-muted-foreground">Upgrade to Enterprise for unlimited contacts, 50k AI messages, and dedicated support.</p>
-        <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
+        <p className="text-sm text-muted-foreground">
+          Review your plan and upgrade options on the billing page.
+        </p>
+        <Link
+          href="/billing/upgrade"
+          className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+        >
           <Zap className="h-4 w-4" /> Upgrade Plan
-        </button>
+        </Link>
       </div>
     </div>
   );

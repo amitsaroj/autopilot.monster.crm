@@ -7,11 +7,7 @@ import toast from 'react-hot-toast';
 
 import { voiceCampaignService, VoiceCampaign } from '@/services/voice-campaign.service';
 
-export default function VoiceCampaignDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [campaign, setCampaign] = useState<VoiceCampaign | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,9 +65,7 @@ export default function VoiceCampaignDetailPage({
 
   if (!campaign) {
     return (
-      <div className="mx-auto max-w-3xl py-8 text-center text-gray-500">
-        Campaign not found.
-      </div>
+      <div className="mx-auto max-w-3xl py-8 text-center text-gray-500">Campaign not found.</div>
     );
   }
 

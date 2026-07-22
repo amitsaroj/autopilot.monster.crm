@@ -31,7 +31,12 @@ export default function AnalyticsCrmPage() {
     void load();
   }, []);
 
-  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   if (!data) return <p className="text-sm text-muted-foreground">No analytics data.</p>;
 
   return (

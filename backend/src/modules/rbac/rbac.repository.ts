@@ -19,7 +19,12 @@ export class RbacRepository extends BaseRepository<Role> {
     super(roleRepository);
   }
 
-  async assignRole(tenantId: string, userId: string, roleId: string, assignedBy?: string): Promise<UserRole> {
+  async assignRole(
+    tenantId: string,
+    userId: string,
+    roleId: string,
+    assignedBy?: string,
+  ): Promise<UserRole> {
     const userRole = this.userRoleRepository.create({ tenantId, userId, roleId, assignedBy });
     return this.userRoleRepository.save(userRole);
   }
@@ -34,7 +39,8 @@ export class RbacRepository extends BaseRepository<Role> {
 
   async findAllPaginated(tenantId: string, filter: any = {}): Promise<[Role[], number]> {
     const { page = 1, limit = 10, search } = filter;
-    const query = this.roleRepository.createQueryBuilder('role')
+    const query = this.roleRepository
+      .createQueryBuilder('role')
       .where('role.tenantId = :tenantId', { tenantId });
 
     if (search) {

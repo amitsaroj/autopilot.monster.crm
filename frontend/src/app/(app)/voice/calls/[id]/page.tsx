@@ -7,11 +7,7 @@ import toast from 'react-hot-toast';
 
 import { voiceCallService, VoiceCall } from '@/services/voice-call.service';
 
-export default function VoiceCallDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function VoiceCallDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [call, setCall] = useState<VoiceCall | null>(null);
   const [loading, setLoading] = useState(true);
@@ -64,7 +60,10 @@ export default function VoiceCallDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-8">
-      <Link href="/voice/calls" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600">
+      <Link
+        href="/voice/calls"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to Calls
       </Link>
 
@@ -73,24 +72,50 @@ export default function VoiceCallDetailPage({
           <div className="flex items-center gap-3">
             <Phone className="h-6 w-6 text-blue-600" />
             <div>
-              <h1 className="text-xl font-bold">{call.from} → {call.to}</h1>
-              <p className="text-sm text-gray-500">{call.direction} · {call.status}</p>
+              <h1 className="text-xl font-bold">
+                {call.from} → {call.to}
+              </h1>
+              <p className="text-sm text-gray-500">
+                {call.direction} · {call.status}
+              </p>
             </div>
           </div>
           {!['completed', 'COMPLETED', 'failed', 'FAILED'].includes(call.status) && (
-            <button type="button" onClick={() => void handleHangUp()} className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm text-white">
+            <button
+              type="button"
+              onClick={() => void handleHangUp()}
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-3 py-2 text-sm text-white"
+            >
               <PhoneOff className="h-4 w-4" /> Hang up
             </button>
           )}
         </div>
 
         <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
-          <div><dt className="text-gray-500">Duration</dt><dd className="font-medium">{call.durationSeconds}s</dd></div>
-          <div><dt className="text-gray-500">Cost</dt><dd className="font-medium">${Number(call.costAmount).toFixed(4)}</dd></div>
-          <div><dt className="text-gray-500">Voice profile</dt><dd className="font-medium">{call.voiceProfile ?? 'default'}</dd></div>
-          <div><dt className="text-gray-500">Sentiment</dt><dd className="font-medium">{call.sentiment ?? '—'}</dd></div>
-          <div><dt className="text-gray-500">SID</dt><dd className="font-mono text-xs">{call.sid}</dd></div>
-          <div><dt className="text-gray-500">Created</dt><dd className="font-medium">{new Date(call.createdAt).toLocaleString()}</dd></div>
+          <div>
+            <dt className="text-gray-500">Duration</dt>
+            <dd className="font-medium">{call.durationSeconds}s</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Cost</dt>
+            <dd className="font-medium">${Number(call.costAmount).toFixed(4)}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Voice profile</dt>
+            <dd className="font-medium">{call.voiceProfile ?? 'default'}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Sentiment</dt>
+            <dd className="font-medium">{call.sentiment ?? '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">SID</dt>
+            <dd className="font-mono text-xs">{call.sid}</dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Created</dt>
+            <dd className="font-medium">{new Date(call.createdAt).toLocaleString()}</dd>
+          </div>
         </dl>
 
         {recordingUrl && (

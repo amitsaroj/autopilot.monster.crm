@@ -31,4 +31,10 @@ export class VoiceCallRepository extends BaseRepository<VoiceCall> {
       .take(100)
       .getMany();
   }
+
+  async findByRecordingUrl(tenantId: string, audioUrl: string): Promise<VoiceCall | null> {
+    return this.repository.findOne({
+      where: { tenantId, recordingUrl: audioUrl },
+    });
+  }
 }

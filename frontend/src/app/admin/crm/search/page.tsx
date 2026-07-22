@@ -1,9 +1,20 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import {
-  Search, X, Users, Building2, Target, FileText,
-  Clock, ArrowRight, Command, Hash, Tag, Zap, Loader2
+  Search,
+  X,
+  Users,
+  Building2,
+  Target,
+  FileText,
+  Clock,
+  ArrowRight,
+  Command,
+  Hash,
+  Tag,
+  Zap,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -21,9 +32,17 @@ interface DisplayResult {
   updatedAt?: string;
 }
 
-const TYPE_CONFIG: Record<ResultType, { icon: React.ElementType; color: string; bg: string; label: string }> = {
+const TYPE_CONFIG: Record<
+  ResultType,
+  { icon: React.ElementType; color: string; bg: string; label: string }
+> = {
   contact: { icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10', label: 'Contact' },
-  company: { icon: Building2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', label: 'Company' },
+  company: {
+    icon: Building2,
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
+    label: 'Company',
+  },
   deal: { icon: Target, color: 'text-amber-400', bg: 'bg-amber-500/10', label: 'Deal' },
   quote: { icon: FileText, color: 'text-purple-400', bg: 'bg-purple-500/10', label: 'Quote' },
 };
@@ -78,7 +97,9 @@ export default function AdminCRMSearchPage() {
     <div className="space-y-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
       <div>
         <h1 className="text-3xl font-black text-white tracking-tight">CRM Search</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Search Contacts, Companies, Deals & More</p>
+        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          Search Contacts, Companies, Deals & More
+        </p>
       </div>
 
       {/* Search Box */}
@@ -89,13 +110,16 @@ export default function AdminCRMSearchPage() {
             type="text"
             placeholder="Search contacts, companies, deals, quotes..."
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             autoFocus
             className="flex-1 bg-transparent outline-none text-base text-gray-100 placeholder:text-gray-600 font-medium"
           />
           <div className="flex items-center gap-2 shrink-0">
             {query && (
-              <button onClick={() => setQuery('')} className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+              <button
+                onClick={() => setQuery('')}
+                className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all"
+              >
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -108,9 +132,12 @@ export default function AdminCRMSearchPage() {
 
       {/* Filters */}
       <div className="flex gap-2 flex-wrap">
-        {FILTERS.map(f => (
-          <button key={f} onClick={() => setActiveFilter(f)}
-            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeFilter === f ? 'bg-indigo-500 text-white shadow-xl shadow-indigo-500/20' : 'bg-white/[0.03] border border-white/[0.06] text-gray-400 hover:text-white hover:bg-white/[0.06]'}`}>
+        {FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setActiveFilter(f)}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeFilter === f ? 'bg-indigo-500 text-white shadow-xl shadow-indigo-500/20' : 'bg-white/[0.03] border border-white/[0.06] text-gray-400 hover:text-white hover:bg-white/[0.06]'}`}
+          >
             {f}
           </button>
         ))}
@@ -131,23 +158,38 @@ export default function AdminCRMSearchPage() {
               </p>
               {results.length > 0 ? (
                 <div className="space-y-2">
-                  {results.map(r => {
+                  {results.map((r) => {
                     const cfg = TYPE_CONFIG[r.type];
                     return (
-                      <Link key={r.id} href={r.href}
-                        className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group">
-                        <div className={`p-3 rounded-xl ${cfg.bg} shrink-0 group-hover:scale-110 transition-transform`}>
+                      <Link
+                        key={r.id}
+                        href={r.href}
+                        className="flex items-center gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group"
+                      >
+                        <div
+                          className={`p-3 rounded-xl ${cfg.bg} shrink-0 group-hover:scale-110 transition-transform`}
+                        >
                           <cfg.icon className={`w-5 h-5 ${cfg.color}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">{r.title}</p>
-                            <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
+                            <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">
+                              {r.title}
+                            </p>
+                            <span
+                              className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${cfg.bg} ${cfg.color}`}
+                            >
+                              {cfg.label}
+                            </span>
                           </div>
                           <p className="text-xs text-gray-500 truncate">{r.subtitle}</p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          {r.updatedAt && <span className="text-[10px] text-gray-600 font-mono">{r.updatedAt}</span>}
+                          {r.updatedAt && (
+                            <span className="text-[10px] text-gray-600 font-mono">
+                              {r.updatedAt}
+                            </span>
+                          )}
                           <ArrowRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
                         </div>
                       </Link>
@@ -157,8 +199,12 @@ export default function AdminCRMSearchPage() {
               ) : (
                 <div className="py-20 text-center">
                   <Search className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-                  <p className="text-sm text-gray-500 font-medium">No results found for "{query}"</p>
-                  <p className="text-xs text-gray-700 mt-1">Try different keywords or check filters</p>
+                  <p className="text-sm text-gray-500 font-medium">
+                    No results found for "{query}"
+                  </p>
+                  <p className="text-xs text-gray-700 mt-1">
+                    Try different keywords or check filters
+                  </p>
                 </div>
               )}
             </>
@@ -171,11 +217,16 @@ export default function AdminCRMSearchPage() {
               <Clock className="w-3.5 h-3.5" /> Recent Searches
             </p>
             <div className="space-y-2">
-              {RECENT.map(r => (
-                <button key={r} onClick={() => setQuery(r)}
-                  className="w-full text-left flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-all group">
+              {RECENT.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setQuery(r)}
+                  className="w-full text-left flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.03] transition-all group"
+                >
                   <Clock className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-                  <span className="text-sm text-gray-400 group-hover:text-white transition-colors">{r}</span>
+                  <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
+                    {r}
+                  </span>
                 </button>
               ))}
             </div>
@@ -187,9 +238,14 @@ export default function AdminCRMSearchPage() {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {Object.entries(TYPE_CONFIG).map(([type, cfg]) => (
-                <button key={type} onClick={() => setActiveFilter(cfg.label + 's')}
-                  className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group">
-                  <div className={`p-2 rounded-lg ${cfg.bg}`}><cfg.icon className={`w-4 h-4 ${cfg.color}`} /></div>
+                <button
+                  key={type}
+                  onClick={() => setActiveFilter(cfg.label + 's')}
+                  className="flex items-center gap-3 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group"
+                >
+                  <div className={`p-2 rounded-lg ${cfg.bg}`}>
+                    <cfg.icon className={`w-4 h-4 ${cfg.color}`} />
+                  </div>
                   <span className="text-sm font-black text-white">{cfg.label}s</span>
                 </button>
               ))}

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Link2, Plus, RefreshCw, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { socialService } from "@/services/social.service";
-import { parseApiData } from "@/lib/api/parse-response";
+import { useEffect, useState } from 'react';
+import { Link2, Plus, RefreshCw, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { socialService } from '@/services/social.service';
+import { parseApiData } from '@/lib/api/parse-response';
 
 interface SocialPost {
   id: string;
@@ -19,16 +19,16 @@ interface PlatformConnection {
   id: string;
   name: string;
   platform: string;
-  status: "CONNECTED" | "DISCONNECTED";
+  status: 'CONNECTED' | 'DISCONNECTED';
   posts: number;
   lastSync: string;
 }
 
 const PLATFORM_META: Record<string, { icon: string; label: string }> = {
-  LINKEDIN: { icon: "🔵", label: "LinkedIn" },
-  TWITTER: { icon: "🐦", label: "Twitter / X" },
-  FACEBOOK: { icon: "📘", label: "Facebook Page" },
-  INSTAGRAM: { icon: "📸", label: "Instagram" },
+  LINKEDIN: { icon: '🔵', label: 'LinkedIn' },
+  TWITTER: { icon: '🐦', label: 'Twitter / X' },
+  FACEBOOK: { icon: '📘', label: 'Facebook Page' },
+  INSTAGRAM: { icon: '📸', label: 'Instagram' },
 };
 
 export default function AdminSocialConnectionsPage() {
@@ -57,17 +57,15 @@ export default function AdminSocialConnectionsPage() {
               id: platform,
               name: meta.label,
               platform,
-              status: platformPosts.length > 0 ? "CONNECTED" : "DISCONNECTED",
+              status: platformPosts.length > 0 ? 'CONNECTED' : 'DISCONNECTED',
               posts: platformPosts.length,
-              lastSync: latest?.updatedAt
-                ? new Date(latest.updatedAt).toLocaleString()
-                : "Never",
+              lastSync: latest?.updatedAt ? new Date(latest.updatedAt).toLocaleString() : 'Never',
             };
           },
         );
         setPlatforms(connections);
       } catch {
-        toast.error("Failed to load social connections");
+        toast.error('Failed to load social connections');
       } finally {
         setLoading(false);
       }
@@ -99,14 +97,14 @@ export default function AdminSocialConnectionsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {platforms.map((p) => {
-          const meta = PLATFORM_META[p.platform] ?? { icon: "🌐", label: p.name };
+          const meta = PLATFORM_META[p.platform] ?? { icon: '🌐', label: p.name };
           return (
             <div
               key={p.id}
               className={`p-6 rounded-2xl border transition-all ${
-                p.status === "CONNECTED"
-                  ? "bg-white/[0.02] border-white/[0.05]"
-                  : "bg-white/[0.01] border-dashed border-white/[0.08]"
+                p.status === 'CONNECTED'
+                  ? 'bg-white/[0.02] border-white/[0.05]'
+                  : 'bg-white/[0.01] border-dashed border-white/[0.08]'
               }`}
             >
               <div className="flex justify-between items-start mb-4">
@@ -119,15 +117,15 @@ export default function AdminSocialConnectionsPage() {
                 </div>
                 <span
                   className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${
-                    p.status === "CONNECTED"
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                    p.status === 'CONNECTED'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
                   }`}
                 >
                   {p.status}
                 </span>
               </div>
-              {p.status === "CONNECTED" ? (
+              {p.status === 'CONNECTED' ? (
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="p-3 rounded-xl bg-white/[0.02]">
                     <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1">

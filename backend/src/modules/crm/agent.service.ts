@@ -71,7 +71,7 @@ export class AgentService {
 
   async createFromTemplate(tenantId: string, templateId: string) {
     const templates = this.getTemplates();
-    const template = templates.find(t => t.id === templateId);
+    const template = templates.find((t) => t.id === templateId);
     if (!template) throw new NotFoundException('Template not found');
 
     const agent = this.agentRepo.create({
@@ -81,11 +81,11 @@ export class AgentService {
       systemPrompt: template.prompt,
       isActive: true,
       voice: 'shimmer',
-      configuration: { 
-        templateId, 
+      configuration: {
+        templateId,
         role: template.role,
         category: template.category,
-        capabilities: template.capabilities 
+        capabilities: template.capabilities,
       },
     });
     return this.agentRepo.save(agent);

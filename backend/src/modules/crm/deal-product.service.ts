@@ -26,11 +26,7 @@ export class DealProductService {
     });
   }
 
-  async addProduct(
-    tenantId: string,
-    dealId: string,
-    dto: AddDealProductDto,
-  ): Promise<DealProduct> {
+  async addProduct(tenantId: string, dealId: string, dto: AddDealProductDto): Promise<DealProduct> {
     await this.dealService.findOne(tenantId, dealId);
 
     const product = await this.productRepository.findOne({

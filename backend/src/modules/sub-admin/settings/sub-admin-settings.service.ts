@@ -5,9 +5,7 @@ import { Tenant } from '../../../database/entities/tenant.entity';
 
 @Injectable()
 export class SubAdminSettingsService {
-  constructor(
-    @InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>,
-  ) {}
+  constructor(@InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>) {}
 
   async getSettings(tenantId: string) {
     const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });

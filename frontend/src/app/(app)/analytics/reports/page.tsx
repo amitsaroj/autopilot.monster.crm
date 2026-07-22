@@ -5,10 +5,7 @@ import { Plus, Loader2, FileText, Trash2, Play } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
-import {
-  analyticsReportService,
-  AnalyticsReport,
-} from '@/services/analytics-report.service';
+import { analyticsReportService, AnalyticsReport } from '@/services/analytics-report.service';
 
 export default function AnalyticsReportsPage() {
   const [reports, setReports] = useState<AnalyticsReport[]>([]);

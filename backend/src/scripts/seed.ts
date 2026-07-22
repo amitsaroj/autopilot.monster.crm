@@ -16,6 +16,7 @@ import * as bcrypt from 'bcryptjs';
 
 import { seedDemoCrmData, seedDemoSubscription } from './seed-demo-data';
 import { seedMarketplacePlugins } from './seed-marketplace-plugins';
+import { readStripePriceFromEnv } from '../modules/billing/stripe-price.util';
 
 const DEMO_PASSWORD = 'SecureP@ssw0rd!';
 
@@ -56,7 +57,12 @@ async function seed() {
         const name = `${resource}:${action}`;
         let perm = await permRepo.findOneBy({ name });
         if (!perm) {
-          perm = permRepo.create({ name, resource, action, description: `Can ${action} ${resource}` });
+          perm = permRepo.create({
+            name,
+            resource,
+            action,
+            description: `Can ${action} ${resource}`,
+          });
           await permRepo.save(perm);
         }
         allPermissions.push(perm);
@@ -68,16 +74,43 @@ async function seed() {
     const roleMappings = [
       { name: 'SUPER_ADMIN', perms: allPermissions },
       { name: 'TENANT_ADMIN', perms: allPermissions.filter((p) => p.resource !== 'admin') },
-      { name: 'MANAGER', perms: allPermissions.filter((p) => !['admin', 'billing'].includes(p.resource) && p.action !== 'delete') },
-      { name: 'USER', perms: allPermissions.filter((p) => ['read', 'create', 'update', 'view'].includes(p.action) && !['admin', 'billing', 'settings'].includes(p.resource)) },
-      { name: 'AGENT', perms: allPermissions.filter((p) => ['read', 'view', 'create', 'update'].includes(p.action) && ['crm', 'voice', 'whatsapp'].includes(p.resource)) },
+      {
+        name: 'MANAGER',
+        perms: allPermissions.filter(
+          (p) => !['admin', 'billing'].includes(p.resource) && p.action !== 'delete',
+        ),
+      },
+      {
+        name: 'USER',
+        perms: allPermissions.filter(
+          (p) =>
+            ['read', 'create', 'update', 'view'].includes(p.action) &&
+            !['admin', 'billing', 'settings'].includes(p.resource),
+        ),
+      },
+      {
+        name: 'AGENT',
+        perms: allPermissions.filter(
+          (p) =>
+            ['read', 'view', 'create', 'update'].includes(p.action) &&
+            ['crm', 'voice', 'whatsapp'].includes(p.resource),
+        ),
+      },
     ];
 
     const rolesMap = new Map<string, Role>();
     for (const mapping of roleMappings) {
-      let role = await roleRepo.findOne({ where: { name: mapping.name, tenantId: defaultTenant.id }, relations: ['permissions'] });
+      let role = await roleRepo.findOne({
+        where: { name: mapping.name, tenantId: defaultTenant.id },
+        relations: ['permissions'],
+      });
       if (!role) {
-        role = roleRepo.create({ name: mapping.name, isSystem: true, tenantId: defaultTenant.id, permissions: mapping.perms });
+        role = roleRepo.create({
+          name: mapping.name,
+          isSystem: true,
+          tenantId: defaultTenant.id,
+          permissions: mapping.perms,
+        });
         await roleRepo.save(role);
         console.log(`Created Role: ${mapping.name}`);
       } else {
@@ -90,13 +123,77 @@ async function seed() {
 
     // 4. PLANS, FEATURES, LIMITS
     const plansData = [
-      { name: 'Free', slug: 'FREE', priceMonthly: 0, priceAnnual: 0, limitContacts: 100, limitUsers: 1, limitAiTokens: 1000, features: ['crm', 'analytics', 'billing'], stripePriceIdMonthly: null, stripePriceIdAnnual: null },
-      { name: 'Starter', slug: 'STARTER', priceMonthly: 29, priceAnnual: 290, limitContacts: 1000, limitUsers: 5, limitAiTokens: 50000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'billing', 'export'], stripePriceIdMonthly: 'price_starter_monthly_placeholder', stripePriceIdAnnual: 'price_starter_annual_placeholder' },
-      { name: 'Pro', slug: 'PRO', priceMonthly: 99, priceAnnual: 990, limitContacts: 10000, limitUsers: 20, limitAiTokens: 500000, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'billing', 'storage', 'export', 'import'], stripePriceIdMonthly: 'price_pro_monthly_placeholder', stripePriceIdAnnual: 'price_pro_annual_placeholder' },
-      { name: 'Enterprise', slug: 'ENTERPRISE', priceMonthly: 499, priceAnnual: 4990, limitContacts: -1, limitUsers: -1, limitAiTokens: -1, features: ['crm', 'analytics', 'workflow', 'whatsapp', 'ai', 'voice', 'plugins', 'marketplace', 'billing', 'storage', 'export', 'import'], stripePriceIdMonthly: 'price_ent_monthly_placeholder', stripePriceIdAnnual: 'price_ent_annual_placeholder' },
+      {
+        name: 'Free',
+        slug: 'FREE',
+        priceMonthly: 0,
+        priceAnnual: 0,
+        limitContacts: 100,
+        limitUsers: 1,
+        limitAiTokens: 1000,
+        features: ['crm', 'analytics', 'billing'],
+      },
+      {
+        name: 'Starter',
+        slug: 'STARTER',
+        priceMonthly: 29,
+        priceAnnual: 290,
+        limitContacts: 1000,
+        limitUsers: 5,
+        limitAiTokens: 50000,
+        features: ['crm', 'analytics', 'workflow', 'whatsapp', 'billing', 'export'],
+      },
+      {
+        name: 'Pro',
+        slug: 'PRO',
+        priceMonthly: 99,
+        priceAnnual: 990,
+        limitContacts: 10000,
+        limitUsers: 20,
+        limitAiTokens: 500000,
+        features: [
+          'crm',
+          'analytics',
+          'workflow',
+          'whatsapp',
+          'ai',
+          'voice',
+          'plugins',
+          'billing',
+          'storage',
+          'export',
+          'import',
+        ],
+      },
+      {
+        name: 'Enterprise',
+        slug: 'ENTERPRISE',
+        priceMonthly: 499,
+        priceAnnual: 4990,
+        limitContacts: -1,
+        limitUsers: -1,
+        limitAiTokens: -1,
+        features: [
+          'crm',
+          'analytics',
+          'workflow',
+          'whatsapp',
+          'ai',
+          'voice',
+          'plugins',
+          'marketplace',
+          'billing',
+          'storage',
+          'export',
+          'import',
+        ],
+      },
     ];
 
     for (const pd of plansData) {
+      const stripePriceIdMonthly = readStripePriceFromEnv(pd.slug, 'MONTHLY');
+      const stripePriceIdAnnual = readStripePriceFromEnv(pd.slug, 'ANNUAL');
+
       let plan = await planRepo.findOneBy({ slug: pd.slug });
       if (!plan) {
         plan = planRepo.create({
@@ -106,36 +203,119 @@ async function seed() {
           priceAnnual: pd.priceAnnual,
           currency: 'USD',
           status: 'ACTIVE',
-          stripePriceIdMonthly: pd.stripePriceIdMonthly as string,
-          stripePriceIdAnnual: pd.stripePriceIdAnnual as string,
+          stripePriceIdMonthly: stripePriceIdMonthly ?? undefined,
+          stripePriceIdAnnual: stripePriceIdAnnual ?? undefined,
         });
         await planRepo.save(plan);
         console.log(`Created Plan: ${pd.name}`);
-        
+
         // Limits
         await limitRepo.save([
-          limitRepo.create({ planId: plan.id, metric: 'contacts_limit', value: pd.limitContacts, period: 'TOTAL' }),
-          limitRepo.create({ planId: plan.id, metric: 'deals_limit', value: pd.limitContacts, period: 'TOTAL' }),
-          limitRepo.create({ planId: plan.id, metric: 'users_limit', value: pd.limitUsers, period: 'TOTAL' }),
-          limitRepo.create({ planId: plan.id, metric: 'ai_tokens', value: pd.limitAiTokens, period: 'MONTHLY' }),
-          limitRepo.create({ planId: plan.id, metric: 'workflow_runs', value: pd.limitUsers === -1 ? -1 : pd.limitUsers * 500, period: 'MONTHLY' }),
-          limitRepo.create({ planId: plan.id, metric: 'calls', value: pd.limitUsers === -1 ? -1 : pd.limitUsers * 100, period: 'MONTHLY' }),
-          limitRepo.create({ planId: plan.id, metric: 'messages', value: pd.limitUsers === -1 ? -1 : pd.limitUsers * 1000, period: 'MONTHLY' }),
+          limitRepo.create({
+            planId: plan.id,
+            metric: 'contacts_limit',
+            value: pd.limitContacts,
+            period: 'TOTAL',
+          }),
+          limitRepo.create({
+            planId: plan.id,
+            metric: 'deals_limit',
+            value: pd.limitContacts,
+            period: 'TOTAL',
+          }),
+          limitRepo.create({
+            planId: plan.id,
+            metric: 'users_limit',
+            value: pd.limitUsers,
+            period: 'TOTAL',
+          }),
+          limitRepo.create({
+            planId: plan.id,
+            metric: 'ai_tokens',
+            value: pd.limitAiTokens,
+            period: 'MONTHLY',
+          }),
+          limitRepo.create({
+            planId: plan.id,
+            metric: 'workflow_runs',
+            value: pd.limitUsers === -1 ? -1 : pd.limitUsers * 500,
+            period: 'MONTHLY',
+          }),
+          limitRepo.create({
+            planId: plan.id,
+            metric: 'calls',
+            value: pd.limitUsers === -1 ? -1 : pd.limitUsers * 100,
+            period: 'MONTHLY',
+          }),
+          limitRepo.create({
+            planId: plan.id,
+            metric: 'messages',
+            value: pd.limitUsers === -1 ? -1 : pd.limitUsers * 1000,
+            period: 'MONTHLY',
+          }),
         ]);
 
         // Features
-        const featuresEnts = pd.features.map(f => featureRepo.create({ planId: plan!.id, featureKey: f, enabled: true, config: {} }));
+        const featuresEnts = pd.features.map((f) =>
+          featureRepo.create({ planId: plan!.id, featureKey: f, enabled: true, config: {} }),
+        );
         await featureRepo.save(featuresEnts);
+      } else {
+        let priceUpdated = false;
+        if (stripePriceIdMonthly) {
+          plan.stripePriceIdMonthly = stripePriceIdMonthly;
+          priceUpdated = true;
+        }
+        if (stripePriceIdAnnual) {
+          plan.stripePriceIdAnnual = stripePriceIdAnnual;
+          priceUpdated = true;
+        }
+        if (priceUpdated) {
+          await planRepo.save(plan);
+          console.log(`Updated Stripe price IDs for plan: ${pd.name}`);
+        } else {
+          console.log(`Plan already exists: ${pd.name}`);
+        }
       }
     }
 
     // 5. USERS (SuperAdmin & Admin)
     const usersToCreate = [
-      { key: 'superadmin', email: 'superadmin@autopilotmonster.com', role: 'SUPER_ADMIN', firstName: 'Super', lastName: 'Admin' },
-      { key: 'admin', email: 'admin@autopilotmonster.com', role: 'TENANT_ADMIN', firstName: 'System', lastName: 'Admin' },
-      { key: 'manager', email: 'manager@autopilotmonster.com', role: 'USER', firstName: 'Sales', lastName: 'Manager' },
-      { key: 'user', email: 'user@autopilotmonster.com', role: 'USER', firstName: 'Staff', lastName: 'Member' },
-      { key: 'agent', email: 'agent@autopilotmonster.com', role: 'USER', firstName: 'Support', lastName: 'Agent' },
+      {
+        key: 'superadmin',
+        email: 'superadmin@autopilotmonster.com',
+        role: 'SUPER_ADMIN',
+        firstName: 'Super',
+        lastName: 'Admin',
+      },
+      {
+        key: 'admin',
+        email: 'admin@autopilotmonster.com',
+        role: 'TENANT_ADMIN',
+        firstName: 'System',
+        lastName: 'Admin',
+      },
+      {
+        key: 'manager',
+        email: 'manager@autopilotmonster.com',
+        role: 'USER',
+        firstName: 'Sales',
+        lastName: 'Manager',
+      },
+      {
+        key: 'user',
+        email: 'user@autopilotmonster.com',
+        role: 'USER',
+        firstName: 'Staff',
+        lastName: 'Member',
+      },
+      {
+        key: 'agent',
+        email: 'agent@autopilotmonster.com',
+        role: 'USER',
+        firstName: 'Support',
+        lastName: 'Agent',
+      },
     ];
 
     const demoUsers: Record<string, UserEntity> = {};
@@ -183,7 +363,11 @@ async function seed() {
           });
           if (!existingAgentRole) {
             await userRoleRepo.save(
-              userRoleRepo.create({ userId: user.id, roleId: agentRole.id, tenantId: defaultTenant.id }),
+              userRoleRepo.create({
+                userId: user.id,
+                roleId: agentRole.id,
+                tenantId: defaultTenant.id,
+              }),
             );
           }
         }
@@ -234,7 +418,6 @@ async function seed() {
 
     console.log('Seed completed successfully!');
     process.exit(0);
-
   } catch (err) {
     console.error('Error during seed:', err);
     process.exit(1);

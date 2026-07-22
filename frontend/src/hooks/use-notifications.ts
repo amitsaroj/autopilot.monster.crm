@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
@@ -13,7 +13,7 @@ export const useNotifications = () => {
     if (!user || !token) return;
 
     const socketUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    
+
     socketRef.current = io(`${socketUrl}/notifications`, {
       auth: { token },
       transports: ['websocket'],
@@ -26,10 +26,12 @@ export const useNotifications = () => {
     socketRef.current.on('notification', (data: any) => {
       toast(data.title || 'New Notification', {
         description: data.message,
-        action: data.action ? {
-          label: 'View',
-          onClick: () => window.location.href = data.action
-        } : undefined,
+        action: data.action
+          ? {
+              label: 'View',
+              onClick: () => (window.location.href = data.action),
+            }
+          : undefined,
       });
     });
 

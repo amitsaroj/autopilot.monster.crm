@@ -13,9 +13,9 @@ export class AdminIntegrationsService {
   async findAll() {
     // We use PlatformSetting to store global integration configs
     const configs = await this.settingRepo.find({
-      where: { key: 'global_integrations' }
+      where: { key: 'global_integrations' },
     });
-    
+
     if (configs.length === 0) {
       return [
         { id: 'sendgrid', name: 'SendGrid', status: 'NOT_CONFIGURED', type: 'EMAIL' },
@@ -23,29 +23,29 @@ export class AdminIntegrationsService {
         { id: 'stripe', name: 'Stripe', status: 'NOT_CONFIGURED', type: 'PAYMENT' },
       ];
     }
-    
+
     return configs[0].value;
   }
 
   async updateConfig(id: string, config: any) {
     let setting = await this.settingRepo.findOne({ where: { key: 'global_integrations' } });
-    
+
     if (!setting) {
       setting = this.settingRepo.create({
         key: 'global_integrations',
         value: [],
-        group: 'INTEGRATIONS'
+        group: 'INTEGRATIONS',
       });
     }
-    
+
     const integrations = setting.value as any[];
-    const index = integrations.findIndex(i => i.id === id);
+    const index = integrations.findIndex((i) => i.id === id);
     if (index !== -1) {
       integrations[index] = { ...integrations[index], ...config, status: 'CONFIGURED' };
     } else {
       integrations.push({ id, ...config, status: 'CONFIGURED' });
     }
-    
+
     setting.value = integrations;
     return this.settingRepo.save(setting);
   }

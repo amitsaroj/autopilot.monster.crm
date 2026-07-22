@@ -97,7 +97,11 @@ export class MarketplaceController {
     @Body('amount') amount: number,
   ) {
     const result = await this.marketplaceService.recordPurchase(tenantId, appId, amount);
-    return { status: 200, message: 'Purchase registered and revenue share allocated', data: result };
+    return {
+      status: 200,
+      message: 'Purchase registered and revenue share allocated',
+      data: result,
+    };
   }
 
   @Get('vendor/revenue')

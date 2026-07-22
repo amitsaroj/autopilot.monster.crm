@@ -1,11 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import twilio from 'twilio';
 
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
-import { VoiceCall } from '../../database/entities/voice-call.entity';
 
 @Injectable()
 export class TwilioService {
@@ -15,8 +12,6 @@ export class TwilioService {
   constructor(
     private configService: ConfigService,
     private configOrchestrator: ConfigOrchestratorService,
-    @InjectRepository(VoiceCall)
-    private readonly voiceCallRepo: Repository<VoiceCall>,
   ) {}
 
   async getFromNumber(tenantId: string): Promise<string> {
@@ -30,27 +25,67 @@ export class TwilioService {
   }
 
   private async getClient(tenantId: string): Promise<{ client: twilio.Twilio; from: string }> {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     if (this.clients.has(tenantId)) {
-      return { 
-        client: this.clients.get(tenantId)!, 
-        from: await this.configOrchestrator.get(tenantId, 'twilio_phone_number') || this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890' 
+      const fromNumber =
+        (await this.configOrchestrator.get(tenantId, 'twilio_phone_number')) ||
+        this.configService.get('TWILIO_PHONE_NUMBER') ||
+        '+1234567890';
+      if (isProduction && fromNumber === '+1234567890') {
+        throw new Error('Twilio phone number is not configured for production');
+      }
+      return {
+        client: this.clients.get(tenantId)!,
+        from: fromNumber,
       };
     }
 
-    const accountSid = await this.configOrchestrator.get(tenantId, 'twilio_account_sid') || this.configService.get('TWILIO_ACCOUNT_SID') || 'ACmock';
-    const authToken = await this.configOrchestrator.get(tenantId, 'twilio_auth_token') || this.configService.get('TWILIO_AUTH_TOKEN') || 'mocktoken';
-    const from = await this.configOrchestrator.get(tenantId, 'twilio_phone_number') || this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890';
+    const accountSid =
+      (await this.configOrchestrator.get(tenantId, 'twilio_account_sid')) ||
+      this.configService.get('TWILIO_ACCOUNT_SID') ||
+      'ACmock';
+    const authToken =
+      (await this.configOrchestrator.get(tenantId, 'twilio_auth_token')) ||
+      this.configService.get('TWILIO_AUTH_TOKEN') ||
+      'mocktoken';
+    const from =
+      (await this.configOrchestrator.get(tenantId, 'twilio_phone_number')) ||
+      this.configService.get('TWILIO_PHONE_NUMBER') ||
+      '+1234567890';
 
     let client: twilio.Twilio;
     if (accountSid.startsWith('AC') && accountSid.length === 34) {
+      if (isProduction && authToken === 'mocktoken') {
+        throw new Error(`Tenant ${tenantId} Twilio auth token is not configured for production`);
+      }
+      if (isProduction && from === '+1234567890') {
+        throw new Error(`Tenant ${tenantId} Twilio phone number is not configured for production`);
+      }
       client = twilio(accountSid, authToken);
     } else {
+      if (isProduction) {
+        throw new Error(`Tenant ${tenantId} Twilio account SID is not configured for production`);
+      }
       this.logger.warn(`Tenant ${tenantId} Twilio loaded with mock credentials.`);
       client = twilio('AC' + '0'.repeat(32), '0'.repeat(32)); // Fake but valid format for constructor
     }
 
     this.clients.set(tenantId, client);
     return { client, from };
+  }
+
+  async sendSms(tenantId: string, to: string, body: string): Promise<string> {
+    this.logger.log(`Sending SMS to ${to} for tenant ${tenantId}`);
+
+    const { client, from } = await this.getClient(tenantId);
+    try {
+      const message = await client.messages.create({ to, from, body });
+      return message.sid;
+    } catch (err) {
+      this.logger.error(`Failed to send SMS to ${to}`, err);
+      throw err;
+    }
   }
 
   async initiateOutboundCall(tenantId: string, to: string, wssUrl: string) {
@@ -68,17 +103,6 @@ export class TwilioService {
         from,
         record: true,
       });
-
-      // Persist Call Record
-      const voiceCall = this.voiceCallRepo.create({
-        tenantId,
-        sid: call.sid,
-        from,
-        to,
-        direction: 'OUTBOUND',
-        status: 'INITIATED',
-      });
-      await this.voiceCallRepo.save(voiceCall);
 
       return call.sid;
     } catch (err) {
@@ -137,11 +161,15 @@ export class TwilioService {
     await client.calls(callSid).update({ twiml: twiml.toString() });
   }
 
-  generateRoutingTwiml(routingNumber: string, fallbackWssUrl: string): string {
+  generateRoutingTwiml(
+    routingNumber: string,
+    fallbackWssUrl: string,
+    routingFallbackUrl: string,
+  ): string {
     const twiml = new twilio.twiml.VoiceResponse();
     if (routingNumber) {
       twiml.say({ voice: 'Polly.Amy' }, 'Connecting you to the next available agent.');
-      const dial = twiml.dial({ timeout: 20, action: '/v1/voice/twilio/routing-fallback' });
+      const dial = twiml.dial({ timeout: 20, action: routingFallbackUrl });
       dial.number(routingNumber);
       return twiml.toString();
     }
@@ -169,24 +197,12 @@ export class TwilioService {
     }));
   }
 
-  async extractSentimentStub(callSid: string, tenantId: string) {
-    return {
-      callSid,
-      tenantId,
-      sentiment: 'POSITIVE',
-      keywords: ['support', 'billing', 'happy'],
-      confidence: 0.92,
-    };
-  }
-
-  async cloneVoiceStub(tenantId: string, sampleUrl: string): Promise<string> {
-    this.logger.log(`Cloning voice for tenant ${tenantId} using sample: ${sampleUrl}`);
-    return `voice_clone_${Math.random().toString(36).substring(7)}`;
-  }
-
   generateIvrTwiml(_body: Record<string, any>): string {
     const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say({ voice: 'Polly.Amy' }, 'Welcome to our IVR system. Press 1 for sales, 2 for support.');
+    twiml.say(
+      { voice: 'Polly.Amy' },
+      'Welcome to our IVR system. Press 1 for sales, 2 for support.',
+    );
     return twiml.toString();
   }
 }

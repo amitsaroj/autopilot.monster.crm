@@ -9,14 +9,24 @@ export const MessageNode = memo(({ data }: NodeProps) => {
         <div className="w-6 h-6 rounded-md bg-blue-500 flex items-center justify-center shrink-0">
           <MessageSquare className="w-3.5 h-3.5 text-white" />
         </div>
-        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">AI Message</span>
+        <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          AI Message
+        </span>
       </div>
       <div className="text-sm font-medium text-gray-900 dark:text-white leading-snug">
         {data.text || <span className="opacity-30 italic">Click to edit message text...</span>}
       </div>
-      
-      <Handle type="target" position={Position.Top} className="w-3 h-3 bg-blue-500 border-2 border-white dark:border-[#1f2937]" />
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 bg-blue-500 border-2 border-white dark:border-[#1f2937]" />
+
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="w-3 h-3 bg-blue-500 border-2 border-white dark:border-[#1f2937]"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="w-3 h-3 bg-blue-500 border-2 border-white dark:border-[#1f2937]"
+      />
     </div>
   );
 });

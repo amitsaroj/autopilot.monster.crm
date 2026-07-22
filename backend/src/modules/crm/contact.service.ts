@@ -1,10 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ContactRepository } from './contact.repository';
-import { CreateContactDto } from './dto/crm.dto';
+import { CreateContactDto, CrmListQueryDto, UpdateContactDto } from './dto/crm.dto';
 import { CreateContactNoteDto } from './dto/deal-lifecycle.dto';
 import { Contact } from '../../database/entities/contact.entity';
 import { Activity } from '../../database/entities/activity.entity';
@@ -14,6 +14,8 @@ import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
 import { DealService } from './deal.service';
 import { EVENT_NAMES } from '../../events/event.constants';
+import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
+import { toPaginatedResult } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class ContactService {
@@ -33,14 +35,28 @@ export class ContactService {
     private readonly whatsappRepository: Repository<WhatsAppMessage>,
   ) {}
 
-  async create(tenantId: string, dto: CreateContactDto): Promise<Contact> {
+  async create(tenantId: string, dto: CreateContactDto, actorId?: string): Promise<Contact> {
     const contact = await this.contactRepository.create(tenantId, dto);
-    this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, { contact, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, { contact, tenantId, actorId });
     return contact;
   }
 
   async findAll(tenantId: string): Promise<Contact[]> {
     return this.contactRepository.findAll(tenantId);
+  }
+
+  async findPaginated(
+    tenantId: string,
+    query: CrmListQueryDto,
+  ): Promise<IPaginatedResult<Contact>> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const [data, total] = await this.contactRepository.findFiltered(tenantId, {
+      ...query,
+      page,
+      limit,
+    });
+    return toPaginatedResult(data, total, page, limit);
   }
 
   async findOne(tenantId: string, id: string): Promise<Contact> {
@@ -51,32 +67,45 @@ export class ContactService {
     return contact;
   }
 
-  async update(tenantId: string, id: string, dto: Partial<CreateContactDto>): Promise<Contact> {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: UpdateContactDto,
+    actorId?: string,
+  ): Promise<Contact> {
+    await this.findOne(tenantId, id);
     const contact = await this.contactRepository.updateWithTenant(tenantId, id, dto);
-    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId, actorId });
     return contact;
   }
 
-  async assignOwner(tenantId: string, id: string, ownerId: string): Promise<Contact> {
+  async assignOwner(
+    tenantId: string,
+    id: string,
+    ownerId: string,
+    actorId?: string,
+  ): Promise<Contact> {
     await this.findOne(tenantId, id);
     const contact = await this.contactRepository.updateWithTenant(tenantId, id, { ownerId });
-    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId, actorId });
     return contact;
   }
 
-  async addTag(tenantId: string, id: string, tag: string): Promise<Contact> {
+  async addTag(tenantId: string, id: string, tag: string, actorId?: string): Promise<Contact> {
     const contact = await this.findOne(tenantId, id);
     const tags = [...(contact.tags ?? [])];
     if (!tags.includes(tag)) {
       tags.push(tag);
     }
     const updated = await this.contactRepository.updateWithTenant(tenantId, id, { tags });
-    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact: updated, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact: updated, tenantId, actorId });
     return updated;
   }
 
-  async remove(tenantId: string, id: string): Promise<void> {
+  async remove(tenantId: string, id: string, actorId?: string): Promise<void> {
+    await this.findOne(tenantId, id);
     await this.contactRepository.delete(tenantId, id);
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_DELETED, { tenantId, contact: { id }, actorId });
   }
 
   async getActivities(tenantId: string, contactId: string): Promise<Activity[]> {
@@ -116,7 +145,10 @@ export class ContactService {
   async getEmails(tenantId: string, contactId: string): Promise<EmailMessage[]> {
     const contact = await this.findOne(tenantId, contactId);
     return this.emailRepository.find({
-      where: [{ tenantId, contactId }, { tenantId, to: contact.email }],
+      where: [
+        { tenantId, contactId },
+        { tenantId, to: contact.email },
+      ],
       order: { createdAt: 'DESC' },
     });
   }
@@ -157,16 +189,20 @@ export class ContactService {
     tenantId: string,
     primaryId: string,
     secondaryId: string,
+    actorId?: string,
   ): Promise<Contact> {
     if (primaryId === secondaryId) {
-      throw new NotFoundException('Cannot merge contact with itself');
+      throw new BadRequestException('Cannot merge contact with itself');
     }
 
     const primary = await this.findOne(tenantId, primaryId);
     const secondary = await this.findOne(tenantId, secondaryId);
 
     const mergedTags = Array.from(new Set([...(primary.tags ?? []), ...(secondary.tags ?? [])]));
-    const mergedCustomFields = { ...(secondary.customFields ?? {}), ...(primary.customFields ?? {}) };
+    const mergedCustomFields = {
+      ...(secondary.customFields ?? {}),
+      ...(primary.customFields ?? {}),
+    };
 
     await this.contactRepository.updateWithTenant(tenantId, primaryId, {
       tags: mergedTags,
@@ -175,11 +211,25 @@ export class ContactService {
       jobTitle: primary.jobTitle ?? secondary.jobTitle,
     });
 
-    await this.activityRepository.update({ tenantId, contactId: secondaryId }, { contactId: primaryId });
-    await this.noteRepository.update({ tenantId, contactId: secondaryId }, { contactId: primaryId });
+    await this.activityRepository.update(
+      { tenantId, contactId: secondaryId },
+      { contactId: primaryId },
+    );
+    await this.noteRepository.update(
+      { tenantId, contactId: secondaryId },
+      { contactId: primaryId },
+    );
     await this.dealService.reassignContact(tenantId, secondaryId, primaryId);
     await this.contactRepository.delete(tenantId, secondaryId);
 
-    return this.findOne(tenantId, primaryId);
+    const merged = await this.findOne(tenantId, primaryId);
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_MERGED, {
+      tenantId,
+      primaryId,
+      secondaryId,
+      contact: merged,
+      actorId,
+    });
+    return merged;
   }
 }

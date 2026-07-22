@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Trash2, 
-  Save, 
+import {
+  User,
+  Mail,
+  Phone,
+  Trash2,
+  Save,
   ArrowLeft,
   Loader2,
   Zap,
@@ -21,7 +21,7 @@ import {
   BarChart3,
   Star,
   RefreshCw,
-  UserCheck
+  UserCheck,
 } from 'lucide-react';
 import { leadService, Lead, LeadStatus } from '@/services/lead.service';
 import toast from 'react-hot-toast';
@@ -85,9 +85,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-emerald-500 bg-emerald-50 border-emerald-100";
-    if (score >= 50) return "text-amber-500 bg-amber-50 border-amber-100";
-    return "text-red-500 bg-red-50 border-red-100";
+    if (score >= 80) return 'text-emerald-500 bg-emerald-50 border-emerald-100';
+    if (score >= 50) return 'text-amber-500 bg-amber-50 border-amber-100';
+    return 'text-red-500 bg-red-50 border-red-100';
   };
 
   if (isLoading) {
@@ -101,23 +101,27 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
       <div className="mb-8 flex items-center justify-between">
-        <Link 
-          href="/crm/leads" 
+        <Link
+          href="/crm/leads"
           className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Leads Engine
         </Link>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={handleConvert}
             disabled={isConverting || formData.status === LeadStatus.CONVERTED}
             className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-emerald-500/20 disabled:opacity-50"
           >
-            {isConverting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserCheck className="w-4 h-4" />}
+            {isConverting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <UserCheck className="w-4 h-4" />
+            )}
             Convert Lead
           </button>
-          <button 
+          <button
             onClick={handleSave}
             disabled={isSaving}
             className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-indigo-500/20"
@@ -137,10 +141,12 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="w-32 h-32 rounded-[32px] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-500/30">
                   <User className="w-16 h-16" />
                 </div>
-                <div className={cn(
-                  "absolute -bottom-4 -right-4 w-14 h-14 rounded-2xl border-4 border-white dark:border-card flex flex-col items-center justify-center shadow-xl",
-                  getScoreColor(lead?.score || 0)
-                )}>
+                <div
+                  className={cn(
+                    'absolute -bottom-4 -right-4 w-14 h-14 rounded-2xl border-4 border-white dark:border-card flex flex-col items-center justify-center shadow-xl',
+                    getScoreColor(lead?.score || 0),
+                  )}
+                >
                   <span className="text-xs font-black">{lead?.score}</span>
                   <span className="text-[7px] font-black uppercase opacity-60">AI Score</span>
                 </div>
@@ -150,10 +156,14 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">
                     {formData.firstName} {formData.lastName}
                   </h1>
-                  <span className={cn(
-                    "px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest",
-                    formData.status === LeadStatus.QUALIFIED ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-gray-50 text-gray-400 border-gray-100"
-                  )}>
+                  <span
+                    className={cn(
+                      'px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest',
+                      formData.status === LeadStatus.QUALIFIED
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        : 'bg-gray-50 text-gray-400 border-gray-100',
+                    )}
+                  >
                     {formData.status}
                   </span>
                 </div>
@@ -185,21 +195,32 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 <Zap className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Lead Intelligence</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">AI-Generated Insights & Prioritization</p>
+                <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                  Lead Intelligence
+                </h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  AI-Generated Insights & Prioritization
+                </p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
               <div className="p-6 rounded-[32px] bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Sentiment Analysis</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                  Sentiment Analysis
+                </p>
                 <div className="flex items-end gap-2">
-                  <div className="h-2 flex-1 rounded-full bg-emerald-500" style={{ width: '80%' }}></div>
+                  <div
+                    className="h-2 flex-1 rounded-full bg-emerald-500"
+                    style={{ width: '80%' }}
+                  ></div>
                   <span className="text-xs font-black text-emerald-600">80% Positive</span>
                 </div>
               </div>
               <div className="p-6 rounded-[32px] bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Intent Level</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                  Intent Level
+                </p>
                 <div className="flex items-end gap-2 text-indigo-600">
                   <BarChart3 className="w-4 h-4" />
                   <span className="text-xs font-black uppercase">High Purchase Intent</span>
@@ -208,7 +229,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             <div className="relative">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-3">AI Executive Summary</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-3">
+                AI Executive Summary
+              </label>
               <div className="bg-gray-50/30 dark:bg-gray-900/30 rounded-[32px] p-8 border border-gray-100 dark:border-border">
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed italic">
                   "{formData.aiSummary || 'Waiting for AI processing...'}"
@@ -220,17 +243,19 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
 
         <div className="space-y-8">
           <div className="bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-border shadow-soft p-8">
-            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white mb-6">Pipeline Status</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white mb-6">
+              Pipeline Status
+            </h3>
             <div className="space-y-4">
-              {Object.values(LeadStatus).map(status => (
+              {Object.values(LeadStatus).map((status) => (
                 <button
                   key={status}
                   onClick={() => setFormData({ ...formData, status })}
                   className={cn(
-                    "w-full px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition flex items-center justify-between",
-                    formData.status === status 
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20" 
-                      : "bg-gray-50 dark:bg-gray-800 text-gray-400 hover:bg-gray-100 border border-transparent hover:border-gray-100 dark:hover:border-border"
+                    'w-full px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition flex items-center justify-between',
+                    formData.status === status
+                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                      : 'bg-gray-50 dark:bg-gray-800 text-gray-400 hover:bg-gray-100 border border-transparent hover:border-gray-100 dark:hover:border-border',
                   )}
                 >
                   {status}
@@ -241,20 +266,28 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-border shadow-soft p-8">
-            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white mb-6">Metadata</h3>
+            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white mb-6">
+              Metadata
+            </h3>
             <div className="space-y-6">
               <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-border">
                 <Globe className="w-5 h-5 text-gray-400 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Source Channel</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">
+                    Source Channel
+                  </p>
                   <p className="text-xs font-black text-gray-900 dark:text-white">Direct Website</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-border">
                 <Calendar className="w-5 h-5 text-gray-400 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">Capture Date</p>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">{new Date(lead!.createdAt).toLocaleDateString()}</p>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">
+                    Capture Date
+                  </p>
+                  <p className="text-xs font-black text-gray-900 dark:text-white">
+                    {new Date(lead!.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             </div>

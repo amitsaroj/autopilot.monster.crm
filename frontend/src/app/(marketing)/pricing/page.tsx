@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -12,7 +12,14 @@ const plans = [
     desc: 'For small teams getting started with AI-powered sales.',
     cta: 'Start Free Trial',
     highlight: false,
-    features: ['Up to 1,000 contacts', '1 AI Agent', '500 voice minutes', 'Basic CRM pipeline', 'Email support', '5 workflows'],
+    features: [
+      'Up to 1,000 contacts',
+      '1 AI Agent',
+      '500 voice minutes',
+      'Basic CRM pipeline',
+      'Email support',
+      '5 workflows',
+    ],
   },
   {
     name: 'Growth',
@@ -22,7 +29,16 @@ const plans = [
     cta: 'Start Free Trial',
     highlight: true,
     badge: 'Most Popular',
-    features: ['Up to 10,000 contacts', '5 AI Agents', '5,000 voice minutes', 'Advanced pipelines', 'WhatsApp inbox', 'Unlimited workflows', 'Custom analytics', 'Priority support'],
+    features: [
+      'Up to 10,000 contacts',
+      '5 AI Agents',
+      '5,000 voice minutes',
+      'Advanced pipelines',
+      'WhatsApp inbox',
+      'Unlimited workflows',
+      'Custom analytics',
+      'Priority support',
+    ],
   },
   {
     name: 'Enterprise',
@@ -31,7 +47,16 @@ const plans = [
     desc: 'For large organizations with advanced security needs.',
     cta: 'Contact Sales',
     highlight: false,
-    features: ['Unlimited contacts', 'Unlimited AI Agents', 'Unlimited voice', 'Multi-tenant isolation', 'SSO & SAML', 'Dedicated CSM', 'Custom SLA', 'On-premise option'],
+    features: [
+      'Unlimited contacts',
+      'Unlimited AI Agents',
+      'Unlimited voice',
+      'Multi-tenant isolation',
+      'SSO & SAML',
+      'Dedicated CSM',
+      'Custom SLA',
+      'On-premise option',
+    ],
   },
 ];
 
@@ -39,14 +64,15 @@ export default function PricingPage() {
   return (
     <div className="pt-32 pb-20">
       <div className="max-w-6xl mx-auto px-6">
-        
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">Pricing</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+            Pricing
+          </span>
           <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
             Simple, transparent pricing
           </h1>
@@ -74,12 +100,14 @@ export default function PricingPage() {
                   {plan.badge}
                 </span>
               )}
-              
+
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{plan.desc}</p>
-              
+
               <div className="mb-8">
-                <span className="text-5xl font-black text-gray-900 dark:text-white">{plan.price}</span>
+                <span className="text-5xl font-black text-gray-900 dark:text-white">
+                  {plan.price}
+                </span>
                 <span className="text-gray-500 text-lg">{plan.period}</span>
               </div>
 
@@ -96,7 +124,10 @@ export default function PricingPage() {
 
               <ul className="space-y-3 flex-1">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                  <li
+                    key={feature}
+                    className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400"
+                  >
                     <Check className="w-4 h-4 text-indigo-400 shrink-0" />
                     {feature}
                   </li>
@@ -114,8 +145,13 @@ export default function PricingPage() {
           className="mt-24 text-center"
         >
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Questions?</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">Check our FAQ or contact our sales team for custom enterprise plans.</p>
-          <Link href="/contact" className="text-indigo-400 hover:text-indigo-300 font-medium flex items-center justify-center gap-2 transition-colors">
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            Check our FAQ or contact our sales team for custom enterprise plans.
+          </p>
+          <Link
+            href="/contact"
+            className="text-indigo-400 hover:text-indigo-300 font-medium flex items-center justify-center gap-2 transition-colors"
+          >
             Contact Sales <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>

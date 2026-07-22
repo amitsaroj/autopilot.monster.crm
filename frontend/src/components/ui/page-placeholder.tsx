@@ -8,12 +8,7 @@ interface PagePlaceholderProps {
   backLabel?: string;
 }
 
-export function PagePlaceholder({
-  title,
-  description,
-  backHref,
-  backLabel,
-}: PagePlaceholderProps) {
+export function PagePlaceholder({ title, description, backHref, backLabel }: PagePlaceholderProps) {
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="page-header">
@@ -36,8 +31,8 @@ export function PagePlaceholder({
         </div>
         <h2 className="text-lg font-semibold text-foreground mb-1">{title}</h2>
         <p className="text-sm text-muted-foreground text-center max-w-sm">
-          This page is part of the AutopilotMonster platform and will be fully
-          implemented as part of the module build.
+          This page is part of the AutopilotMonster platform and will be fully implemented as part
+          of the module build.
         </p>
       </div>
     </div>

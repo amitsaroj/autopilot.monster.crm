@@ -40,7 +40,12 @@ export default function KnowledgeBaseUploadPage() {
   return (
     <div className="mx-auto max-w-lg space-y-6 py-8">
       <h1 className="text-2xl font-bold">Upload to Knowledge Base</h1>
-      <input type="file" onChange={(e) => void handleUpload(e)} disabled={uploading} className="block w-full text-sm" />
+      <input
+        type="file"
+        onChange={(e) => void handleUpload(e)}
+        disabled={uploading}
+        className="block w-full text-sm"
+      />
       {uploading && <p className="text-sm text-muted-foreground">Indexing document...</p>}
     </div>
   );

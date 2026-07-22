@@ -12,9 +12,7 @@ export interface SecuredHttpTestContext {
   postgresAvailable: true;
 }
 
-export type SecuredHttpBootstrapResult =
-  | SecuredHttpTestContext
-  | { postgresAvailable: false };
+export type SecuredHttpBootstrapResult = SecuredHttpTestContext | { postgresAvailable: false };
 
 export async function bootstrapSecuredHttpTest(): Promise<SecuredHttpBootstrapResult> {
   const postgresAvailable = await isPostgresReachable();

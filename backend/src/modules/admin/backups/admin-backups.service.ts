@@ -1,28 +1,66 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import * as Minio from 'minio';
 import { StorageService } from '../../../storage/storage.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
 const execAsync = promisify(exec);
 
+export interface BackupRecord {
+  id: string;
+  name: string;
+  size?: string;
+  createdAt: Date;
+  status: string;
+  errorMessage?: string;
+}
+
+interface ListedBackupObject {
+  name: string;
+  size?: number;
+  lastModified?: Date;
+}
+
 @Injectable()
 export class AdminBackupsService {
   private readonly logger = new Logger(AdminBackupsService.name);
-  private currentBackups: any[] = [
-    { id: 'bak-001', name: 'weekly-system-backup-01.tar.gz', size: '1.2 GB', createdAt: new Date(Date.now() - 86400000 * 2), status: 'SUCCESS' },
-    { id: 'bak-002', name: 'daily-db-snapshot.sql', size: '450 MB', createdAt: new Date(Date.now() - 86400000), status: 'SUCCESS' },
-  ];
+  private currentBackups: BackupRecord[] = [];
 
   constructor(private readonly storageService: StorageService) {}
 
   async findAll() {
-    return this.currentBackups;
+    const backups = [...this.currentBackups];
+
+    try {
+      const bucket = this.storageService.getBackupsBucket();
+      const objects = await this.listBackupObjects(bucket);
+      const knownNames = new Set(backups.map((b) => b.name));
+
+      for (const obj of objects) {
+        if (obj.name && !knownNames.has(obj.name)) {
+          backups.push({
+            id: obj.name,
+            name: obj.name,
+            size: this.formatSize(obj.size),
+            createdAt: obj.lastModified ?? new Date(),
+            status: 'SUCCESS',
+          });
+        }
+      }
+    } catch (err: any) {
+      this.logger.warn(`Failed to list backups from storage: ${err.message}`);
+    }
+
+    return backups.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
   }
 
   async findOne(id: string) {
-    return this.currentBackups.find(b => b.id === id);
+    const all = await this.findAll();
+    return all.find((b) => b.id === id);
   }
 
   async trigger() {
@@ -30,7 +68,7 @@ export class AdminBackupsService {
     const fileName = `backup-${Date.now()}.sql`;
     const tempPath = path.join('/tmp', fileName);
 
-    const backupRecord = {
+    const backupRecord: BackupRecord = {
       id: backupId,
       name: fileName,
       status: 'RUNNING',
@@ -38,12 +76,42 @@ export class AdminBackupsService {
     };
     this.currentBackups.push(backupRecord);
 
-    // Run backup in background
-    this.runBackup(backupId, tempPath, fileName).catch(err => {
+    this.runBackup(backupId, tempPath, fileName).catch((err) => {
       this.logger.error(`Backup ${backupId} failed`, err);
     });
 
     return backupRecord;
+  }
+
+  private async listBackupObjects(bucket: string): Promise<ListedBackupObject[]> {
+    return new Promise((resolve, reject) => {
+      const items: ListedBackupObject[] = [];
+      const stream = this.storageService.getClient().listObjects(bucket, '', true);
+      stream.on('data', (obj: Minio.BucketItem) => {
+        if (obj.name) {
+          items.push({
+            name: obj.name,
+            size: obj.size,
+            lastModified: obj.lastModified,
+          });
+        }
+      });
+      stream.on('error', reject);
+      stream.on('end', () => resolve(items));
+    });
+  }
+
+  private formatSize(bytes?: number): string {
+    if (!bytes) {
+      return 'Unknown';
+    }
+    if (bytes >= 1024 * 1024 * 1024) {
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    }
+    if (bytes >= 1024 * 1024) {
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+    return (bytes / 1024).toFixed(2) + ' KB';
   }
 
   private async runBackup(id: string, tempPath: string, fileName: string) {
@@ -56,27 +124,23 @@ export class AdminBackupsService {
 
       this.logger.log(`Uploading ${fileName} to storage`);
       const fileBuffer = fs.readFileSync(tempPath);
-      await this.storageService.getClient().putObject(
-        this.storageService.getBackupsBucket(),
-        fileName,
-        fileBuffer
-      );
+      await this.storageService
+        .getClient()
+        .putObject(this.storageService.getBackupsBucket(), fileName, fileBuffer);
 
       const stats = fs.statSync(tempPath);
       const size = (stats.size / (1024 * 1024)).toFixed(2) + ' MB';
 
-      // Update record
-      const record = this.currentBackups.find(b => b.id === id);
+      const record = this.currentBackups.find((b) => b.id === id);
       if (record) {
         record.status = 'SUCCESS';
         record.size = size;
       }
 
-      // Cleanup
       fs.unlinkSync(tempPath);
       this.logger.log(`Backup ${id} completed successfully`);
     } catch (err: any) {
-      const record = this.currentBackups.find(b => b.id === id);
+      const record = this.currentBackups.find((b) => b.id === id);
       if (record) {
         record.status = 'FAILED';
         record.errorMessage = err.message;

@@ -20,7 +20,10 @@ export default function SettingsApiPage() {
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [newAppName, setNewAppName] = useState('');
   const [newAppRedirect, setNewAppRedirect] = useState('https://localhost/callback');
-  const [createdOAuth, setCreatedOAuth] = useState<{ clientId: string; clientSecret: string } | null>(null);
+  const [createdOAuth, setCreatedOAuth] = useState<{
+    clientId: string;
+    clientSecret: string;
+  } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -159,7 +162,10 @@ export default function SettingsApiPage() {
         </div>
         <div className="space-y-3">
           {keys.map((key) => (
-            <div key={key.id} className="flex items-center gap-4 p-4 rounded-lg border border-border bg-muted/20">
+            <div
+              key={key.id}
+              className="flex items-center gap-4 p-4 rounded-lg border border-border bg-muted/20"
+            >
               <div className="flex-1">
                 <p className="text-sm font-medium">{key.name}</p>
                 <code className="text-xs font-mono text-muted-foreground">{key.keyPrefix}...</code>
@@ -192,10 +198,15 @@ export default function SettingsApiPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <p className="text-sm font-medium">{webhook.name}</p>
-                    <p className="text-sm font-mono break-all text-muted-foreground">{webhook.url}</p>
+                    <p className="text-sm font-mono break-all text-muted-foreground">
+                      {webhook.url}
+                    </p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {webhook.events.map((event) => (
-                        <span key={event} className="px-2 py-0.5 bg-muted text-xs rounded font-mono">
+                        <span
+                          key={event}
+                          className="px-2 py-0.5 bg-muted text-xs rounded font-mono"
+                        >
                           {event}
                         </span>
                       ))}
@@ -216,7 +227,9 @@ export default function SettingsApiPage() {
 
       {createdOAuth && (
         <div className="rounded-xl border border-green-500/30 bg-green-500/5 p-4">
-          <p className="text-sm font-medium text-green-700">OAuth credentials (copy now — shown once):</p>
+          <p className="text-sm font-medium text-green-700">
+            OAuth credentials (copy now — shown once):
+          </p>
           <p className="text-xs font-mono mt-2">Client ID: {createdOAuth.clientId}</p>
           <p className="text-xs font-mono break-all">Client Secret: {createdOAuth.clientSecret}</p>
         </div>
@@ -225,21 +238,42 @@ export default function SettingsApiPage() {
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
         <h2 className="text-sm font-semibold">OAuth Applications</h2>
         <div className="flex gap-2">
-          <input value={newAppName} onChange={(e) => setNewAppName(e.target.value)} placeholder="App name" className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background" />
-          <input value={newAppRedirect} onChange={(e) => setNewAppRedirect(e.target.value)} placeholder="Redirect URI" className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background" />
-          <button onClick={() => void handleCreateOAuthApp()} className="px-3 py-2 text-xs bg-[hsl(246,80%,60%)] text-white rounded-lg">Create</button>
+          <input
+            value={newAppName}
+            onChange={(e) => setNewAppName(e.target.value)}
+            placeholder="App name"
+            className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background"
+          />
+          <input
+            value={newAppRedirect}
+            onChange={(e) => setNewAppRedirect(e.target.value)}
+            placeholder="Redirect URI"
+            className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background"
+          />
+          <button
+            onClick={() => void handleCreateOAuthApp()}
+            className="px-3 py-2 text-xs bg-[hsl(246,80%,60%)] text-white rounded-lg"
+          >
+            Create
+          </button>
         </div>
         <div className="space-y-3">
           {oauthApps.length === 0 ? (
             <p className="text-sm text-muted-foreground">No OAuth apps registered.</p>
           ) : (
             oauthApps.map((app) => (
-              <div key={app.id} className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20">
+              <div
+                key={app.id}
+                className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/20"
+              >
                 <div>
                   <p className="text-sm font-medium">{app.name}</p>
                   <code className="text-xs text-muted-foreground">{app.clientId}</code>
                 </div>
-                <button onClick={() => void handleRevokeOAuthApp(app.id)} className="p-2 rounded-lg border border-border hover:bg-red-500/10">
+                <button
+                  onClick={() => void handleRevokeOAuthApp(app.id)}
+                  className="p-2 rounded-lg border border-border hover:bg-red-500/10"
+                >
                   <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>
               </div>

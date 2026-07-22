@@ -110,7 +110,13 @@ export class UserEntity {
   @Column({ name: 'avatar_url', type: 'varchar', length: 512, nullable: true })
   avatarUrl?: string;
 
-  @Column({ name: 'verification_token', type: 'varchar', length: 128, nullable: true, select: false })
+  @Column({
+    name: 'verification_token',
+    type: 'varchar',
+    length: 128,
+    nullable: true,
+    select: false,
+  })
   verificationToken?: string;
 
   @Column({ name: 'reset_token', type: 'varchar', length: 128, nullable: true, select: false })

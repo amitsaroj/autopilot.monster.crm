@@ -1,8 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
 import { Conversation } from '../../database/entities/conversation.entity';
 import { Message } from '../../database/entities/message.entity';
+import { Contact } from '../../database/entities/contact.entity';
+import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { OmnichannelPreferredChannel } from './dto/omnichannel.dto';
 
 @Injectable()
 export class OmnichannelService {
@@ -13,24 +17,55 @@ export class OmnichannelService {
     private readonly conversationRepo: Repository<Conversation>,
     @InjectRepository(Message)
     private readonly messageRepo: Repository<Message>,
+    @InjectRepository(Contact)
+    private readonly contactRepo: Repository<Contact>,
+    private readonly whatsappService: WhatsappService,
   ) {}
 
-  async sendUnifiedMessage(tenantId: string, contactId: string, text: string, preferredChannel: 'VOICE' | 'WHATSAPP' | 'EMAIL' | 'WEBCHAT') {
-    this.logger.log(`[STUB] Sending unified message to contact ${contactId} via ${preferredChannel}`);
-    
-    // Fallback logic
-    let channelUsed = preferredChannel;
-    let fallbackTriggered = false;
-    
-    if (preferredChannel === 'WHATSAPP') {
-       // Mock failure and fallback to EMAIL
-       fallbackTriggered = true;
-       channelUsed = 'EMAIL';
-       this.logger.warn(`WhatsApp failed, falling back to ${channelUsed}`);
+  async sendUnifiedMessage(
+    tenantId: string,
+    contactId: string,
+    text: string,
+    preferredChannel: OmnichannelPreferredChannel,
+  ) {
+    const contact = await this.contactRepo.findOne({ where: { tenantId, id: contactId } });
+    if (!contact) {
+      throw new NotFoundException('Contact not found');
     }
 
-    // Find or create conversation
-    let conv = await this.conversationRepo.findOne({ where: { tenantId, contactId, channel: channelUsed } as any });
+    if (preferredChannel === OmnichannelPreferredChannel.WHATSAPP) {
+      const phone = contact.mobile ?? contact.phone;
+      if (!phone) {
+        throw new BadRequestException('Contact has no phone number for WhatsApp');
+      }
+
+      const message = await this.whatsappService.sendTextMessage(tenantId, phone, text);
+      return {
+        success: true,
+        channelUsed: 'WHATSAPP',
+        fallbackTriggered: false,
+        messageId: message.id,
+      };
+    }
+
+    let channelUsed = preferredChannel;
+    let fallbackTriggered = false;
+
+    if (
+      preferredChannel === OmnichannelPreferredChannel.VOICE &&
+      !contact.phone &&
+      !contact.mobile
+    ) {
+      fallbackTriggered = true;
+      channelUsed = OmnichannelPreferredChannel.EMAIL;
+      this.logger.warn(
+        `Voice unavailable for contact ${contactId}, falling back to ${channelUsed}`,
+      );
+    }
+
+    let conv = await this.conversationRepo.findOne({
+      where: { tenantId, contactId, channel: channelUsed },
+    });
     if (!conv) {
       conv = this.conversationRepo.create({
         tenantId,
@@ -41,14 +76,13 @@ export class OmnichannelService {
       conv = await this.conversationRepo.save(conv);
     }
 
-    // Create message
     const msg = this.messageRepo.create({
       tenantId,
       conversationId: conv.id,
       role: 'ASSISTANT',
       content: text,
       type: 'TEXT',
-      meta: { channel: channelUsed, status: 'SENT' }
+      meta: { channel: channelUsed, status: 'SENT' },
     });
     await this.messageRepo.save(msg);
 
@@ -59,25 +93,114 @@ export class OmnichannelService {
   }
 
   async getConversations(tenantId: string, contactId?: string) {
-    const where: any = { tenantId };
-    if (contactId) where.contactId = contactId;
-    return this.conversationRepo.find({ where, order: { lastMessageAt: 'DESC' } });
+    const where: { tenantId: string; contactId?: string } = { tenantId };
+    if (contactId) {
+      where.contactId = contactId;
+    }
+
+    const dbConversations = await this.conversationRepo.find({
+      where,
+      relations: ['contact'],
+      order: { lastMessageAt: 'DESC' },
+    });
+
+    const whatsappSummaries = await this.whatsappService.listConversations(tenantId);
+    const whatsappConversations = await Promise.all(
+      whatsappSummaries.map(async (summary) => {
+        const contact = await this.contactRepo.findOne({
+          where: [
+            { tenantId, phone: summary.phone },
+            { tenantId, mobile: summary.phone },
+          ],
+        });
+
+        if (contactId && contact?.id !== contactId) {
+          return null;
+        }
+
+        return {
+          id: `wa:${summary.phone}`,
+          contactId: contact?.id,
+          channel: 'WHATSAPP',
+          status: summary.status === 'RESOLVED' ? 'CLOSED' : 'OPEN',
+          lastMessageAt: summary.lastMessageAt,
+          meta: {
+            lastPreview: summary.lastMessage,
+            unreadCount: summary.unreadCount,
+            assignedAgentId: summary.assigneeId,
+            phone: summary.phone,
+          },
+          contact: contact
+            ? {
+                firstName: contact.firstName,
+                lastName: contact.lastName,
+                email: contact.email,
+                name: summary.contactName ?? `${contact.firstName} ${contact.lastName}`.trim(),
+              }
+            : { name: summary.contactName ?? summary.phone },
+        };
+      }),
+    );
+
+    const mergedWhatsapp = whatsappConversations.filter(
+      (conversation): conversation is NonNullable<typeof conversation> => conversation !== null,
+    );
+
+    const nonWhatsappDb = dbConversations.filter(
+      (conversation) => conversation.channel !== 'WHATSAPP',
+    );
+    return [...mergedWhatsapp, ...nonWhatsappDb];
   }
 
   async getMessages(tenantId: string, conversationId: string) {
-    return this.messageRepo.find({ where: { tenantId, conversationId } as any, order: { createdAt: 'ASC' } });
+    if (conversationId.startsWith('wa:')) {
+      const phone = conversationId.slice(3);
+      return this.whatsappService.getConversation(tenantId, phone);
+    }
+
+    return this.messageRepo.find({
+      where: { tenantId, conversationId },
+      order: { createdAt: 'ASC' },
+    });
   }
 
-  async routeToAgent(tenantId: string, conversationId: string): Promise<{ assignedAgentId: string }> {
-    this.logger.log(`[STUB] Routing conversation ${conversationId} to best available agent`);
-    
-    // Stub: find conversation and assign to agent
-    const conv = await this.conversationRepo.findOne({ where: { tenantId, id: conversationId } as any });
-    if (conv) {
-      conv.meta = { ...conv.meta, assignedAgentId: 'agent_123' };
-      await this.conversationRepo.save(conv);
+  async routeToAgent(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<{ assignedAgentId: string }> {
+    if (conversationId.startsWith('wa:')) {
+      const phone = conversationId.slice(3);
+      const contact = await this.contactRepo.findOne({
+        where: [
+          { tenantId, phone },
+          { tenantId, mobile: phone },
+        ],
+      });
+
+      if (!contact?.ownerId) {
+        throw new BadRequestException('No agent assigned to contact for WhatsApp routing');
+      }
+
+      await this.whatsappService.assignConversation(tenantId, phone, contact.ownerId);
+      return { assignedAgentId: contact.ownerId };
     }
-    
-    return { assignedAgentId: 'agent_123' };
+
+    const conv = await this.conversationRepo.findOne({
+      where: { tenantId, id: conversationId },
+      relations: ['contact'],
+    });
+    if (!conv) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    const assignedAgentId = conv.contact?.ownerId;
+    if (!assignedAgentId) {
+      throw new BadRequestException('No agent available for routing');
+    }
+
+    conv.meta = { ...conv.meta, assignedAgentId };
+    await this.conversationRepo.save(conv);
+
+    return { assignedAgentId };
   }
 }

@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Briefcase, 
-  Tag, 
-  Clock, 
-  Save, 
+import {
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  Tag,
+  Clock,
+  Save,
   ArrowLeft,
   Loader2,
   Trash2,
@@ -16,7 +16,7 @@ import {
   Globe,
   Twitter,
   Linkedin,
-  Plus
+  Plus,
 } from 'lucide-react';
 import { contactService, Contact } from '@/services/contact.service';
 import toast from 'react-hot-toast';
@@ -87,22 +87,22 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <div className="mb-8 flex items-center justify-between">
-        <Link 
-          href="/crm/contacts" 
+        <Link
+          href="/crm/contacts"
           className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Contacts
         </Link>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={handleDelete}
             className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition"
             title="Delete Contact"
           >
             <Trash2 className="w-5 h-5" />
           </button>
-          <button 
+          <button
             type="submit"
             form="contact-form"
             disabled={isSaving}
@@ -119,16 +119,20 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft p-8 text-center">
             <div className="w-24 h-24 mx-auto rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-3xl font-black mb-6 shadow-xl shadow-indigo-500/30">
-              {contact?.firstName[0]}{contact?.lastName[0]}
+              {contact?.firstName[0]}
+              {contact?.lastName[0]}
             </div>
             <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
               {contact?.firstName} {contact?.lastName}
             </h2>
             <p className="text-sm text-gray-500 mb-6">{contact?.jobTitle || 'No Title'}</p>
-            
+
             <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {contact?.tags?.map(tag => (
-                <span key={tag} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border">
+              {contact?.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border"
+                >
                   {tag}
                 </span>
               ))}
@@ -154,24 +158,32 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Edit Form */}
         <div className="lg:col-span-2">
-          <form id="contact-form" onSubmit={handleUpdate} className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden">
+          <form
+            id="contact-form"
+            onSubmit={handleUpdate}
+            className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden"
+          >
             <div className="p-8 space-y-8">
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">First Name</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    First Name
+                  </label>
                   <input
                     required
                     value={formData.firstName || ''}
-                    onChange={e => setFormData({ ...formData, firstName: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Last Name</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Last Name
+                  </label>
                   <input
                     required
                     value={formData.lastName || ''}
-                    onChange={e => setFormData({ ...formData, lastName: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                   />
                 </div>
@@ -179,20 +191,24 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Email</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Email
+                  </label>
                   <input
                     required
                     type="email"
                     value={formData.email || ''}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Phone</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Phone
+                  </label>
                   <input
                     value={formData.phone || ''}
-                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                     placeholder="+1 234 567 890"
                   />
@@ -201,19 +217,23 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Job Title</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Job Title
+                  </label>
                   <input
                     value={formData.jobTitle || ''}
-                    onChange={e => setFormData({ ...formData, jobTitle: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                     placeholder="e.g. CEO"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Status</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Status
+                  </label>
                   <select
                     value={formData.status}
-                    onChange={e => setFormData({ ...formData, status: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
                   >
                     <option value="LEAD">Lead</option>
@@ -225,10 +245,12 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               </div>
 
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Internal Notes</label>
+                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  Internal Notes
+                </label>
                 <textarea
                   value={formData.notes || ''}
-                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-medium h-32 resize-none"
                   placeholder="Add private notes about this contact..."
                 />

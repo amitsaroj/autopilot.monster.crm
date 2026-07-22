@@ -5,16 +5,9 @@ import Link from 'next/link';
 import { ArrowLeft, Loader2, Play } from 'lucide-react';
 import { toast } from 'sonner';
 
-import {
-  analyticsReportService,
-  AnalyticsReport,
-} from '@/services/analytics-report.service';
+import { analyticsReportService, AnalyticsReport } from '@/services/analytics-report.service';
 
-export default function AnalyticsReportDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function AnalyticsReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [report, setReport] = useState<AnalyticsReport | null>(null);
   const [results, setResults] = useState<Record<string, unknown> | null>(null);
@@ -104,7 +97,9 @@ export default function AnalyticsReportDetailPage({
             {JSON.stringify(results, null, 2)}
           </pre>
         ) : (
-          <p className="text-sm text-muted-foreground">No results yet. Run the report to generate data.</p>
+          <p className="text-sm text-muted-foreground">
+            No results yet. Run the report to generate data.
+          </p>
         )}
       </div>
     </div>

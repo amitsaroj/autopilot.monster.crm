@@ -11,19 +11,25 @@ export class AdminWorkersService {
     @InjectQueue(QUEUE_NAMES.EMAIL) private readonly emailQueue: Queue,
     @InjectQueue(QUEUE_NAMES.SMS) private readonly smsQueue: Queue,
     @InjectQueue(QUEUE_NAMES.WHATSAPP) private readonly whatsappQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.WORKFLOW) private readonly workflowQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.VOICE) private readonly voiceQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.NOTIFICATION) private readonly notificationQueue: Queue,
   ) {
     this.queues = {
       [QUEUE_NAMES.EMAIL]: this.emailQueue,
       [QUEUE_NAMES.SMS]: this.smsQueue,
       [QUEUE_NAMES.WHATSAPP]: this.whatsappQueue,
+      [QUEUE_NAMES.WORKFLOW]: this.workflowQueue,
+      [QUEUE_NAMES.VOICE]: this.voiceQueue,
+      [QUEUE_NAMES.NOTIFICATION]: this.notificationQueue,
     };
   }
 
   async getWorkersStatus() {
     const workers = await Promise.all(
       Object.entries(this.queues).map(async ([name, queue]) => {
-        const workers = await queue.getWorkers();
-        const count = workers.length;
+        const queueWorkers = await queue.getWorkers();
+        const count = queueWorkers.length;
         return {
           queueName: name,
           activeWorkers: count,

@@ -38,7 +38,11 @@ export default function AIAgentsPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
 
   return (
@@ -48,7 +52,10 @@ export default function AIAgentsPage() {
           <h1 className="page-title">AI Agents</h1>
           <p className="page-description">Autonomous AI agents powering your CRM workflows</p>
         </div>
-        <Link href="/ai/agents/new" className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg text-sm">
+        <Link
+          href="/ai/agents/new"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg text-sm"
+        >
           <Plus className="h-4 w-4" /> New Agent
         </Link>
       </div>
@@ -63,15 +70,27 @@ export default function AIAgentsPage() {
                 <div className="flex items-center gap-3">
                   <Bot className="h-5 w-5 text-[hsl(246,80%,60%)]" />
                   <div>
-                    <Link href={`/ai/agents/${agent.id}`} className="font-medium hover:text-[hsl(246,80%,60%)]">{agent.name}</Link>
+                    <Link
+                      href={`/ai/agents/${agent.id}`}
+                      className="font-medium hover:text-[hsl(246,80%,60%)]"
+                    >
+                      {agent.name}
+                    </Link>
                     <p className="text-xs text-muted-foreground">{agent.voice}</p>
                   </div>
                 </div>
-                <button onClick={() => void handleToggle(agent)} className="p-2 rounded-lg hover:bg-muted">
+                <button
+                  onClick={() => void handleToggle(agent)}
+                  className="p-2 rounded-lg hover:bg-muted"
+                >
                   {agent.isActive ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </button>
               </div>
-              {agent.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{agent.description}</p>}
+              {agent.description && (
+                <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                  {agent.description}
+                </p>
+              )}
             </div>
           ))}
         </div>

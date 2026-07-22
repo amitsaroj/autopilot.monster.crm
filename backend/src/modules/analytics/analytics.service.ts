@@ -215,7 +215,10 @@ export class AnalyticsService {
     const messagesSent = Number(
       aiMetrics.find((record) => record.metric === 'ai_messages')?.quantity ?? 0,
     );
-    const totalCost = aiMetrics.reduce((sum, record) => sum + Number(record.totalCost || 0), 0);
+    const aiCostQuantity = Number(
+      usageRecords.find((record) => record.metric === 'ai_cost')?.quantity ?? 0,
+    );
+    const totalCost = aiCostQuantity / 10000;
 
     const assistantMessages = await this.messageRepo.count({
       where: { tenantId, role: 'ASSISTANT' },

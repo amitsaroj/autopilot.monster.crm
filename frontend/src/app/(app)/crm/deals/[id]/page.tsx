@@ -1,14 +1,14 @@
 'use client';
 
 import { useEffect, useState, use } from 'react';
-import { 
-  BarChart3, 
-  Globe, 
-  Phone, 
-  Briefcase, 
-  Tag, 
-  Clock, 
-  Save, 
+import {
+  BarChart3,
+  Globe,
+  Phone,
+  Briefcase,
+  Tag,
+  Clock,
+  Save,
   ArrowLeft,
   Loader2,
   Trash2,
@@ -20,7 +20,7 @@ import {
   DollarSign,
   Calendar,
   Building2,
-  User
+  User,
 } from 'lucide-react';
 import { dealService, Deal } from '@/services/deal.service';
 import { pipelineService, Pipeline, Stage } from '@/services/pipeline.service';
@@ -43,7 +43,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
     try {
       const [dealRes, pipelineRes] = await Promise.all([
         dealService.getDeal(id),
-        pipelineService.getDefaultPipeline()
+        pipelineService.getDefaultPipeline(),
       ]);
       const dealData = (dealRes as any).data.data;
       setDeal(dealData);
@@ -94,27 +94,27 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
     );
   }
 
-  const currentStage = pipeline?.stages.find(s => s.id === formData.stageId);
+  const currentStage = pipeline?.stages.find((s) => s.id === formData.stageId);
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <div className="mb-8 flex items-center justify-between">
-        <Link 
-          href="/crm/deals" 
+        <Link
+          href="/crm/deals"
           className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Kanban
         </Link>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={handleDelete}
             className="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition"
             title="Delete Deal"
           >
             <Trash2 className="w-5 h-5" />
           </button>
-          <button 
+          <button
             type="submit"
             form="deal-form"
             disabled={isSaving}
@@ -133,24 +133,29 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             <div className="w-24 h-24 mx-auto rounded-3xl bg-emerald-600 flex items-center justify-center text-white text-4xl font-black mb-6 shadow-xl shadow-emerald-500/30 font-serif">
               $
             </div>
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
-              {deal?.name}
-            </h2>
+            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">{deal?.name}</h2>
             <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-6 uppercase tracking-widest text-[10px]">
               {currentStage?.name || 'Unmapped Stage'}
             </p>
-            
+
             <div className="flex flex-wrap justify-center gap-2 mb-8">
-              {deal?.tags?.map(tag => (
-                <span key={tag} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border">
+              {deal?.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border"
+                >
                   {tag}
                 </span>
               ))}
               {deal?.status !== 'OPEN' && (
-                <span className={cn(
-                  "px-3 py-1 rounded-full text-[10px] font-bold border",
-                  deal?.status === 'WON' ? "bg-green-50 text-green-600 border-green-100" : "bg-red-50 text-red-600 border-red-100"
-                )}>
+                <span
+                  className={cn(
+                    'px-3 py-1 rounded-full text-[10px] font-bold border',
+                    deal?.status === 'WON'
+                      ? 'bg-green-50 text-green-600 border-green-100'
+                      : 'bg-red-50 text-red-600 border-red-100',
+                  )}
+                >
                   {deal?.status}
                 </span>
               )}
@@ -167,7 +172,10 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </div>
               <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
                 <Calendar className="w-4 h-4 text-orange-500" />
-                Exp. Close: {deal?.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'N/A'}
+                Exp. Close:{' '}
+                {deal?.expectedCloseDate
+                  ? new Date(deal.expectedCloseDate).toLocaleDateString()
+                  : 'N/A'}
               </div>
             </div>
           </div>
@@ -202,36 +210,48 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Edit Form */}
         <div className="lg:col-span-2">
-          <form id="deal-form" onSubmit={handleUpdate} className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden">
+          <form
+            id="deal-form"
+            onSubmit={handleUpdate}
+            className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden"
+          >
             <div className="p-8 space-y-8">
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Deal Name</label>
+                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  Deal Name
+                </label>
                 <input
                   required
                   value={formData.name || ''}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Pipeline Stage</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Pipeline Stage
+                  </label>
                   <select
                     value={formData.stageId}
-                    onChange={e => setFormData({ ...formData, stageId: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, stageId: e.target.value })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
                   >
-                    {pipeline?.stages.map(stage => (
-                      <option key={stage.id} value={stage.id}>{stage.name}</option>
+                    {pipeline?.stages.map((stage) => (
+                      <option key={stage.id} value={stage.id}>
+                        {stage.name}
+                      </option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Deal Status</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Deal Status
+                  </label>
                   <select
                     value={formData.status}
-                    onChange={e => setFormData({ ...formData, status: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
                   >
                     <option value="OPEN">Open</option>
@@ -243,25 +263,31 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Value ({formData.currency})</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Value ({formData.currency})
+                  </label>
                   <div className="relative">
                     <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="number"
                       value={formData.value || 0}
-                      onChange={e => setFormData({ ...formData, value: Number(e.target.value) })}
+                      onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
                       className="w-full pl-10 pr-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Probability (%)</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Probability (%)
+                  </label>
                   <input
                     type="number"
                     max="100"
                     min="0"
                     value={formData.probability || 0}
-                    onChange={e => setFormData({ ...formData, probability: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, probability: Number(e.target.value) })
+                    }
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                   />
                 </div>
@@ -269,20 +295,30 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Expected Close Date</label>
+                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    Expected Close Date
+                  </label>
                   <input
                     type="date"
-                    value={formData.expectedCloseDate ? new Date(formData.expectedCloseDate).toISOString().split('T')[0] : ''}
-                    onChange={e => setFormData({ ...formData, expectedCloseDate: e.target.value })}
+                    value={
+                      formData.expectedCloseDate
+                        ? new Date(formData.expectedCloseDate).toISOString().split('T')[0]
+                        : ''
+                    }
+                    onChange={(e) =>
+                      setFormData({ ...formData, expectedCloseDate: e.target.value })
+                    }
                     className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                   />
                 </div>
                 {formData.status === 'LOST' && (
                   <div>
-                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">Lost Reason</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                      Lost Reason
+                    </label>
                     <input
                       value={formData.lostReason || ''}
-                      onChange={e => setFormData({ ...formData, lostReason: e.target.value })}
+                      onChange={(e) => setFormData({ ...formData, lostReason: e.target.value })}
                       className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
                       placeholder="e.g. Price too high"
                     />

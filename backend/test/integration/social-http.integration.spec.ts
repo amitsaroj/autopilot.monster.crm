@@ -45,9 +45,7 @@ describe('HTTP E2E — Social posts (secured)', () => {
     expect([200, 201]).toContain(scheduleRes.status);
     const postId = extractResponseData<{ id: string }>(scheduleRes.body).id;
 
-    const listRes = await request(app.getHttpServer())
-      .get('/api/v1/social/posts')
-      .set(headers);
+    const listRes = await request(app.getHttpServer()).get('/api/v1/social/posts').set(headers);
     expect(listRes.status).toBe(200);
     expect(Array.isArray(extractResponseData(listRes.body))).toBe(true);
 

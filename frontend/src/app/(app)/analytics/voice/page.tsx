@@ -52,6 +52,12 @@ export default function VoiceAnalyticsPage() {
     { label: 'Completion Rate', value: `${completionRate.toFixed(1)}%`, icon: CheckCircle2 },
   ];
 
+  const directionStats = [
+    { label: 'Inbound', value: data.inboundCalls ?? 0 },
+    { label: 'Outbound', value: data.outboundCalls ?? 0 },
+    { label: 'Missed', value: data.missedCalls ?? 0 },
+  ];
+
   return (
     <div className="p-8 space-y-8 max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between gap-4">
@@ -82,6 +88,15 @@ export default function VoiceAnalyticsPage() {
               <p className="text-sm font-medium text-muted-foreground">{kpi.label}</p>
               <p className="text-3xl font-black text-foreground mt-1">{kpi.value}</p>
             </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        {directionStats.map((stat) => (
+          <div key={stat.label} className="rounded-xl border border-border bg-card p-4 text-center">
+            <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
           </div>
         ))}
       </div>

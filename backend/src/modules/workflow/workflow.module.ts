@@ -1,8 +1,6 @@
-import { BullModule } from '@nestjs/bullmq';
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { ConfigModule, ConfigService } from '@nestjs/config';
 
 import { WorkflowProcessor } from './workflow.processor';
 import { WorkflowExecutorService } from './workflow-executor.service';
@@ -17,29 +15,20 @@ import { WorkflowMetaController } from './workflow-meta.controller';
 import { WorkflowEventListener } from './workflow-event.listener';
 import { EmailModule } from '../../shared/email/email.module';
 import { WhatsappModule } from '../whatsapp/whatsapp.module';
+import { CrmModule } from '../crm/crm.module';
+import { NotificationModule } from '../notifications/notification.module';
+import { VoiceModule } from '../voice/voice.module';
+import { QUEUE_NAMES } from '../../queue/queue.constants';
 
 @Module({
   imports: [
     EmailModule,
     WhatsappModule,
+    CrmModule,
+    NotificationModule,
+    VoiceModule,
     TypeOrmModule.forFeature([Flow, WorkflowExecution]),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const redis = configService.get('redis');
-        return {
-          connection: {
-            host: redis.host,
-            port: redis.port,
-            password: redis.password || undefined,
-          },
-        };
-      },
-    }),
-    BullModule.registerQueue({
-      name: 'workflows',
-    }),
+    BullModule.registerQueue({ name: QUEUE_NAMES.WORKFLOW }),
   ],
   controllers: [WorkflowController, WorkflowMetaController],
   providers: [

@@ -13,14 +13,16 @@ export class AdminCostRulesService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'COST_RULES' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       aiMarkup: config['cost_ai_markup'] || 20,
       smsMarkup: config['cost_sms_markup'] || 15,
       voiceMarkup: config['cost_voice_markup'] || 25,
       storageMarkup: config['cost_storage_markup'] || 10,
-      minimumBalance: config['cost_min_balance'] || 5.00,
+      minimumBalance: config['cost_min_balance'] || 5.0,
     };
   }
 

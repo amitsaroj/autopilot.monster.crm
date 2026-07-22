@@ -56,7 +56,18 @@ const E2E_PERMISSIONS = E2E_MANAGE_RESOURCES.map((resource) => ({
   action: 'manage',
 }));
 
-const E2E_PLAN_FEATURES = ['workflow', 'crm', 'analytics', 'import', 'export', 'storage', 'billing', 'ai', 'voice', 'whatsapp'];
+const E2E_PLAN_FEATURES = [
+  'workflow',
+  'crm',
+  'analytics',
+  'import',
+  'export',
+  'storage',
+  'billing',
+  'ai',
+  'voice',
+  'whatsapp',
+];
 
 async function ensurePermissions(dataSource: DataSource): Promise<Permission[]> {
   const permissionRepo = dataSource.getRepository(Permission);
@@ -201,7 +212,17 @@ async function seedTenantCredentials(
     database: process.env.DB_NAME ?? 'autopilot_monster',
     username: process.env.DB_USER ?? 'root',
     password: process.env.DB_PASSWORD ?? 'password',
-    entities: [Tenant, UserEntity, Role, Permission, UserRole, Plan, PlanFeature, PlanLimit, Subscription],
+    entities: [
+      Tenant,
+      UserEntity,
+      Role,
+      Permission,
+      UserRole,
+      Plan,
+      PlanFeature,
+      PlanLimit,
+      Subscription,
+    ],
     synchronize: false,
   });
 
@@ -212,9 +233,7 @@ async function seedTenantCredentials(
 
   let tenant = await tenantRepo.findOne({ where: { slug } });
   if (!tenant) {
-    tenant = await tenantRepo.save(
-      tenantRepo.create({ name, slug, status: 'ACTIVE' }),
-    );
+    tenant = await tenantRepo.save(tenantRepo.create({ name, slug, status: 'ACTIVE' }));
   }
 
   const password = 'E2eTestP@ssw0rd!';

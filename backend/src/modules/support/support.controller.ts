@@ -58,11 +58,7 @@ export class SupportController {
   @Put('tickets/:id')
   @ApiOperation({ summary: 'Update ticket' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async updateTicket(
-    @TenantId() tenantId: string,
-    @Param('id') id: string,
-    @Body() dto: any,
-  ) {
+  async updateTicket(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
     const data = await this.supportService.update(tenantId, id, dto);
     return {
       status: 200,
@@ -141,11 +137,7 @@ export class SupportController {
   @Put('articles/:id')
   @ApiOperation({ summary: 'Update article' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateArticle(
-    @TenantId() tenantId: string,
-    @Param('id') id: string,
-    @Body() dto: any,
-  ) {
+  async updateArticle(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
     const data = await this.supportService.updateArticle(tenantId, id, dto);
     return {
       status: 200,

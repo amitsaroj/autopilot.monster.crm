@@ -18,14 +18,20 @@ export interface Role {
 
 export const rbacService = {
   getPermissions: () => api.get('/rbac/permissions'),
-  createPermission: (data: { name: string; resource: string; action: string; description?: string }) => 
-    api.post('/rbac/permissions', data),
+  createPermission: (data: {
+    name: string;
+    resource: string;
+    action: string;
+    description?: string;
+  }) => api.post('/rbac/permissions', data),
   getRoles: () => api.get('/rbac/roles'),
   getRole: (id: string) => api.get(`/rbac/roles/${id}`),
-  createRole: (data: { name: string; description?: string; permissionIds: string[] }) => 
+  createRole: (data: { name: string; description?: string; permissionIds: string[] }) =>
     api.post('/rbac/roles', data),
-  updateRole: (id: string, data: Partial<{ name: string; description?: string; permissionIds: string[] }>) => 
-    api.patch(`/rbac/roles/${id}`, data),
+  updateRole: (
+    id: string,
+    data: Partial<{ name: string; description?: string; permissionIds: string[] }>,
+  ) => api.patch(`/rbac/roles/${id}`, data),
   deleteRole: (id: string) => api.delete(`/rbac/roles/${id}`),
   assignRole: (userId: string, roleId: string) => api.post('/rbac/assign', { userId, roleId }),
   revokeRole: (userId: string, roleId: string) => api.post('/rbac/revoke', { userId, roleId }),

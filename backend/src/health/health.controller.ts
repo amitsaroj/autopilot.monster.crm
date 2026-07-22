@@ -34,9 +34,7 @@ export class HealthController {
         options: {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          ...(process.env.REDIS_PASSWORD
-            ? { password: process.env.REDIS_PASSWORD }
-            : {}),
+          ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
         },
       });
   }
@@ -54,10 +52,7 @@ export class HealthController {
     if (minioHost) {
       const minioPort = process.env.MINIO_PORT ?? '9000';
       checks.push(() =>
-        this.http.pingCheck(
-          'minio',
-          `http://${minioHost}:${minioPort}/minio/health/live`,
-        ),
+        this.http.pingCheck('minio', `http://${minioHost}:${minioPort}/minio/health/live`),
       );
     }
 

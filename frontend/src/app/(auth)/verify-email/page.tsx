@@ -27,7 +27,9 @@ function VerifyEmailContent() {
         setTimeout(() => router.push('/login'), 3000);
       } catch (error: any) {
         setStatus('error');
-        setMessage(error.response?.data?.message || 'Verification failed. The link may have expired.');
+        setMessage(
+          error.response?.data?.message || 'Verification failed. The link may have expired.',
+        );
       }
     };
 
@@ -38,7 +40,9 @@ function VerifyEmailContent() {
     return (
       <div className="text-center py-8">
         <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-        <p className="text-gray-600 dark:text-muted-foreground transition">Verifying your email...</p>
+        <p className="text-gray-600 dark:text-muted-foreground transition">
+          Verifying your email...
+        </p>
       </div>
     );
   }
@@ -49,11 +53,16 @@ function VerifyEmailContent() {
         <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">Email Verified!</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">
+          Email Verified!
+        </h1>
         <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">
           Your email has been successfully verified. Redirecting to login...
         </p>
-        <Link href="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+        <Link
+          href="/login"
+          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+        >
           Go to login now
         </Link>
       </div>
@@ -65,9 +74,14 @@ function VerifyEmailContent() {
       <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-6">
         <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
       </div>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">Verification Failed</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">
+        Verification Failed
+      </h1>
       <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">{message}</p>
-      <Link href="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+      <Link
+        href="/login"
+        className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+      >
         Back to login
       </Link>
     </div>
@@ -81,10 +95,18 @@ export default function VerifyEmailPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
           <Zap className="w-5 h-5 text-white" />
         </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">AutopilotMonster</span>
+        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
+          AutopilotMonster
+        </span>
       </div>
 
-      <Suspense fallback={<div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          </div>
+        }
+      >
         <VerifyEmailContent />
       </Suspense>
     </div>

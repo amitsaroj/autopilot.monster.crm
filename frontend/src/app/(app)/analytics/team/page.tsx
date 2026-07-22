@@ -28,7 +28,9 @@ export default function AnalyticsTeamPage() {
   const totalRevenue = members.reduce((sum, member) => sum + member.value, 0);
   const totalDeals = members.reduce((sum, member) => sum + member.deals, 0);
   const avgWinRate =
-    members.length > 0 ? members.reduce((sum, member) => sum + member.winRate, 0) / members.length : 0;
+    members.length > 0
+      ? members.reduce((sum, member) => sum + member.winRate, 0) / members.length
+      : 0;
 
   if (loading) {
     return (
@@ -57,10 +59,30 @@ export default function AnalyticsTeamPage() {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Team Revenue', value: `$${(totalRevenue / 1000).toFixed(1)}k`, icon: TrendingUp, color: 'text-green-400' },
-          { label: 'Total Deals', value: String(totalDeals), icon: BarChart3, color: 'text-blue-400' },
-          { label: 'Team Members', value: String(members.length), icon: Target, color: 'text-[hsl(246,80%,60%)]' },
-          { label: 'Avg Win Rate', value: `${avgWinRate.toFixed(1)}%`, icon: Award, color: 'text-yellow-400' },
+          {
+            label: 'Team Revenue',
+            value: `$${(totalRevenue / 1000).toFixed(1)}k`,
+            icon: TrendingUp,
+            color: 'text-green-400',
+          },
+          {
+            label: 'Total Deals',
+            value: String(totalDeals),
+            icon: BarChart3,
+            color: 'text-blue-400',
+          },
+          {
+            label: 'Team Members',
+            value: String(members.length),
+            icon: Target,
+            color: 'text-[hsl(246,80%,60%)]',
+          },
+          {
+            label: 'Avg Win Rate',
+            value: `${avgWinRate.toFixed(1)}%`,
+            icon: Award,
+            color: 'text-yellow-400',
+          },
         ].map((s) => (
           <div key={s.label} className="stat-card">
             <div className="flex items-center justify-between mb-2">

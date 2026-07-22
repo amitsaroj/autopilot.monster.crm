@@ -1,21 +1,34 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WebhookService } from './webhook.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId } from '../../common/decorators';
+import { ResourcePermissions, Roles, TenantId } from '../../common/decorators';
+import { CreateWebhookDto, UpdateWebhookDto } from '../tenant-settings/dto/developer-settings.dto';
 
 @ApiTags('Developer - Webhooks')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('settings')
+@Roles('TENANT_ADMIN')
 @Controller('developer/webhooks')
 export class WebhookController {
   constructor(private readonly webhookService: WebhookService) {}
 
   @Post()
   @ApiOperation({ summary: 'Register a webhook endpoint' })
-  async create(@TenantId() tenantId: string, @Body() dto: any) {
+  async create(@TenantId() tenantId: string, @Body() dto: CreateWebhookDto) {
     return this.webhookService.create(tenantId, dto);
   }
 
@@ -56,7 +69,11 @@ export class WebhookController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a webhook' })
-  async update(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+  async update(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateWebhookDto,
+  ) {
     return this.webhookService.update(tenantId, id, dto);
   }
 

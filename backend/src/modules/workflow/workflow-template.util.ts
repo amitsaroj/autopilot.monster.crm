@@ -12,7 +12,9 @@ function readPath(root: Record<string, unknown>, path: string): unknown {
   return current;
 }
 
-export function buildWorkflowVariableRoot(context: WorkflowExecutionContext): Record<string, unknown> {
+export function buildWorkflowVariableRoot(
+  context: WorkflowExecutionContext,
+): Record<string, unknown> {
   const payload = context.payload;
   const contact =
     (payload.contact as Record<string, unknown> | undefined) ??
@@ -30,10 +32,7 @@ export function buildWorkflowVariableRoot(context: WorkflowExecutionContext): Re
   };
 }
 
-export function resolveWorkflowTemplate(
-  value: string,
-  context: WorkflowExecutionContext,
-): string {
+export function resolveWorkflowTemplate(value: string, context: WorkflowExecutionContext): string {
   const root = buildWorkflowVariableRoot(context);
   return value.replace(/\{\{([^}]+)\}\}/g, (_match, rawPath: string) => {
     const resolved = readPath(root, rawPath.trim());

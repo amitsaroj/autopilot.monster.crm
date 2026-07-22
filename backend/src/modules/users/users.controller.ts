@@ -39,35 +39,6 @@ export class UsersController {
     };
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get user by ID' })
-  async findOne(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.usersService.findOne(id, tenantId);
-    return {
-      status: 200,
-      message: 'User retrieved',
-      error: false,
-      data,
-    };
-  }
-
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update user profile/status' })
-  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async update(
-    @TenantId() tenantId: string,
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    const data = await this.usersService.update(id, tenantId, updateUserDto);
-    return {
-      status: 200,
-      message: 'User updated successfully',
-      error: false,
-      data,
-    };
-  }
-
   @Post('invite')
   @ApiOperation({ summary: 'Invite a new member' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
@@ -85,7 +56,7 @@ export class UsersController {
     };
   }
 
-  // --- Team Groups ---
+  // --- Team Groups (static paths MUST precede :id) ---
   @Get('groups')
   @ApiOperation({ summary: 'Get all team groups' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
@@ -128,11 +99,7 @@ export class UsersController {
   @Patch('groups/:id')
   @ApiOperation({ summary: 'Update team group' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateGroup(
-    @TenantId() tenantId: string,
-    @Param('id') id: string,
-    @Body() dto: any,
-  ) {
+  async updateGroup(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
     const data = await this.usersService.updateGroup(id, tenantId, dto);
     return {
       status: 200,
@@ -152,6 +119,36 @@ export class UsersController {
       message: 'Team group deleted',
       error: false,
       data: null,
+    };
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get user by ID' })
+  async findOne(@TenantId() tenantId: string, @Param('id') id: string) {
+    const data = await this.usersService.findOne(id, tenantId);
+    return {
+      status: 200,
+      message: 'User retrieved',
+      error: false,
+      data,
+    };
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update user profile/status' })
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
+  async update(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const data = await this.usersService.update(id, tenantId, updateUserDto, actor.userId);
+    return {
+      status: 200,
+      message: 'User updated successfully',
+      error: false,
+      data,
     };
   }
 }

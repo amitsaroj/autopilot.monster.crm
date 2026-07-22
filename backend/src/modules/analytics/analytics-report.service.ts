@@ -9,10 +9,7 @@ import {
 } from '../../database/entities/analytics-report.entity';
 import { BaseRepository } from '../../database/base.repository';
 import { AnalyticsService } from './analytics.service';
-import {
-  CreateAnalyticsReportDto,
-  UpdateAnalyticsReportDto,
-} from './dto/analytics-report.dto';
+import { CreateAnalyticsReportDto, UpdateAnalyticsReportDto } from './dto/analytics-report.dto';
 
 @Injectable()
 export class AnalyticsReportRepository extends BaseRepository<AnalyticsReport> {
@@ -116,7 +113,10 @@ export class AnalyticsReportService {
       case AnalyticsReportType.AI:
         return this.analyticsService.getAiUsageAnalytics(tenantId);
       case AnalyticsReportType.FORECAST:
-        return (await this.analyticsService.getForecastAnalytics(tenantId)) as unknown as Record<string, unknown>;
+        return (await this.analyticsService.getForecastAnalytics(tenantId)) as unknown as Record<
+          string,
+          unknown
+        >;
       case AnalyticsReportType.OVERVIEW:
         return this.analyticsService.getOverview(tenantId);
       default: {

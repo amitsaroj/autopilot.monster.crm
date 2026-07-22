@@ -59,7 +59,12 @@ export default function WhatsappAnalyticsPage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { label: 'Total Messages', value: data.total, icon: MessageSquare, color: 'text-[hsl(246,80%,60%)]' },
+          {
+            label: 'Total Messages',
+            value: data.total,
+            icon: MessageSquare,
+            color: 'text-[hsl(246,80%,60%)]',
+          },
           { label: 'Inbound', value: data.inbound, icon: ArrowDownLeft, color: 'text-green-500' },
           { label: 'Outbound', value: data.outbound, icon: ArrowUpRight, color: 'text-blue-500' },
         ].map((stat) => (

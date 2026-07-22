@@ -47,12 +47,14 @@ export default function ForgotPasswordPage() {
         <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-6">
           <Mail className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">Check your email</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-2">
+          Check your email
+        </h1>
         <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">
           If an account exists for that email, we&apos;ve sent a password reset link.
         </p>
-        <Link 
-          href="/login" 
+        <Link
+          href="/login"
           className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
         >
           Back to sign in
@@ -68,23 +70,31 @@ export default function ForgotPasswordPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
           <Zap className="w-5 h-5 text-white" />
         </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">AutopilotMonster</span>
+        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
+          AutopilotMonster
+        </span>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">Reset your password</h1>
-      <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">We&apos;ll email you a reset link</p>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">
+        Reset your password
+      </h1>
+      <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">
+        We&apos;ll email you a reset link
+      </p>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Email address</label>
+          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            Email address
+          </label>
           <input
             {...register('email')}
             type="email"
             placeholder="autopilot.monster@gmail.com"
             disabled={isLoading}
             className={cn(
-              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-              errors.email && "border-red-500 focus:ring-red-500"
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              errors.email && 'border-red-500 focus:ring-red-500',
             )}
           />
           {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
@@ -94,15 +104,16 @@ export default function ForgotPasswordPage() {
           disabled={isLoading}
           className="w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50"
         >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            'Send reset link'
-          )}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send reset link'}
         </button>
       </form>
       <p className="mt-6 text-center text-sm text-gray-500 dark:text-muted-foreground">
-        <Link href="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">Back to sign in</Link>
+        <Link
+          href="/login"
+          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+        >
+          Back to sign in
+        </Link>
       </p>
     </div>
   );

@@ -81,9 +81,7 @@ export default function PublicQuoteViewPage() {
     window.open(`${baseUrl}/crm/quotes/view/${params.token}/pdf`, '_blank');
   };
 
-  const canRespond =
-    quote &&
-    !['ACCEPTED', 'DECLINED', 'EXPIRED'].includes(quote.status);
+  const canRespond = quote && !['ACCEPTED', 'DECLINED', 'EXPIRED'].includes(quote.status);
 
   if (loading) {
     return (
@@ -141,10 +139,18 @@ export default function PublicQuoteViewPage() {
         </table>
 
         <div className="space-y-1 text-sm text-right">
-          <p>Subtotal: {quote.currency} {quote.subtotal}</p>
-          <p>Discount: {quote.currency} {quote.discountAmount}</p>
-          <p>Tax: {quote.currency} {quote.taxAmount}</p>
-          <p className="text-lg font-bold">Total: {quote.currency} {quote.total}</p>
+          <p>
+            Subtotal: {quote.currency} {quote.subtotal}
+          </p>
+          <p>
+            Discount: {quote.currency} {quote.discountAmount}
+          </p>
+          <p>
+            Tax: {quote.currency} {quote.taxAmount}
+          </p>
+          <p className="text-lg font-bold">
+            Total: {quote.currency} {quote.total}
+          </p>
         </div>
 
         {quote.notes && (
@@ -185,9 +191,7 @@ export default function PublicQuoteViewPage() {
         )}
 
         {quote.status === 'DECLINED' && (
-          <p className="text-center text-gray-500 text-sm">
-            This quote was declined.
-          </p>
+          <p className="text-center text-gray-500 text-sm">This quote was declined.</p>
         )}
       </div>
     </div>

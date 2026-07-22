@@ -1,4 +1,34 @@
+# Production / demo stack — single Postgres, API, UI, Redis, MinIO, Qdrant, nginx TLS.
+# Copy backend/.env.production.example → backend/.env.production and fill secrets before up.
+# Set GITHUB_REPOSITORY (lowercase) when pulling GHCR images, e.g. owner/autopilot.monster.crm
+
 services:
+  ssl-init:
+    image: alpine/openssl:latest
+    container_name: autopilot_ssl_init
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        mkdir -p /etc/nginx/ssl
+        if [ ! -f /etc/nginx/ssl/fullchain.pem ] || [ ! -f /etc/nginx/ssl/privkey.pem ]; then
+          echo "Generating self-signed TLS cert for $${DOMAIN} (demo/bootstrap)..."
+          openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
+            -keyout /etc/nginx/ssl/privkey.pem \
+            -out /etc/nginx/ssl/fullchain.pem \
+            -subj "/CN=$${DOMAIN}"
+        else
+          echo "TLS certs already present under nginx/ssl — skipping."
+        fi
+    restart: "no"
+    networks:
+      - autopilot_net
+
   nginx:
     image: nginx:alpine
     container_name: autopilot_nginx
@@ -7,10 +37,15 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
+      ssl-init:
+        condition: service_completed_successfully
       api:
+        condition: service_healthy
+      ui:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -39,20 +74,31 @@ services:
       - autopilot_net
 
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY}/api:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-owner/autopilot.monster.crm}/api:latest
     container_name: autopilot_api
     env_file:
       - path: ./backend/.env.production
         required: false
     environment:
+      # Force single-DB wiring (overrides any stale DATABASE_URL pointing at removed `db` service)
+      - DATABASE_URL=postgresql://${DB_USER:-root}:${DB_PASSWORD:-password}@postgres:5432/${DB_NAME:-autopilot_monster}
       - DB_HOST=postgres
       - DB_PORT=5432
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-autopilot_monster}
+      - DB_SYNCHRONIZE=false
       - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-password}
       - MINIO_ENDPOINT=minio
       - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
       - QDRANT_URL=http://qdrant:6333
-      - DB_SYNCHRONIZE=false
       - NODE_ENV=production
+      - APP_PORT=8000
     expose:
       - 8000
     depends_on:
@@ -80,16 +126,36 @@ services:
     networks:
       - autopilot_net
 
-  db:
-    image: postgres:15-alpine
-    container_name: autopilot_db
+  # Queue processors (WhatsApp broadcast, import/export, workflow) run in-process with the API.
+  # No separate worker image exists yet — missing queue processors are application gaps (BL-C08).
+
+  ui:
+    image: ghcr.io/${GITHUB_REPOSITORY:-owner/autopilot.monster.crm}/ui:latest
+    container_name: autopilot_ui
+    env_file:
+      - path: ./frontend/.env.production
+        required: false
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: crm
-    volumes:
-      - pg_prod_data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://localhost/api/v1}
+    expose:
+      - 3000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://127.0.0.1:3000/',(r)=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
     networks:
       - autopilot_net
 
@@ -148,7 +214,15 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+      - ./nginx/ssl:/etc/nginx/ssl
+    # Renew Let's Encrypt certs and sync into nginx/ssl when live certs exist.
+    # Bootstrap LE once:
+    #   docker compose -f docker-compose.prod.yml run --rm certbot \
+    #     certonly --webroot -w /var/www/certbot -d ${DOMAIN} --agree-tos -m you@example.com
+    #   then copy live certs into nginx/ssl (or mount LE path in nginx.conf).
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; if [ -d /etc/letsencrypt/live/$${DOMAIN:-localhost} ]; then cp -L /etc/letsencrypt/live/$${DOMAIN:-localhost}/fullchain.pem /etc/nginx/ssl/fullchain.pem; cp -L /etc/letsencrypt/live/$${DOMAIN:-localhost}/privkey.pem /etc/nginx/ssl/privkey.pem; fi; sleep 12h & wait $${!}; done;'"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
     networks:
       - autopilot_net
 

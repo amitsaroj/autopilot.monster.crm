@@ -10,11 +10,7 @@ import {
   WhatsAppMessage,
 } from '@/services/whatsapp-conversation.service';
 
-export default function WhatsAppConversationPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function WhatsAppConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: phone } = use(params);
   const decodedPhone = decodeURIComponent(phone);
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
@@ -77,7 +73,10 @@ export default function WhatsAppConversationPage({
   return (
     <div className="mx-auto flex h-[calc(100vh-8rem)] max-w-3xl flex-col py-4">
       <div className="mb-4 flex items-center justify-between">
-        <Link href="/whatsapp" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600">
+        <Link
+          href="/whatsapp"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600"
+        >
           <ArrowLeft className="h-4 w-4" /> WhatsApp
         </Link>
         <button
@@ -97,14 +96,18 @@ export default function WhatsAppConversationPage({
           <div
             key={msg.id}
             className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
-              msg.direction === 'OUTBOUND' ? 'ml-auto bg-green-600 text-white' : 'bg-gray-100 text-gray-900'
+              msg.direction === 'OUTBOUND'
+                ? 'ml-auto bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-900'
             }`}
           >
             {msg.body}
             {msg.mediaUrls && msg.mediaUrls.length > 0 && (
               <p className="mt-1 text-[10px] opacity-70">Media: {msg.mediaUrls.join(', ')}</p>
             )}
-            <p className="mt-1 text-[10px] opacity-70">{new Date(msg.createdAt).toLocaleString()}</p>
+            <p className="mt-1 text-[10px] opacity-70">
+              {new Date(msg.createdAt).toLocaleString()}
+            </p>
           </div>
         ))}
       </div>
@@ -116,7 +119,11 @@ export default function WhatsAppConversationPage({
           placeholder="Type a message..."
           className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
         />
-        <button type="submit" disabled={sending} className="rounded-lg bg-green-600 px-4 py-2 text-white disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={sending}
+          className="rounded-lg bg-green-600 px-4 py-2 text-white disabled:opacity-50"
+        >
           <Send className="h-4 w-4" />
         </button>
       </form>

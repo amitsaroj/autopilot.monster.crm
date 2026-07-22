@@ -28,7 +28,8 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
   async handleConnection(client: Socket) {
     try {
-      const token = client.handshake.auth['token'] || client.handshake.headers['authorization']?.split(' ')[1];
+      const token =
+        client.handshake.auth['token'] || client.handshake.headers['authorization']?.split(' ')[1];
       if (!token) {
         client.disconnect();
         return;
@@ -36,9 +37,9 @@ export class NotificationGateway implements OnGatewayConnection, OnGatewayDiscon
 
       const payload = this.jwtService.verify(token);
       const userId = payload.sub;
-      
+
       client.join(`user:${userId}`);
-      
+
       const userSockets = this.connectedUsers.get(userId) || [];
       userSockets.push(client.id);
       this.connectedUsers.set(userId, userSockets);

@@ -58,7 +58,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </header>
         <div className="prose prose-invert max-w-none space-y-6">
           {post.content.map((paragraph) => (
-            <p key={paragraph.slice(0, 40)} className="text-gray-600 dark:text-gray-300 leading-relaxed">
+            <p
+              key={paragraph.slice(0, 40)}
+              className="text-gray-600 dark:text-gray-300 leading-relaxed"
+            >
               {paragraph}
             </p>
           ))}

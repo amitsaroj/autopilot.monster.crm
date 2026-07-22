@@ -1,6 +1,11 @@
-# 1. IAM Role for SSM (No SSH Keys Needed)
+# Single-EC2 runtime aligned with docker-compose.prod.yml (API + UI + Postgres + Redis + MinIO + Qdrant + nginx).
+
+locals {
+  name_prefix = var.project_name
+}
+
 resource "aws_iam_role" "ssm_role" {
-  name                  = "autopilot-ssm-role"
+  name                  = "${local.name_prefix}-ssm-role"
   force_detach_policies = true
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -35,7 +40,7 @@ resource "aws_iam_role_policy_attachment" "s3_read" {
 }
 
 resource "aws_iam_instance_profile" "ssm_profile" {
-  name = "autopilot-ssm-profile"
+  name = "${local.name_prefix}-ssm-profile"
   role = aws_iam_role.ssm_role.name
 
   lifecycle {
@@ -43,10 +48,9 @@ resource "aws_iam_instance_profile" "ssm_profile" {
   }
 }
 
-# 2. Security Group
 resource "aws_security_group" "sg" {
-  name        = "autopilot-sg"
-  description = "Allow HTTP and HTTPS"
+  name        = "${local.name_prefix}-sg"
+  description = "Allow HTTP and HTTPS for nginx ingress"
 
   ingress {
     from_port   = 80
@@ -62,6 +66,16 @@ resource "aws_security_group" "sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  dynamic "ingress" {
+    for_each = var.allowed_ssh_cidr == "" ? [] : [var.allowed_ssh_cidr]
+    content {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -72,32 +86,32 @@ resource "aws_security_group" "sg" {
   lifecycle {
     ignore_changes = [ingress, egress]
   }
+
+  tags = {
+    Name    = "${local.name_prefix}-sg"
+    Project = local.name_prefix
+  }
 }
 
-# 3. EC2 Instance (t3.medium - Scaling upgrade in ap-south-1)
 resource "aws_instance" "app_server" {
-  ami                    = "ami-0dee22c13ea7a9a67" # Ubuntu 24.04 LTS ap-south-1
-  instance_type          = "t3.medium"
+  ami                    = var.ami_id
+  instance_type          = var.instance_type
   iam_instance_profile   = aws_iam_instance_profile.ssm_profile.name
   vpc_security_group_ids = [aws_security_group.sg.id]
 
   root_block_device {
-    volume_size = 20
+    volume_size = var.root_volume_gb
     volume_type = "gp3"
   }
 
   user_data = <<-EOF
               #!/bin/bash
               set -e
-
-              # 2GB swap for memory headroom
               fallocate -l 2G /swapfile
               chmod 600 /swapfile
               mkswap /swapfile
               swapon /swapfile
               echo '/swapfile none swap sw 0 0' >> /etc/fstab
-
-              # Install Docker & tools
               apt-get update -y
               apt-get install -y docker.io docker-compose-plugin awscli
               systemctl enable docker
@@ -109,13 +123,19 @@ resource "aws_instance" "app_server" {
     ignore_changes = [user_data, ami]
   }
 
-  tags = { Name = "Autopilot-Backend" }
+  tags = {
+    Name    = "${local.name_prefix}-app"
+    Project = local.name_prefix
+    Role    = "compose-host"
+  }
 }
 
-# 4. Elastic IP for Static DNS
 resource "aws_eip" "lb" {
   instance = aws_instance.app_server.id
   domain   = "vpc"
+
+  tags = {
+    Name    = "${local.name_prefix}-eip"
+    Project = local.name_prefix
+  }
 }
-
-

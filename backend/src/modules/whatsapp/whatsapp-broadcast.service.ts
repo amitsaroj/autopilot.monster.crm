@@ -9,6 +9,7 @@ import {
   WhatsAppBroadcastStatus,
 } from '../../database/entities/whatsapp-broadcast.entity';
 import { Contact } from '../../database/entities/contact.entity';
+import { Segment } from '../../database/entities/segment.entity';
 import { WhatsappTemplateService } from './whatsapp-template.service';
 import {
   WhatsappBroadcastProcessor,
@@ -27,6 +28,8 @@ export class WhatsappBroadcastService {
     private readonly broadcastRepository: Repository<WhatsAppBroadcast>,
     @InjectRepository(Contact)
     private readonly contactRepository: Repository<Contact>,
+    @InjectRepository(Segment)
+    private readonly segmentRepository: Repository<Segment>,
     private readonly templateService: WhatsappTemplateService,
     @InjectQueue(QUEUE_NAMES.WHATSAPP)
     private readonly whatsappQueue: Queue<WhatsappBroadcastJobPayload>,
@@ -140,21 +143,45 @@ export class WhatsappBroadcastService {
       where.status = In(filter.status);
     }
 
-    const contacts = await this.contactRepository.find({ where: where as never });
+    let contacts = await this.contactRepository.find({ where: where as never });
+    const tagFilters = new Set(filter.tags ?? []);
 
-    if (filter.tags?.length) {
-      return contacts.filter((contact) =>
-        filter.tags!.some((tag) => (contact.tags ?? []).includes(tag)),
+    if (filter.segmentIds?.length) {
+      const segments = await this.segmentRepository.find({
+        where: { tenantId, id: In(filter.segmentIds) },
+      });
+
+      for (const segment of segments) {
+        const conditions = (segment.rules?.conditions ?? []) as Array<{
+          field?: string;
+          value?: string;
+        }>;
+        for (const condition of conditions) {
+          if (condition.field === 'tags' || condition.field === 'tag') {
+            if (condition.value) {
+              tagFilters.add(condition.value);
+            }
+          }
+        }
+      }
+    }
+
+    if (tagFilters.size > 0) {
+      contacts = contacts.filter((contact) =>
+        [...tagFilters].some((tag) => (contact.tags ?? []).includes(tag)),
       );
     }
 
-    return contacts;
+    if (filter.customField) {
+      contacts = contacts.filter(
+        (contact) => contact.customFields?.[filter.customField!.key] === filter.customField!.value,
+      );
+    }
+
+    return contacts.filter((contact) => contact.mobile || contact.phone);
   }
 
-  private buildTemplateMessage(
-    variables: Record<string, string>,
-    contact: Contact,
-  ): string {
+  private buildTemplateMessage(variables: Record<string, string>, contact: Contact): string {
     let message = variables.body ?? 'Hello {{firstName}}';
     message = message.replace(/\{\{firstName\}\}/g, contact.firstName);
     message = message.replace(/\{\{lastName\}\}/g, contact.lastName);

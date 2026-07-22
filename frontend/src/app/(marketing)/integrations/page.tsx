@@ -1,26 +1,45 @@
-"use client";
+'use client';
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  Globe,
-  Webhook,
-  Code2,
-  Blocks,
-  Key,
-  FileJson,
-  Zap,
-} from 'lucide-react';
+import { ArrowRight, Globe, Webhook, Code2, Blocks, Key, FileJson, Zap } from 'lucide-react';
 
 const integrations = [
-  { icon: Globe, title: 'REST API', desc: 'Full CRUD API for contacts, deals, workflows, and every platform resource.' },
-  { icon: Webhook, title: 'Webhooks', desc: 'Real-time events for CRM changes, AI completions, and workflow triggers.' },
-  { icon: Code2, title: 'TypeScript SDK', desc: 'Official SDK with full type safety for custom integrations.' },
-  { icon: Blocks, title: '500+ Connectors', desc: 'Pre-built connectors for popular apps — no code required.' },
-  { icon: Zap, title: 'n8n & Zapier', desc: 'Orchestrate workflows across 1,000+ apps with low-code automation.' },
-  { icon: Key, title: 'OAuth & API Keys', desc: 'Secure authentication with OAuth 2.0, API keys, and service accounts.' },
-  { icon: FileJson, title: 'GraphQL', desc: 'Flexible GraphQL endpoint for complex queries and custom data fetching.' },
+  {
+    icon: Globe,
+    title: 'REST API',
+    desc: 'Full CRUD API for contacts, deals, workflows, and every platform resource.',
+  },
+  {
+    icon: Webhook,
+    title: 'Webhooks',
+    desc: 'Real-time events for CRM changes, AI completions, and workflow triggers.',
+  },
+  {
+    icon: Code2,
+    title: 'TypeScript SDK',
+    desc: 'Official SDK with full type safety for custom integrations.',
+  },
+  {
+    icon: Blocks,
+    title: '500+ Connectors',
+    desc: 'Pre-built connectors for popular apps — no code required.',
+  },
+  {
+    icon: Zap,
+    title: 'n8n & Zapier',
+    desc: 'Orchestrate workflows across 1,000+ apps with low-code automation.',
+  },
+  {
+    icon: Key,
+    title: 'OAuth & API Keys',
+    desc: 'Secure authentication with OAuth 2.0, API keys, and service accounts.',
+  },
+  {
+    icon: FileJson,
+    title: 'GraphQL',
+    desc: 'Flexible GraphQL endpoint for complex queries and custom data fetching.',
+  },
 ];
 
 const partnerLogos = [
@@ -100,7 +119,9 @@ export default function IntegrationsPage() {
             >
               <item.icon className="w-8 h-8 text-cyan-400 mb-4" aria-hidden="true" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{item.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+                {item.desc}
+              </p>
             </motion.div>
           ))}
         </div>

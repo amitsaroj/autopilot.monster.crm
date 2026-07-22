@@ -1,11 +1,26 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import {
-  Server, Cpu, HardDrive, Globe, Wifi, RefreshCw,
-  Activity, Zap, Database, Cloud, CheckCircle2,
-  AlertTriangle, XCircle, Loader2, ArrowUpRight, BarChart3,
-  Shield, Terminal, Settings
+  Server,
+  Cpu,
+  HardDrive,
+  Globe,
+  Wifi,
+  RefreshCw,
+  Activity,
+  Zap,
+  Database,
+  Cloud,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Loader2,
+  ArrowUpRight,
+  BarChart3,
+  Shield,
+  Terminal,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -53,7 +68,10 @@ function UsageBar({ value, color }: { value: number; color: string }) {
   };
   return (
     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-      <div className={`h-full ${getColor()} rounded-full transition-all duration-1000`} style={{ width: `${value}%` }} />
+      <div
+        className={`h-full ${getColor()} rounded-full transition-all duration-1000`}
+        style={{ width: `${value}%` }}
+      />
     </div>
   );
 }
@@ -86,7 +104,9 @@ export default function CloudOrchestrationPage() {
           status: health.status === 'OK' ? 'HEALTHY' : 'DEGRADED',
           cpuUsage,
           memoryUsage,
-          diskUsage: Math.round((health.memory.usage.heapUsed / health.memory.usage.heapTotal) * 100),
+          diskUsage: Math.round(
+            (health.memory.usage.heapUsed / health.memory.usage.heapTotal) * 100,
+          ),
           uptime: formatUptime(health.uptime),
           version: health.nodeVersion,
         },
@@ -117,7 +137,7 @@ export default function CloudOrchestrationPage() {
     void load();
   };
 
-  const healthyNodes = nodes.filter(n => n.status === 'HEALTHY').length;
+  const healthyNodes = nodes.filter((n) => n.status === 'HEALTHY').length;
   const totalNodes = nodes.length;
 
   if (loading && nodes.length === 0) {
@@ -130,22 +150,27 @@ export default function CloudOrchestrationPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Live Infrastructure Feed</span>
+            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+              Live Infrastructure Feed
+            </span>
           </div>
           <h1 className="text-3xl font-black text-white tracking-tight">Cloud Infrastructure</h1>
           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
-            {healthyNodes}/{totalNodes} Nodes Healthy · Last sync: {lastRefresh.toLocaleTimeString()}
+            {healthyNodes}/{totalNodes} Nodes Healthy · Last sync:{' '}
+            {lastRefresh.toLocaleTimeString()}
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={refresh} disabled={loading}
-            className="p-3 bg-white/[0.03] border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all">
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="p-3 bg-white/[0.03] border border-white/10 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.08] transition-all"
+          >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
           <button className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
@@ -157,12 +182,43 @@ export default function CloudOrchestrationPage() {
       {/* Platform KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Cluster Uptime', value: '99.97%', icon: Zap, color: 'text-emerald-400', bg: 'bg-emerald-500/10', trend: '+0.02%' },
-          { label: 'Avg API Latency', value: '45ms', icon: Activity, color: 'text-indigo-400', bg: 'bg-indigo-500/10', trend: '-12ms' },
-          { label: 'DB Connections', value: '2,841', icon: Database, color: 'text-blue-400', bg: 'bg-blue-500/10', trend: '+4%' },
-          { label: 'Active Workers', value: '24', icon: Cpu, color: 'text-amber-400', bg: 'bg-amber-500/10', trend: 'Stable' },
-        ].map(kpi => (
-          <div key={kpi.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group">
+          {
+            label: 'Cluster Uptime',
+            value: '99.97%',
+            icon: Zap,
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-500/10',
+            trend: '+0.02%',
+          },
+          {
+            label: 'Avg API Latency',
+            value: '45ms',
+            icon: Activity,
+            color: 'text-indigo-400',
+            bg: 'bg-indigo-500/10',
+            trend: '-12ms',
+          },
+          {
+            label: 'DB Connections',
+            value: '2,841',
+            icon: Database,
+            color: 'text-blue-400',
+            bg: 'bg-blue-500/10',
+            trend: '+4%',
+          },
+          {
+            label: 'Active Workers',
+            value: '24',
+            icon: Cpu,
+            color: 'text-amber-400',
+            bg: 'bg-amber-500/10',
+            trend: 'Stable',
+          },
+        ].map((kpi) => (
+          <div
+            key={kpi.label}
+            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group"
+          >
             <div className="flex justify-between items-start mb-3">
               <div className={`p-2.5 rounded-xl ${kpi.bg}`}>
                 <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
@@ -171,7 +227,9 @@ export default function CloudOrchestrationPage() {
                 <ArrowUpRight className="w-3 h-3" /> {kpi.trend}
               </span>
             </div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">{kpi.label}</p>
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+              {kpi.label}
+            </p>
             <p className="text-2xl font-black text-white mt-1">{kpi.value}</p>
           </div>
         ))}
@@ -187,13 +245,20 @@ export default function CloudOrchestrationPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-white/[0.05] bg-white/[0.02]">
-                  {['Node', 'Region', 'Type', 'Status', 'CPU', 'Memory', 'Disk', 'Uptime'].map(h => (
-                    <th key={h} className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
-                  ))}
+                  {['Node', 'Region', 'Type', 'Status', 'CPU', 'Memory', 'Disk', 'Uptime'].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.03]">
-                {nodes.map(node => (
+                {nodes.map((node) => (
                   <tr key={node.id} className="group hover:bg-white/[0.02] transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -212,17 +277,22 @@ export default function CloudOrchestrationPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{node.type}</span>
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        {node.type}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
-                      <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${STATUS_STYLES[node.status]}`}>
+                      <span
+                        className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${STATUS_STYLES[node.status]}`}
+                      >
                         {node.status}
                       </span>
                     </td>
                     <td className="px-5 py-4 min-w-[100px]">
                       <div className="space-y-1">
                         <div className="flex justify-between text-[10px] text-gray-500">
-                          <span>CPU</span><span className="text-white font-black">{node.cpuUsage}%</span>
+                          <span>CPU</span>
+                          <span className="text-white font-black">{node.cpuUsage}%</span>
                         </div>
                         <UsageBar value={node.cpuUsage} color="bg-blue-500" />
                       </div>
@@ -230,7 +300,8 @@ export default function CloudOrchestrationPage() {
                     <td className="px-5 py-4 min-w-[100px]">
                       <div className="space-y-1">
                         <div className="flex justify-between text-[10px] text-gray-500">
-                          <span>RAM</span><span className="text-white font-black">{node.memoryUsage}%</span>
+                          <span>RAM</span>
+                          <span className="text-white font-black">{node.memoryUsage}%</span>
                         </div>
                         <UsageBar value={node.memoryUsage} color="bg-purple-500" />
                       </div>
@@ -238,7 +309,8 @@ export default function CloudOrchestrationPage() {
                     <td className="px-5 py-4 min-w-[100px]">
                       <div className="space-y-1">
                         <div className="flex justify-between text-[10px] text-gray-500">
-                          <span>Disk</span><span className="text-white font-black">{node.diskUsage}%</span>
+                          <span>Disk</span>
+                          <span className="text-white font-black">{node.diskUsage}%</span>
                         </div>
                         <UsageBar value={node.diskUsage} color="bg-indigo-500" />
                       </div>
@@ -260,23 +332,35 @@ export default function CloudOrchestrationPage() {
           <Cloud className="w-4 h-4 text-blue-400" /> Service Health Matrix
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {services.map(svc => (
-            <div key={svc.name} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group">
+          {services.map((svc) => (
+            <div
+              key={svc.name}
+              className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group"
+            >
               <div className="flex justify-between items-start mb-3">
-                <div className={`w-2 h-2 rounded-full ${svc.status === 'UP' ? 'bg-emerald-500 animate-pulse' : svc.status === 'DEGRADED' ? 'bg-amber-500' : 'bg-red-500'}`} />
-                <span className={`text-[10px] font-black uppercase tracking-widest ${STATUS_STYLES[svc.status]?.split(' ')[0]}`}>{svc.status}</span>
+                <div
+                  className={`w-2 h-2 rounded-full ${svc.status === 'UP' ? 'bg-emerald-500 animate-pulse' : svc.status === 'DEGRADED' ? 'bg-amber-500' : 'bg-red-500'}`}
+                />
+                <span
+                  className={`text-[10px] font-black uppercase tracking-widest ${STATUS_STYLES[svc.status]?.split(' ')[0]}`}
+                >
+                  {svc.status}
+                </span>
               </div>
               <h3 className="text-xs font-bold text-white mb-1">{svc.name}</h3>
               <p className="text-[10px] font-mono text-gray-600 mb-3 truncate">{svc.endpoint}</p>
               <div className="flex justify-between text-[10px] text-gray-500">
-                <span>Latency: <span className="text-white font-black">{svc.latency}ms</span></span>
-                <span>Up: <span className="text-emerald-400 font-black">{svc.uptime}</span></span>
+                <span>
+                  Latency: <span className="text-white font-black">{svc.latency}ms</span>
+                </span>
+                <span>
+                  Up: <span className="text-emerald-400 font-black">{svc.uptime}</span>
+                </span>
               </div>
             </div>
           ))}
         </div>
       </div>
-
     </div>
   );
 }

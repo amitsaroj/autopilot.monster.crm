@@ -79,8 +79,6 @@ describe('HTTP E2E — Workflow meta and trigger (secured)', () => {
 
     expect([200, 201, 202]).toContain(triggerRes.status);
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/workflows/${workflowId}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/workflows/${workflowId}`).set(headers);
   });
 });

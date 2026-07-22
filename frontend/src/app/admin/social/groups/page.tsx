@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Users, Plus, Globe, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { socialService } from "@/services/social.service";
-import { parseApiData } from "@/lib/api/parse-response";
+import { useEffect, useState } from 'react';
+import { Users, Plus, Globe, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { socialService } from '@/services/social.service';
+import { parseApiData } from '@/lib/api/parse-response';
 interface SocialGroup {
   id: string;
   name: string;
@@ -15,10 +15,10 @@ interface SocialGroup {
 }
 
 const PLATFORM_LABELS: Record<string, string> = {
-  FACEBOOK: "Facebook",
-  TWITTER: "Twitter",
-  LINKEDIN: "LinkedIn",
-  INSTAGRAM: "Instagram",
+  FACEBOOK: 'Facebook',
+  TWITTER: 'Twitter',
+  LINKEDIN: 'LinkedIn',
+  INSTAGRAM: 'Instagram',
 };
 
 export default function AdminSocialGroupsPage() {
@@ -47,7 +47,7 @@ export default function AdminSocialGroupsPage() {
           }));
         setGroups(built);
       } catch {
-        toast.error("Failed to load social groups");
+        toast.error('Failed to load social groups');
       } finally {
         setLoading(false);
       }

@@ -8,7 +8,7 @@ import { Response } from 'express';
 @ApiTags('Analytics - Advanced')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantGuard)
-@Controller('analytics')
+@Controller('analytics/advanced')
 export class AdvancedAnalyticsController {
   constructor(private readonly analyticsService: AdvancedAnalyticsService) {}
 
@@ -60,7 +60,9 @@ export class AdvancedAnalyticsController {
   @ApiOperation({ summary: 'Build a custom report based on config' })
   async customReport(@TenantId() tenantId: string, @Query('config') config: string) {
     let parsedConfig = {};
-    try { if (config) parsedConfig = JSON.parse(config); } catch (e) {}
+    try {
+      if (config) parsedConfig = JSON.parse(config);
+    } catch (e) {}
     return this.analyticsService.buildCustomReport(tenantId, parsedConfig);
   }
 
@@ -74,7 +76,9 @@ export class AdvancedAnalyticsController {
   @ApiOperation({ summary: 'Schedule an automated report' })
   async scheduleReport(@TenantId() tenantId: string, @Query('config') config: string) {
     let parsedConfig = {};
-    try { if (config) parsedConfig = JSON.parse(config); } catch (e) {}
+    try {
+      if (config) parsedConfig = JSON.parse(config);
+    } catch (e) {}
     return this.analyticsService.scheduleReport(tenantId, parsedConfig);
   }
 

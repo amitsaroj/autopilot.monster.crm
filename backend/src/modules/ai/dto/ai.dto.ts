@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsObject, IsOptional, IsBoolean, IsArray, IsInt, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsObject,
+  IsOptional,
+  IsBoolean,
+  IsArray,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 
 export class GenerateDto {
   @ApiProperty()

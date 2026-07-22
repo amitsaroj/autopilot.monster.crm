@@ -19,7 +19,10 @@ export class WebhookService {
   async create(tenantId: string, dto: Partial<Webhook>): Promise<Webhook> {
     const secret = crypto.randomBytes(32).toString('hex');
     const webhook = this.webhookRepo.create({
-      ...dto, tenantId, secret, status: 'ACTIVE',
+      ...dto,
+      tenantId,
+      secret,
+      status: 'ACTIVE',
     } as any) as unknown as Webhook;
     return this.webhookRepo.save(webhook) as unknown as Promise<Webhook>;
   }
@@ -45,7 +48,12 @@ export class WebhookService {
     await this.webhookRepo.softRemove(w);
   }
 
-  async getDeliveries(tenantId: string, webhookId: string, page = 1, limit = 20): Promise<{ data: WebhookDelivery[]; total: number }> {
+  async getDeliveries(
+    tenantId: string,
+    webhookId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: WebhookDelivery[]; total: number }> {
     const [data, total] = await this.deliveryRepo.findAndCount({
       where: { tenantId, webhookId } as any,
       order: { createdAt: 'DESC' },

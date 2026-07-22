@@ -1,9 +1,18 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
+import api from '@/lib/api/client';
 import {
-  CreditCard, Search, Loader2, Building2, Calendar,
-  CheckCircle2, XCircle, Clock, RefreshCw, ArrowRight,
+  CreditCard,
+  Search,
+  Loader2,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  RefreshCw,
+  ArrowRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,8 +36,8 @@ export default function GlobalSubscriptionsPage() {
   const fetchSubscriptions = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/admin/subscriptions');
-      const json = await res.json();
+      const res = await api.get('/admin/subscriptions');
+      const json = res.data;
       if (json.data) setSubscriptions(json.data);
     } catch {
       toast.error('Failed to load subscriptions');
@@ -102,7 +111,10 @@ export default function GlobalSubscriptionsPage() {
             <thead>
               <tr className="border-b border-white/[0.05] bg-white/[0.02]">
                 {['Tenant', 'Plan', 'Status', 'Billing Cycle', 'Period End', 'Created'].map((h) => (
-                  <th key={h} className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                  <th
+                    key={h}
+                    className="px-6 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest"
+                  >
                     {h}
                   </th>
                 ))}
@@ -115,20 +127,28 @@ export default function GlobalSubscriptionsPage() {
                     <div className="flex items-center gap-3">
                       <Building2 className="w-4 h-4 text-indigo-400" />
                       <div>
-                        <p className="text-sm font-bold text-white">{sub.tenant?.name ?? 'Unknown Tenant'}</p>
+                        <p className="text-sm font-bold text-white">
+                          {sub.tenant?.name ?? 'Unknown Tenant'}
+                        </p>
                         <p className="text-[10px] text-gray-600 font-mono">{sub.tenantId}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-sm text-gray-300">{sub.plan?.name ?? sub.planId}</td>
+                  <td className="px-6 py-5 text-sm text-gray-300">
+                    {sub.plan?.name ?? sub.planId}
+                  </td>
                   <td className="px-6 py-5">
-                    <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusStyle(sub.status)}`}>
+                    <span
+                      className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusStyle(sub.status)}`}
+                    >
                       {sub.status}
                     </span>
                   </td>
                   <td className="px-6 py-5 text-xs text-gray-400">{sub.billingCycle ?? '—'}</td>
                   <td className="px-6 py-5 text-xs text-gray-400">
-                    {sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toLocaleDateString() : '—'}
+                    {sub.currentPeriodEnd
+                      ? new Date(sub.currentPeriodEnd).toLocaleDateString()
+                      : '—'}
                   </td>
                   <td className="px-6 py-5 text-xs text-gray-400 flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5" />
@@ -152,7 +172,9 @@ export default function GlobalSubscriptionsPage() {
       <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-between gap-6">
         <div>
           <h3 className="text-lg font-black text-white">Invoice Registry</h3>
-          <p className="text-sm text-gray-500 mt-1">Review platform-wide invoice artifacts and payment reconciliation.</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Review platform-wide invoice artifacts and payment reconciliation.
+          </p>
         </div>
         <a
           href="/superadmin/invoices"

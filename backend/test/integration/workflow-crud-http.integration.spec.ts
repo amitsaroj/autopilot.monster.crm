@@ -4,7 +4,11 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
-import { authRequestHeaders, extractResponseData, loginTestUser } from '../e2e/helpers/auth-test.helper';
+import {
+  authRequestHeaders,
+  extractResponseData,
+  loginTestUser,
+} from '../e2e/helpers/auth-test.helper';
 
 describe('HTTP E2E — Workflow CRUD', () => {
   let app: INestApplication;
@@ -66,9 +70,7 @@ describe('HTTP E2E — Workflow CRUD', () => {
     expect(updateRes.status).toBe(200);
     expect(extractResponseData<{ name: string }>(updateRes.body).name).toBe('E2E Workflow Updated');
 
-    const listRes = await request(app.getHttpServer())
-      .get('/api/v1/workflows')
-      .set(headers);
+    const listRes = await request(app.getHttpServer()).get('/api/v1/workflows').set(headers);
 
     expect(listRes.status).toBe(200);
     expect(Array.isArray(extractResponseData(listRes.body))).toBe(true);

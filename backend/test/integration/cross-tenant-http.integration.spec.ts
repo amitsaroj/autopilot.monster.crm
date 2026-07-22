@@ -4,7 +4,11 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedCrossTenantCredentials, seedWalletBalance } from '../e2e/helpers/seed-test.helper';
-import { authRequestHeaders, extractResponseData, loginTestUser } from '../e2e/helpers/auth-test.helper';
+import {
+  authRequestHeaders,
+  extractResponseData,
+  loginTestUser,
+} from '../e2e/helpers/auth-test.helper';
 
 describe('HTTP E2E — cross-tenant isolation', () => {
   let app: INestApplication;
@@ -73,10 +77,15 @@ describe('HTTP E2E — cross-tenant isolation', () => {
     const pipelineRes = await request(app.getHttpServer())
       .post('/api/v1/crm/pipelines')
       .set(primaryHeaders)
-      .send({ name: `E2E Pipeline ${Date.now()}`, stages: [{ name: 'New', order: 0, probability: 10 }] });
+      .send({
+        name: `E2E Pipeline ${Date.now()}`,
+        stages: [{ name: 'New', order: 0, probability: 10 }],
+      });
 
     expect([200, 201]).toContain(pipelineRes.status);
-    const pipeline = extractResponseData<{ id: string; stages: Array<{ id: string }> }>(pipelineRes.body);
+    const pipeline = extractResponseData<{ id: string; stages: Array<{ id: string }> }>(
+      pipelineRes.body,
+    );
 
     const dealRes = await request(app.getHttpServer())
       .post('/api/v1/crm/deals')
@@ -120,8 +129,12 @@ describe('HTTP E2E — cross-tenant isolation', () => {
     expect(primaryWallet.status).toBe(200);
     expect(secondaryWallet.status).toBe(200);
 
-    const primaryBalance = Number(extractResponseData<{ balance: number }>(primaryWallet.body).balance);
-    const secondaryBalance = Number(extractResponseData<{ balance: number }>(secondaryWallet.body).balance);
+    const primaryBalance = Number(
+      extractResponseData<{ balance: number }>(primaryWallet.body).balance,
+    );
+    const secondaryBalance = Number(
+      extractResponseData<{ balance: number }>(secondaryWallet.body).balance,
+    );
 
     expect(primaryBalance).toBeGreaterThanOrEqual(50);
     expect(secondaryBalance).toBeLessThan(primaryBalance);

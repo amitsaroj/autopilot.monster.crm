@@ -33,14 +33,28 @@ storybook-static/
 .env
 .env.*
 !.env.example
+!.env.*.example
 !.env.test.example
+!.env.production.example
 .env.local
 .env.*.local
+backend/.env
+backend/.env.production
+frontend/.env
+frontend/.env.production
 secrets.json
 *.pem
 *.key
 *.cert
 *.p12
+!nginx/ssl/.gitkeep
+nginx/ssl/*.pem
+nginx/ssl/*.crt
+nginx/ssl/*.key
+certbot/conf/**
+!certbot/conf/.gitkeep
+certbot/www/**
+!certbot/www/.gitkeep
 
 # ─── Testing & Coverage ─────────────────────────────────────
 coverage/
@@ -82,7 +96,7 @@ lerna-debug.log*
 
 # ─── Docker ─────────────────────────────────────────────────
 # Ignore local volume data; keep Dockerfiles and compose files
-data/
+/data/
 volumes/
 docker-compose.override.yml
 

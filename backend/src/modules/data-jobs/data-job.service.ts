@@ -4,11 +4,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Repository } from 'typeorm';
 import { Queue } from 'bull';
 
-import {
-  DataJob,
-  DataJobStatus,
-  DataJobType,
-} from '../../database/entities/data-job.entity';
+import { DataJob, DataJobStatus, DataJobType } from '../../database/entities/data-job.entity';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
 import { StartExportDto, StartImportDto } from './dto/data-job.dto';
 

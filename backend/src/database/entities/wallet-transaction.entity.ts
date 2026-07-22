@@ -30,5 +30,4 @@ export class WalletTransaction extends BaseEntity {
 
   @Column({ name: 'source', length: 50, nullable: true })
   source?: string;
-
 }

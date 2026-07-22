@@ -24,11 +24,11 @@ export class AdminIpWhitelistService {
     } else {
       setting = this.settingRepo.create({ key: 'ip_whitelist', group: 'SECURITY' });
     }
-    
+
     if (!whitelist.find((item: any) => item.ip === ip)) {
       whitelist.push({ ip, description, addedAt: new Date() });
     }
-    
+
     setting.value = whitelist;
     return this.settingRepo.save(setting);
   }
@@ -36,10 +36,10 @@ export class AdminIpWhitelistService {
   async removeIp(ip: string) {
     const setting = await this.settingRepo.findOne({ where: { key: 'ip_whitelist' } });
     if (!setting) return;
-    
+
     let whitelist = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
     whitelist = whitelist.filter((item: any) => item.ip !== ip);
-    
+
     setting.value = whitelist;
     return this.settingRepo.save(setting);
   }

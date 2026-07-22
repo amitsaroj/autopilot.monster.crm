@@ -8,7 +8,6 @@ import type { IRequestContext } from '../interfaces/request-context.interface';
 
 /**
  * RolesGuard — checks @Roles() metadata against the authenticated user's roles.
- * Stub: full RBAC resolver lives in apps/rbac (build step 4).
  */
 @Injectable()
 export class RolesGuard implements CanActivate {

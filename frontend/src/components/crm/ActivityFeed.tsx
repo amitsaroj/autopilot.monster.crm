@@ -1,14 +1,14 @@
 'use client';
 
-import { 
-  Phone, 
-  Mail, 
-  Users, 
-  FileText, 
-  CheckSquare, 
+import {
+  Phone,
+  Mail,
+  Users,
+  FileText,
+  CheckSquare,
   MessageSquare,
   Clock,
-  MoreHorizontal
+  MoreHorizontal,
 } from 'lucide-react';
 import { Activity, ActivityType } from '@/services/activity.service';
 import { cn } from '@/lib/utils';
@@ -40,13 +40,16 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
 
         return (
           <div key={activity.id} className="relative flex items-start gap-4 group">
-            <div className={cn(
-              "shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border-2 border-white dark:border-background shadow-sm transition group-hover:scale-110",
-              Config.bg, Config.color
-            )}>
+            <div
+              className={cn(
+                'shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border-2 border-white dark:border-background shadow-sm transition group-hover:scale-110',
+                Config.bg,
+                Config.color,
+              )}
+            >
               <Icon className="w-5 h-5" />
             </div>
-            
+
             <div className="flex-1 bg-white dark:bg-card/50 p-4 rounded-2xl border border-gray-100 dark:border-border shadow-soft transition hover:border-indigo-100 dark:hover:border-indigo-900/50">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">

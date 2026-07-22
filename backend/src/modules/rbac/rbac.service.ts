@@ -1,21 +1,40 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { v4 as uuidv4 } from 'uuid';
 import { RbacRepository } from './rbac.repository';
 import { CreateRoleDto, RoleFilterDto, PermissionFilterDto } from './dto/create-role.dto';
 import { Role } from '../../database/entities/role.entity';
 import { Permission } from '../../database/entities/permission.entity';
 import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
+import { EVENT_NAMES } from '../../events/event.constants';
 
 @Injectable()
 export class RbacService {
-  constructor(private readonly rbacRepository: RbacRepository) {}
+  constructor(
+    private readonly rbacRepository: RbacRepository,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
-  async createRole(tenantId: string, createRoleDto: CreateRoleDto): Promise<Role> {
+  async createRole(
+    tenantId: string,
+    createRoleDto: CreateRoleDto,
+    actorId?: string,
+  ): Promise<Role> {
     const permissions = await this.rbacRepository.findPermissionsByIds(createRoleDto.permissionIds);
-    return this.rbacRepository.create(tenantId, {
+    const role = await this.rbacRepository.create(tenantId, {
       name: createRoleDto.name,
       description: createRoleDto.description,
       permissions,
     });
+    this.eventEmitter.emit(EVENT_NAMES.ROLE_CREATED, {
+      name: EVENT_NAMES.ROLE_CREATED,
+      tenantId,
+      actorId: actorId ?? null,
+      payload: { roleId: role.id, name: role.name },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+    return role;
   }
 
   async findAllRoles(tenantId: string, filter: RoleFilterDto): Promise<IPaginatedResult<Role>> {
@@ -68,6 +87,7 @@ export class RbacService {
     tenantId: string,
     id: string,
     updateRoleDto: Partial<CreateRoleDto>,
+    actorId?: string,
   ): Promise<Role> {
     const role = await this.findRole(tenantId, id);
     if (updateRoleDto.permissionIds) {
@@ -78,7 +98,16 @@ export class RbacService {
     if (updateRoleDto.name) role.name = updateRoleDto.name;
     if (updateRoleDto.description) role.description = updateRoleDto.description;
 
-    return this.rbacRepository.updateWithTenant(tenantId, id, role);
+    const updated = await this.rbacRepository.updateWithTenant(tenantId, id, role);
+    this.eventEmitter.emit(EVENT_NAMES.ROLE_UPDATED, {
+      name: EVENT_NAMES.ROLE_UPDATED,
+      tenantId,
+      actorId: actorId ?? null,
+      payload: { roleId: id, changes: updateRoleDto },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
+    return updated;
   }
 
   async removeRole(tenantId: string, id: string): Promise<void> {
@@ -86,13 +115,39 @@ export class RbacService {
     await this.rbacRepository.delete(tenantId, id);
   }
 
-  async assignRole(tenantId: string, userId: string, roleId: string, actorId?: string): Promise<void> {
+  async assignRole(
+    tenantId: string,
+    userId: string,
+    roleId: string,
+    actorId?: string,
+  ): Promise<void> {
     await this.findRole(tenantId, roleId);
     await this.rbacRepository.assignRole(tenantId, userId, roleId, actorId);
+    this.eventEmitter.emit(EVENT_NAMES.ROLE_ASSIGNED, {
+      name: EVENT_NAMES.ROLE_ASSIGNED,
+      tenantId,
+      actorId: actorId ?? null,
+      payload: { userId, roleId },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
   }
 
-  async revokeRole(tenantId: string, userId: string, roleId: string): Promise<void> {
+  async revokeRole(
+    tenantId: string,
+    userId: string,
+    roleId: string,
+    actorId?: string,
+  ): Promise<void> {
     await this.rbacRepository.revokeRole(tenantId, userId, roleId);
+    this.eventEmitter.emit(EVENT_NAMES.ROLE_REVOKED, {
+      name: EVENT_NAMES.ROLE_REVOKED,
+      tenantId,
+      actorId: actorId ?? null,
+      payload: { userId, roleId },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
+    });
   }
 
   async createPermission(data: any): Promise<Permission> {

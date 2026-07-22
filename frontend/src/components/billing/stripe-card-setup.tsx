@@ -72,7 +72,11 @@ function CardSetupForm({ onComplete, onCancel }: StripeCardSetupFormProps) {
         >
           {submitting ? 'Saving...' : 'Save Card'}
         </button>
-        <button type="button" onClick={onCancel} className="text-sm text-muted-foreground hover:underline">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-sm text-muted-foreground hover:underline"
+        >
           Cancel
         </button>
       </div>

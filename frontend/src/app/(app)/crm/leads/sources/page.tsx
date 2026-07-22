@@ -7,7 +7,9 @@ export default function LeadSourcesPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
 
   useEffect(() => {
-    void leadService.getLeads().then((r) => setLeads((r as { data: { data: Lead[] } }).data?.data ?? []));
+    void leadService
+      .getLeads()
+      .then((r) => setLeads((r as { data: { data: Lead[] } }).data?.data ?? []));
   }, []);
 
   const bySource = leads.reduce<Record<string, number>>((acc, lead) => {
@@ -21,7 +23,10 @@ export default function LeadSourcesPage() {
       <h1 className="text-2xl font-bold">Lead Sources</h1>
       <ul className="divide-y rounded-xl border border-border bg-card">
         {Object.entries(bySource).map(([source, count]) => (
-          <li key={source} className="flex justify-between p-4"><span className="font-medium capitalize">{source}</span><span>{count} leads</span></li>
+          <li key={source} className="flex justify-between p-4">
+            <span className="font-medium capitalize">{source}</span>
+            <span>{count} leads</span>
+          </li>
         ))}
       </ul>
     </div>

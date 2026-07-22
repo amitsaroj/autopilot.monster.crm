@@ -19,7 +19,12 @@ import { TenantId, ResourcePermissions, PlanFeature, Roles } from '../../common/
 import { Public } from '../../common/decorators/public.decorator';
 import { BillingService } from './billing.service';
 import { PricingService } from '../pricing/pricing.service';
-import { AttachPaymentMethodDto, UpgradeSubscriptionDto, DowngradeSubscriptionDto, CancelSubscriptionDto } from './dto/billing.dto';
+import {
+  AttachPaymentMethodDto,
+  UpgradeSubscriptionDto,
+  DowngradeSubscriptionDto,
+  CancelSubscriptionDto,
+} from './dto/billing.dto';
 import { AddWalletCreditsDto } from './dto/wallet.dto';
 import { WalletService } from './wallet.service';
 
@@ -47,6 +52,15 @@ export class BillingController {
   @ApiOperation({ summary: 'Get current subscription' })
   getSubscription(@TenantId() tenantId: string) {
     return this.billingService.getSubscription(tenantId);
+  }
+
+  @Get('subscription/recovery')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiOperation({ summary: 'Get failed-payment recovery state' })
+  async getRecoveryState(@TenantId() tenantId: string) {
+    const data = await this.billingService.getBillingRecovery(tenantId);
+    return { status: 200, message: 'Billing recovery state retrieved', error: false, data };
   }
 
   @Post('subscription/upgrade')
@@ -82,6 +96,15 @@ export class BillingController {
   async reactivate(@TenantId() tenantId: string) {
     const data = await this.billingService.reactivateSubscription(tenantId);
     return { status: 200, message: 'Subscription reactivated', error: false, data };
+  }
+
+  @Post('subscription/retry-payment')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiOperation({ summary: 'Create retry payment recovery session' })
+  async retryPayment(@TenantId() tenantId: string) {
+    const data = await this.billingService.retryFailedPayment(tenantId);
+    return { status: 200, message: 'Retry payment session created', error: false, data };
   }
 
   @Get('invoices')
@@ -196,6 +219,9 @@ export class BillingController {
     if (!signature) {
       throw new BadRequestException('Missing signature');
     }
-    return this.billingService.handleWebhook(signature, req.rawBody as Buffer);
+    if (!req.rawBody?.length) {
+      throw new BadRequestException('Missing request body');
+    }
+    return this.billingService.handleWebhook(signature, req.rawBody);
   }
 }

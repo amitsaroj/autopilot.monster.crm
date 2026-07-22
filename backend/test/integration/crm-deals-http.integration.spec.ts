@@ -46,15 +46,12 @@ describe('HTTP E2E — CRM deals (secured)', () => {
       pipelineRes.body,
     );
 
-    const dealRes = await request(app.getHttpServer())
-      .post('/api/v1/crm/deals')
-      .set(headers)
-      .send({
-        name: 'Secured E2E Deal',
-        value: 2500,
-        pipelineId: pipeline.id,
-        stageId: pipeline.stages[0]?.id,
-      });
+    const dealRes = await request(app.getHttpServer()).post('/api/v1/crm/deals').set(headers).send({
+      name: 'Secured E2E Deal',
+      value: 2500,
+      pipelineId: pipeline.id,
+      stageId: pipeline.stages[0]?.id,
+    });
 
     expect([200, 201]).toContain(dealRes.status);
     const dealId = extractResponseData<{ id: string }>(dealRes.body).id;

@@ -23,16 +23,16 @@ export class ConfigOrchestratorService {
    */
   async get(tenantId: string, key: string, defaultValue?: any): Promise<any> {
     // 1. Check Tenant Specific Setting
-    const tenantSetting = await this.tenantSettingRepo.findOne({ 
-      where: { tenantId, key } 
+    const tenantSetting = await this.tenantSettingRepo.findOne({
+      where: { tenantId, key },
     });
     if (tenantSetting && tenantSetting.value !== undefined && tenantSetting.value !== '') {
       return tenantSetting.value;
     }
 
     // 2. Check Global Platform Setting
-    const platformSetting = await this.platformSettingRepo.findOne({ 
-      where: { key } 
+    const platformSetting = await this.platformSettingRepo.findOne({
+      where: { key },
     });
     if (platformSetting && platformSetting.value !== undefined && platformSetting.value !== '') {
       return platformSetting.value;
@@ -53,7 +53,11 @@ export class ConfigOrchestratorService {
       openaiKey: await this.get(tenantId, 'openai_key'),
       anthropicKey: await this.get(tenantId, 'anthropic_key'),
       defaultModel: await this.get(tenantId, 'ai_default_model', 'gpt-4o'),
-      platformRole: await this.get(tenantId, 'ai_platform_role', 'You are an advanced CRM assistant.'),
+      platformRole: await this.get(
+        tenantId,
+        'ai_platform_role',
+        'You are an advanced CRM assistant.',
+      ),
     };
   }
 
@@ -67,7 +71,7 @@ export class ConfigOrchestratorService {
       twilioVoiceSid: await this.get(tenantId, 'twilio_voice_sid'),
     };
   }
-  
+
   /**
    * Convenience method for WhatsApp settings
    */
@@ -85,7 +89,7 @@ export class ConfigOrchestratorService {
    */
   async findTenantByConfig(key: string, value: string): Promise<string | null> {
     const setting = await this.tenantSettingRepo.findOne({
-      where: { key, value }
+      where: { key, value },
     });
     return setting ? setting.tenantId : null;
   }

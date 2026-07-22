@@ -10,13 +10,13 @@ export class PipelineService {
   constructor(
     private readonly repository: PipelineRepository,
     @InjectRepository(PipelineStage)
-    private readonly stageRepo: Repository<PipelineStage>
+    private readonly stageRepo: Repository<PipelineStage>,
   ) {}
 
   async findAll(tenantId: string): Promise<Pipeline[]> {
     return this.repository.findAll(tenantId, {
       relations: ['stages'],
-      order: { order: 'ASC', stages: { order: 'ASC' } }
+      order: { order: 'ASC', stages: { order: 'ASC' } },
     });
   }
 
@@ -29,7 +29,7 @@ export class PipelineService {
     return this.repository.findOne(tenantId, {
       where: { id } as any,
       relations: ['stages'],
-      order: { stages: { order: 'ASC' } }
+      order: { stages: { order: 'ASC' } },
     });
   }
 
@@ -41,7 +41,11 @@ export class PipelineService {
     return this.repository.create(tenantId, payload);
   }
 
-  async createStage(tenantId: string, pipelineId: string, data: Partial<PipelineStage>): Promise<PipelineStage> {
+  async createStage(
+    tenantId: string,
+    pipelineId: string,
+    data: Partial<PipelineStage>,
+  ): Promise<PipelineStage> {
     const stage = this.stageRepo.create({ ...data, pipelineId, tenantId });
     return this.stageRepo.save(stage);
   }

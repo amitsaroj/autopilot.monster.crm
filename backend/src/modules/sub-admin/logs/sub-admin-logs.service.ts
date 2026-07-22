@@ -5,9 +5,7 @@ import { AuditLog } from '../../../database/entities/audit-log.entity';
 
 @Injectable()
 export class SubAdminLogsService {
-  constructor(
-    @InjectRepository(AuditLog) private readonly logRepo: Repository<AuditLog>,
-  ) {}
+  constructor(@InjectRepository(AuditLog) private readonly logRepo: Repository<AuditLog>) {}
 
   async findAll(tenantId: string, query: any) {
     const { type, limit = 50 } = query;
