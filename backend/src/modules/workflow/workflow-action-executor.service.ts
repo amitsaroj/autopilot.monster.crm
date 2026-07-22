@@ -8,6 +8,7 @@ import { TaskCrmService, NoteService, EmailCrmService } from '../crm/crm-support
 import { EmailService } from '../../shared/email/email.service';
 import { NotificationService } from '../notifications/notification.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { WhatsappTemplateService } from '../whatsapp/whatsapp-template.service';
 import { VoiceCallService } from '../voice/voice-call.service';
 import { TaskPriority } from '../../database/entities/task.entity';
 import { ContactStatus } from '../../database/entities/contact.entity';
@@ -32,6 +33,7 @@ export class WorkflowActionExecutorService {
     private readonly emailCrmService: EmailCrmService,
     private readonly notificationService: NotificationService,
     private readonly whatsappService: WhatsappService,
+    private readonly whatsappTemplateService: WhatsappTemplateService,
     private readonly voiceCallService: VoiceCallService,
   ) {}
 
@@ -64,7 +66,14 @@ export class WorkflowActionExecutorService {
       case 'SEND_EMAIL':
         return this.sendEmail(step, context, config);
       case 'SEND_WHATSAPP':
+      case 'SEND_MESSAGE':
         return this.sendWhatsapp(step, context, config);
+      case 'SEND_TEMPLATE':
+        return this.sendWhatsappTemplate(step, context, config);
+      case 'ASSIGN_AGENT':
+        return this.assignWhatsappAgent(step, context, config);
+      case 'RESOLVE':
+        return this.resolveWhatsappConversation(step, context, config);
       case 'NOTIFY_TEAM':
         return this.notifyTeam(step, context, config);
       case 'CALL_WEBHOOK':
@@ -74,6 +83,7 @@ export class WorkflowActionExecutorService {
         return this.initiateCall(step, context, config);
       case 'WAIT_DELAY':
       case 'DELAY':
+      case 'AWAIT_RESPONSE':
         return this.executeDelay(step, config);
       case 'AI_CHAT':
       case 'AI_RESPONSE':
@@ -441,6 +451,97 @@ export class WorkflowActionExecutorService {
     };
   }
 
+  private async sendWhatsappTemplate(
+    step: WorkflowStep,
+    context: WorkflowExecutionContext,
+    config: Record<string, unknown>,
+  ): Promise<WorkflowStepResult> {
+    const toNumber = String(
+      config.toNumber ?? config.to ?? config.phone ?? context.payload.phone ?? '',
+    );
+    if (!toNumber) {
+      throw new Error('SEND_TEMPLATE requires toNumber');
+    }
+
+    let templateName = typeof config.templateName === 'string' ? config.templateName : '';
+    let language =
+      typeof config.language === 'string' && config.language ? config.language : 'en_US';
+    const components = Array.isArray(config.components) ? config.components : [];
+
+    if (!templateName && typeof config.templateId === 'string' && config.templateId) {
+      const template = await this.whatsappTemplateService.findOne(
+        context.tenantId,
+        config.templateId,
+      );
+      templateName = template.name;
+      language = template.language || language;
+    }
+
+    if (!templateName) {
+      throw new Error('SEND_TEMPLATE requires templateName or templateId');
+    }
+
+    const messageRecord = await this.whatsappService.sendTemplateMessage(
+      context.tenantId,
+      toNumber,
+      templateName,
+      language,
+      components,
+      typeof config.wabaId === 'string' ? config.wabaId : undefined,
+    );
+
+    return {
+      stepId: step.id,
+      type: step.type,
+      status: 'COMPLETED',
+      messageId: messageRecord.id,
+      to: toNumber,
+    };
+  }
+
+  private async assignWhatsappAgent(
+    step: WorkflowStep,
+    context: WorkflowExecutionContext,
+    config: Record<string, unknown>,
+  ): Promise<WorkflowStepResult> {
+    const phone = String(config.phone ?? context.payload.phone ?? '');
+    const assigneeId = String(config.assigneeId ?? config.ownerId ?? config.userId ?? '');
+    if (!phone) {
+      throw new Error('ASSIGN_AGENT requires phone');
+    }
+    if (!assigneeId) {
+      throw new Error('ASSIGN_AGENT requires assigneeId');
+    }
+
+    await this.whatsappService.assignConversation(context.tenantId, phone, assigneeId);
+    return {
+      stepId: step.id,
+      type: step.type,
+      status: 'COMPLETED',
+      ownerId: assigneeId,
+      to: phone,
+    };
+  }
+
+  private async resolveWhatsappConversation(
+    step: WorkflowStep,
+    context: WorkflowExecutionContext,
+    config: Record<string, unknown>,
+  ): Promise<WorkflowStepResult> {
+    const phone = String(config.phone ?? context.payload.phone ?? '');
+    if (!phone) {
+      throw new Error('RESOLVE requires phone');
+    }
+
+    await this.whatsappService.resolveConversation(context.tenantId, phone);
+    return {
+      stepId: step.id,
+      type: step.type,
+      status: 'COMPLETED',
+      to: phone,
+    };
+  }
+
   private async notifyTeam(
     step: WorkflowStep,
     context: WorkflowExecutionContext,
@@ -475,9 +576,7 @@ export class WorkflowActionExecutorService {
     context: WorkflowExecutionContext,
     config: Record<string, unknown>,
   ): Promise<WorkflowStepResult> {
-    const to = String(
-      config.to ?? config.toNumber ?? config.phone ?? context.payload.phone ?? '',
-    );
+    const to = String(config.to ?? config.toNumber ?? config.phone ?? context.payload.phone ?? '');
     if (!to) {
       throw new Error('INITIATE_CALL requires to phone number');
     }
@@ -518,7 +617,8 @@ export class WorkflowActionExecutorService {
       config.headers && typeof config.headers === 'object'
         ? (config.headers as Record<string, string>)
         : {};
-    const body = config.body ?? config.payload ?? { eventName: context.eventName, payload: context.payload };
+    const body = config.body ??
+      config.payload ?? { eventName: context.eventName, payload: context.payload };
 
     const response = await axios.request({
       url,
@@ -585,7 +685,11 @@ export class WorkflowActionExecutorService {
       return context.payload.contactId;
     }
     const contact = context.payload.contact;
-    if (contact && typeof contact === 'object' && typeof (contact as { id?: unknown }).id === 'string') {
+    if (
+      contact &&
+      typeof contact === 'object' &&
+      typeof (contact as { id?: unknown }).id === 'string'
+    ) {
       return (contact as { id: string }).id;
     }
     return undefined;
@@ -622,7 +726,8 @@ export class WorkflowActionExecutorService {
   private resolveDelayMs(config: Record<string, unknown>): number {
     const hours = Number(config.delayHours ?? 0);
     const days = Number(config.delayDays ?? 0);
+    const minutes = Number(config.timeoutMinutes ?? config.delayMinutes ?? 0);
     const seconds = Number(config.delaySeconds ?? config.seconds ?? 0);
-    return (days * 24 * 3600 + hours * 3600 + seconds) * 1000;
+    return (days * 24 * 3600 + hours * 3600 + minutes * 60 + seconds) * 1000;
   }
 }

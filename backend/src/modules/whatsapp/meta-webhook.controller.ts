@@ -16,6 +16,7 @@ import { Request, Response } from 'express';
 import { WhatsappService } from './whatsapp.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
+import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 
 @SkipThrottle()
 @Controller('whatsapp/webhook')
@@ -26,9 +27,10 @@ export class MetaWebhookController {
   constructor(
     private readonly whatsappService: WhatsappService,
     private configService: ConfigService,
+    private readonly configOrchestrator: ConfigOrchestratorService,
   ) {
     this.isProduction = process.env.NODE_ENV === 'production';
-    this.appSecret = this.configService.get('META_APP_SECRET') || 'mock_secret';
+    this.appSecret = this.configService.get('META_APP_SECRET') || '';
   }
 
   private isMockSecret(): boolean {
@@ -82,18 +84,27 @@ export class MetaWebhookController {
     const tenantId =
       tenantHeader ||
       this.configService.get<string>('DEFAULT_TENANT_ID') ||
-      this.extractTenantFromPayload(req.body);
+      (await this.extractTenantFromPayload(req.body));
 
     if (tenantId) {
       await this.whatsappService.processIncomingMessage(tenantId, req.body);
     }
   }
 
-  private extractTenantFromPayload(body: Record<string, unknown>): string {
+  private async extractTenantFromPayload(body: Record<string, unknown>): Promise<string> {
     const entry = (body.entry as Array<Record<string, unknown>> | undefined)?.[0];
     const changes = (entry?.changes as Array<Record<string, unknown>> | undefined)?.[0];
     const value = changes?.value as Record<string, unknown> | undefined;
     const metadata = value?.metadata as { phone_number_id?: string } | undefined;
-    return metadata?.phone_number_id ?? '';
+    const phoneNumberId = String(metadata?.phone_number_id ?? '');
+    if (!phoneNumberId) {
+      return '';
+    }
+    return (
+      (await this.configOrchestrator.findTenantByConfig(
+        'whatsapp_phone_number_id',
+        phoneNumberId,
+      )) || ''
+    );
   }
 }

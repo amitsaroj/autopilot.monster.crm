@@ -13,9 +13,7 @@ import type { AppConfig } from './config/app.config';
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
-  integrations: [
-    nodeProfilingIntegration(),
-  ],
+  integrations: [nodeProfilingIntegration()],
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
 });
@@ -38,6 +36,14 @@ async function bootstrap(): Promise<void> {
 
   // CORS
   const isProd = appCfg.nodeEnv === 'production';
+  if (isProd) {
+    if (!appCfg.url.startsWith('https://')) {
+      throw new Error('APP_URL must use https:// in production');
+    }
+    if (!appCfg.frontendUrl.startsWith('https://')) {
+      throw new Error('FRONTEND_URL must use https:// in production');
+    }
+  }
   app.enableCors({
     origin: isProd ? [appCfg.url, appCfg.frontendUrl] : true,
     credentials: true,

@@ -1,5 +1,15 @@
 import {
-  Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Req, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OAuthService } from './oauth.service';

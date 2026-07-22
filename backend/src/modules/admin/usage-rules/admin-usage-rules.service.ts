@@ -13,8 +13,10 @@ export class AdminUsageRulesService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'USAGE_RULES' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       softLimitThreshold: config['usage_soft_limit'] || 80,
       hardLimitThreshold: config['usage_hard_limit'] || 100,

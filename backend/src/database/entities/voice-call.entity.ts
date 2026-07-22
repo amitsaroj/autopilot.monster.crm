@@ -40,6 +40,9 @@ export class VoiceCall extends BaseEntity {
   @Column({ name: 'voice_profile', length: 50, nullable: true })
   voiceProfile?: string;
 
+  @Column({ name: 'campaign_id', type: 'uuid', nullable: true })
+  campaignId?: string;
+
   @Column({ name: 'cost_amount', type: 'decimal', precision: 10, scale: 4, default: 0 })
   costAmount!: number;
 }

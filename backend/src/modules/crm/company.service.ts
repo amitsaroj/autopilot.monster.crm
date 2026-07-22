@@ -29,9 +29,9 @@ export class CompanyService {
     private readonly noteRepository: Repository<Note>,
   ) {}
 
-  async create(tenantId: string, data: CreateCompanyDto): Promise<Company> {
+  async create(tenantId: string, data: CreateCompanyDto, actorId?: string): Promise<Company> {
     const company = await this.repository.create(tenantId, data);
-    this.eventEmitter.emit(EVENT_NAMES.COMPANY_CREATED, { company, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.COMPANY_CREATED, { company, tenantId, actorId });
     return company;
   }
 
@@ -61,23 +61,29 @@ export class CompanyService {
     return company;
   }
 
-  async update(tenantId: string, id: string, data: UpdateCompanyDto): Promise<Company> {
+  async update(
+    tenantId: string,
+    id: string,
+    data: UpdateCompanyDto,
+    actorId?: string,
+  ): Promise<Company> {
     await this.findOne(tenantId, id);
     const company = await this.repository.updateWithTenant(tenantId, id, data);
-    this.eventEmitter.emit(EVENT_NAMES.COMPANY_UPDATED, { company, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.COMPANY_UPDATED, { company, tenantId, actorId });
     return company;
   }
 
-  async delete(tenantId: string, id: string): Promise<void> {
+  async delete(tenantId: string, id: string, actorId?: string): Promise<void> {
     await this.findOne(tenantId, id);
     await this.repository.hardDelete(tenantId, id);
-    this.eventEmitter.emit(EVENT_NAMES.COMPANY_DELETED, { tenantId, company: { id } });
+    this.eventEmitter.emit(EVENT_NAMES.COMPANY_DELETED, { tenantId, company: { id }, actorId });
   }
 
   async mergeCompanies(
     tenantId: string,
     primaryId: string,
     secondaryId: string,
+    actorId?: string,
   ): Promise<Company> {
     if (primaryId === secondaryId) {
       throw new BadRequestException('Cannot merge company with itself');
@@ -124,6 +130,7 @@ export class CompanyService {
       primaryId,
       secondaryId,
       company: merged,
+      actorId,
     });
     return merged;
   }

@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WhatsAppBroadcast, WhatsAppBroadcastStatus } from '../../database/entities/whatsapp-broadcast.entity';
+import {
+  WhatsAppBroadcast,
+  WhatsAppBroadcastStatus,
+} from '../../database/entities/whatsapp-broadcast.entity';
 
 @Injectable()
 export class BroadcastService {

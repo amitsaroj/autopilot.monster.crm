@@ -11,6 +11,6 @@ export interface PlatformSetting {
 
 export const adminSettingsService = {
   findAll: () => api.get('/admin/settings'),
-  update: (key: string, value: any, group?: string) => 
+  update: (key: string, value: any, group?: string) =>
     api.post(`/admin/settings/${key}`, { value, group }),
 };

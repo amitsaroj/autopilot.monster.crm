@@ -168,10 +168,7 @@ export class ExportJobProcessor {
 
     try {
       const records = await this.fetchRecords(tenantId, entityType);
-      const content =
-        format === 'json'
-          ? JSON.stringify(records, null, 2)
-          : this.toCsv(records);
+      const content = format === 'json' ? JSON.stringify(records, null, 2) : this.toCsv(records);
 
       const extension = format === 'json' ? 'json' : 'csv';
       const mimeType = format === 'json' ? 'application/json' : 'text/csv';
@@ -259,9 +256,7 @@ export class ExportJobProcessor {
   }
 
   private toPlainRecords<T extends object>(records: T[]): Array<Record<string, unknown>> {
-    return records.map(
-      (record) => JSON.parse(JSON.stringify(record)) as Record<string, unknown>,
-    );
+    return records.map((record) => JSON.parse(JSON.stringify(record)) as Record<string, unknown>);
   }
 
   private toCsv(records: Array<Record<string, unknown>>): string {

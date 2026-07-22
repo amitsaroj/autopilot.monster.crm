@@ -7,11 +7,7 @@ import { toast } from 'sonner';
 
 import { companyService, CompanyDeal } from '@/services/company.service';
 
-export default function CompanyDealsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function CompanyDealsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [deals, setDeals] = useState<CompanyDeal[]>([]);
   const [loading, setLoading] = useState(true);

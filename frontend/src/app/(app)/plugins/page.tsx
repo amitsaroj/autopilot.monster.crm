@@ -41,17 +41,27 @@ export default function PluginsPage() {
           <h1 className="page-title">Plugins</h1>
           <p className="page-description">Installed integrations for this workspace</p>
         </div>
-        <Link href="/plugins/new" className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
+        <Link
+          href="/plugins/new"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+        >
           <Plus className="h-4 w-4" /> Browse Marketplace
         </Link>
       </div>
       <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
         {plugins.map((item) => (
-          <div key={item.id} className="flex items-center gap-5 px-5 py-4 hover:bg-muted/30 transition-colors">
-            <div className="p-2.5 rounded-lg bg-muted"><Puzzle className="h-5 w-5 text-muted-foreground" /></div>
+          <div
+            key={item.id}
+            className="flex items-center gap-5 px-5 py-4 hover:bg-muted/30 transition-colors"
+          >
+            <div className="p-2.5 rounded-lg bg-muted">
+              <Puzzle className="h-5 w-5 text-muted-foreground" />
+            </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-foreground">{item.plugin?.name ?? item.pluginId}</span>
+                <span className="font-medium text-foreground">
+                  {item.plugin?.name ?? item.pluginId}
+                </span>
                 {item.plugin?.version && (
                   <span className="text-xs text-muted-foreground">v{item.plugin.version}</span>
                 )}
@@ -63,7 +73,10 @@ export default function PluginsPage() {
             <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
               Active
             </span>
-            <Link href={`/plugins/${item.pluginId}`} className="p-2 rounded-lg hover:bg-muted transition-colors">
+            <Link
+              href={`/plugins/${item.pluginId}`}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+            >
               <Settings className="h-4 w-4 text-muted-foreground" />
             </Link>
           </div>
@@ -72,7 +85,10 @@ export default function PluginsPage() {
           <div className="py-12 text-center text-muted-foreground">
             <Puzzle className="h-10 w-10 mx-auto mb-3 opacity-30" />
             <p>No plugins installed yet</p>
-            <Link href="/marketplace" className="text-sm text-[hsl(246,80%,60%)] hover:underline mt-2 inline-block">
+            <Link
+              href="/marketplace"
+              className="text-sm text-[hsl(246,80%,60%)] hover:underline mt-2 inline-block"
+            >
               Browse marketplace
             </Link>
           </div>

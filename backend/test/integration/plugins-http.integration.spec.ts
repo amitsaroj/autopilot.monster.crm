@@ -31,9 +31,7 @@ describe('HTTP E2E — Plugins (secured)', () => {
   it('GET /plugins returns available plugins', async () => {
     if (!ctx.postgresAvailable) return;
 
-    const response = await request(ctx.app.getHttpServer())
-      .get('/api/v1/plugins')
-      .set(ctx.headers);
+    const response = await request(ctx.app.getHttpServer()).get('/api/v1/plugins').set(ctx.headers);
 
     expect(response.status).toBe(200);
     expect(Array.isArray(extractResponseData(response.body))).toBe(true);

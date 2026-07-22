@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  Paperclip, 
-  Trash2, 
-  Download, 
-  File, 
-  FileText, 
-  Image as ImageIcon, 
-  Plus, 
+import {
+  Paperclip,
+  Trash2,
+  Download,
+  File,
+  FileText,
+  Image as ImageIcon,
+  Plus,
   Loader2,
-  ExternalLink
+  ExternalLink,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -45,18 +45,18 @@ const formatFileSize = (bytes: number) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-export function AttachmentList({ 
-  attachments, 
-  onUpload, 
-  onDelete, 
-  isUploading = false 
+export function AttachmentList({
+  attachments,
+  onUpload,
+  onDelete,
+  isUploading = false,
 }: AttachmentListProps) {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     try {
       await onUpload(file);
       toast.success('File uploaded successfully');
@@ -88,10 +88,10 @@ export function AttachmentList({
         </h3>
         <label className="p-2 cursor-pointer bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition">
           <Plus className="w-4 h-4" />
-          <input 
-            type="file" 
-            className="hidden" 
-            onChange={handleFileChange} 
+          <input
+            type="file"
+            className="hidden"
+            onChange={handleFileChange}
             disabled={isUploading}
           />
         </label>
@@ -113,17 +113,22 @@ export function AttachmentList({
         {attachments.length === 0 && !isUploading ? (
           <div className="col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-border rounded-3xl opacity-40">
             <Paperclip className="w-8 h-8 mb-2 text-gray-300" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">No attachments yet</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+              No attachments yet
+            </span>
           </div>
         ) : (
-          attachments.map(file => {
+          attachments.map((file) => {
             const Icon = getFileIcon(file.mimeType);
             return (
-              <div key={file.id} className="group flex items-center gap-4 p-4 bg-white dark:bg-card/50 rounded-2xl border border-gray-100 dark:border-border hover:border-emerald-100 dark:hover:border-emerald-900/50 shadow-soft transition">
+              <div
+                key={file.id}
+                className="group flex items-center gap-4 p-4 bg-white dark:bg-card/50 rounded-2xl border border-gray-100 dark:border-border hover:border-emerald-100 dark:hover:border-emerald-900/50 shadow-soft transition"
+              >
                 <div className="shrink-0 w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-emerald-500 transition">
                   <Icon className="w-6 h-6" />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
                     {file.name}
@@ -134,20 +139,24 @@ export function AttachmentList({
                 </div>
 
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                  <a 
-                    href={file.url} 
-                    target="_blank" 
+                  <a
+                    href={file.url}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="p-2 text-gray-400 hover:text-indigo-500 transition"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
-                  <button 
+                  <button
                     onClick={() => handleDelete(file.id)}
                     disabled={isDeleting === file.id}
                     className="p-2 text-gray-300 hover:text-red-500 transition disabled:opacity-50"
                   >
-                    {isDeleting === file.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    {isDeleting === file.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>

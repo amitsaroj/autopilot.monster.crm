@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { MessageSquare, Plus, Globe, Phone, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { parseApiData } from "@/lib/api/parse-response";
-import { subAdminWhatsappService } from "@/services/sub-admin-whatsapp.service";
+import { useEffect, useState } from 'react';
+import { MessageSquare, Plus, Globe, Phone, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { parseApiData } from '@/lib/api/parse-response';
+import { subAdminWhatsappService } from '@/services/sub-admin-whatsapp.service';
 
 interface WhatsappProfile {
   id: string;
@@ -21,12 +21,12 @@ function profileDisplayName(profile: WhatsappProfile): string {
 
 function profilePhone(profile: WhatsappProfile): string {
   const value = profile.value ?? {};
-  return String(value.phone ?? value.phoneNumber ?? "—");
+  return String(value.phone ?? value.phoneNumber ?? '—');
 }
 
 function profileStatus(profile: WhatsappProfile): string {
   const value = profile.value ?? {};
-  return String(value.status ?? "CONFIGURED");
+  return String(value.status ?? 'CONFIGURED');
 }
 
 export default function AdminWhatsAppProfilesPage() {
@@ -40,7 +40,7 @@ export default function AdminWhatsAppProfilesPage() {
         const envelope = await subAdminWhatsappService.getProfiles();
         setProfiles(parseApiData<WhatsappProfile[]>({ data: envelope }) ?? []);
       } catch {
-        toast.error("Failed to load WhatsApp profiles");
+        toast.error('Failed to load WhatsApp profiles');
       } finally {
         setLoading(false);
       }
@@ -96,9 +96,9 @@ export default function AdminWhatsAppProfilesPage() {
                 </div>
                 <span
                   className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
-                    profileStatus(profile) === "VERIFIED"
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    profileStatus(profile) === 'VERIFIED'
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                   }`}
                 >
                   {profileStatus(profile)}

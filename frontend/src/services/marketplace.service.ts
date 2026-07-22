@@ -25,6 +25,7 @@ export const marketplaceService = {
   listApps: () => api.get<{ data: MarketplacePlugin[] }>('/marketplace'),
   getApp: (id: string) => api.get<{ data: MarketplacePlugin }>(`/marketplace/${id}`),
   listInstalled: () => api.get<{ data: TenantPluginInstallation[] }>('/marketplace/installed'),
-  install: (id: string) => api.post<{ data: TenantPluginInstallation }>(`/marketplace/${id}/install`),
+  install: (id: string) =>
+    api.post<{ data: TenantPluginInstallation }>(`/marketplace/${id}/install`),
   uninstall: (id: string) => api.delete(`/marketplace/${id}/uninstall`),
 };

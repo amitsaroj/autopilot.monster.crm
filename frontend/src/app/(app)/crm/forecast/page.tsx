@@ -130,7 +130,9 @@ export default function CrmForecastPage() {
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Owner</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Stage</th>
               <th className="text-right px-4 py-3 font-medium text-muted-foreground">Value</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Probability</th>
+              <th className="text-right px-4 py-3 font-medium text-muted-foreground">
+                Probability
+              </th>
               <th className="text-right px-4 py-3 font-medium text-muted-foreground">Forecast</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Close</th>
             </tr>

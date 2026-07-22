@@ -41,7 +41,10 @@ export default function WorkflowTemplatesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Link href="/workflows" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        href="/workflows"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Workflows
       </Link>
       <h1 className="page-title">Workflow Templates</h1>
@@ -52,7 +55,10 @@ export default function WorkflowTemplatesPage() {
           <h2 className="text-sm font-semibold mb-3">Triggers</h2>
           <div className="space-y-2">
             {triggers.map((t) => (
-              <div key={t.key} className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+              <div
+                key={t.key}
+                className="rounded-xl border border-border bg-card p-4 flex items-center gap-3"
+              >
                 <Zap className="h-4 w-4 text-[hsl(246,80%,60%)]" />
                 <div>
                   <p className="font-medium text-sm">{t.label}</p>
@@ -66,7 +72,10 @@ export default function WorkflowTemplatesPage() {
           <h2 className="text-sm font-semibold mb-3">Actions</h2>
           <div className="space-y-2">
             {actions.map((a) => (
-              <div key={a.key} className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
+              <div
+                key={a.key}
+                className="rounded-xl border border-border bg-card p-4 flex items-center gap-3"
+              >
                 <Zap className="h-4 w-4 text-amber-500" />
                 <div>
                   <p className="font-medium text-sm">{a.label}</p>

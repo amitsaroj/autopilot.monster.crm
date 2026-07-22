@@ -215,7 +215,9 @@ export class AuthRepository {
     }
 
     const permissions = await this.permissionRepo.find();
-    const tenantAdminPermissions = permissions.filter((permission) => permission.resource !== 'admin');
+    const tenantAdminPermissions = permissions.filter(
+      (permission) => permission.resource !== 'admin',
+    );
 
     let role = await this.roleRepo.findOne({
       where: { tenantId, name: 'TENANT_ADMIN' },
@@ -248,7 +250,8 @@ export class AuthRepository {
     if (userRoles.length === 0) return [];
 
     const roleIds = userRoles.map((ur) => ur.roleId);
-    return this.roleRepo.createQueryBuilder('role')
+    return this.roleRepo
+      .createQueryBuilder('role')
       .leftJoinAndSelect('role.permissions', 'permission')
       .where('role.id IN (:...roleIds)', { roleIds })
       .getMany();

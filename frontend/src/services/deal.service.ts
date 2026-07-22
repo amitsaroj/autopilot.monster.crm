@@ -36,7 +36,10 @@ export const dealService = {
   markLost: (id: string, lostReason: string) => api.patch(`/crm/deals/${id}/lost`, { lostReason }),
   getActivities: (id: string) => api.get(`/crm/deals/${id}/activities`),
   getProducts: (id: string) => api.get(`/crm/deals/${id}/products`),
-  addProduct: (id: string, data: { productId: string; quantity: number; unitPrice: number; discount?: number }) =>
-    api.post(`/crm/deals/${id}/products`, data),
-  removeProduct: (id: string, productId: string) => api.delete(`/crm/deals/${id}/products/${productId}`),
+  addProduct: (
+    id: string,
+    data: { productId: string; quantity: number; unitPrice: number; discount?: number },
+  ) => api.post(`/crm/deals/${id}/products`, data),
+  removeProduct: (id: string, productId: string) =>
+    api.delete(`/crm/deals/${id}/products/${productId}`),
 };

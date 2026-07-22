@@ -5,10 +5,7 @@ import { Repository } from 'typeorm';
 import OpenAI from 'openai';
 import { toFile } from 'openai/uploads';
 
-import {
-  FineTuningJob,
-  FineTuningStatus,
-} from '../../database/entities/fine-tuning-job.entity';
+import { FineTuningJob, FineTuningStatus } from '../../database/entities/fine-tuning-job.entity';
 import { BaseRepository } from '../../database/base.repository';
 import { StorageService } from '../../storage/storage.service';
 import { CreateFineTuningJobDto, UpdateFineTuningJobDto } from './dto/fine-tuning.dto';

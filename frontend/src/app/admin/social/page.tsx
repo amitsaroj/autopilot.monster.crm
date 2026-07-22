@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Globe, ArrowRight, Users, Image, Rss, Link2, Loader2 } from "lucide-react";
-import Link from "next/link";
-import { toast } from "sonner";
-import { socialService } from "@/services/social.service";
-import { parseApiData } from "@/lib/api/parse-response";
+import { useEffect, useState } from 'react';
+import { Globe, ArrowRight, Users, Image, Rss, Link2, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { toast } from 'sonner';
+import { socialService } from '@/services/social.service';
+import { parseApiData } from '@/lib/api/parse-response';
 
 interface SocialAnalytics {
   overview: {
@@ -19,44 +19,44 @@ interface SocialAnalytics {
 
 const SOCIAL_MODULES = [
   {
-    label: "Connections",
-    href: "/admin/social/connections",
+    label: 'Connections',
+    href: '/admin/social/connections',
     icon: Link2,
-    desc: "Manage connected social accounts",
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
+    desc: 'Manage connected social accounts',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   {
-    label: "Social Feed",
-    href: "/admin/social/feed",
+    label: 'Social Feed',
+    href: '/admin/social/feed',
     icon: Rss,
-    desc: "Monitor and schedule social posts",
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10",
+    desc: 'Monitor and schedule social posts',
+    color: 'text-indigo-400',
+    bg: 'bg-indigo-500/10',
   },
   {
-    label: "Groups",
-    href: "/admin/social/groups",
+    label: 'Groups',
+    href: '/admin/social/groups',
     icon: Users,
-    desc: "Manage social audience groups",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
+    desc: 'Manage social audience groups',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
   },
   {
-    label: "Media Library",
-    href: "/admin/social/media",
+    label: 'Media Library',
+    href: '/admin/social/media',
     icon: Image,
-    desc: "Shared social media asset library",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
+    desc: 'Shared social media asset library',
+    color: 'text-amber-400',
+    bg: 'bg-amber-500/10',
   },
 ];
 
 const PLATFORM_LABELS: Record<string, string> = {
-  FACEBOOK: "Facebook",
-  TWITTER: "Twitter/X",
-  LINKEDIN: "LinkedIn",
-  INSTAGRAM: "Instagram",
+  FACEBOOK: 'Facebook',
+  TWITTER: 'Twitter/X',
+  LINKEDIN: 'LinkedIn',
+  INSTAGRAM: 'Instagram',
 };
 
 export default function AdminSocialPage() {
@@ -77,11 +77,11 @@ export default function AdminSocialPage() {
         setScheduledCount(
           posts.filter((p) => {
             const post = p as { status?: string };
-            return post.status === "SCHEDULED";
+            return post.status === 'SCHEDULED';
           }).length,
         );
       } catch {
-        toast.error("Failed to load social dashboard");
+        toast.error('Failed to load social dashboard');
       } finally {
         setLoading(false);
       }
@@ -101,10 +101,10 @@ export default function AdminSocialPage() {
     ([, count]) => count > 0,
   );
   const moduleStats: Record<string, string> = {
-    "/admin/social/connections": `${connectedPlatforms.length} Connected`,
-    "/admin/social/feed": `${scheduledCount} Scheduled`,
-    "/admin/social/groups": `${connectedPlatforms.length} Groups`,
-    "/admin/social/media": `${analytics?.overview.totalPosts ?? 0} Posts`,
+    '/admin/social/connections': `${connectedPlatforms.length} Connected`,
+    '/admin/social/feed': `${scheduledCount} Scheduled`,
+    '/admin/social/groups': `${connectedPlatforms.length} Groups`,
+    '/admin/social/media': `${analytics?.overview.totalPosts ?? 0} Posts`,
   };
 
   return (
@@ -130,7 +130,7 @@ export default function AdminSocialPage() {
                 <mod.icon className={`w-5 h-5 ${mod.color}`} />
               </div>
               <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">
-                {moduleStats[mod.href] ?? ""}
+                {moduleStats[mod.href] ?? ''}
               </span>
             </div>
             <h3 className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors mb-1">
@@ -165,11 +165,11 @@ export default function AdminSocialPage() {
                 <span
                   className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase tracking-widest ${
                     count > 0
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                      : "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
                   }`}
                 >
-                  {count > 0 ? "ACTIVE" : "INACTIVE"}
+                  {count > 0 ? 'ACTIVE' : 'INACTIVE'}
                 </span>
               </div>
             );
@@ -180,10 +180,10 @@ export default function AdminSocialPage() {
       {analytics && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Total Posts", value: analytics.overview.totalPosts },
-            { label: "Total Likes", value: analytics.overview.totalLikes },
-            { label: "Total Shares", value: analytics.overview.totalShares },
-            { label: "Total Clicks", value: analytics.overview.totalClicks },
+            { label: 'Total Posts', value: analytics.overview.totalPosts },
+            { label: 'Total Likes', value: analytics.overview.totalLikes },
+            { label: 'Total Shares', value: analytics.overview.totalShares },
+            { label: 'Total Clicks', value: analytics.overview.totalClicks },
           ].map((stat) => (
             <div
               key={stat.label}

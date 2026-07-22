@@ -2,15 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trash2, 
-  CheckCircle2, 
-  Tag, 
-  X, 
-  UserPlus, 
-  Mail,
-  MoreHorizontal
-} from 'lucide-react';
+import { Trash2, CheckCircle2, Tag, X, UserPlus, Mail, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BulkActionBarProps {
@@ -28,12 +20,12 @@ const STATUS_OPTIONS = [
   { label: 'Lost', value: 'LOST', color: 'bg-rose-500' },
 ];
 
-export function BulkActionBar({ 
-  selectedCount, 
-  onClear, 
-  onDelete, 
+export function BulkActionBar({
+  selectedCount,
+  onClear,
+  onDelete,
   onUpdateStatus,
-  entityType 
+  entityType,
 }: BulkActionBarProps) {
   return (
     <AnimatePresence>
@@ -62,13 +54,13 @@ export function BulkActionBar({
                 </button>
                 <div className="absolute bottom-full left-0 mb-4 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all translate-y-2 group-hover:translate-y-0">
                   <div className="bg-gray-900 border border-white/10 rounded-2xl p-2 shadow-2xl flex flex-col gap-1 min-w-[160px]">
-                    {STATUS_OPTIONS.map(opt => (
+                    {STATUS_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
                         onClick={() => onUpdateStatus(opt.value)}
                         className="flex items-center gap-2 px-4 py-2 hover:bg-white/5 rounded-xl text-xs font-bold transition text-left"
                       >
-                        <div className={cn("w-2 h-2 rounded-full", opt.color)} />
+                        <div className={cn('w-2 h-2 rounded-full', opt.color)} />
                         {opt.label}
                       </button>
                     ))}
@@ -81,7 +73,7 @@ export function BulkActionBar({
                 Email
               </button>
 
-              <button 
+              <button
                 onClick={onDelete}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white transition text-sm font-bold"
               >
@@ -90,7 +82,7 @@ export function BulkActionBar({
               </button>
             </div>
 
-            <button 
+            <button
               onClick={onClear}
               className="p-2.5 hover:bg-white/5 rounded-xl text-gray-400 hover:text-white transition"
             >

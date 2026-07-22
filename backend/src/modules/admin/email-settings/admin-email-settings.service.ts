@@ -13,8 +13,10 @@ export class AdminEmailSettingsService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'EMAIL' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       host: config['smtp_host'] || 'smtp.sendgrid.net',
       port: config['smtp_port'] || 587,

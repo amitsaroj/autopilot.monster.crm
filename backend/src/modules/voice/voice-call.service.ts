@@ -10,6 +10,7 @@ export interface CreateOutboundCallInput {
   to: string;
   wssUrl: string;
   voiceProfile?: string;
+  campaignId?: string;
 }
 
 export interface TwilioStatusUpdate {
@@ -74,6 +75,10 @@ export class VoiceCallService {
     return bySid;
   }
 
+  findBySidGlobal(sid: string): Promise<VoiceCall | null> {
+    return this.voiceCallRepository.findBySidGlobal(sid);
+  }
+
   async initiateOutbound(tenantId: string, input: CreateOutboundCallInput): Promise<VoiceCall> {
     const from = await this.twilioService.getFromNumber(tenantId);
     const sid = await this.twilioService.initiateOutboundCall(tenantId, input.to, input.wssUrl);
@@ -90,6 +95,7 @@ export class VoiceCallService {
       direction: 'OUTBOUND',
       status: 'QUEUED',
       voiceProfile: input.voiceProfile,
+      campaignId: input.campaignId,
     });
   }
 

@@ -22,7 +22,10 @@ export class EmailService {
   async sendEmail(to: string, subject: string, html: string): Promise<boolean> {
     try {
       const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('SMTP_FROM', '"Autopilot Monster" <noreply@autopilot.monster>'),
+        from: this.configService.get<string>(
+          'SMTP_FROM',
+          '"Autopilot Monster" <noreply@autopilot.monster>',
+        ),
         to,
         subject,
         html,

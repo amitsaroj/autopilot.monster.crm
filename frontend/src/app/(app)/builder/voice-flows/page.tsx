@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { motion } from 'framer-motion';
 import { FlowBuilder } from '@/components/FlowBuilder/FlowBuilder';
@@ -11,8 +11,8 @@ export default function VoiceFlowsPage() {
       {/* Top Header */}
       <div className="px-8 py-4 bg-white dark:bg-[#0b0f19] border-b border-gray-200 dark:border-white/[0.08] flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <Link 
-            href="/voice/campaigns" 
+          <Link
+            href="/voice/campaigns"
             className="p-2 hover:bg-gray-100 dark:hover:bg-white/[0.05] rounded-lg transition-colors"
           >
             <ChevronLeft className="w-5 h-5 text-gray-500" />
@@ -20,9 +20,13 @@ export default function VoiceFlowsPage() {
           <div>
             <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               Lead Qualification Flow
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">Published</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/10 text-green-500 border border-green-500/20 uppercase">
+                Published
+              </span>
             </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Created by AI Assistant • Last edited 2 mins ago</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Created by AI Assistant • Last edited 2 mins ago
+            </p>
           </div>
         </div>
 
@@ -44,7 +48,7 @@ export default function VoiceFlowsPage() {
 
       {/* Main Builder Area */}
       <div className="flex-1 p-6 bg-gray-50 dark:bg-[#0b0f19]/50 overflow-hidden">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full h-full"

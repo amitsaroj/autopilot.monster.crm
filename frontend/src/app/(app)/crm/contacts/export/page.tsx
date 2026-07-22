@@ -31,7 +31,14 @@ export default function ContactExportPage() {
     <div className="py-8 space-y-4">
       <h1 className="text-2xl font-bold">Export Contacts</h1>
       <p className="text-sm text-muted-foreground">Download all contacts as CSV.</p>
-      <button type="button" disabled={loading} onClick={() => void handleExport()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50">Download CSV</button>
+      <button
+        type="button"
+        disabled={loading}
+        onClick={() => void handleExport()}
+        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+      >
+        Download CSV
+      </button>
     </div>
   );
 }

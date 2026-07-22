@@ -99,11 +99,7 @@ export class UsersController {
   @Patch('groups/:id')
   @ApiOperation({ summary: 'Update team group' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateGroup(
-    @TenantId() tenantId: string,
-    @Param('id') id: string,
-    @Body() dto: any,
-  ) {
+  async updateGroup(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
     const data = await this.usersService.updateGroup(id, tenantId, dto);
     return {
       status: 200,

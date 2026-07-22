@@ -107,10 +107,12 @@ describe('PricingService tenant overrides', () => {
       id: 't1',
       overrides: { features: { ai: false } },
     });
-    mockSubscriptionRepo.findOne.mockResolvedValue({ tenantId: 't1', planId: 'p1', status: 'ACTIVE' });
-    mockPricingRepository.findPlanFeatures.mockResolvedValue([
-      { featureKey: 'ai', enabled: true },
-    ]);
+    mockSubscriptionRepo.findOne.mockResolvedValue({
+      tenantId: 't1',
+      planId: 'p1',
+      status: 'ACTIVE',
+    });
+    mockPricingRepository.findPlanFeatures.mockResolvedValue([{ featureKey: 'ai', enabled: true }]);
 
     await expect(service.isFeatureEnabled('t1', 'ai')).resolves.toBe(false);
   });
@@ -120,10 +122,12 @@ describe('PricingService tenant overrides', () => {
       id: 't1',
       overrides: { limits: { contacts: 5000 } },
     });
-    mockSubscriptionRepo.findOne.mockResolvedValue({ tenantId: 't1', planId: 'p1', status: 'ACTIVE' });
-    mockPricingRepository.findPlanLimits.mockResolvedValue([
-      { metric: 'contacts', value: 1000 },
-    ]);
+    mockSubscriptionRepo.findOne.mockResolvedValue({
+      tenantId: 't1',
+      planId: 'p1',
+      status: 'ACTIVE',
+    });
+    mockPricingRepository.findPlanLimits.mockResolvedValue([{ metric: 'contacts', value: 1000 }]);
 
     await expect(service.getLimit('t1', 'contacts')).resolves.toBe(5000);
   });

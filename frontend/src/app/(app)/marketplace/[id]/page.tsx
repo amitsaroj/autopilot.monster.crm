@@ -7,11 +7,7 @@ import { toast } from 'sonner';
 
 import { marketplaceService, MarketplacePlugin } from '@/services/marketplace.service';
 
-export default function MarketplaceAppDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function MarketplaceAppDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [app, setApp] = useState<MarketplacePlugin | null>(null);
   const [installed, setInstalled] = useState(false);
@@ -27,9 +23,7 @@ export default function MarketplaceAppDetailPage({
           marketplaceService.listInstalled(),
         ]);
         setApp(appRes.data?.data ?? null);
-        const isInstalled = (installedRes.data?.data ?? []).some(
-          (item) => item.pluginId === id,
-        );
+        const isInstalled = (installedRes.data?.data ?? []).some((item) => item.pluginId === id);
         setInstalled(isInstalled);
       } catch {
         toast.error('Failed to load app');

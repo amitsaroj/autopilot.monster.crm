@@ -1,11 +1,41 @@
 import { DollarSign, TrendingUp, BarChart3, ArrowUpRight, Clock } from 'lucide-react';
 
 const billingEvents = [
-  { desc: 'Contact import — 284 records processed', unit: 'contacts', usage: 284, cost: '$0.00', date: 'Oct 10' },
-  { desc: 'Outbound calls — 48 minutes used', unit: 'call minutes', usage: 48, cost: '$4.80', date: 'Oct 10' },
-  { desc: 'AI chat messages — 840 messages', unit: 'messages', usage: 840, cost: '$8.40', date: 'Oct 9' },
-  { desc: 'WhatsApp broadcast — 1,200 messages sent', unit: 'messages', usage: 1200, cost: '$12.00', date: 'Oct 8' },
-  { desc: 'Email sends — 3,480 transactional', unit: 'emails', usage: 3480, cost: '$0.00', date: 'Oct 7' },
+  {
+    desc: 'Contact import — 284 records processed',
+    unit: 'contacts',
+    usage: 284,
+    cost: '$0.00',
+    date: 'Oct 10',
+  },
+  {
+    desc: 'Outbound calls — 48 minutes used',
+    unit: 'call minutes',
+    usage: 48,
+    cost: '$4.80',
+    date: 'Oct 10',
+  },
+  {
+    desc: 'AI chat messages — 840 messages',
+    unit: 'messages',
+    usage: 840,
+    cost: '$8.40',
+    date: 'Oct 9',
+  },
+  {
+    desc: 'WhatsApp broadcast — 1,200 messages sent',
+    unit: 'messages',
+    usage: 1200,
+    cost: '$12.00',
+    date: 'Oct 8',
+  },
+  {
+    desc: 'Email sends — 3,480 transactional',
+    unit: 'emails',
+    usage: 3480,
+    cost: '$0.00',
+    date: 'Oct 7',
+  },
 ];
 
 export default function BillingUsagePage() {
@@ -20,7 +50,12 @@ export default function BillingUsagePage() {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Usage This Month', value: '$25.20', icon: DollarSign, color: 'text-[hsl(246,80%,60%)]' },
+          {
+            label: 'Usage This Month',
+            value: '$25.20',
+            icon: DollarSign,
+            color: 'text-[hsl(246,80%,60%)]',
+          },
           { label: 'Base Plan', value: '$960.00', icon: TrendingUp, color: 'text-blue-400' },
           { label: 'Projected Total', value: '$985.20', icon: BarChart3, color: 'text-green-400' },
           { label: 'Billing On', value: 'Nov 1, 2024', icon: Clock, color: 'text-yellow-400' },
@@ -36,7 +71,9 @@ export default function BillingUsagePage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="px-5 py-4 border-b border-border"><h2 className="text-sm font-semibold">Usage Events</h2></div>
+        <div className="px-5 py-4 border-b border-border">
+          <h2 className="text-sm font-semibold">Usage Events</h2>
+        </div>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
@@ -50,7 +87,9 @@ export default function BillingUsagePage() {
             {billingEvents.map((e, i) => (
               <tr key={i} className="hover:bg-muted/30 transition-colors">
                 <td className="px-5 py-4 text-sm text-foreground">{e.desc}</td>
-                <td className="px-5 py-4 text-sm text-muted-foreground">{e.usage.toLocaleString()} {e.unit}</td>
+                <td className="px-5 py-4 text-sm text-muted-foreground">
+                  {e.usage.toLocaleString()} {e.unit}
+                </td>
                 <td className="px-5 py-4 font-semibold text-foreground">{e.cost}</td>
                 <td className="px-5 py-4 text-xs text-muted-foreground">{e.date}</td>
               </tr>

@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import type { CrmListParams } from '../lib/api/pagination';
 
 export enum QuoteStatus {
   DRAFT = 'DRAFT',
@@ -35,7 +36,8 @@ export interface Quote {
 }
 
 export const quoteService = {
-  getQuotes: () => api.get('/crm/quotes'),
+  getQuotes: (params?: CrmListParams) =>
+    params ? api.get('/crm/quotes', { params }) : api.get('/crm/quotes'),
   getQuote: (id: string) => api.get(`/crm/quotes/${id}`),
   createQuote: (data: Partial<Quote>) => api.post('/crm/quotes', data),
   updateQuote: (id: string, data: Partial<Quote>) => api.put(`/crm/quotes/${id}`, data),

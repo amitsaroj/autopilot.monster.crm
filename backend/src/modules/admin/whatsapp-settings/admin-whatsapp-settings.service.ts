@@ -13,8 +13,10 @@ export class AdminWhatsAppSettingsService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'WHATSAPP' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       appId: config['whatsapp_app_id'] || '',
       appSecret: config['whatsapp_app_secret'] || '',

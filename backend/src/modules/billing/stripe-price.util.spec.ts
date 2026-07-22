@@ -39,12 +39,9 @@ describe('stripe-price.util', () => {
   });
 
   it('prefers config prices over DB plan prices', () => {
-    const resolved = resolveStripePriceId(
-      'STARTER',
-      'MONTHLY',
-      'price_db_fallback',
-      { starterMonthly: 'price_config_starter_m' },
-    );
+    const resolved = resolveStripePriceId('STARTER', 'MONTHLY', 'price_db_fallback', {
+      starterMonthly: 'price_config_starter_m',
+    });
     expect(resolved).toBe('price_config_starter_m');
   });
 
@@ -54,6 +51,8 @@ describe('stripe-price.util', () => {
   });
 
   it('returns null when no valid price is configured', () => {
-    expect(resolveStripePriceId('ENTERPRISE', 'MONTHLY', 'price_ent_monthly_placeholder', {})).toBeNull();
+    expect(
+      resolveStripePriceId('ENTERPRISE', 'MONTHLY', 'price_ent_monthly_placeholder', {}),
+    ).toBeNull();
   });
 });

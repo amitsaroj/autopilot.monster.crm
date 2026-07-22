@@ -59,4 +59,7 @@ export const companyService = {
 
   getActivities: (id: string) =>
     api.get<{ data: CompanyActivity[] }>(`/crm/companies/${id}/activities`),
+
+  mergeCompanies: (primaryId: string, secondaryId: string) =>
+    api.post('/crm/companies/merge', { primaryId, secondaryId }),
 };

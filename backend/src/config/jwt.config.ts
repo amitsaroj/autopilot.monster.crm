@@ -9,6 +9,9 @@ export interface JwtConfig {
   secret: string;
   privateKey: string;
   publicKey: string;
+  previousPublicKey: string;
+  keyId: string;
+  previousKeyId: string;
   expiresIn: string;
   refreshSecret: string;
   refreshExpiresIn: string;
@@ -46,6 +49,9 @@ export const jwtConfig = registerAs(
     secret: process.env['JWT_SECRET'] ?? '',
     privateKey: normalizePemKey(process.env['JWT_PRIVATE_KEY'] ?? ''),
     publicKey: normalizePemKey(process.env['JWT_PUBLIC_KEY'] ?? ''),
+    previousPublicKey: normalizePemKey(process.env['JWT_PUBLIC_KEY_PREVIOUS'] ?? ''),
+    keyId: (process.env['JWT_KEY_ID'] ?? '').trim(),
+    previousKeyId: (process.env['JWT_PREVIOUS_KEY_ID'] ?? '').trim(),
     expiresIn: process.env['JWT_EXPIRES_IN'] ?? '15m',
     refreshSecret: process.env['JWT_REFRESH_SECRET'] ?? process.env['JWT_SECRET'] ?? '',
     refreshExpiresIn: process.env['JWT_REFRESH_EXPIRES_IN'] ?? '7d',

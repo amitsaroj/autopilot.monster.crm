@@ -42,7 +42,8 @@ function MessagesList({ contactId }: { contactId: string }) {
   }, [contactId]);
 
   if (loading) return <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />;
-  if (items.length === 0) return <p className="text-sm text-muted-foreground">No messages found.</p>;
+  if (items.length === 0)
+    return <p className="text-sm text-muted-foreground">No messages found.</p>;
 
   return (
     <div className="space-y-3">

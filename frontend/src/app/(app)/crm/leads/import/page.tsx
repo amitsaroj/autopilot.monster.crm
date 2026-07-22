@@ -8,8 +8,19 @@ export default function LeadImportPage() {
   return (
     <div className="py-8">
       <h1 className="text-2xl font-bold mb-4">Import Leads</h1>
-      <button type="button" onClick={() => setOpen(true)} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white">Open Import Wizard</button>
-      <CsvImportModal isOpen={open} onClose={() => setOpen(false)} onSuccess={() => setOpen(false)} entityType="lead" />
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+      >
+        Open Import Wizard
+      </button>
+      <CsvImportModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        onSuccess={() => setOpen(false)}
+        entityType="lead"
+      />
     </div>
   );
 }

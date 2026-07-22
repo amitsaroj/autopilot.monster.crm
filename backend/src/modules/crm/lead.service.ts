@@ -23,10 +23,7 @@ export class LeadService {
     return this.leadRepo.find({ where: { tenantId }, order: { createdAt: 'DESC' } });
   }
 
-  async findPaginated(
-    tenantId: string,
-    query: CrmListQueryDto,
-  ): Promise<IPaginatedResult<Lead>> {
+  async findPaginated(tenantId: string, query: CrmListQueryDto): Promise<IPaginatedResult<Lead>> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const qb = this.leadRepo
@@ -59,15 +56,15 @@ export class LeadService {
     return lead;
   }
 
-  async create(tenantId: string, data: CreateLeadDto) {
+  async create(tenantId: string, data: CreateLeadDto, actorId?: string) {
     const score = this.leadScoringService.computeScore(data);
     const lead = this.leadRepo.create({ ...data, tenantId, score });
     const saved = await this.leadRepo.save(lead);
-    this.eventEmitter.emit(EVENT_NAMES.LEAD_CREATED, { lead: saved, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.LEAD_CREATED, { lead: saved, tenantId, actorId });
     return saved;
   }
 
-  async bulkCreate(tenantId: string, leads: CreateLeadDto[]) {
+  async bulkCreate(tenantId: string, leads: CreateLeadDto[], actorId?: string) {
     const leadEntities = leads.map((l) =>
       this.leadRepo.create({
         ...l,
@@ -77,24 +74,24 @@ export class LeadService {
     );
     const saved = await this.leadRepo.save(leadEntities);
     for (const lead of saved) {
-      this.eventEmitter.emit(EVENT_NAMES.LEAD_CREATED, { lead, tenantId });
+      this.eventEmitter.emit(EVENT_NAMES.LEAD_CREATED, { lead, tenantId, actorId });
     }
     return saved;
   }
 
-  async update(tenantId: string, id: string, data: UpdateLeadDto) {
+  async update(tenantId: string, id: string, data: UpdateLeadDto, actorId?: string) {
     const existing = await this.findOne(tenantId, id);
     const merged = { ...existing, ...data };
     const score = this.leadScoringService.computeScore(merged);
     await this.leadRepo.update({ id, tenantId }, { ...data, score } as never);
     const lead = await this.findOne(tenantId, id);
-    this.eventEmitter.emit(EVENT_NAMES.LEAD_UPDATED, { lead, tenantId });
+    this.eventEmitter.emit(EVENT_NAMES.LEAD_UPDATED, { lead, tenantId, actorId });
     return lead;
   }
 
-  async remove(tenantId: string, id: string) {
+  async remove(tenantId: string, id: string, actorId?: string) {
     await this.findOne(tenantId, id);
     await this.leadRepo.softDelete({ id, tenantId });
-    this.eventEmitter.emit(EVENT_NAMES.LEAD_DELETED, { tenantId, lead: { id } });
+    this.eventEmitter.emit(EVENT_NAMES.LEAD_DELETED, { tenantId, lead: { id }, actorId });
   }
 }

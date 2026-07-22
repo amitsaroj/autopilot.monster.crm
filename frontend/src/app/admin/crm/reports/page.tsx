@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   BarChart3,
   TrendingUp,
@@ -12,7 +12,7 @@ import {
   Zap,
   CreditCard,
   Loader2,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -24,10 +24,10 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
-import { toast } from "sonner";
-import { parseApiData } from "@/lib/api/parse-response";
-import { crmReportService } from "@/services/crm-report.service";
+} from 'recharts';
+import { toast } from 'sonner';
+import { parseApiData } from '@/lib/api/parse-response';
+import { crmReportService } from '@/services/crm-report.service';
 
 interface CrmSummary {
   totalDeals: number;
@@ -47,14 +47,14 @@ interface RevenuePoint {
   revenue: number;
 }
 
-const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#3b82f6", "#8b5cf6"];
+const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
 const REPORT_CATALOG = [
-  { id: "summary", name: "CRM Summary", type: "OVERVIEW" },
-  { id: "pipeline", name: "Pipeline Distribution", type: "PIPELINE" },
-  { id: "revenue-trend", name: "Revenue Trend", type: "REVENUE" },
-  { id: "lead-funnel", name: "Lead Conversion Funnel", type: "LEADS" },
-  { id: "performance", name: "Agent Performance", type: "ACTIVITY" },
+  { id: 'summary', name: 'CRM Summary', type: 'OVERVIEW' },
+  { id: 'pipeline', name: 'Pipeline Distribution', type: 'PIPELINE' },
+  { id: 'revenue-trend', name: 'Revenue Trend', type: 'REVENUE' },
+  { id: 'lead-funnel', name: 'Lead Conversion Funnel', type: 'LEADS' },
+  { id: 'performance', name: 'Agent Performance', type: 'ACTIVITY' },
 ];
 
 function formatCurrency(value: number): string {
@@ -90,7 +90,7 @@ export default function AdminCRMReportsPage() {
           })),
         );
       } catch {
-        toast.error("Failed to load CRM reports");
+        toast.error('Failed to load CRM reports');
       } finally {
         setLoading(false);
       }
@@ -108,32 +108,32 @@ export default function AdminCRMReportsPage() {
 
   const kpis = [
     {
-      label: "Total Revenue",
+      label: 'Total Revenue',
       value: formatCurrency(summary?.totalRevenue ?? 0),
       icon: CreditCard,
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10",
+      color: 'text-emerald-400',
+      bg: 'bg-emerald-500/10',
     },
     {
-      label: "Deals",
+      label: 'Deals',
       value: String(summary?.totalDeals ?? 0),
       icon: Target,
-      color: "text-indigo-400",
-      bg: "bg-indigo-500/10",
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-500/10',
     },
     {
-      label: "Leads",
+      label: 'Leads',
       value: String(summary?.totalLeads ?? 0),
       icon: Users,
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
+      color: 'text-blue-400',
+      bg: 'bg-blue-500/10',
     },
     {
-      label: "Win Rate",
+      label: 'Win Rate',
       value: `${Math.round(summary?.winRate ?? 0)}%`,
       icon: TrendingUp,
-      color: "text-amber-400",
-      bg: "bg-amber-500/10",
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10',
     },
   ];
 
@@ -201,12 +201,12 @@ export default function AdminCRMReportsPage() {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#0b0f19",
-                    border: "1px solid #ffffff10",
-                    borderRadius: "12px",
-                    fontSize: "12px",
+                    backgroundColor: '#0b0f19',
+                    border: '1px solid #ffffff10',
+                    borderRadius: '12px',
+                    fontSize: '12px',
                   }}
-                  formatter={(v) => [`$${Number(v).toLocaleString()}`, "Revenue"]}
+                  formatter={(v) => [`$${Number(v).toLocaleString()}`, 'Revenue']}
                 />
                 <Area
                   type="monotone"
@@ -245,12 +245,12 @@ export default function AdminCRMReportsPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#0b0f19",
-                      border: "1px solid #ffffff10",
-                      borderRadius: "8px",
-                      fontSize: "11px",
+                      backgroundColor: '#0b0f19',
+                      border: '1px solid #ffffff10',
+                      borderRadius: '8px',
+                      fontSize: '11px',
                     }}
-                    formatter={(v) => [`${Number(v)}%`, "Share"]}
+                    formatter={(v) => [`${Number(v)}%`, 'Share']}
                   />
                 </PieChart>
               </ResponsiveContainer>

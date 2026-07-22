@@ -13,8 +13,10 @@ export class AdminSmsSettingsService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'SMS' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       provider: config['sms_provider'] || 'twilio',
       accountSid: config['twilio_sid'] || '',

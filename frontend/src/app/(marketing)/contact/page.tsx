@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { motion } from 'framer-motion';
 import { Mail, MapPin, MessageCircle } from 'lucide-react';
@@ -34,7 +34,10 @@ export default function ContactPage() {
             <form className="space-y-6" aria-label="Contact form">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="contact-first-name" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  <label
+                    htmlFor="contact-first-name"
+                    className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+                  >
                     First Name
                   </label>
                   <input
@@ -48,7 +51,10 @@ export default function ContactPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="contact-last-name" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  <label
+                    htmlFor="contact-last-name"
+                    className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+                  >
                     Last Name
                   </label>
                   <input
@@ -63,7 +69,10 @@ export default function ContactPage() {
                 </div>
               </div>
               <div>
-                <label htmlFor="contact-email" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                <label
+                  htmlFor="contact-email"
+                  className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+                >
                   Work Email
                 </label>
                 <input
@@ -77,7 +86,10 @@ export default function ContactPage() {
                 />
               </div>
               <div>
-                <label htmlFor="contact-message" className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                <label
+                  htmlFor="contact-message"
+                  className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2"
+                >
                   Message
                 </label>
                 <textarea

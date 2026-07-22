@@ -49,10 +49,7 @@ export class AdminQueuesService {
   async cleanQueue(queueName: string) {
     const queue = this.queues[queueName];
     if (!queue) throw new Error('Queue not found');
-    await Promise.all([
-      queue.clean(1000, 'completed'),
-      queue.clean(1000, 'failed'),
-    ]);
+    await Promise.all([queue.clean(1000, 'completed'), queue.clean(1000, 'failed')]);
     return { success: true };
   }
 }

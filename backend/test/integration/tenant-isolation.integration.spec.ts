@@ -85,14 +85,18 @@ describe('Tenant isolation (DealService)', () => {
   });
 
   it('returns deal only for matching tenant', async () => {
-    mockDealRepository.findOne.mockImplementation((tenantId: string, options: { where: { id: string } }) => {
-      if (tenantId === TENANT_A && options.where.id === 'deal-1') {
-        return Promise.resolve({ id: 'deal-1', tenantId: TENANT_A, name: 'Deal A' });
-      }
-      return Promise.resolve(null);
-    });
+    mockDealRepository.findOne.mockImplementation(
+      (tenantId: string, options: { where: { id: string } }) => {
+        if (tenantId === TENANT_A && options.where.id === 'deal-1') {
+          return Promise.resolve({ id: 'deal-1', tenantId: TENANT_A, name: 'Deal A' });
+        }
+        return Promise.resolve(null);
+      },
+    );
 
-    await expect(service.findOne(TENANT_A, 'deal-1')).resolves.toMatchObject({ tenantId: TENANT_A });
+    await expect(service.findOne(TENANT_A, 'deal-1')).resolves.toMatchObject({
+      tenantId: TENANT_A,
+    });
     await expect(service.findOne(TENANT_B, 'deal-1')).rejects.toThrow('Deal not found');
   });
 });
@@ -126,23 +130,31 @@ describe('Tenant isolation (WalletService)', () => {
   });
 
   it('loads wallet scoped to tenant id', async () => {
-    mockWalletRepository.findOne.mockImplementation(({ where }: { where: { tenantId: string } }) => {
-      if (where.tenantId === TENANT_A) {
-        return Promise.resolve({ tenantId: TENANT_A, balance: 100, currency: 'USD' });
-      }
-      return Promise.resolve(null);
-    });
+    mockWalletRepository.findOne.mockImplementation(
+      ({ where }: { where: { tenantId: string } }) => {
+        if (where.tenantId === TENANT_A) {
+          return Promise.resolve({ tenantId: TENANT_A, balance: 100, currency: 'USD' });
+        }
+        return Promise.resolve(null);
+      },
+    );
     mockWalletRepository.create.mockImplementation((data: Partial<Wallet>) => data);
     mockWalletRepository.save.mockImplementation((wallet: Wallet) => Promise.resolve(wallet));
 
-    await expect(service.getWallet(TENANT_A)).resolves.toMatchObject({ tenantId: TENANT_A, balance: 100 });
+    await expect(service.getWallet(TENANT_A)).resolves.toMatchObject({
+      tenantId: TENANT_A,
+      balance: 100,
+    });
 
     mockWalletRepository.findOne.mockResolvedValue(null);
     mockWalletRepository.save.mockImplementation((wallet: Wallet) =>
       Promise.resolve({ ...wallet, balance: 0, currency: 'USD' }),
     );
 
-    await expect(service.getWallet(TENANT_B)).resolves.toMatchObject({ tenantId: TENANT_B, balance: 0 });
+    await expect(service.getWallet(TENANT_B)).resolves.toMatchObject({
+      tenantId: TENANT_B,
+      balance: 0,
+    });
     expect(mockWalletRepository.findOne).toHaveBeenCalledWith({ where: { tenantId: TENANT_B } });
   });
 });

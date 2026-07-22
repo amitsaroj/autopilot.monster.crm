@@ -47,10 +47,7 @@ export class AnalyticsEventListener {
   }
 
   @OnEvent(EVENT_NAMES.CONTACT_CREATED, { async: true })
-  async onContactCreated(payload: {
-    tenantId: string;
-    contact: { id: string };
-  }): Promise<void> {
+  async onContactCreated(payload: { tenantId: string; contact: { id: string } }): Promise<void> {
     await this.analyticsQueue.trackEvent(payload.tenantId, 'contact.created', {
       contactId: payload.contact.id,
     });

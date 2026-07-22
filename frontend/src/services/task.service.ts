@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import type { CrmListParams } from '../lib/api/pagination';
 
 export enum TaskPriority {
   HIGH = 'HIGH',
@@ -28,7 +29,8 @@ export interface Task {
 }
 
 export const taskService = {
-  getTasks: () => api.get('/crm/tasks'),
+  getTasks: (params?: CrmListParams) =>
+    params ? api.get('/crm/tasks', { params }) : api.get('/crm/tasks'),
   getTask: (id: string) => api.get(`/crm/tasks/${id}`),
   createTask: (data: Partial<Task>) => api.post('/crm/tasks', data),
   updateTask: (id: string, data: Partial<Task>) => api.put(`/crm/tasks/${id}`, data),

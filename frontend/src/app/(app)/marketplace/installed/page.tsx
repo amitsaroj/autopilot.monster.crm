@@ -53,10 +53,7 @@ export default function MarketplaceInstalledPage() {
           <h1 className="page-title">Installed Apps</h1>
           <p className="page-description">Your active integrations</p>
         </div>
-        <Link
-          href="/marketplace"
-          className="text-sm text-[hsl(246,80%,60%)] hover:underline"
-        >
+        <Link href="/marketplace" className="text-sm text-[hsl(246,80%,60%)] hover:underline">
           Browse marketplace
         </Link>
       </div>

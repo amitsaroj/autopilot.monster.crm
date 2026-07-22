@@ -18,15 +18,15 @@ export class AdminDebugService {
   async getSanitizedEnv() {
     const env = process.env;
     const sanitized: Record<string, string> = {};
-    
+
     const secretKeys = ['PORT', 'NODE_ENV', 'APP_NAME']; // Only allow non-sensitive keys or mask others
-    
-    Object.keys(env).forEach(key => {
-       if (secretKeys.includes(key)) {
-          sanitized[key] = env[key] || '';
-       } else {
-          sanitized[key] = '********';
-       }
+
+    Object.keys(env).forEach((key) => {
+      if (secretKeys.includes(key)) {
+        sanitized[key] = env[key] || '';
+      } else {
+        sanitized[key] = '********';
+      }
     });
 
     return sanitized;

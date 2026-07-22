@@ -13,8 +13,10 @@ export class AdminSecuritySettingsService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'SECURITY' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       enforce2fa: config['security_enforce_2fa'] || false,
       sessionTimeout: config['security_session_timeout'] || 3600,

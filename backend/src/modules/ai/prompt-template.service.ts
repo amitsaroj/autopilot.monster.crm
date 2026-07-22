@@ -49,7 +49,10 @@ export class PromptTemplateService {
     tenantId: string,
     id: string,
     dto: Partial<
-      Pick<PromptTemplate, 'name' | 'template' | 'category' | 'description' | 'variables' | 'isDefault'>
+      Pick<
+        PromptTemplate,
+        'name' | 'template' | 'category' | 'description' | 'variables' | 'isDefault'
+      >
     >,
   ): Promise<PromptTemplate> {
     const t = await this.findOne(tenantId, id);

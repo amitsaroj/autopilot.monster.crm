@@ -10,13 +10,20 @@ export default function CrmReportsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void Promise.all([crmReportService.getSummary(), crmReportService.getPipeline()]).then(([s, p]) => {
-      setSummary((s as { data: { data: Record<string, unknown> } }).data?.data ?? null);
-      setPipeline((p as { data: { data: unknown[] } }).data?.data ?? []);
-    }).finally(() => setLoading(false));
+    void Promise.all([crmReportService.getSummary(), crmReportService.getPipeline()])
+      .then(([s, p]) => {
+        setSummary((s as { data: { data: Record<string, unknown> } }).data?.data ?? null);
+        setPipeline((p as { data: { data: unknown[] } }).data?.data ?? []);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 py-8">

@@ -45,27 +45,42 @@ export default function WorkflowRunDetailPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Link href={`/workflows/${id}/runs`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        href={`/workflows/${id}/runs`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Runs
       </Link>
       <h1 className="page-title">Run {run.id.slice(0, 8)}</h1>
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <p className="text-sm"><span className="text-muted-foreground">Status:</span> {run.status}</p>
-        <p className="text-sm"><span className="text-muted-foreground">Started:</span> {new Date(run.startedAt).toLocaleString()}</p>
+        <p className="text-sm">
+          <span className="text-muted-foreground">Status:</span> {run.status}
+        </p>
+        <p className="text-sm">
+          <span className="text-muted-foreground">Started:</span>{' '}
+          {new Date(run.startedAt).toLocaleString()}
+        </p>
         {run.completedAt && (
-          <p className="text-sm"><span className="text-muted-foreground">Completed:</span> {new Date(run.completedAt).toLocaleString()}</p>
+          <p className="text-sm">
+            <span className="text-muted-foreground">Completed:</span>{' '}
+            {new Date(run.completedAt).toLocaleString()}
+          </p>
         )}
         {run.error && <p className="text-sm text-red-500">{run.error}</p>}
         {run.input && (
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-1">Input</p>
-            <pre className="text-xs bg-muted/30 p-3 rounded-lg overflow-auto">{JSON.stringify(run.input, null, 2)}</pre>
+            <pre className="text-xs bg-muted/30 p-3 rounded-lg overflow-auto">
+              {JSON.stringify(run.input, null, 2)}
+            </pre>
           </div>
         )}
         {run.output && Object.keys(run.output).length > 0 && (
           <div>
             <p className="text-xs font-medium text-muted-foreground mb-1">Output</p>
-            <pre className="text-xs bg-muted/30 p-3 rounded-lg overflow-auto">{JSON.stringify(run.output, null, 2)}</pre>
+            <pre className="text-xs bg-muted/30 p-3 rounded-lg overflow-auto">
+              {JSON.stringify(run.output, null, 2)}
+            </pre>
           </div>
         )}
       </div>

@@ -24,6 +24,13 @@ export class WorkflowRepository extends BaseRepository<Flow> {
     return this.flowRepo.find({ where: { tenantId, isPublished: true } as any });
   }
 
+  async findPublishedByType(tenantId: string, type: Flow['type']): Promise<Flow[]> {
+    return this.flowRepo.find({
+      where: { tenantId, isPublished: true, type } as any,
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
   async findExecutionById(tenantId: string, id: string): Promise<WorkflowExecution | null> {
     return this.executionRepo.findOne({ where: { id, tenantId } as any });
   }

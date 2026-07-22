@@ -227,9 +227,7 @@ export class AiController {
       const messages = await this.chatService.getMessages(tenantId, dto.conversationId);
       const recent = messages.slice(-memoryWindow);
       if (recent.length > 0) {
-        const history = recent
-          .map((m) => `${m.role}: ${m.content}`)
-          .join('\n');
+        const history = recent.map((m) => `${m.role}: ${m.content}`).join('\n');
         parts.push(`Memory:\n${history}`);
       }
     }

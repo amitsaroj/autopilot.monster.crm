@@ -27,8 +27,14 @@ export class CouponService {
     return coupon;
   }
 
-  async validate(tenantId: string, code: string, orderAmount?: number): Promise<{ valid: boolean; discount: number; coupon?: Coupon }> {
-    const coupon = await this.couponRepo.findOne({ where: { tenantId, code, active: true } as any });
+  async validate(
+    tenantId: string,
+    code: string,
+    orderAmount?: number,
+  ): Promise<{ valid: boolean; discount: number; coupon?: Coupon }> {
+    const coupon = await this.couponRepo.findOne({
+      where: { tenantId, code, active: true } as any,
+    });
     if (!coupon) return { valid: false, discount: 0 };
 
     const now = new Date();
@@ -39,15 +45,18 @@ export class CouponService {
       return { valid: false, discount: 0 };
     }
 
-    const discount = coupon.discountType === 'PERCENTAGE'
-      ? (orderAmount || 0) * Number(coupon.discountValue) / 100
-      : Number(coupon.discountValue);
+    const discount =
+      coupon.discountType === 'PERCENTAGE'
+        ? ((orderAmount || 0) * Number(coupon.discountValue)) / 100
+        : Number(coupon.discountValue);
 
     return { valid: true, discount, coupon };
   }
 
   async redeem(tenantId: string, code: string): Promise<Coupon> {
-    const coupon = await this.couponRepo.findOne({ where: { tenantId, code, active: true } as any });
+    const coupon = await this.couponRepo.findOne({
+      where: { tenantId, code, active: true } as any,
+    });
     if (!coupon) throw new NotFoundException('Coupon not found or inactive');
     coupon.usedCount += 1;
     return this.couponRepo.save(coupon) as unknown as Promise<Coupon>;

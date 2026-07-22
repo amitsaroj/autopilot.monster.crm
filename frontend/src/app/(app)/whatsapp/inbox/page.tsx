@@ -124,17 +124,24 @@ export default function SharedInboxPage() {
                 className={`p-4 border-b cursor-pointer transition-colors ${activePhone === chat.phone ? 'bg-green-50 border-l-4 border-l-green-500' : 'hover:bg-gray-100 border-l-4 border-l-transparent'}`}
               >
                 <div className="flex justify-between items-start mb-1">
-                  <span className={`font-semibold text-sm ${activePhone === chat.phone ? 'text-green-900' : 'text-gray-900'}`}>
+                  <span
+                    className={`font-semibold text-sm ${activePhone === chat.phone ? 'text-green-900' : 'text-gray-900'}`}
+                  >
                     {chat.contactName ?? chat.phone}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {new Date(chat.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(chat.lastMessageAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600 truncate pr-4">{chat.lastMessage}</span>
                   {chat.unreadCount > 0 && (
-                    <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{chat.unreadCount}</span>
+                    <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      {chat.unreadCount}
+                    </span>
                   )}
                 </div>
               </div>
@@ -171,7 +178,10 @@ export default function SharedInboxPage() {
             <p className="text-center text-sm text-gray-500">No messages yet.</p>
           ) : (
             messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                key={msg.id}
+                className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}
+              >
                 <div
                   className={`rounded-lg px-4 py-2 max-w-md shadow-sm text-sm ${
                     msg.direction === 'OUTBOUND'
@@ -181,7 +191,10 @@ export default function SharedInboxPage() {
                 >
                   {msg.body}
                   <div className="text-[10px] text-gray-400 text-right mt-1">
-                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {new Date(msg.createdAt).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </div>
                 </div>
               </div>

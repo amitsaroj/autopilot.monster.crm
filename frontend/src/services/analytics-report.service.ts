@@ -36,5 +36,6 @@ export const analyticsReportService = {
     api.patch<{ data: AnalyticsReport }>(`/analytics/reports/${id}`, payload),
   remove: (id: string) => api.delete(`/analytics/reports/${id}`),
   run: (id: string) => api.post<{ data: AnalyticsReport }>(`/analytics/reports/${id}/run`),
-  results: (id: string) => api.get<{ data: Record<string, unknown> }>(`/analytics/reports/${id}/results`),
+  results: (id: string) =>
+    api.get<{ data: Record<string, unknown> }>(`/analytics/reports/${id}/results`),
 };

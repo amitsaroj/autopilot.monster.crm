@@ -10,7 +10,11 @@ export class ApiLogService {
     private readonly logRepo: Repository<ApiLog>,
   ) {}
 
-  async findAll(tenantId: string, page = 1, limit = 20): Promise<{ data: ApiLog[]; total: number }> {
+  async findAll(
+    tenantId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: ApiLog[]; total: number }> {
     const [data, total] = await this.logRepo.findAndCount({
       where: { tenantId } as any,
       order: { createdAt: 'DESC' },
@@ -73,7 +77,12 @@ export class ApiLogService {
       }
 
       // Group by path (strip query params and UUIDs if any)
-      const pathClean = log.url.split('?')[0].replace(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g, ':id');
+      const pathClean = log.url
+        .split('?')[0]
+        .replace(
+          /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/g,
+          ':id',
+        );
       const key = `${log.method}:${pathClean}`;
       if (!pathCounts[key]) {
         pathCounts[key] = { method: log.method, path: pathClean, count: 0 };

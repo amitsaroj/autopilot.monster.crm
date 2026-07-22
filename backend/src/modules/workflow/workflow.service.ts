@@ -92,7 +92,11 @@ export class WorkflowService {
       { key: 'DEAL_LOST', label: 'Deal Lost', category: 'CRM' },
       { key: 'LEAD_CREATED', label: 'Lead Created', category: 'CRM' },
       { key: 'CALL_COMPLETED', label: 'Call Completed', category: 'Voice' },
-      { key: 'WHATSAPP_MESSAGE_RECEIVED', label: 'WhatsApp Message Received', category: 'WhatsApp' },
+      {
+        key: 'WHATSAPP_MESSAGE_RECEIVED',
+        label: 'WhatsApp Message Received',
+        category: 'WhatsApp',
+      },
       { key: 'WEBHOOK', label: 'Inbound Webhook', category: 'Webhook' },
       { key: 'SCHEDULE', label: 'Scheduled', category: 'Scheduler' },
       { key: 'MANUAL', label: 'Manual Trigger', category: 'Manual' },

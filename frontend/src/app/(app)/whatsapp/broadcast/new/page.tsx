@@ -36,12 +36,50 @@ export default function NewWhatsappBroadcastPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 py-8">
-      <Link href="/whatsapp/broadcast" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Broadcasts</Link>
+      <Link
+        href="/whatsapp/broadcast"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" /> Broadcasts
+      </Link>
       <h1 className="text-2xl font-bold">New Broadcast</h1>
-      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 rounded-xl border border-border bg-card p-6">
-        <div><label className="text-sm font-medium">Name</label><input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" required /></div>
-        <div><label className="text-sm font-medium">Template</label><select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm" required><option value="">Select template</option>{templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
-        <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Send Broadcast</button>
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="space-y-4 rounded-xl border border-border bg-card p-6"
+      >
+        <div>
+          <label className="text-sm font-medium">Name</label>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
+            required
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Template</label>
+          <select
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
+            required
+          >
+            <option value="">Select template</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}{' '}
+          Send Broadcast
+        </button>
       </form>
     </div>
   );

@@ -64,26 +64,51 @@ export default function NewDealPage() {
 
   return (
     <div className="space-y-6 max-w-2xl animate-fade-in">
-      <Link href="/crm/deals" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        href="/crm/deals"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Deals
       </Link>
       <h1 className="page-title">New Deal</h1>
-      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 rounded-xl border border-border bg-card p-6">
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="space-y-4 rounded-xl border border-border bg-card p-6"
+      >
         <div>
           <label className="text-sm font-medium">Deal Name</label>
-          <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" required />
+          <input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm"
+            required
+          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium">Value</label>
-            <input type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" required />
+            <input
+              type="number"
+              value={form.value}
+              onChange={(e) => setForm({ ...form, value: e.target.value })}
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm"
+              required
+            />
           </div>
           <div>
             <label className="text-sm font-medium">Currency</label>
-            <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
+            <input
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value })}
+              className="w-full mt-1 px-3 py-2 rounded-lg border border-border bg-background text-sm"
+            />
           </div>
         </div>
-        <button type="submit" disabled={saving} className="flex items-center gap-2 px-4 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg disabled:opacity-50"
+        >
           <Save className="h-4 w-4" /> {saving ? 'Creating...' : 'Create Deal'}
         </button>
       </form>

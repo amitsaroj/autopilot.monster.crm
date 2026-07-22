@@ -49,87 +49,111 @@ export default function RegisterPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
           <Zap className="w-5 h-5 text-white" />
         </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">AutopilotMonster</span>
+        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
+          AutopilotMonster
+        </span>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">Create your account</h1>
-      <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">Start your 14-day free trial</p>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">
+        Create your account
+      </h1>
+      <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">
+        Start your 14-day free trial
+      </p>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">First name</label>
+            <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+              First name
+            </label>
             <input
               {...register('firstName')}
               type="text"
               placeholder="John"
               disabled={isLoading}
               className={cn(
-                "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-                errors.firstName && "border-red-500 focus:ring-red-500"
+                'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+                errors.firstName && 'border-red-500 focus:ring-red-500',
               )}
             />
-            {errors.firstName && <p className="mt-1 text-xs text-red-500">{errors.firstName.message}</p>}
+            {errors.firstName && (
+              <p className="mt-1 text-xs text-red-500">{errors.firstName.message}</p>
+            )}
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Last name</label>
+            <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+              Last name
+            </label>
             <input
               {...register('lastName')}
               type="text"
               placeholder="Doe"
               disabled={isLoading}
               className={cn(
-                "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-                errors.lastName && "border-red-500 focus:ring-red-500"
+                'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+                errors.lastName && 'border-red-500 focus:ring-red-500',
               )}
             />
-            {errors.lastName && <p className="mt-1 text-xs text-red-500">{errors.lastName.message}</p>}
+            {errors.lastName && (
+              <p className="mt-1 text-xs text-red-500">{errors.lastName.message}</p>
+            )}
           </div>
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Workspace Name</label>
+          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            Workspace Name
+          </label>
           <input
             {...register('tenantName')}
             type="text"
             placeholder="Acme Corp"
             disabled={isLoading}
             className={cn(
-              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-              errors.tenantName && "border-red-500 focus:ring-red-500"
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              errors.tenantName && 'border-red-500 focus:ring-red-500',
             )}
           />
-          {errors.tenantName && <p className="mt-1 text-xs text-red-500">{errors.tenantName.message}</p>}
+          {errors.tenantName && (
+            <p className="mt-1 text-xs text-red-500">{errors.tenantName.message}</p>
+          )}
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Work email</label>
+          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            Work email
+          </label>
           <input
             {...register('email')}
             type="email"
             placeholder="autopilot.monster@gmail.com"
             disabled={isLoading}
             className={cn(
-              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-              errors.email && "border-red-500 focus:ring-red-500"
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              errors.email && 'border-red-500 focus:ring-red-500',
             )}
           />
           {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">Password</label>
+          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            Password
+          </label>
           <input
             {...register('password')}
             type="password"
             placeholder="Min 8 characters"
             disabled={isLoading}
             className={cn(
-              "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition",
-              errors.password && "border-red-500 focus:ring-red-500"
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              errors.password && 'border-red-500 focus:ring-red-500',
             )}
           />
-          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
+          )}
         </div>
 
         <button
@@ -150,7 +174,10 @@ export default function RegisterPage() {
 
       <p className="mt-6 text-center text-sm text-gray-500 dark:text-muted-foreground">
         Already have an account?{' '}
-        <Link href="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline">
+        <Link
+          href="/login"
+          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+        >
           Sign in
         </Link>
       </p>

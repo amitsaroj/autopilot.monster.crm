@@ -4,7 +4,11 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
-import { authRequestHeaders, extractResponseData, loginTestUser } from '../e2e/helpers/auth-test.helper';
+import {
+  authRequestHeaders,
+  extractResponseData,
+  loginTestUser,
+} from '../e2e/helpers/auth-test.helper';
 
 describe('HTTP E2E — WhatsApp platform', () => {
   let app: INestApplication;
@@ -125,7 +129,14 @@ describe('HTTP E2E — WhatsApp platform', () => {
               {
                 value: {
                   metadata: { display_phone_number: '15550001111' },
-                  messages: [{ from: '15559998888', id: 'wamid.test', type: 'text', text: { body: 'Webhook hello' } }],
+                  messages: [
+                    {
+                      from: '15559998888',
+                      id: 'wamid.test',
+                      type: 'text',
+                      text: { body: 'Webhook hello' },
+                    },
+                  ],
                 },
               },
             ],

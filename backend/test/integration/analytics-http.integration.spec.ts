@@ -4,7 +4,11 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
-import { authRequestHeaders, extractResponseData, loginTestUser } from '../e2e/helpers/auth-test.helper';
+import {
+  authRequestHeaders,
+  extractResponseData,
+  loginTestUser,
+} from '../e2e/helpers/auth-test.helper';
 
 describe('HTTP E2E — Analytics endpoints', () => {
   let app: INestApplication;

@@ -65,7 +65,10 @@ export class ForecastService {
     return stage?.probability ?? 0;
   }
 
-  private async buildStageMap(tenantId: string, deals: Deal[]): Promise<Map<string, PipelineStage>> {
+  private async buildStageMap(
+    tenantId: string,
+    deals: Deal[],
+  ): Promise<Map<string, PipelineStage>> {
     const stageIds = [...new Set(deals.map((deal) => deal.stageId))];
     if (stageIds.length === 0) {
       return new Map();
@@ -119,7 +122,7 @@ export class ForecastService {
         id: deal.id,
         name: deal.name,
         ownerId: deal.ownerId ?? null,
-        ownerName: deal.ownerId ? ownerMap.get(deal.ownerId) ?? 'Unassigned' : 'Unassigned',
+        ownerName: deal.ownerId ? (ownerMap.get(deal.ownerId) ?? 'Unassigned') : 'Unassigned',
         stageId: deal.stageId,
         stageName: stage?.name ?? 'Unknown',
         value,

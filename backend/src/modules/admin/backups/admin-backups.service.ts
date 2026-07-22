@@ -11,8 +11,20 @@ const execAsync = promisify(exec);
 export class AdminBackupsService {
   private readonly logger = new Logger(AdminBackupsService.name);
   private currentBackups: any[] = [
-    { id: 'bak-001', name: 'weekly-system-backup-01.tar.gz', size: '1.2 GB', createdAt: new Date(Date.now() - 86400000 * 2), status: 'SUCCESS' },
-    { id: 'bak-002', name: 'daily-db-snapshot.sql', size: '450 MB', createdAt: new Date(Date.now() - 86400000), status: 'SUCCESS' },
+    {
+      id: 'bak-001',
+      name: 'weekly-system-backup-01.tar.gz',
+      size: '1.2 GB',
+      createdAt: new Date(Date.now() - 86400000 * 2),
+      status: 'SUCCESS',
+    },
+    {
+      id: 'bak-002',
+      name: 'daily-db-snapshot.sql',
+      size: '450 MB',
+      createdAt: new Date(Date.now() - 86400000),
+      status: 'SUCCESS',
+    },
   ];
 
   constructor(private readonly storageService: StorageService) {}
@@ -22,7 +34,7 @@ export class AdminBackupsService {
   }
 
   async findOne(id: string) {
-    return this.currentBackups.find(b => b.id === id);
+    return this.currentBackups.find((b) => b.id === id);
   }
 
   async trigger() {
@@ -39,7 +51,7 @@ export class AdminBackupsService {
     this.currentBackups.push(backupRecord);
 
     // Run backup in background
-    this.runBackup(backupId, tempPath, fileName).catch(err => {
+    this.runBackup(backupId, tempPath, fileName).catch((err) => {
       this.logger.error(`Backup ${backupId} failed`, err);
     });
 
@@ -56,17 +68,15 @@ export class AdminBackupsService {
 
       this.logger.log(`Uploading ${fileName} to storage`);
       const fileBuffer = fs.readFileSync(tempPath);
-      await this.storageService.getClient().putObject(
-        this.storageService.getBackupsBucket(),
-        fileName,
-        fileBuffer
-      );
+      await this.storageService
+        .getClient()
+        .putObject(this.storageService.getBackupsBucket(), fileName, fileBuffer);
 
       const stats = fs.statSync(tempPath);
       const size = (stats.size / (1024 * 1024)).toFixed(2) + ' MB';
 
       // Update record
-      const record = this.currentBackups.find(b => b.id === id);
+      const record = this.currentBackups.find((b) => b.id === id);
       if (record) {
         record.status = 'SUCCESS';
         record.size = size;
@@ -76,7 +86,7 @@ export class AdminBackupsService {
       fs.unlinkSync(tempPath);
       this.logger.log(`Backup ${id} completed successfully`);
     } catch (err: any) {
-      const record = this.currentBackups.find(b => b.id === id);
+      const record = this.currentBackups.find((b) => b.id === id);
       if (record) {
         record.status = 'FAILED';
         record.errorMessage = err.message;

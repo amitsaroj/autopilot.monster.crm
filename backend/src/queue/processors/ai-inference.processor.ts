@@ -19,7 +19,9 @@ export class AiInferenceQueueProcessor {
   constructor(private readonly ragService: RagService) {}
 
   @Process(JOB_NAMES.RUN_INFERENCE)
-  async handleRunInference(job: Job<AiInferenceJobPayload>): Promise<{ status: string; reply?: string | null }> {
+  async handleRunInference(
+    job: Job<AiInferenceJobPayload>,
+  ): Promise<{ status: string; reply?: string | null }> {
     const { tenantId, prompt, model, context } = job.data;
     this.logger.log(
       `Processing AI inference job ${job.id} for tenant ${tenantId} (model: ${model ?? 'default'})`,

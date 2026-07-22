@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  Globe, 
-  Zap, 
-  BarChart3, 
-  Plus, 
+import {
+  Globe,
+  Zap,
+  BarChart3,
+  Plus,
   Loader2,
   Calendar,
   Sparkles,
-  LayoutDashboard
+  LayoutDashboard,
 } from 'lucide-react';
 import { PostComposer } from '@/components/social/PostComposer';
 import { SocialCalendar } from '@/components/social/SocialCalendar';
@@ -29,7 +29,7 @@ export default function SocialSchedulerPage() {
     try {
       const [postsRes, analyticsRes] = await Promise.all([
         socialService.getPosts(),
-        socialService.getAnalytics()
+        socialService.getAnalytics(),
       ]);
       setPosts((postsRes as any).data.data || []);
       setAnalytics((analyticsRes as any).data.data || null);
@@ -81,8 +81,12 @@ export default function SocialSchedulerPage() {
             <Sparkles className="w-3 h-3" />
             Social Automation Active
           </div>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Social Orchestrator</h1>
-          <p className="text-gray-500 font-bold leading-relaxed">Broadcast and track your brand across all major networks from a single command center.</p>
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+            Social Orchestrator
+          </h1>
+          <p className="text-gray-500 font-bold leading-relaxed">
+            Broadcast and track your brand across all major networks from a single command center.
+          </p>
         </div>
 
         {/* Tab Switcher */}
@@ -90,8 +94,10 @@ export default function SocialSchedulerPage() {
           <button
             onClick={() => setActiveTab('scheduler')}
             className={cn(
-              "px-6 py-2.5 rounded-[14px] text-xs font-black transition flex items-center gap-2",
-              activeTab === 'scheduler' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
+              'px-6 py-2.5 rounded-[14px] text-xs font-black transition flex items-center gap-2',
+              activeTab === 'scheduler'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-gray-400 hover:text-gray-600',
             )}
           >
             <Calendar className="w-4 h-4" />
@@ -100,8 +106,10 @@ export default function SocialSchedulerPage() {
           <button
             onClick={() => setActiveTab('analytics')}
             className={cn(
-              "px-6 py-2.5 rounded-[14px] text-xs font-black transition flex items-center gap-2",
-              activeTab === 'analytics' ? "bg-white text-indigo-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
+              'px-6 py-2.5 rounded-[14px] text-xs font-black transition flex items-center gap-2',
+              activeTab === 'analytics'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-gray-400 hover:text-gray-600',
             )}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -115,7 +123,7 @@ export default function SocialSchedulerPage() {
           <div className="xl:col-span-2">
             <PostComposer onSchedule={handleSchedulePost} />
           </div>
-          
+
           <div className="xl:col-span-1">
             <SocialCalendar posts={posts} onDelete={handleDeletePost} />
           </div>

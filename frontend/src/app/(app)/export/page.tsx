@@ -123,7 +123,9 @@ export default function ExportGlobalPage() {
         <h2 className="text-sm font-semibold">Custom Export</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Data Type</label>
+            <label className="text-xs font-medium text-muted-foreground block mb-1">
+              Data Type
+            </label>
             <select
               value={entityType}
               onChange={(e) => setEntityType(e.target.value)}
@@ -154,7 +156,11 @@ export default function ExportGlobalPage() {
           onClick={() => void startExport(entityType, format)}
           className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
         >
-          {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          {starting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
           Generate Export
         </button>
       </div>
@@ -162,7 +168,11 @@ export default function ExportGlobalPage() {
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-sm font-semibold">Recent Exports</h2>
-          <button type="button" onClick={() => void loadHistory()} className="text-xs text-muted-foreground hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => void loadHistory()}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
             Refresh
           </button>
         </div>

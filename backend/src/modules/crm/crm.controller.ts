@@ -83,10 +83,18 @@ import { DealProductService } from './deal-product.service';
 import { AddDealProductDto } from './dto/deal-product.dto';
 import { SendQuoteDto } from './dto/quote-lifecycle.dto';
 import { LeadConversionService } from './services/lead-conversion.service';
-import { TenantId, Roles, ResourcePermissions, PlanFeature, Limit } from '../../common/decorators';
+import {
+  TenantId,
+  Roles,
+  ResourcePermissions,
+  PlanFeature,
+  Limit,
+  CurrentUser,
+} from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../../common/guards/tenant.guard';
 import { wantsPagination } from '../../common/utils/pagination.util';
+import { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('CRM & AI Agents')
 @ApiBearerAuth()
@@ -224,8 +232,12 @@ export class CrmController {
   @ApiOperation({ summary: 'Create contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   @Limit('contacts')
-  async createContact(@TenantId() tenantId: string, @Body() dto: CreateContactDto) {
-    const data = await this.contactService.create(tenantId, dto);
+  async createContact(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() dto: CreateContactDto,
+  ) {
+    const data = await this.contactService.create(tenantId, dto, actor.userId);
     return {
       status: 201,
       message: 'Contact created successfully',
@@ -252,17 +264,22 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async updateContact(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
     @Body() dto: UpdateContactDto,
   ) {
-    return await this.contactService.update(tenantId, id, dto);
+    return await this.contactService.update(tenantId, id, dto, actor.userId);
   }
 
   @Delete('contacts/:id')
   @ApiOperation({ summary: 'Delete contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async deleteContact(@TenantId() tenantId: string, @Param('id') id: string) {
-    await this.contactService.remove(tenantId, id);
+  async deleteContact(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    await this.contactService.remove(tenantId, id, actor.userId);
     return { success: true };
   }
 
@@ -331,9 +348,15 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async mergeContacts(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Body() body: MergeRecordsDto,
   ) {
-    const data = await this.contactService.mergeContacts(tenantId, body.primaryId, body.secondaryId);
+    const data = await this.contactService.mergeContacts(
+      tenantId,
+      body.primaryId,
+      body.secondaryId,
+      actor.userId,
+    );
     return { status: 200, message: 'Contacts merged', error: false, data };
   }
 
@@ -355,8 +378,12 @@ export class CrmController {
   @Post('companies')
   @ApiOperation({ summary: 'Create company' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async createCompany(@TenantId() tenantId: string, @Body() dto: CreateCompanyDto) {
-    return await this.companyService.create(tenantId, dto);
+  async createCompany(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() dto: CreateCompanyDto,
+  ) {
+    return await this.companyService.create(tenantId, dto, actor.userId);
   }
 
   @Post('companies/merge')
@@ -364,9 +391,15 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async mergeCompanies(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Body() body: MergeRecordsDto,
   ) {
-    const data = await this.companyService.mergeCompanies(tenantId, body.primaryId, body.secondaryId);
+    const data = await this.companyService.mergeCompanies(
+      tenantId,
+      body.primaryId,
+      body.secondaryId,
+      actor.userId,
+    );
     return { status: 200, message: 'Companies merged', error: false, data };
   }
 
@@ -388,10 +421,11 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async updateCompany(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
     @Body() dto: UpdateCompanyDto,
   ) {
-    const data = await this.companyService.update(tenantId, id, dto);
+    const data = await this.companyService.update(tenantId, id, dto, actor.userId);
     return {
       status: 200,
       message: 'Company updated',
@@ -403,8 +437,12 @@ export class CrmController {
   @Delete('companies/:id')
   @ApiOperation({ summary: 'Delete company' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async deleteCompany(@TenantId() tenantId: string, @Param('id') id: string) {
-    await this.companyService.delete(tenantId, id);
+  async deleteCompany(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    await this.companyService.delete(tenantId, id, actor.userId);
     return { success: true };
   }
 
@@ -432,7 +470,6 @@ export class CrmController {
     return { status: 200, message: 'Company activities retrieved', error: false, data };
   }
 
-
   // --- Deals ---
 
   @Get('deals/board')
@@ -446,7 +483,13 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all deals' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getDeals(@TenantId() tenantId: string, @Query() query: CrmListQueryDto) {
-    if (wantsPagination(query) || query.search || query.status || query.pipelineId || query.companyId) {
+    if (
+      wantsPagination(query) ||
+      query.search ||
+      query.status ||
+      query.pipelineId ||
+      query.companyId
+    ) {
       return this.dealService.findPaginated(tenantId, {
         ...query,
         page: query.page ?? 1,
@@ -460,8 +503,12 @@ export class CrmController {
   @Limit('deals_limit')
   @ApiOperation({ summary: 'Create deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async createDeal(@TenantId() tenantId: string, @Body() dto: CreateDealDto) {
-    const data = await this.dealService.create(tenantId, dto);
+  async createDeal(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() dto: CreateDealDto,
+  ) {
+    const data = await this.dealService.create(tenantId, dto, actor.userId);
     return {
       status: 201,
       message: 'Deal created successfully',
@@ -482,17 +529,22 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async updateDeal(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
     @Body() dto: UpdateDealDto,
   ) {
-    return await this.dealService.update(tenantId, id, dto);
+    return await this.dealService.update(tenantId, id, dto, actor.userId);
   }
 
   @Delete('deals/:id')
   @ApiOperation({ summary: 'Delete deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async deleteDeal(@TenantId() tenantId: string, @Param('id') id: string) {
-    await this.dealService.remove(tenantId, id);
+  async deleteDeal(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    await this.dealService.remove(tenantId, id, actor.userId);
     return { success: true };
   }
 
@@ -501,18 +553,29 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async moveDealStage(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
     @Body() dto: MoveDealStageDto,
   ) {
-    const data = await this.dealService.moveStage(tenantId, id, dto.stageId, undefined, dto.reason);
+    const data = await this.dealService.moveStage(
+      tenantId,
+      id,
+      dto.stageId,
+      actor.userId,
+      dto.reason,
+    );
     return { status: 200, message: 'Deal stage updated', error: false, data };
   }
 
   @Patch('deals/:id/won')
   @ApiOperation({ summary: 'Mark deal as won' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async markDealWon(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.dealService.markWon(tenantId, id);
+  async markDealWon(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    const data = await this.dealService.markWon(tenantId, id, actor.userId);
     return { status: 200, message: 'Deal marked as won', error: false, data };
   }
 
@@ -521,10 +584,11 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async markDealLost(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
     @Body() dto: MarkDealLostDto,
   ) {
-    const data = await this.dealService.markLost(tenantId, id, dto.lostReason);
+    const data = await this.dealService.markLost(tenantId, id, dto.lostReason, actor.userId);
     return { status: 200, message: 'Deal marked as lost', error: false, data };
   }
 
@@ -570,10 +634,7 @@ export class CrmController {
 
   @Post('campaigns/start')
   @ApiOperation({ summary: 'Start a bulk AI calling campaign' })
-  startCampaign(
-    @TenantId() tenantId: string,
-    @Body() body: StartCampaignDto,
-  ) {
+  startCampaign(@TenantId() tenantId: string, @Body() body: StartCampaignDto) {
     return this.campaignService.startBulkCampaign(tenantId, body.agentId, body.leadIds);
   }
 
@@ -606,7 +667,7 @@ export class CrmController {
         start: t.dueDate,
         type: 'task',
         description: t.description,
-      }))
+      })),
     ];
   }
 
@@ -662,7 +723,11 @@ export class CrmController {
   @Put('tasks/:id')
   @ApiOperation({ summary: 'Update task' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async updateTask(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdateTaskDto) {
+  async updateTask(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateTaskDto,
+  ) {
     return await this.taskService.update(tenantId, id, dto);
   }
 
@@ -759,7 +824,11 @@ export class CrmController {
   @Put('products/:id')
   @ApiOperation({ summary: 'Update product' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateProduct(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdateProductDto) {
+  async updateProduct(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+  ) {
     return await this.productService.update(tenantId, id, dto);
   }
 
@@ -803,7 +872,11 @@ export class CrmController {
   @Put('quotes/:id')
   @ApiOperation({ summary: 'Update quote' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateQuote(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdateQuoteDto) {
+  async updateQuote(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateQuoteDto,
+  ) {
     return await this.quoteService.update(tenantId, id, dto);
   }
 
@@ -873,15 +946,23 @@ export class CrmController {
   @Post('leads')
   @ApiOperation({ summary: 'Create lead' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async createLead(@TenantId() tenantId: string, @Body() dto: CreateLeadDto) {
-    return await this.leadService.create(tenantId, dto);
+  async createLead(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() dto: CreateLeadDto,
+  ) {
+    return await this.leadService.create(tenantId, dto, actor.userId);
   }
 
   @Post('leads/bulk')
   @ApiOperation({ summary: 'Bulk upload leads' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async bulkLeads(@TenantId() tenantId: string, @Body() body: BulkCreateLeadsDto) {
-    const data = await this.leadService.bulkCreate(tenantId, body.leads);
+  async bulkLeads(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() body: BulkCreateLeadsDto,
+  ) {
+    const data = await this.leadService.bulkCreate(tenantId, body.leads, actor.userId);
     return {
       status: 201,
       message: 'Leads bulk created',
@@ -895,10 +976,14 @@ export class CrmController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a CSV file of leads' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async uploadLeads(@TenantId() tenantId: string, @UploadedFile() file: Express.Multer.File) {
+  async uploadLeads(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     const csvContent = file.buffer.toString('utf-8');
     const leads = await this.csvService.parseLeads(csvContent);
-    const data = await this.leadService.bulkCreate(tenantId, leads);
+    const data = await this.leadService.bulkCreate(tenantId, leads, actor.userId);
     return {
       status: 201,
       message: 'CSV leads uploaded',
@@ -923,8 +1008,13 @@ export class CrmController {
   @Patch('leads/:id')
   @ApiOperation({ summary: 'Update lead' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateLead(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdateLeadDto) {
-    const data = await this.leadService.update(tenantId, id, dto);
+  async updateLead(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Param('id') id: string,
+    @Body() dto: UpdateLeadDto,
+  ) {
+    const data = await this.leadService.update(tenantId, id, dto, actor.userId);
     return {
       status: 200,
       message: 'Lead updated',
@@ -936,8 +1026,12 @@ export class CrmController {
   @Delete('leads/:id')
   @ApiOperation({ summary: 'Delete lead' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async deleteLead(@TenantId() tenantId: string, @Param('id') id: string) {
-    await this.leadService.remove(tenantId, id);
+  async deleteLead(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    await this.leadService.remove(tenantId, id, actor.userId);
     return {
       status: 200,
       message: 'Lead deleted',
@@ -951,6 +1045,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async convertLead(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
     @Body() body: ConvertLeadDto,
   ) {
@@ -960,6 +1055,7 @@ export class CrmController {
       createDeal: body.createDeal ?? false,
       dealName: body.dealName,
       pipelineId: body.pipelineId,
+      actorId: actor.userId,
     });
     return {
       contactId: result.contact.id,
@@ -1011,7 +1107,11 @@ export class CrmController {
   @Patch('campaigns/:id')
   @ApiOperation({ summary: 'Update campaign' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateCampaign(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdateCampaignDto) {
+  async updateCampaign(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateCampaignDto,
+  ) {
     const data = await this.campaignCrmService.update(tenantId, id, dto);
     return {
       status: 200,
@@ -1132,10 +1232,7 @@ export class CrmController {
   @Patch('bulk/status')
   @ApiOperation({ summary: 'Bulk update status for leads/contacts' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async bulkUpdateStatus(
-    @TenantId() tenantId: string,
-    @Body() body: BulkStatusDto,
-  ) {
+  async bulkUpdateStatus(@TenantId() tenantId: string, @Body() body: BulkStatusDto) {
     await this.bulkService.bulkUpdateStatus(tenantId, body.entityType, body.ids, body.status);
     return {
       status: 200,
@@ -1148,10 +1245,7 @@ export class CrmController {
   @Post('bulk/delete')
   @ApiOperation({ summary: 'Bulk delete leads/contacts' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async bulkDelete(
-    @TenantId() tenantId: string,
-    @Body() body: BulkDeleteDto,
-  ) {
+  async bulkDelete(@TenantId() tenantId: string, @Body() body: BulkDeleteDto) {
     await this.bulkService.bulkDelete(tenantId, body.entityType, body.ids);
     return {
       status: 200,
@@ -1167,14 +1261,19 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async importData(
     @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
     @Body() body: ImportCrmDataDto,
   ) {
     if (body.entityType === 'lead') {
-      await this.leadService.bulkCreate(tenantId, body.data as unknown as CreateLeadDto[]);
+      await this.leadService.bulkCreate(
+        tenantId,
+        body.data as unknown as CreateLeadDto[],
+        actor.userId,
+      );
     } else {
       await Promise.all(
         body.data.map((item) =>
-          this.contactService.create(tenantId, item as unknown as CreateContactDto),
+          this.contactService.create(tenantId, item as unknown as CreateContactDto, actor.userId),
         ),
       );
     }
@@ -1238,7 +1337,11 @@ export class CrmController {
   @Put('pipelines/:id')
   @ApiOperation({ summary: 'Update pipeline' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updatePipeline(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdatePipelineDto) {
+  async updatePipeline(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdatePipelineDto,
+  ) {
     const data = await this.pipelineService.update(tenantId, id, dto as never);
     return { status: 200, message: 'Pipeline updated', error: false, data };
   }
@@ -1246,7 +1349,11 @@ export class CrmController {
   @Post('pipelines/:id/stages')
   @ApiOperation({ summary: 'Create pipeline stage' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async createStage(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: CreatePipelineStageDto) {
+  async createStage(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: CreatePipelineStageDto,
+  ) {
     return await this.pipelineService.createStage(tenantId, id, dto);
   }
 
@@ -1321,7 +1428,11 @@ export class CrmController {
   @Put('custom-fields/:id')
   @ApiOperation({ summary: 'Update custom field' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateCustomField(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdateCustomFieldDto) {
+  async updateCustomField(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateCustomFieldDto,
+  ) {
     return await this.customFieldService.update(tenantId, id, dto);
   }
 

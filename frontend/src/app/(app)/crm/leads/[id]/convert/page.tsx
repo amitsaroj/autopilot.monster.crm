@@ -30,11 +30,16 @@ export default function ConvertLeadPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div className="space-y-6 max-w-lg animate-fade-in">
-      <Link href={`/crm/leads/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        href={`/crm/leads/${id}`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Lead
       </Link>
       <h1 className="page-title">Convert Lead</h1>
-      <p className="text-sm text-muted-foreground">Convert this lead into a CRM contact and optionally create a deal.</p>
+      <p className="text-sm text-muted-foreground">
+        Convert this lead into a CRM contact and optionally create a deal.
+      </p>
       <button
         onClick={() => void handleConvert()}
         disabled={converting}

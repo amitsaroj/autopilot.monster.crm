@@ -2,7 +2,12 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@n
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { DeveloperSettingsService } from './developer-settings.service';
-import { CreateApiKeyDto, CreateWebhookDto, UpdateWebhookDto, CreateOAuthAppDto } from './dto/developer-settings.dto';
+import {
+  CreateApiKeyDto,
+  CreateWebhookDto,
+  UpdateWebhookDto,
+  CreateOAuthAppDto,
+} from './dto/developer-settings.dto';
 import { CurrentUser, Roles, ResourcePermissions } from '../../common/decorators';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
@@ -26,11 +31,7 @@ export class DeveloperSettingsController {
   @Post('api-keys')
   @ApiOperation({ summary: 'Create a new API key' })
   async createApiKey(@CurrentUser() user: IRequestContext, @Body() dto: CreateApiKeyDto) {
-    const data = await this.developerSettingsService.createApiKey(
-      user.tenantId,
-      user.userId,
-      dto,
-    );
+    const data = await this.developerSettingsService.createApiKey(user.tenantId, user.userId, dto);
     return { status: 201, message: 'API key created', error: false, data };
   }
 

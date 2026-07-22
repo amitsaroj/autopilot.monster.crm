@@ -38,13 +38,21 @@ export class AuditLogListener {
         changes: event.payload ?? {},
       });
     } catch (error) {
-      this.logger.error(`Failed to persist audit log for ${action}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        `Failed to persist audit log for ${action}`,
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 
   @OnEvent(EVENT_NAMES.USER_LOGIN)
   async onUserLogin(event: DomainEventPayload): Promise<void> {
-    await this.write('user.login', 'user', event, String(event.payload?.['userId'] ?? event.actorId ?? ''));
+    await this.write(
+      'user.login',
+      'user',
+      event,
+      String(event.payload?.['userId'] ?? event.actorId ?? ''),
+    );
   }
 
   @OnEvent(EVENT_NAMES.USER_LOGOUT)
@@ -54,7 +62,12 @@ export class AuditLogListener {
 
   @OnEvent(EVENT_NAMES.USER_REGISTERED)
   async onUserRegistered(event: DomainEventPayload): Promise<void> {
-    await this.write('user.registered', 'user', event, String(event.payload?.['userId'] ?? event.actorId ?? ''));
+    await this.write(
+      'user.registered',
+      'user',
+      event,
+      String(event.payload?.['userId'] ?? event.actorId ?? ''),
+    );
   }
 
   @OnEvent(EVENT_NAMES.PASSWORD_RESET)
@@ -161,12 +174,19 @@ export class AuditLogListener {
   async onContactDeleted(
     event: DomainEventPayload & { contact?: { id: string }; contactId?: string },
   ): Promise<void> {
-    const resourceId = String(event.contact?.id ?? event.contactId ?? event.payload?.['contactId'] ?? '');
-    await this.write('contact.deleted', 'contact', {
-      tenantId: event.tenantId,
-      actorId: event.actorId,
-      payload: { contactId: resourceId, ...(event.payload ?? {}) },
-    }, resourceId);
+    const resourceId = String(
+      event.contact?.id ?? event.contactId ?? event.payload?.['contactId'] ?? '',
+    );
+    await this.write(
+      'contact.deleted',
+      'contact',
+      {
+        tenantId: event.tenantId,
+        actorId: event.actorId,
+        payload: { contactId: resourceId, ...(event.payload ?? {}) },
+      },
+      resourceId,
+    );
   }
 
   @OnEvent(EVENT_NAMES.CONTACT_MERGED)
@@ -178,16 +198,21 @@ export class AuditLogListener {
     },
   ): Promise<void> {
     const resourceId = String(event.contact?.id ?? event.primaryId ?? '');
-    await this.write('contact.merged', 'contact', {
-      tenantId: event.tenantId,
-      actorId: event.actorId,
-      payload: {
-        contactId: resourceId,
-        primaryId: event.primaryId,
-        secondaryId: event.secondaryId,
-        ...(event.payload ?? {}),
+    await this.write(
+      'contact.merged',
+      'contact',
+      {
+        tenantId: event.tenantId,
+        actorId: event.actorId,
+        payload: {
+          contactId: resourceId,
+          primaryId: event.primaryId,
+          secondaryId: event.secondaryId,
+          ...(event.payload ?? {}),
+        },
       },
-    }, resourceId);
+      resourceId,
+    );
   }
 
   @OnEvent(EVENT_NAMES.COMPANY_CREATED)
@@ -206,12 +231,19 @@ export class AuditLogListener {
   async onCompanyDeleted(
     event: DomainEventPayload & { company?: { id: string }; companyId?: string },
   ): Promise<void> {
-    const resourceId = String(event.company?.id ?? event.companyId ?? event.payload?.['companyId'] ?? '');
-    await this.write('company.deleted', 'company', {
-      tenantId: event.tenantId,
-      actorId: event.actorId,
-      payload: { companyId: resourceId, ...(event.payload ?? {}) },
-    }, resourceId);
+    const resourceId = String(
+      event.company?.id ?? event.companyId ?? event.payload?.['companyId'] ?? '',
+    );
+    await this.write(
+      'company.deleted',
+      'company',
+      {
+        tenantId: event.tenantId,
+        actorId: event.actorId,
+        payload: { companyId: resourceId, ...(event.payload ?? {}) },
+      },
+      resourceId,
+    );
   }
 
   @OnEvent(EVENT_NAMES.COMPANY_MERGED)
@@ -223,16 +255,21 @@ export class AuditLogListener {
     },
   ): Promise<void> {
     const resourceId = String(event.company?.id ?? event.primaryId ?? '');
-    await this.write('company.merged', 'company', {
-      tenantId: event.tenantId,
-      actorId: event.actorId,
-      payload: {
-        companyId: resourceId,
-        primaryId: event.primaryId,
-        secondaryId: event.secondaryId,
-        ...(event.payload ?? {}),
+    await this.write(
+      'company.merged',
+      'company',
+      {
+        tenantId: event.tenantId,
+        actorId: event.actorId,
+        payload: {
+          companyId: resourceId,
+          primaryId: event.primaryId,
+          secondaryId: event.secondaryId,
+          ...(event.payload ?? {}),
+        },
       },
-    }, resourceId);
+      resourceId,
+    );
   }
 
   @OnEvent(EVENT_NAMES.DEAL_CREATED)
@@ -252,11 +289,16 @@ export class AuditLogListener {
     event: DomainEventPayload & { deal?: { id: string }; dealId?: string },
   ): Promise<void> {
     const resourceId = String(event.deal?.id ?? event.dealId ?? event.payload?.['dealId'] ?? '');
-    await this.write('deal.deleted', 'deal', {
-      tenantId: event.tenantId,
-      actorId: event.actorId,
-      payload: { dealId: resourceId, ...(event.payload ?? {}) },
-    }, resourceId);
+    await this.write(
+      'deal.deleted',
+      'deal',
+      {
+        tenantId: event.tenantId,
+        actorId: event.actorId,
+        payload: { dealId: resourceId, ...(event.payload ?? {}) },
+      },
+      resourceId,
+    );
   }
 
   @OnEvent(EVENT_NAMES.DEAL_STAGE_CHANGED)
@@ -294,10 +336,15 @@ export class AuditLogListener {
     event: DomainEventPayload & { lead?: { id: string }; leadId?: string },
   ): Promise<void> {
     const resourceId = String(event.lead?.id ?? event.leadId ?? event.payload?.['leadId'] ?? '');
-    await this.write('lead.deleted', 'lead', {
-      tenantId: event.tenantId,
-      actorId: event.actorId,
-      payload: { leadId: resourceId, ...(event.payload ?? {}) },
-    }, resourceId);
+    await this.write(
+      'lead.deleted',
+      'lead',
+      {
+        tenantId: event.tenantId,
+        actorId: event.actorId,
+        payload: { leadId: resourceId, ...(event.payload ?? {}) },
+      },
+      resourceId,
+    );
   }
 }

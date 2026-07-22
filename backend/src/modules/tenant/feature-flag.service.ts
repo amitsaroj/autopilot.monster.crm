@@ -6,7 +6,6 @@ import { CreateFeatureFlagDto } from './dto/tenant-features.dto';
 
 @Injectable()
 export class FeatureFlagService {
-
   constructor(
     @InjectRepository(FeatureFlag)
     private readonly flagRepo: Repository<FeatureFlag>,
@@ -49,7 +48,7 @@ export class FeatureFlagService {
     }
     if (flag.rolloutPercentage < 100) {
       const hash = this.hashTenantFeature(tenantId, featureKey);
-      return (hash % 100) < flag.rolloutPercentage;
+      return hash % 100 < flag.rolloutPercentage;
     }
     return true;
   }
@@ -60,7 +59,11 @@ export class FeatureFlagService {
     return this.flagRepo.save(flag);
   }
 
-  async update(tenantId: string, id: string, dto: Partial<CreateFeatureFlagDto>): Promise<FeatureFlag> {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: Partial<CreateFeatureFlagDto>,
+  ): Promise<FeatureFlag> {
     const flag = await this.findOne(tenantId, id);
     Object.assign(flag, dto);
     return this.flagRepo.save(flag);
@@ -76,7 +79,7 @@ export class FeatureFlagService {
     const str = `${tenantId}:${featureKey}`;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash |= 0;
     }
     return Math.abs(hash);

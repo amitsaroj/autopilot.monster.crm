@@ -72,6 +72,9 @@ export function resolveStripePriceId(
   return null;
 }
 
-export function stripePriceConfigHint(planSlug: string, billingCycle: 'MONTHLY' | 'ANNUAL'): string {
+export function stripePriceConfigHint(
+  planSlug: string,
+  billingCycle: 'MONTHLY' | 'ANNUAL',
+): string {
   return `Set ${stripePriceEnvKey(planSlug, billingCycle)} in environment or configure the plan stripe price in admin.`;
 }

@@ -51,10 +51,16 @@ export class OmnichannelService {
     let channelUsed = preferredChannel;
     let fallbackTriggered = false;
 
-    if (preferredChannel === OmnichannelPreferredChannel.VOICE && !contact.phone && !contact.mobile) {
+    if (
+      preferredChannel === OmnichannelPreferredChannel.VOICE &&
+      !contact.phone &&
+      !contact.mobile
+    ) {
       fallbackTriggered = true;
       channelUsed = OmnichannelPreferredChannel.EMAIL;
-      this.logger.warn(`Voice unavailable for contact ${contactId}, falling back to ${channelUsed}`);
+      this.logger.warn(
+        `Voice unavailable for contact ${contactId}, falling back to ${channelUsed}`,
+      );
     }
 
     let conv = await this.conversationRepo.findOne({
@@ -140,7 +146,9 @@ export class OmnichannelService {
       (conversation): conversation is NonNullable<typeof conversation> => conversation !== null,
     );
 
-    const nonWhatsappDb = dbConversations.filter((conversation) => conversation.channel !== 'WHATSAPP');
+    const nonWhatsappDb = dbConversations.filter(
+      (conversation) => conversation.channel !== 'WHATSAPP',
+    );
     return [...mergedWhatsapp, ...nonWhatsappDb];
   }
 
@@ -156,7 +164,10 @@ export class OmnichannelService {
     });
   }
 
-  async routeToAgent(tenantId: string, conversationId: string): Promise<{ assignedAgentId: string }> {
+  async routeToAgent(
+    tenantId: string,
+    conversationId: string,
+  ): Promise<{ assignedAgentId: string }> {
     if (conversationId.startsWith('wa:')) {
       const phone = conversationId.slice(3);
       const contact = await this.contactRepo.findOne({

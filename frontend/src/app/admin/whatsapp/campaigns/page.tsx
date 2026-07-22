@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Plus, Search, Trash2, Send, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { parseApiData } from "@/lib/api/parse-response";
+import { useEffect, useState } from 'react';
+import { Plus, Search, Trash2, Send, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { parseApiData } from '@/lib/api/parse-response';
 import {
   whatsappBroadcastService,
   type WhatsappBroadcast,
-} from "@/services/whatsapp-broadcast.service";
+} from '@/services/whatsapp-broadcast.service';
 
 export default function WhatsAppCampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<WhatsappBroadcast[]>([]);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -22,7 +22,7 @@ export default function WhatsAppCampaignsPage() {
         const res = await whatsappBroadcastService.list();
         setCampaigns(parseApiData<WhatsappBroadcast[]>(res) ?? []);
       } catch {
-        toast.error("Failed to load WhatsApp campaigns");
+        toast.error('Failed to load WhatsApp campaigns');
       } finally {
         setLoading(false);
       }
@@ -36,13 +36,13 @@ export default function WhatsAppCampaignsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "SENT":
-      case "COMPLETED":
-        return "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-      case "SCHEDULED":
-        return "text-blue-400 bg-blue-500/10 border-blue-500/20";
+      case 'SENT':
+      case 'COMPLETED':
+        return 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+      case 'SCHEDULED':
+        return 'text-blue-400 bg-blue-500/10 border-blue-500/20';
       default:
-        return "text-gray-400 bg-white/5 border-white/10";
+        return 'text-gray-400 bg-white/5 border-white/10';
     }
   };
 
@@ -63,7 +63,9 @@ export default function WhatsAppCampaignsPage() {
               Acquisition Vector Active
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight text-sans">Broadcast Intelligence</h1>
+          <h1 className="text-3xl font-black text-white tracking-tight text-sans">
+            Broadcast Intelligence
+          </h1>
           <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
             Manage bulk WhatsApp engagement vectors and scheduled transmission clusters
           </p>
@@ -100,9 +102,9 @@ export default function WhatsAppCampaignsPage() {
                     try {
                       await whatsappBroadcastService.remove(camp.id);
                       setCampaigns((prev) => prev.filter((item) => item.id !== camp.id));
-                      toast.success("Campaign removed");
+                      toast.success('Campaign removed');
                     } catch {
-                      toast.error("Failed to remove campaign");
+                      toast.error('Failed to remove campaign');
                     }
                   }}
                   className="p-2.5 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
@@ -117,7 +119,7 @@ export default function WhatsAppCampaignsPage() {
               <div className="flex items-center gap-2 mb-6">
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
+                    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border',
                     getStatusColor(camp.status),
                   )}
                 >
@@ -138,7 +140,7 @@ export default function WhatsAppCampaignsPage() {
               <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                 <span className="text-gray-500">Scheduled</span>
                 <span className="text-gray-300">
-                  {camp.scheduledAt ? new Date(camp.scheduledAt).toLocaleString() : "Immediate"}
+                  {camp.scheduledAt ? new Date(camp.scheduledAt).toLocaleString() : 'Immediate'}
                 </span>
               </div>
             </div>

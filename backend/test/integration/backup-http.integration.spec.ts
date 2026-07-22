@@ -31,9 +31,7 @@ describe('HTTP E2E — Backup (secured)', () => {
   it('GET /backup returns backup history', async () => {
     if (!ctx.postgresAvailable) return;
 
-    const response = await request(ctx.app.getHttpServer())
-      .get('/api/v1/backup')
-      .set(ctx.headers);
+    const response = await request(ctx.app.getHttpServer()).get('/api/v1/backup').set(ctx.headers);
 
     expect(response.status).toBe(200);
     expect(Array.isArray(extractResponseData(response.body))).toBe(true);
@@ -42,9 +40,7 @@ describe('HTTP E2E — Backup (secured)', () => {
   it('POST /backup triggers backup job', async () => {
     if (!ctx.postgresAvailable) return;
 
-    const response = await request(ctx.app.getHttpServer())
-      .post('/api/v1/backup')
-      .set(ctx.headers);
+    const response = await request(ctx.app.getHttpServer()).post('/api/v1/backup').set(ctx.headers);
 
     expect([200, 202]).toContain(response.status);
     expect(extractResponseData(response.body)).toBeDefined();

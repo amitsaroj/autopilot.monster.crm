@@ -11,7 +11,10 @@ export class MarketplaceTemplateService {
   ) {}
 
   async create(tenantId: string, dto: Partial<MarketplaceTemplate>): Promise<MarketplaceTemplate> {
-    const template = this.templateRepo.create({ ...dto, tenantId } as any) as unknown as MarketplaceTemplate;
+    const template = this.templateRepo.create({
+      ...dto,
+      tenantId,
+    } as any) as unknown as MarketplaceTemplate;
     return this.templateRepo.save(template) as unknown as Promise<MarketplaceTemplate>;
   }
 
@@ -28,7 +31,10 @@ export class MarketplaceTemplateService {
     return t;
   }
 
-  async install(_tenantId: string, templateId: string): Promise<{ installed: boolean; content: Record<string, any> }> {
+  async install(
+    _tenantId: string,
+    templateId: string,
+  ): Promise<{ installed: boolean; content: Record<string, any> }> {
     const t = await this.findOne(templateId);
     t.installCount += 1;
     await this.templateRepo.save(t);
@@ -42,7 +48,11 @@ export class MarketplaceTemplateService {
     return this.templateRepo.save(t) as unknown as Promise<MarketplaceTemplate>;
   }
 
-  async update(tenantId: string, id: string, dto: Partial<MarketplaceTemplate>): Promise<MarketplaceTemplate> {
+  async update(
+    tenantId: string,
+    id: string,
+    dto: Partial<MarketplaceTemplate>,
+  ): Promise<MarketplaceTemplate> {
     const t = await this.templateRepo.findOne({ where: { id, tenantId } as any });
     if (!t) throw new NotFoundException('Template not found');
     Object.assign(t, dto);

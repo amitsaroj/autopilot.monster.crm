@@ -15,11 +15,7 @@ interface DealProduct {
   product?: { name: string };
 }
 
-export default function DealProductsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function DealProductsPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <DealSubpage params={params} title="Products">
       {(deal) => <ProductsList dealId={deal.id} />}

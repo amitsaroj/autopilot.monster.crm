@@ -43,9 +43,7 @@ describe('HTTP E2E — CRM metadata (secured)', () => {
     expect([200, 201]).toContain(createRes.status);
     const tagId = extractResponseData<{ id: string }>(createRes.body).id;
 
-    const listRes = await request(ctx.app.getHttpServer())
-      .get('/api/v1/crm/tags')
-      .set(ctx.headers);
+    const listRes = await request(ctx.app.getHttpServer()).get('/api/v1/crm/tags').set(ctx.headers);
     expect(listRes.status).toBe(200);
 
     const deleteRes = await request(ctx.app.getHttpServer())

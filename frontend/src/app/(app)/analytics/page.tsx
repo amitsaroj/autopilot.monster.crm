@@ -7,7 +7,11 @@ import { toast } from 'sonner';
 import { analyticsService, AnalyticsOverview } from '@/services/analytics.service';
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export default function AnalyticsMainPage() {
@@ -44,10 +48,34 @@ export default function AnalyticsMainPage() {
   const conversionRate = data.leads > 0 ? ((data.wonDeals / data.leads) * 100).toFixed(1) : '0.0';
 
   const kpis = [
-    { title: 'Won Revenue', value: formatCurrency(data.wonValue), icon: DollarSign, color: 'text-green-500', bg: 'bg-green-100' },
-    { title: 'Contacts', value: data.contacts.toLocaleString(), icon: Users, color: 'text-blue-500', bg: 'bg-blue-100' },
-    { title: 'Pipeline Value', value: formatCurrency(data.pipelineValue), icon: Target, color: 'text-purple-500', bg: 'bg-purple-100' },
-    { title: 'Open Deals', value: data.openDeals.toLocaleString(), icon: Target, color: 'text-orange-500', bg: 'bg-orange-100' },
+    {
+      title: 'Won Revenue',
+      value: formatCurrency(data.wonValue),
+      icon: DollarSign,
+      color: 'text-green-500',
+      bg: 'bg-green-100',
+    },
+    {
+      title: 'Contacts',
+      value: data.contacts.toLocaleString(),
+      icon: Users,
+      color: 'text-blue-500',
+      bg: 'bg-blue-100',
+    },
+    {
+      title: 'Pipeline Value',
+      value: formatCurrency(data.pipelineValue),
+      icon: Target,
+      color: 'text-purple-500',
+      bg: 'bg-purple-100',
+    },
+    {
+      title: 'Open Deals',
+      value: data.openDeals.toLocaleString(),
+      icon: Target,
+      color: 'text-orange-500',
+      bg: 'bg-orange-100',
+    },
   ];
 
   return (
@@ -55,7 +83,9 @@ export default function AnalyticsMainPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Analytics Overview</h1>
-          <p className="text-sm text-muted-foreground mt-1">Live KPIs across CRM, voice, and WhatsApp</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Live KPIs across CRM, voice, and WhatsApp
+          </p>
         </div>
         <button
           type="button"
@@ -103,11 +133,13 @@ export default function AnalyticsMainPage() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">
-        Lead-to-won conversion: <span className="font-semibold text-foreground">{conversionRate}%</span>
+        Lead-to-won conversion:{' '}
+        <span className="font-semibold text-foreground">{conversionRate}%</span>
         {' · '}
         <Phone className="inline h-3.5 w-3.5 -mt-0.5" /> {data.calls} calls
         {' · '}
-        <MessageSquare className="inline h-3.5 w-3.5 -mt-0.5" /> {data.whatsappMessages} WhatsApp messages
+        <MessageSquare className="inline h-3.5 w-3.5 -mt-0.5" /> {data.whatsappMessages} WhatsApp
+        messages
       </div>
     </div>
   );

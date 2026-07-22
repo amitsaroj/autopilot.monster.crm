@@ -64,7 +64,10 @@ function NotesList({ contactId }: { contactId: string }) {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={(e) => void handleCreate(e)} className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <form
+        onSubmit={(e) => void handleCreate(e)}
+        className="rounded-xl border border-border bg-card p-4 space-y-3"
+      >
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}

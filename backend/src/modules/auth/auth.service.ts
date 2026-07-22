@@ -43,7 +43,11 @@ export class AuthService {
     this.jwtConfig = cfg;
   }
 
-  async validateCredentials(email: string, password: string, tenantId = ''): Promise<UserEntity | null> {
+  async validateCredentials(
+    email: string,
+    password: string,
+    tenantId = '',
+  ): Promise<UserEntity | null> {
     const user = await this.authRepo.findUserByEmail(email, tenantId);
     if (user === null) return null;
 
@@ -77,35 +81,56 @@ export class AuthService {
       });
     }
     if (user.status !== UserStatus.ACTIVE) {
-      throw new UnauthorizedException({ message: 'Account is not active', code: ERROR_CODES.UNAUTHORIZED });
+      throw new UnauthorizedException({
+        message: 'Account is not active',
+        code: ERROR_CODES.UNAUTHORIZED,
+      });
     }
 
     const tenant = await this.authRepo.findTenantById(user.tenantId);
     if (tenant === null) {
-      throw new UnauthorizedException({ message: 'Workspace not found', code: ERROR_CODES.TENANT_NOT_FOUND });
+      throw new UnauthorizedException({
+        message: 'Workspace not found',
+        code: ERROR_CODES.TENANT_NOT_FOUND,
+      });
     }
     if (tenant.status === 'SUSPENDED') {
-      throw new UnauthorizedException({ message: 'Workspace is suspended', code: ERROR_CODES.TENANT_SUSPENDED });
+      throw new UnauthorizedException({
+        message: 'Workspace is suspended',
+        code: ERROR_CODES.TENANT_SUSPENDED,
+      });
     }
     if (tenant.status === 'DELETED') {
-      throw new UnauthorizedException({ message: 'Workspace is no longer available', code: ERROR_CODES.TENANT_NOT_FOUND });
+      throw new UnauthorizedException({
+        message: 'Workspace is no longer available',
+        code: ERROR_CODES.TENANT_NOT_FOUND,
+      });
     }
 
     if (user.isMfaEnabled) {
-       if (!dto.mfaCode) {
-           throw new UnauthorizedException({ message: 'MFA code required', code: ERROR_CODES.UNAUTHORIZED });
-       }
-       const isValid = this.mfaService.verifyToken(dto.mfaCode, user.mfaSecret!);
-       if (!isValid) {
-           throw new UnauthorizedException({ message: 'Invalid MFA code', code: ERROR_CODES.UNAUTHORIZED });
-       }
+      if (!dto.mfaCode) {
+        throw new UnauthorizedException({
+          message: 'MFA code required',
+          code: ERROR_CODES.UNAUTHORIZED,
+        });
+      }
+      const isValid = this.mfaService.verifyToken(dto.mfaCode, user.mfaSecret!);
+      if (!isValid) {
+        throw new UnauthorizedException({
+          message: 'Invalid MFA code',
+          code: ERROR_CODES.UNAUTHORIZED,
+        });
+      }
     }
 
     const tokens = await this.generateTokens(user, ipAddress);
     this.eventEmitter.emit(EVENT_NAMES.USER_LOGIN, {
-      name: EVENT_NAMES.USER_LOGIN, tenantId: user.tenantId, actorId: user.id,
+      name: EVENT_NAMES.USER_LOGIN,
+      tenantId: user.tenantId,
+      actorId: user.id,
       payload: { userId: user.id, email: user.email },
-      occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
     return tokens;
   }
@@ -113,10 +138,16 @@ export class AuthService {
   async register(dto: RegisterDto, _tenantId: string): Promise<{ user: any; tenant: any }> {
     const existing = await this.authRepo.findUserByEmail(dto.email, '');
     if (existing !== null) {
-      throw new ConflictException({ message: 'Email already registered', code: ERROR_CODES.CONFLICT });
+      throw new ConflictException({
+        message: 'Email already registered',
+        code: ERROR_CODES.CONFLICT,
+      });
     }
 
-    const slugBase = dto.tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slugBase = dto.tenantName
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
     const slug = `${slugBase}-${uuidv4().split('-')[0]}`;
 
     const tenant = await this.authRepo.createTenant({
@@ -151,7 +182,11 @@ export class AuthService {
     return { user, tenant };
   }
 
-  async refreshTokens(rawRefreshToken: string, tenantId: string, ipAddress: string): Promise<AuthTokens> {
+  async refreshTokens(
+    rawRefreshToken: string,
+    tenantId: string,
+    ipAddress: string,
+  ): Promise<AuthTokens> {
     let payload: JwtPayload;
     try {
       payload = this.jwtService.verify<JwtPayload>(
@@ -159,15 +194,24 @@ export class AuthService {
         buildJwtVerifyConfig(this.jwtConfig, 'refresh'),
       );
     } catch {
-      throw new UnauthorizedException({ message: 'Invalid or expired refresh token', code: ERROR_CODES.TOKEN_EXPIRED });
+      throw new UnauthorizedException({
+        message: 'Invalid or expired refresh token',
+        code: ERROR_CODES.TOKEN_EXPIRED,
+      });
     }
 
     if (!payload.sub || !payload.tenantId) {
-      throw new UnauthorizedException({ message: 'Invalid refresh token payload', code: ERROR_CODES.UNAUTHORIZED });
+      throw new UnauthorizedException({
+        message: 'Invalid refresh token payload',
+        code: ERROR_CODES.UNAUTHORIZED,
+      });
     }
 
     if (tenantId !== '' && tenantId !== payload.tenantId) {
-      throw new UnauthorizedException({ message: 'Tenant ID mismatch', code: ERROR_CODES.UNAUTHORIZED });
+      throw new UnauthorizedException({
+        message: 'Tenant ID mismatch',
+        code: ERROR_CODES.UNAUTHORIZED,
+      });
     }
 
     const resolvedTenantId = payload.tenantId;
@@ -176,9 +220,16 @@ export class AuthService {
       throw new UnauthorizedException({ code: ERROR_CODES.UNAUTHORIZED });
     }
 
-    const revoked = await this.authRepo.revokeRefreshTokenByRawToken(user.id, resolvedTenantId, rawRefreshToken);
+    const revoked = await this.authRepo.revokeRefreshTokenByRawToken(
+      user.id,
+      resolvedTenantId,
+      rawRefreshToken,
+    );
     if (!revoked) {
-      throw new UnauthorizedException({ message: 'Refresh token revoked or invalid', code: ERROR_CODES.TOKEN_EXPIRED });
+      throw new UnauthorizedException({
+        message: 'Refresh token revoked or invalid',
+        code: ERROR_CODES.TOKEN_EXPIRED,
+      });
     }
 
     return this.generateTokens(user, ipAddress);
@@ -197,13 +248,21 @@ export class AuthService {
       await this.authRepo.revokeRefreshTokenByRawToken(userId, tenantId, refreshToken);
     }
     this.eventEmitter.emit(EVENT_NAMES.USER_LOGOUT, {
-      name: EVENT_NAMES.USER_LOGOUT, tenantId, actorId: userId,
+      name: EVENT_NAMES.USER_LOGOUT,
+      tenantId,
+      actorId: userId,
       payload: { userId, allSessions },
-      occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
   }
 
-  async changePassword(userId: string, tenantId: string, currentPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    tenantId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
     const user = await this.authRepo.findUserById(userId, tenantId);
     if (user === null) throw new BadRequestException('User not found');
     const valid = await user.validatePassword(currentPassword);
@@ -225,9 +284,12 @@ export class AuthService {
     });
 
     this.eventEmitter.emit(EVENT_NAMES.PASSWORD_RESET, {
-      name: EVENT_NAMES.PASSWORD_RESET, tenantId, actorId: user.id,
+      name: EVENT_NAMES.PASSWORD_RESET,
+      tenantId,
+      actorId: user.id,
       payload: { userId: user.id, email: user.email, token },
-      occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
 
     await this.emailService.sendPasswordResetEmail(user.email, token);
@@ -259,16 +321,22 @@ export class AuthService {
     });
 
     this.eventEmitter.emit(EVENT_NAMES.USER_VERIFIED, {
-        name: EVENT_NAMES.USER_VERIFIED, tenantId: user.tenantId, actorId: user.id,
-        payload: { userId: user.id, email: user.email },
-        occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      name: EVENT_NAMES.USER_VERIFIED,
+      tenantId: user.tenantId,
+      actorId: user.id,
+      payload: { userId: user.id, email: user.email },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
   }
 
   async generateMfaSecret(userId: string, tenantId: string) {
     const user = await this.authRepo.findUserById(userId, tenantId);
     if (!user) throw new BadRequestException('User not found');
-    if (user.isMfaEnabled) throw new ConflictException('MFA is already enabled. Disable it first to generate a new secret.');
+    if (user.isMfaEnabled)
+      throw new ConflictException(
+        'MFA is already enabled. Disable it first to generate a new secret.',
+      );
 
     const secret = this.mfaService.generateSecret();
     const qrCodeUrl = this.mfaService.generateQrCodeUrl(user.email, 'Autopilot Monster', secret);
@@ -288,9 +356,12 @@ export class AuthService {
     await this.authRepo.updateUser(userId, tenantId, { isMfaEnabled: true });
 
     this.eventEmitter.emit(EVENT_NAMES.USER_MFA_ENABLED, {
-        name: EVENT_NAMES.USER_MFA_ENABLED, tenantId, actorId: userId,
-        payload: { userId },
-        occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      name: EVENT_NAMES.USER_MFA_ENABLED,
+      tenantId,
+      actorId: userId,
+      payload: { userId },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
   }
 
@@ -301,9 +372,12 @@ export class AuthService {
     });
 
     this.eventEmitter.emit(EVENT_NAMES.USER_MFA_DISABLED, {
-        name: EVENT_NAMES.USER_MFA_DISABLED, tenantId, actorId: userId,
-        payload: { userId },
-        occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      name: EVENT_NAMES.USER_MFA_DISABLED,
+      tenantId,
+      actorId: userId,
+      payload: { userId },
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
   }
 
@@ -334,7 +408,10 @@ export class AuthService {
 
     // 3. Create a new user and tenant
     const tenantName = `${firstName}'s CRM`;
-    const slugBase = tenantName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const slugBase = tenantName
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
     const slug = `${slugBase}-${uuidv4().split('-')[0]}`;
 
     const tenant = await this.authRepo.createTenant({
@@ -372,19 +449,25 @@ export class AuthService {
   async oauthLogin(user: UserEntity, ipAddress: string): Promise<AuthTokens> {
     const tokens = await this.generateTokens(user, ipAddress);
     this.eventEmitter.emit(EVENT_NAMES.USER_LOGIN, {
-      name: EVENT_NAMES.USER_LOGIN, tenantId: user.tenantId, actorId: user.id,
+      name: EVENT_NAMES.USER_LOGIN,
+      tenantId: user.tenantId,
+      actorId: user.id,
       payload: { userId: user.id, email: user.email, provider: user.provider },
-      occurredAt: new Date().toISOString(), correlationId: uuidv4(),
+      occurredAt: new Date().toISOString(),
+      correlationId: uuidv4(),
     });
     return tokens;
   }
 
   private async generateTokens(user: UserEntity, _ipAddress: string): Promise<AuthTokens> {
-    const rolesWithPermissions = await this.authRepo.fetchUserRolesWithPermissions(user.id, user.tenantId);
-    
+    const rolesWithPermissions = await this.authRepo.fetchUserRolesWithPermissions(
+      user.id,
+      user.tenantId,
+    );
+
     const roles = rolesWithPermissions.map((r) => r.name);
     const permissions = Array.from(
-      new Set(rolesWithPermissions.flatMap((r) => r.permissions.map((p) => p.name)))
+      new Set(rolesWithPermissions.flatMap((r) => r.permissions.map((p) => p.name))),
     );
 
     const subscription = await this.pricingService.getTenantSubscription(user.tenantId);
@@ -405,14 +488,23 @@ export class AuthService {
     let expiryTime = 7 * 24 * 3600 * 1000;
     if (typeof this.jwtConfig.refreshExpiresIn === 'number') {
       expiryTime = this.jwtConfig.refreshExpiresIn * 1000;
-    } else if (typeof this.jwtConfig.refreshExpiresIn === 'string' && this.jwtConfig.refreshExpiresIn.endsWith('d')) {
+    } else if (
+      typeof this.jwtConfig.refreshExpiresIn === 'string' &&
+      this.jwtConfig.refreshExpiresIn.endsWith('d')
+    ) {
       expiryTime = parseInt(this.jwtConfig.refreshExpiresIn) * 24 * 3600 * 1000;
     }
     const refreshExpiresAt = new Date(Date.now() + expiryTime);
 
     // Persist refresh token securely
-    await this.authRepo.saveRefreshToken(user.id, user.tenantId, refreshToken, refreshExpiresAt, _ipAddress);
-    
+    await this.authRepo.saveRefreshToken(
+      user.id,
+      user.tenantId,
+      refreshToken,
+      refreshExpiresAt,
+      _ipAddress,
+    );
+
     // Create accompanying session
     await this.authRepo.createSession({
       userId: user.id,
@@ -421,7 +513,7 @@ export class AuthService {
       userAgent: 'Standard Session',
       isActive: true,
       expiresAt: refreshExpiresAt,
-      lastActivityAt: new Date()
+      lastActivityAt: new Date(),
     });
 
     return { accessToken, refreshToken, expiresIn: 900, tokenType: 'Bearer' };

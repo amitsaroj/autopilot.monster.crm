@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -169,7 +169,10 @@ export default function ServicesPage() {
                   <div
                     className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${section.color} flex items-center justify-center shrink-0 shadow-xl shadow-black/20`}
                   >
-                    <section.icon className="w-8 h-8 text-gray-900 dark:text-white" aria-hidden="true" />
+                    <section.icon
+                      className="w-8 h-8 text-gray-900 dark:text-white"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div className="flex-1">
                     <span

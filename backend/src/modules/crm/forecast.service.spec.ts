@@ -58,7 +58,13 @@ describe('ForecastService', () => {
       { id: 'stage-1', name: 'Negotiation', probability: 70, tenantId: 'tenant-1' },
     ]);
     mockUserRepository.find.mockResolvedValue([
-      { id: 'user-1', firstName: 'Alex', lastName: 'Smith', fullName: 'Alex Smith', tenantId: 'tenant-1' },
+      {
+        id: 'user-1',
+        firstName: 'Alex',
+        lastName: 'Smith',
+        fullName: 'Alex Smith',
+        tenantId: 'tenant-1',
+      },
     ]);
 
     const result = await service.getForecast('tenant-1');

@@ -13,8 +13,10 @@ export class AdminAISettingsService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'AI' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       openaiKey: config['openai_key'] || '',
       anthropicKey: config['anthropic_key'] || '',

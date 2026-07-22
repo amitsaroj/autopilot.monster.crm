@@ -13,8 +13,10 @@ export class AdminRateLimitService {
   async getSettings() {
     const settings = await this.settingRepo.find({ where: { group: 'RATE_LIMIT' } });
     const config: Record<string, any> = {};
-    settings.forEach(s => { config[s.key] = s.value; });
-    
+    settings.forEach((s) => {
+      config[s.key] = s.value;
+    });
+
     return {
       globalTtl: config['rl_global_ttl'] || 60,
       globalLimit: config['rl_global_limit'] || 100,

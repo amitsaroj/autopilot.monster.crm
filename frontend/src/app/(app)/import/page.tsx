@@ -1,15 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  Upload,
-  FileText,
-  X,
-  CheckCircle,
-  AlertCircle,
-  ChevronRight,
-  Loader2,
-} from 'lucide-react';
+import { Upload, FileText, X, CheckCircle, AlertCircle, ChevronRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { importExportService, type DataJob } from '@/services/import-export.service';
 import { parseApiData } from '@/lib/api/parse-response';
@@ -52,8 +44,13 @@ export default function ImportGlobalPage() {
   const handleFile = async (file: File) => {
     setUploading(true);
     try {
-      const presigned = await importExportService.getPresignedUpload(file.name, file.type || 'text/csv');
-      const { uploadUrl, fileKey } = parseApiData<{ uploadUrl: string; fileKey: string }>(presigned) ?? {
+      const presigned = await importExportService.getPresignedUpload(
+        file.name,
+        file.type || 'text/csv',
+      );
+      const { uploadUrl, fileKey } = parseApiData<{ uploadUrl: string; fileKey: string }>(
+        presigned,
+      ) ?? {
         uploadUrl: '',
         fileKey: '',
       };
@@ -81,7 +78,9 @@ export default function ImportGlobalPage() {
     <div className="space-y-6 animate-fade-in max-w-3xl">
       <div>
         <h1 className="page-title">Import Data</h1>
-        <p className="page-description">Bulk import contacts, leads, companies, deals from CSV, Excel, or JSON</p>
+        <p className="page-description">
+          Bulk import contacts, leads, companies, deals from CSV, Excel, or JSON
+        </p>
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
@@ -133,7 +132,9 @@ export default function ImportGlobalPage() {
           <p className="text-sm font-medium text-foreground">
             {uploading ? 'Uploading…' : 'Drop your file here or click to browse'}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Supported: CSV, XLSX, JSON · Max 10 MB</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Supported: CSV, XLSX, JSON · Max 10 MB
+          </p>
           <button
             type="button"
             disabled={uploading}
@@ -151,14 +152,20 @@ export default function ImportGlobalPage() {
         <AlertCircle className="h-4 w-4 text-[hsl(246,80%,60%)] shrink-0 mt-0.5" />
         <div className="text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Field Mapping</p>
-          <p className="mt-0.5">Upload starts an import job. Use entity CSV modals for guided mapping when available.</p>
+          <p className="mt-0.5">
+            Upload starts an import job. Use entity CSV modals for guided mapping when available.
+          </p>
         </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="text-sm font-semibold">Recent Imports</h2>
-          <button type="button" onClick={() => void loadHistory()} className="text-xs text-muted-foreground hover:text-foreground">
+          <button
+            type="button"
+            onClick={() => void loadHistory()}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
             Refresh
           </button>
         </div>

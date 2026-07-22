@@ -52,7 +52,12 @@ describe('UsageMeteringInterceptor', () => {
       complete: async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
         expect(pricingService.getLimitPeriod).toHaveBeenCalledWith('tenant-1', 'contacts_limit');
-        expect(billingService.trackUsage).toHaveBeenCalledWith('tenant-1', 'contacts_limit', 1, 'TOTAL');
+        expect(billingService.trackUsage).toHaveBeenCalledWith(
+          'tenant-1',
+          'contacts_limit',
+          1,
+          'TOTAL',
+        );
         done();
       },
     });

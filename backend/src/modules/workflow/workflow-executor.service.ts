@@ -50,10 +50,15 @@ export class WorkflowExecutorService {
 
   extractSteps(definition: Record<string, unknown>): WorkflowStep[] {
     if (Array.isArray(definition.steps)) {
-      return definition.steps as WorkflowStep[];
+      return (definition.steps as WorkflowStep[]).map((step) => ({
+        ...step,
+        type: this.normalizeStepType(step.type),
+      }));
     }
 
-    const nodes = definition.nodes as Array<{ id: string; data?: Record<string, unknown> }> | undefined;
+    const nodes = definition.nodes as
+      | Array<{ id: string; data?: Record<string, unknown> }>
+      | undefined;
     const edges = definition.edges as Array<{ source: string; target: string }> | undefined;
     if (!nodes?.length) {
       return [];
@@ -67,7 +72,10 @@ export class WorkflowExecutorService {
 
     const startNode =
       nodes.find((n) => n.data?.isTrigger === true) ??
-      nodes.find((n) => (n.data?.type as string | undefined)?.includes('TRIGGER')) ??
+      nodes.find((n) => {
+        const raw = String(n.data?.stepType ?? n.data?.nodeType ?? n.data?.type ?? '');
+        return raw.toUpperCase().includes('TRIGGER');
+      }) ??
       nodes[0];
 
     const steps: WorkflowStep[] = [];
@@ -79,13 +87,19 @@ export class WorkflowExecutorService {
       const node = nodeMap.get(currentId);
       if (!node) break;
 
-      const stepType = (node.data?.stepType ?? node.data?.type ?? 'LOG') as string;
-      if (!stepType.includes('TRIGGER')) {
+      const stepType = String(
+        node.data?.stepType ?? node.data?.nodeType ?? node.data?.type ?? 'LOG',
+      );
+      if (!stepType.toUpperCase().includes('TRIGGER')) {
+        const configFromNode =
+          node.data?.config && typeof node.data.config === 'object'
+            ? (node.data.config as Record<string, unknown>)
+            : {};
         steps.push({
           id: node.id,
-          type: stepType.toUpperCase(),
+          type: this.normalizeStepType(stepType),
           name: (node.data?.label as string) ?? stepType,
-          config: (node.data?.config as Record<string, unknown>) ?? node.data ?? {},
+          config: Object.keys(configFromNode).length > 0 ? configFromNode : (node.data ?? {}),
           nextStepId: adjacency.get(currentId),
         });
       }
@@ -93,6 +107,20 @@ export class WorkflowExecutorService {
     }
 
     return steps;
+  }
+
+  normalizeStepType(type: string): string {
+    const upper = type.toUpperCase();
+    switch (upper) {
+      case 'SEND_MESSAGE':
+        return 'SEND_WHATSAPP';
+      case 'AWAIT_RESPONSE':
+        return 'WAIT_DELAY';
+      case 'CONDITION_BRANCH':
+        return 'CONDITION';
+      default:
+        return upper;
+    }
   }
 
   evaluateCondition(config: Record<string, unknown>, context: WorkflowExecutionContext): boolean {
@@ -146,22 +174,30 @@ export class WorkflowExecutorService {
     step: WorkflowStep,
     context: WorkflowExecutionContext,
   ): Promise<WorkflowStepResult> {
-    this.logger.log(`Executing step ${step.id} (${step.type}) for tenant ${context.tenantId}`);
+    const normalizedType = this.normalizeStepType(step.type);
+    const normalizedStep: WorkflowStep = { ...step, type: normalizedType };
+    this.logger.log(
+      `Executing step ${normalizedStep.id} (${normalizedType}) for tenant ${context.tenantId}`,
+    );
 
-    switch (step.type) {
-      case 'CONDITION':
-      case 'CONDITION_BRANCH': {
-        const passed = this.evaluateCondition(step.config ?? {}, context);
-        return { stepId: step.id, type: step.type, status: 'COMPLETED', passed };
+    switch (normalizedType) {
+      case 'CONDITION': {
+        const passed = this.evaluateCondition(normalizedStep.config ?? {}, context);
+        return { stepId: normalizedStep.id, type: normalizedType, status: 'COMPLETED', passed };
       }
       case 'LOG': {
         this.logger.log(
-          `Workflow log [${context.eventName}]: ${String(step.config?.message ?? step.name ?? step.type)}`,
+          `Workflow log [${context.eventName}]: ${String(normalizedStep.config?.message ?? normalizedStep.name ?? normalizedType)}`,
         );
-        return { stepId: step.id, type: step.type, status: 'COMPLETED', logged: true };
+        return {
+          stepId: normalizedStep.id,
+          type: normalizedType,
+          status: 'COMPLETED',
+          logged: true,
+        };
       }
       default:
-        return this.actionExecutor.executeAction(step, context);
+        return this.actionExecutor.executeAction(normalizedStep, context);
     }
   }
 

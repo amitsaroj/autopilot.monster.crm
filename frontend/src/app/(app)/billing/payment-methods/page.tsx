@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
 import { CreditCard, Plus, CheckCircle2, MoreVertical, Building } from 'lucide-react';
@@ -50,12 +50,19 @@ export default function PaymentMethodsPage() {
       <div className="border-b border-border pb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link href="/billing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Billing</Link>
+            <Link
+              href="/billing"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Billing
+            </Link>
             <span className="text-muted-foreground text-sm">/</span>
             <span className="text-sm font-medium text-foreground">Payment Methods</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Payment Methods</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your credit cards and billing information.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your credit cards and billing information.
+          </p>
         </div>
         <button
           onClick={handleAdd}
@@ -105,7 +112,9 @@ export default function PaymentMethodsPage() {
                           {method.brand} ending in {method.lastFour}
                         </h3>
                         {method.isDefault && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">Default</span>
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">
+                            Default
+                          </span>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground mt-0.5">
@@ -119,7 +128,10 @@ export default function PaymentMethodsPage() {
                 </div>
                 <div className="mt-5 pt-4 border-t border-border flex items-center justify-between text-sm">
                   {!method.isDefault && (
-                    <button onClick={() => handleSetDefault(method.id)} className="text-primary hover:underline font-medium">
+                    <button
+                      onClick={() => handleSetDefault(method.id)}
+                      className="text-primary hover:underline font-medium"
+                    >
                       Make Default
                     </button>
                   )}
@@ -129,7 +141,10 @@ export default function PaymentMethodsPage() {
                       Active subscription billing card
                     </span>
                   )}
-                  <button onClick={() => handleRemove(method.id)} className="text-red-600 hover:underline">
+                  <button
+                    onClick={() => handleRemove(method.id)}
+                    className="text-red-600 hover:underline"
+                  >
                     Remove
                   </button>
                 </div>

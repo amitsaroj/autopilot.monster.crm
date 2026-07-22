@@ -1,7 +1,16 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
-import { Phone, Users, Mic, Clock, BarChart2, CheckCircle2, PhoneOutgoing, Settings } from 'lucide-react';
+import {
+  Phone,
+  Users,
+  Mic,
+  Clock,
+  BarChart2,
+  CheckCircle2,
+  PhoneOutgoing,
+  Settings,
+} from 'lucide-react';
 import { voiceCampaignService, VoiceCampaign } from '@/services/voice-campaign.service';
 
 export default function VoiceCampaignsPage() {
@@ -63,7 +72,9 @@ export default function VoiceCampaignsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">AI Voice Calling</h1>
-            <p className="text-sm text-gray-500 mt-1">Autonomous outbound calling powered by OpenAI Realtime interactions.</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Autonomous outbound calling powered by OpenAI Realtime interactions.
+            </p>
           </div>
         </div>
       </div>
@@ -76,14 +87,18 @@ export default function VoiceCampaignsPage() {
           className={`pb-4 font-medium text-sm transition-colors relative ${activeTab === 'new' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
         >
           New Campaign
-          {activeTab === 'new' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-lg" />}
+          {activeTab === 'new' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-lg" />
+          )}
         </button>
         <button
           onClick={() => setActiveTab('active')}
           className={`pb-4 font-medium text-sm transition-colors relative ${activeTab === 'active' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
         >
           Active Dialers
-          {activeTab === 'active' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-lg" />}
+          {activeTab === 'active' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-lg" />
+          )}
         </button>
       </div>
 

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { CreditCard, CheckCircle2, History, DollarSign, Download, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { parseApiData } from "@/lib/api/parse-response";
-import { billingService, type Invoice, type Subscription } from "@/services/billing.service";
+import { useEffect, useState } from 'react';
+import { CreditCard, CheckCircle2, History, DollarSign, Download, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { parseApiData } from '@/lib/api/parse-response';
+import { billingService, type Invoice, type Subscription } from '@/services/billing.service';
 
 export default function BillingPage() {
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,7 @@ export default function BillingPage() {
         setInvoices(parseApiData<Invoice[]>(invoiceRes) ?? invoiceRes.data ?? []);
         setUsage(parseApiData<Record<string, number>>(usageRes) ?? usageRes.data ?? {});
       } catch {
-        toast.error("Failed to load billing data");
+        toast.error('Failed to load billing data');
       } finally {
         setLoading(false);
       }
@@ -36,22 +36,22 @@ export default function BillingPage() {
 
   const limits = [
     {
-      name: "Contacts",
+      name: 'Contacts',
       used: usage.contacts_limit ?? 0,
       total: 10000,
-      color: "bg-indigo-500",
+      color: 'bg-indigo-500',
     },
     {
-      name: "Deals",
+      name: 'Deals',
       used: usage.deals_limit ?? 0,
       total: 10000,
-      color: "bg-emerald-500",
+      color: 'bg-emerald-500',
     },
     {
-      name: "AI Tokens",
+      name: 'AI Tokens',
       used: usage.ai_tokens ?? 0,
       total: 500000,
-      color: "bg-amber-500",
+      color: 'bg-amber-500',
     },
   ];
 
@@ -72,7 +72,9 @@ export default function BillingPage() {
               Capital Layer Active
             </span>
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase">Fiscal Orchestration</h1>
+          <h1 className="text-4xl font-black text-white tracking-tighter uppercase">
+            Fiscal Orchestration
+          </h1>
           <p className="text-gray-500 text-sm mt-1 font-bold uppercase tracking-widest">
             Manage tenant subscription cycles, usage vectors, and billing artifacts
           </p>
@@ -84,21 +86,29 @@ export default function BillingPage() {
           <div className="relative z-10 space-y-8 text-white">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Current Plan</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                  Current Plan
+                </p>
                 <h2 className="text-3xl font-black tracking-tight mt-2">
-                  {subscription?.status ?? "ACTIVE"}
+                  {subscription?.status ?? 'ACTIVE'}
                 </h2>
               </div>
               <CheckCircle2 className="w-8 h-8 text-emerald-300" />
             </div>
             <div className="space-y-2">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Billing Cycle</p>
-              <p className="text-xl font-black">{subscription?.billingCycle ?? "MONTHLY"}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                Billing Cycle
+              </p>
+              <p className="text-xl font-black">{subscription?.billingCycle ?? 'MONTHLY'}</p>
             </div>
             {subscription?.currentPeriodEnd && (
               <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Renews</p>
-                <p className="text-sm font-bold">{new Date(subscription.currentPeriodEnd).toLocaleDateString()}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                  Renews
+                </p>
+                <p className="text-sm font-bold">
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                </p>
               </div>
             )}
           </div>
@@ -115,10 +125,15 @@ export default function BillingPage() {
                 <div key={limit.name}>
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
                     <span className="text-gray-400">{limit.name}</span>
-                    <span className="text-white">{limit.used} / {limit.total}</span>
+                    <span className="text-white">
+                      {limit.used} / {limit.total}
+                    </span>
                   </div>
                   <div className="h-2 rounded-full bg-white/5 overflow-hidden">
-                    <div className={cn("h-full rounded-full transition-all", limit.color)} style={{ width: `${pct}%` }} />
+                    <div
+                      className={cn('h-full rounded-full transition-all', limit.color)}
+                      style={{ width: `${pct}%` }}
+                    />
                   </div>
                 </div>
               );
@@ -130,23 +145,34 @@ export default function BillingPage() {
       <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.01] overflow-hidden">
         <div className="px-8 py-6 border-b border-white/[0.05] flex items-center gap-2">
           <History className="w-4 h-4 text-gray-400" />
-          <h2 className="text-sm font-black text-white uppercase tracking-widest">Invoice History</h2>
+          <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            Invoice History
+          </h2>
         </div>
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-white/[0.05] bg-white/[0.02]">
-              {["Invoice", "Date", "Amount", "Status", ""].map((h) => (
-                <th key={h} className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest">{h}</th>
+              {['Invoice', 'Date', 'Amount', 'Status', ''].map((h) => (
+                <th
+                  key={h}
+                  className="px-6 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest"
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.03]">
             {invoices.map((inv) => (
               <tr key={inv.id} className="hover:bg-white/[0.02]">
-                <td className="px-6 py-4 text-sm font-bold text-white">{inv.number ?? inv.id.slice(0, 8)}</td>
-                <td className="px-6 py-4 text-xs text-gray-400">{new Date(inv.createdAt).toLocaleDateString()}</td>
+                <td className="px-6 py-4 text-sm font-bold text-white">
+                  {inv.number ?? inv.id.slice(0, 8)}
+                </td>
+                <td className="px-6 py-4 text-xs text-gray-400">
+                  {new Date(inv.createdAt).toLocaleDateString()}
+                </td>
                 <td className="px-6 py-4 text-sm font-black text-indigo-400">
-                  {inv.currency ?? "USD"} {Number(inv.total).toFixed(2)}
+                  {inv.currency ?? 'USD'} {Number(inv.total).toFixed(2)}
                 </td>
                 <td className="px-6 py-4">
                   <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest">
@@ -155,7 +181,12 @@ export default function BillingPage() {
                 </td>
                 <td className="px-6 py-4">
                   {inv.pdfUrl && (
-                    <a href={inv.pdfUrl} target="_blank" rel="noreferrer" className="text-gray-500 hover:text-white">
+                    <a
+                      href={inv.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-gray-500 hover:text-white"
+                    >
                       <Download className="w-4 h-4" />
                     </a>
                   )}
@@ -164,7 +195,9 @@ export default function BillingPage() {
             ))}
             {invoices.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500 text-sm">No invoices yet.</td>
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-500 text-sm">
+                  No invoices yet.
+                </td>
               </tr>
             )}
           </tbody>

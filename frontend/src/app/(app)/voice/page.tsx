@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Phone,
-  PhoneIncoming,
-  PhoneOutgoing,
-  PhoneMissed,
-  Loader2,
-} from 'lucide-react';
+import { Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -58,7 +52,9 @@ export default function VoicePage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Voice</h1>
-          <p className="page-description">AI-powered calling with auto-recording and transcription</p>
+          <p className="page-description">
+            AI-powered calling with auto-recording and transcription
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Link

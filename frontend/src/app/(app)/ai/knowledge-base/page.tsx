@@ -69,29 +69,47 @@ export default function KnowledgeBasePage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link href="/ai" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">AI OS</Link>
+            <Link
+              href="/ai"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              AI OS
+            </Link>
             <span className="text-muted-foreground text-sm">/</span>
             <span className="text-sm font-medium text-foreground">Knowledge Base</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Vector Data Management</h1>
-          <p className="text-sm text-muted-foreground mt-1">Upload documents to power your RAG engine and AI copilot agents.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Upload documents to power your RAG engine and AI copilot agents.
+          </p>
         </div>
-        <Link href="/ai/knowledge-base/upload" className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm rounded-lg transition-colors shadow-sm">
+        <Link
+          href="/ai/knowledge-base/upload"
+          className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-medium text-sm rounded-lg transition-colors shadow-sm"
+        >
           <Database className="w-4 h-4" /> Quick Upload
         </Link>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin" /></div>
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
               <h2 className="text-lg font-bold text-foreground mb-4">Upload Documents</h2>
-              <input ref={fileRef} type="file" className="hidden" accept=".pdf,.docx,.txt,.md" onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void handleUpload(file);
-              }} />
+              <input
+                ref={fileRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.txt,.md"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleUpload(file);
+                }}
+              />
               <button
                 type="button"
                 disabled={uploading}
@@ -108,14 +126,18 @@ export default function KnowledgeBasePage() {
               </button>
               {bases.length > 0 && (
                 <div className="mt-4">
-                  <label className="text-xs font-medium text-muted-foreground">Target knowledge base</label>
+                  <label className="text-xs font-medium text-muted-foreground">
+                    Target knowledge base
+                  </label>
                   <select
                     value={selectedKbId ?? ''}
                     onChange={(e) => setSelectedKbId(e.target.value)}
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
                   >
                     {bases.map((kb) => (
-                      <option key={kb.id} value={kb.id}>{kb.name} ({kb.status})</option>
+                      <option key={kb.id} value={kb.id}>
+                        {kb.name} ({kb.status})
+                      </option>
                     ))}
                   </select>
                 </div>

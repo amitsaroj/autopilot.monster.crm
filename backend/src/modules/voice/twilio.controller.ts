@@ -8,6 +8,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { TwilioService } from './twilio.service';
 import { VoiceCallService } from './voice-call.service';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
+import { VoiceCampaignService } from './voice-campaign.service';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { EVENT_NAMES } from '../../events/event.constants';
 
@@ -32,6 +33,7 @@ export class TwilioController {
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly voiceCampaignService: VoiceCampaignService,
   ) {}
 
   @Post('inbound')
@@ -105,6 +107,7 @@ export class TwilioController {
     const recordingUrl = req.body.RecordingUrl ? String(req.body.RecordingUrl) : undefined;
 
     if (callSid) {
+      const existingCall = await this.voiceCallService.findBySidGlobal(callSid);
       const call = await this.voiceCallService.updateFromWebhook({
         sid: callSid,
         status: callStatus.toUpperCase(),
@@ -116,6 +119,13 @@ export class TwilioController {
       });
 
       if (call && TERMINAL_CALL_STATUSES.has(callStatus.toUpperCase())) {
+        const priorStatus = existingCall?.status?.toUpperCase() ?? '';
+        const isFirstTerminal = !existingCall || !TERMINAL_CALL_STATUSES.has(priorStatus);
+
+        if (isFirstTerminal && call.campaignId) {
+          await this.voiceCampaignService.recordCallOutcome(call.campaignId, callStatus);
+        }
+
         this.eventEmitter.emit(EVENT_NAMES.CALL_ENDED, {
           tenantId: call.tenantId,
           call: {

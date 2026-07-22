@@ -9,10 +9,7 @@ import { Announcement } from '../../../database/entities/announcement.entity';
 import { NotificationModule } from '../../notifications/notification.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Notification, Announcement]),
-    NotificationModule,
-  ],
+  imports: [TypeOrmModule.forFeature([Notification, Announcement]), NotificationModule],
   controllers: [AdminNotificationsController, AdminAnnouncementsController],
   providers: [AdminNotificationsService, AdminAnnouncementsService],
   exports: [AdminNotificationsService, AdminAnnouncementsService],

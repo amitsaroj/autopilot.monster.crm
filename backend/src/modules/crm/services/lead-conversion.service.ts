@@ -18,21 +18,24 @@ export class LeadConversionService {
     private readonly leadRepo: Repository<Lead>,
   ) {}
 
-  async convertLead(leadId: string, options: { 
-    tenantId: string; 
-    createCompany?: boolean; 
-    createDeal?: boolean;
-    dealName?: string;
-    pipelineId?: string;
-  }) {
-    const lead = await this.leadRepo.findOne({ 
-       where: { id: leadId, tenantId: options.tenantId } 
+  async convertLead(
+    leadId: string,
+    options: {
+      tenantId: string;
+      createCompany?: boolean;
+      createDeal?: boolean;
+      dealName?: string;
+      pipelineId?: string;
+      actorId?: string;
+    },
+  ) {
+    const lead = await this.leadRepo.findOne({
+      where: { id: leadId, tenantId: options.tenantId },
     });
 
     if (!lead) throw new NotFoundException(`Lead Vector ${leadId} not materialized`);
-    
+
     return await this.dataSource.transaction(async (manager: EntityManager) => {
-      // 1. Create Company if requested
       let companyId: string | undefined;
       if (options.createCompany) {
         const company = manager.create(Company, {
@@ -43,9 +46,13 @@ export class LeadConversionService {
         });
         const savedCompany = await manager.save(company);
         companyId = savedCompany.id;
+        this.eventEmitter.emit(EVENT_NAMES.COMPANY_CREATED, {
+          company: savedCompany,
+          tenantId: options.tenantId,
+          actorId: options.actorId,
+        });
       }
 
-      // 2. Create Contact
       const contact = manager.create(Contact, {
         firstName: lead.firstName,
         lastName: lead.lastName || '',
@@ -58,33 +65,44 @@ export class LeadConversionService {
       });
       const savedContact = await manager.save(contact);
 
-      // 3. Create Deal if requested
       if (options.createDeal && options.pipelineId) {
-        const pipeline = await manager.findOne(Pipeline, { 
-           where: { id: options.pipelineId, tenantId: options.tenantId },
-           relations: ['stages'] 
+        const pipeline = await manager.findOne(Pipeline, {
+          where: { id: options.pipelineId, tenantId: options.tenantId },
+          relations: ['stages'],
         });
-        
+
         if (pipeline && pipeline.stages.length > 0) {
-           const firstStage = pipeline.stages.sort((a, b) => a.order - b.order)[0];
-           const deal = manager.create(Deal, {
-             name: options.dealName || `${lead.firstName}'s Strategic Deal`,
-             contactId: savedContact.id,
-             companyId: companyId,
-             pipelineId: pipeline.id,
-             stageId: firstStage.id,
-             currency: 'USD',
-             status: DealStatus.OPEN,
-             tenantId: options.tenantId,
-           });
-           const savedDeal = await manager.save(deal);
-           this.eventEmitter.emit(EVENT_NAMES.DEAL_CREATED, { deal: savedDeal, tenantId: options.tenantId });
+          const firstStage = pipeline.stages.sort((a, b) => a.order - b.order)[0];
+          const deal = manager.create(Deal, {
+            name: options.dealName || `${lead.firstName}'s Strategic Deal`,
+            contactId: savedContact.id,
+            companyId: companyId,
+            pipelineId: pipeline.id,
+            stageId: firstStage.id,
+            currency: 'USD',
+            status: DealStatus.OPEN,
+            tenantId: options.tenantId,
+          });
+          const savedDeal = await manager.save(deal);
+          this.eventEmitter.emit(EVENT_NAMES.DEAL_CREATED, {
+            deal: savedDeal,
+            tenantId: options.tenantId,
+            actorId: options.actorId,
+          });
         }
       }
 
-      // 4. Finalize Lead (Soft Delete or Status change)
       await manager.update(Lead, lead.id, { status: 'CONVERTED' });
-      this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, { contact: savedContact, tenantId: options.tenantId });
+      this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, {
+        contact: savedContact,
+        tenantId: options.tenantId,
+        actorId: options.actorId,
+      });
+      this.eventEmitter.emit(EVENT_NAMES.LEAD_UPDATED, {
+        lead: { ...lead, status: 'CONVERTED' },
+        tenantId: options.tenantId,
+        actorId: options.actorId,
+      });
 
       return { contact: savedContact, companyId };
     });

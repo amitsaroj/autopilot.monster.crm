@@ -47,7 +47,10 @@ export default function AnalyticsDashboardDetailPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <Link href="/analytics/dashboards" className="inline-flex items-center gap-2 text-sm text-[hsl(246,80%,60%)]">
+      <Link
+        href="/analytics/dashboards"
+        className="inline-flex items-center gap-2 text-sm text-[hsl(246,80%,60%)]"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to dashboards
       </Link>
       <div>
@@ -61,7 +64,9 @@ export default function AnalyticsDashboardDetailPage({
           dashboard.widgets.map((widget, index) => (
             <div key={index} className="rounded-xl border border-border bg-card p-4">
               <p className="text-sm font-medium">{String(widget.title ?? `Widget ${index + 1}`)}</p>
-              <p className="text-xs text-muted-foreground mt-1">{String(widget.type ?? 'metric')}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {String(widget.type ?? 'metric')}
+              </p>
             </div>
           ))
         )}

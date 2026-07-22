@@ -14,11 +14,7 @@ interface Activity {
   occurredAt: string;
 }
 
-export default function ContactActivitiesPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function ContactActivitiesPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <ContactSubpage params={params} title="Activities">
       {(contact) => <ActivitiesList contactId={contact.id} />}

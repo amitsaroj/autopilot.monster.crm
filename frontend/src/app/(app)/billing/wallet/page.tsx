@@ -88,8 +88,11 @@ export default function BillingWalletPage() {
                     </p>
                   </div>
                 </div>
-                <p className={`text-sm font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
-                  {tx.type === 'CREDIT' ? '+' : '-'}{Number(tx.amount).toFixed(2)}
+                <p
+                  className={`text-sm font-medium ${tx.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}
+                >
+                  {tx.type === 'CREDIT' ? '+' : '-'}
+                  {Number(tx.amount).toFixed(2)}
                 </p>
               </div>
             ))}

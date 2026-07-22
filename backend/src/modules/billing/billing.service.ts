@@ -41,6 +41,12 @@ export class BillingService {
     if (!stripeConfig?.secretKey) {
       throw new Error('STRIPE_SECRET_KEY is missing');
     }
+    if (
+      (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production' &&
+      /placeholder|changeme|change-me/i.test(stripeConfig.secretKey)
+    ) {
+      throw new Error('STRIPE_SECRET_KEY must be a live injected secret in production');
+    }
     this.stripe = new Stripe(stripeConfig.secretKey, {
       apiVersion: '2025-01-27' as Stripe.LatestApiVersion,
     });
@@ -59,13 +65,15 @@ export class BillingService {
     );
   }
 
-  private resolvePlanStripePriceId(
-    plan: Plan,
-    billingCycle: 'MONTHLY' | 'ANNUAL',
-  ): string {
+  private resolvePlanStripePriceId(plan: Plan, billingCycle: 'MONTHLY' | 'ANNUAL'): string {
     const dbPriceId =
       billingCycle === 'MONTHLY' ? plan.stripePriceIdMonthly : plan.stripePriceIdAnnual;
-    const priceId = resolveStripePriceId(plan.slug, billingCycle, dbPriceId, this.getStripePrices());
+    const priceId = resolveStripePriceId(
+      plan.slug,
+      billingCycle,
+      dbPriceId,
+      this.getStripePrices(),
+    );
 
     if (!priceId) {
       throw new BadRequestException(
@@ -76,20 +84,24 @@ export class BillingService {
     return priceId;
   }
 
-  async createCheckoutSession(tenantId: string, planId: string, billingCycle: 'MONTHLY' | 'ANNUAL') {
+  async createCheckoutSession(
+    tenantId: string,
+    planId: string,
+    billingCycle: 'MONTHLY' | 'ANNUAL',
+  ) {
     const plan = await this.planRepo.findOne({ where: { id: planId } });
     if (!plan) throw new NotFoundException('Plan not found');
 
     const priceId = this.resolvePlanStripePriceId(plan, billingCycle);
 
     const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as any });
-    
+
     let customerId = sub?.stripeCustomerId;
     if (!customerId) {
-        const customer = await this.stripe.customers.create({
-            metadata: { tenantId },
-        });
-        customerId = customer.id;
+      const customer = await this.stripe.customers.create({
+        metadata: { tenantId },
+      });
+      customerId = customer.id;
     }
 
     const appUrl = this.configService.get<string>('app.frontendUrl');
@@ -152,6 +164,9 @@ export class BillingService {
       case 'invoice.paid':
         await this.handleInvoicePaid(event.data.object as Stripe.Invoice);
         break;
+      case 'invoice.payment_failed':
+        await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        break;
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
         await this.handleSubscriptionChange(event.data.object as Stripe.Subscription);
@@ -180,21 +195,23 @@ export class BillingService {
     }
 
     if (sub) {
-        sub.planId = planId;
-        sub.billingCycle = billingCycle as any;
-        sub.status = 'ACTIVE';
-        sub.stripeCustomerId = stripeCustomerId;
-        sub.stripeSubscriptionId = stripeSubscriptionId;
-        sub.currentPeriodStart = new Date((stripeSub as any).current_period_start * 1000);
-        sub.currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
+      sub.planId = planId;
+      sub.billingCycle = billingCycle as any;
+      sub.status = 'ACTIVE';
+      sub.stripeCustomerId = stripeCustomerId;
+      sub.stripeSubscriptionId = stripeSubscriptionId;
+      sub.currentPeriodStart = new Date((stripeSub as any).current_period_start * 1000);
+      sub.currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
 
-        await this.subscriptionRepo.save(sub);
+      await this.subscriptionRepo.save(sub);
     }
   }
 
   private async handleInvoicePaid(invoice: Stripe.Invoice) {
     const stripeCustomerId = invoice.customer as string;
-    const sub = await this.subscriptionRepo.findOne({ where: { stripeCustomerId } as Record<string, string> });
+    const sub = await this.subscriptionRepo.findOne({
+      where: { stripeCustomerId } as Record<string, string>,
+    });
     if (!sub) return;
 
     const existing = await this.invoiceRepo.findOne({
@@ -235,7 +252,9 @@ export class BillingService {
         description: line.description || 'Subscription',
         amount: (line.amount ?? 0) / 100,
         quantity: line.quantity ?? 1,
-        unit_amount: ((line as Stripe.InvoiceLineItem & { price?: { unit_amount?: number } }).price?.unit_amount ?? 0) / 100,
+        unit_amount:
+          ((line as Stripe.InvoiceLineItem & { price?: { unit_amount?: number } }).price
+            ?.unit_amount ?? 0) / 100,
       })),
     } as Partial<InvoiceEntity>);
 
@@ -260,9 +279,7 @@ export class BillingService {
 
   private async handleChargeRefunded(charge: Stripe.Charge) {
     const paymentIntentId =
-      typeof charge.payment_intent === 'string'
-        ? charge.payment_intent
-        : charge.payment_intent?.id;
+      typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
 
     if (!paymentIntentId) return;
 
@@ -300,9 +317,20 @@ export class BillingService {
     sub.currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
 
     if (stripeSub.status === 'canceled') {
-        sub.cancelledAt = new Date();
+      sub.cancelledAt = new Date();
     }
 
+    await this.subscriptionRepo.save(sub);
+  }
+
+  private async handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+    const stripeCustomerId = invoice.customer as string;
+    const sub = await this.subscriptionRepo.findOne({
+      where: { stripeCustomerId } as Record<string, string>,
+    });
+    if (!sub) return;
+
+    sub.status = 'PAST_DUE';
     await this.subscriptionRepo.save(sub);
   }
 
@@ -396,7 +424,10 @@ export class BillingService {
     return record ? Number(record.quantity) : 0;
   }
 
-  async getUsageBreakdown(tenantId: string, period: UsagePeriod = 'MONTHLY'): Promise<Record<string, number>> {
+  async getUsageBreakdown(
+    tenantId: string,
+    period: UsagePeriod = 'MONTHLY',
+  ): Promise<Record<string, number>> {
     const { periodStart } = resolveUsagePeriodBounds(period);
     const records = await this.usageRepo.find({ where: { tenantId, periodStart } });
     return records.reduce<Record<string, number>>((acc, record) => {
@@ -422,13 +453,15 @@ export class BillingService {
   async getGlobalUsage(metric: string = 'all'): Promise<Record<string, number> | number> {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     if (metric === 'all') {
-        const records = await this.usageRepo.find({ where: { periodStart: startOfMonth } as Record<string, Date> });
-        return records.reduce((acc: Record<string, number>, record) => {
-            acc[record.metric] = (acc[record.metric] || 0) + Number(record.quantity);
-            return acc;
-        }, {});
+      const records = await this.usageRepo.find({
+        where: { periodStart: startOfMonth } as Record<string, Date>,
+      });
+      return records.reduce((acc: Record<string, number>, record) => {
+        acc[record.metric] = (acc[record.metric] || 0) + Number(record.quantity);
+        return acc;
+      }, {});
     }
 
     const records = await this.usageRepo.find({
@@ -438,7 +471,9 @@ export class BillingService {
   }
 
   private async ensureStripeCustomer(tenantId: string): Promise<string> {
-    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    const sub = await this.subscriptionRepo.findOne({
+      where: { tenantId } as Record<string, string>,
+    });
     if (sub?.stripeCustomerId) {
       return sub.stripeCustomerId;
     }
@@ -554,7 +589,9 @@ export class BillingService {
   }
 
   async downgradeSubscription(tenantId: string, planId: string): Promise<SubscriptionEntity> {
-    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    const sub = await this.subscriptionRepo.findOne({
+      where: { tenantId } as Record<string, string>,
+    });
     if (!sub?.stripeSubscriptionId) {
       throw new NotFoundException('Active subscription not found');
     }
@@ -582,7 +619,9 @@ export class BillingService {
   }
 
   async cancelSubscription(tenantId: string, atPeriodEnd = true): Promise<SubscriptionEntity> {
-    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    const sub = await this.subscriptionRepo.findOne({
+      where: { tenantId } as Record<string, string>,
+    });
     if (!sub?.stripeSubscriptionId) {
       throw new NotFoundException('Active subscription not found');
     }
@@ -601,7 +640,9 @@ export class BillingService {
   }
 
   async reactivateSubscription(tenantId: string): Promise<SubscriptionEntity> {
-    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as Record<string, string> });
+    const sub = await this.subscriptionRepo.findOne({
+      where: { tenantId } as Record<string, string>,
+    });
     if (!sub?.stripeSubscriptionId) {
       throw new NotFoundException('Subscription not found');
     }
@@ -613,5 +654,48 @@ export class BillingService {
     sub.status = 'ACTIVE';
     sub.cancelledAt = undefined;
     return this.subscriptionRepo.save(sub);
+  }
+
+  async getBillingRecovery(tenantId: string): Promise<{
+    status: string;
+    canRetryPayment: boolean;
+    hasPaymentMethod: boolean;
+  }> {
+    const sub = await this.subscriptionRepo.findOne({
+      where: { tenantId } as Record<string, string>,
+      order: { createdAt: 'DESC' },
+    });
+
+    const status = sub?.status ?? 'TRIAL';
+    const canRetryPayment = status === 'PAST_DUE';
+    const hasPaymentMethod =
+      (await this.paymentMethodRepo.count({ where: { tenantId } as Record<string, string> })) > 0;
+
+    return {
+      status,
+      canRetryPayment,
+      hasPaymentMethod,
+    };
+  }
+
+  async retryFailedPayment(tenantId: string): Promise<{ url: string; status: string }> {
+    const sub = await this.subscriptionRepo.findOne({
+      where: { tenantId } as Record<string, string>,
+    });
+    if (!sub?.stripeCustomerId) {
+      throw new BadRequestException('No stripe customer found for this tenant');
+    }
+
+    if (sub.status !== 'PAST_DUE') {
+      throw new BadRequestException('Retry is available only for past due subscriptions');
+    }
+
+    const appUrl = this.configService.get<string>('app.frontendUrl');
+    const session = await this.stripe.billingPortal.sessions.create({
+      customer: sub.stripeCustomerId,
+      return_url: `${appUrl}/billing?retry=processed`,
+    });
+
+    return { url: session.url, status: sub.status };
   }
 }

@@ -31,7 +31,9 @@ describe('HTTP E2E — Monetization (secured)', () => {
   it('rejects unauthenticated monetization subscription with 401', async () => {
     if (!ctx.postgresAvailable) return;
 
-    const response = await request(ctx.app.getHttpServer()).get('/api/v1/monetization/subscription');
+    const response = await request(ctx.app.getHttpServer()).get(
+      '/api/v1/monetization/subscription',
+    );
     expect(response.status).toBe(401);
   });
 

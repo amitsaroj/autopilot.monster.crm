@@ -79,7 +79,9 @@ describe('ContactService.mergeContacts', () => {
   });
 
   it('rejects merging a contact into itself', async () => {
-    await expect(service.mergeContacts('t1', 'c1', 'c1')).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.mergeContacts('t1', 'c1', 'c1')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('merges tags/fields and reassigns related records', async () => {

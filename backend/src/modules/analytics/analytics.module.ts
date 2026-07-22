@@ -13,10 +13,7 @@ import {
   AnalyticsDashboardService,
   AnalyticsDashboardRepository,
 } from './analytics-dashboard.service';
-import {
-  AnalyticsReportService,
-  AnalyticsReportRepository,
-} from './analytics-report.service';
+import { AnalyticsReportService, AnalyticsReportRepository } from './analytics-report.service';
 import { DashboardMetric } from '../../database/entities/dashboard-metric.entity';
 import { AnalyticsDashboard } from '../../database/entities/analytics-dashboard.entity';
 import { AnalyticsReport } from '../../database/entities/analytics-report.entity';
@@ -65,6 +62,11 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     AnalyticsQueueService,
     AnalyticsEventListener,
   ],
-  exports: [AnalyticsService, AnalyticsDashboardService, AnalyticsReportService, AnalyticsQueueService],
+  exports: [
+    AnalyticsService,
+    AnalyticsDashboardService,
+    AnalyticsReportService,
+    AnalyticsQueueService,
+  ],
 })
 export class AnalyticsModule {}

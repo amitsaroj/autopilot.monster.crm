@@ -14,10 +14,7 @@ export class CompanyRepository extends BaseRepository<Company> {
     super(companyRepo);
   }
 
-  async findFiltered(
-    tenantId: string,
-    query: CrmListQueryDto,
-  ): Promise<[Company[], number]> {
+  async findFiltered(tenantId: string, query: CrmListQueryDto): Promise<[Company[], number]> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const qb = this.companyRepo

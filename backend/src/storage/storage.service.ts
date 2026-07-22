@@ -79,11 +79,7 @@ export class StorageService {
   ): Promise<PresignedUploadResult> {
     await this.ensureBucket(this.bucketAssets);
     const objectKey = `${tenantId}/${randomUUID()}/${filename}`;
-    const uploadUrl = await this.client.presignedPutObject(
-      this.bucketAssets,
-      objectKey,
-      3600,
-    );
+    const uploadUrl = await this.client.presignedPutObject(this.bucketAssets, objectKey, 3600);
 
     await this.fileRepository.save(
       this.fileRepository.create({

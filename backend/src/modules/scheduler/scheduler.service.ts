@@ -45,7 +45,7 @@ export class SchedulerService implements OnModuleInit {
 
   async update(tenantId: string, id: string, dto: UpdateScheduledJobDto): Promise<ScheduledJob> {
     const job = await this.findOne(tenantId, id);
-    
+
     // Update fields
     Object.assign(job, dto);
     const updatedJob = await this.schedulerRepository.save(job);
@@ -91,7 +91,7 @@ export class SchedulerService implements OnModuleInit {
 
   private async executeJob(job: ScheduledJob) {
     this.logger.log(`Executing scheduled job: ${job.name} (ID: ${job.id})`);
-    
+
     // Update last run
     job.lastRunAt = new Date();
     await this.schedulerRepository.save(job);
@@ -100,7 +100,7 @@ export class SchedulerService implements OnModuleInit {
       // In a real system, you'd trigger handlers based on job.target
       // For now, we log it
       this.logger.log(`Triggering target: ${job.target} for tenant: ${job.tenantId}`);
-      
+
       // Update success
       job.status = JobStatus.ENABLED;
       job.errorMessage = undefined;

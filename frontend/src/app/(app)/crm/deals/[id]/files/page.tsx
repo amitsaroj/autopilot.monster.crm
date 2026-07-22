@@ -11,16 +11,24 @@ function FilesList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void storageFileService.list().then((r) => setFiles(r.data.data ?? [])).finally(() => setLoading(false));
+    void storageFileService
+      .list()
+      .then((r) => setFiles(r.data.data ?? []))
+      .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <Loader2 className="h-6 w-6 animate-spin" />;
-  if (files.length === 0) return <p className="text-sm text-muted-foreground">No files uploaded yet.</p>;
+  if (files.length === 0)
+    return <p className="text-sm text-muted-foreground">No files uploaded yet.</p>;
 
   return (
     <ul className="divide-y rounded-xl border border-border bg-card">
       {files.map((f) => (
-        <li key={f.id}><Link href={`/storage/${f.id}`} className="block p-4 hover:bg-muted/50">{f.filename}</Link></li>
+        <li key={f.id}>
+          <Link href={`/storage/${f.id}`} className="block p-4 hover:bg-muted/50">
+            {f.filename}
+          </Link>
+        </li>
       ))}
     </ul>
   );

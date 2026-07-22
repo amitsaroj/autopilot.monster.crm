@@ -96,7 +96,7 @@ lerna-debug.log*
 
 # ─── Docker ─────────────────────────────────────────────────
 # Ignore local volume data; keep Dockerfiles and compose files
-data/
+/data/
 volumes/
 docker-compose.override.yml
 

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OAuthApp } from '../../database/entities/oauth-app.entity';
@@ -25,7 +30,10 @@ export class OAuthService {
     this.jwtConfig = cfg;
   }
 
-  async createApp(tenantId: string, dto: { name: string; description?: string; redirectUris: string[]; scopes: string[] }): Promise<OAuthApp> {
+  async createApp(
+    tenantId: string,
+    dto: { name: string; description?: string; redirectUris: string[]; scopes: string[] },
+  ): Promise<OAuthApp> {
     const clientId = 'client_' + crypto.randomBytes(16).toString('hex');
     const clientSecret = 'secret_' + crypto.randomBytes(32).toString('hex');
     const app = this.appRepo.create({
@@ -56,7 +64,7 @@ export class OAuthService {
   async validateClientRedirect(clientId: string, redirectUri: string): Promise<OAuthApp> {
     const app = await this.appRepo.findOne({ where: { clientId, isActive: true } as any });
     if (!app) throw new BadRequestException('Invalid Client ID');
-    
+
     // Exact match redirect URI
     if (!app.redirectUris.includes(redirectUri)) {
       throw new BadRequestException('Redirect URI mismatch');
@@ -64,9 +72,15 @@ export class OAuthService {
     return app;
   }
 
-  async createAuthCode(clientId: string, tenantId: string, userId: string, redirectUri: string, scopes: string[]): Promise<string> {
+  async createAuthCode(
+    clientId: string,
+    tenantId: string,
+    userId: string,
+    redirectUri: string,
+    scopes: string[],
+  ): Promise<string> {
     await this.validateClientRedirect(clientId, redirectUri);
-    
+
     const code = 'code_' + crypto.randomBytes(20).toString('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins expiry
 
@@ -84,8 +98,15 @@ export class OAuthService {
     return code;
   }
 
-  async exchangeCodeForToken(clientId: string, clientSecret: string, code: string, redirectUri: string): Promise<any> {
-    const app = await this.appRepo.findOne({ where: { clientId, clientSecret, isActive: true } as any });
+  async exchangeCodeForToken(
+    clientId: string,
+    clientSecret: string,
+    code: string,
+    redirectUri: string,
+  ): Promise<any> {
+    const app = await this.appRepo.findOne({
+      where: { clientId, clientSecret, isActive: true } as any,
+    });
     if (!app) throw new UnauthorizedException('Invalid client credentials');
 
     const codeRecord = await this.codeRepo.findOne({ where: { code } as any });

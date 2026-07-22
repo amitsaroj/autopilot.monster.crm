@@ -58,7 +58,8 @@ export class RegisterDto {
   @MinLength(8)
   @MaxLength(128)
   @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'Password is too weak. Must contain uppercase, lowercase, and a number or special character.',
+    message:
+      'Password is too weak. Must contain uppercase, lowercase, and a number or special character.',
   })
   password!: string;
 

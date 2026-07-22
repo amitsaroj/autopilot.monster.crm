@@ -1,5 +1,13 @@
 import {
-  Controller, Get, Post, Delete, Body, Param, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BroadcastService } from './broadcast.service';
@@ -39,7 +47,11 @@ export class BroadcastController {
 
   @Post(':id/schedule')
   @ApiOperation({ summary: 'Schedule a broadcast' })
-  async schedule(@TenantId() tenantId: string, @Param('id') id: string, @Body() body: { scheduledAt: string }) {
+  async schedule(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: { scheduledAt: string },
+  ) {
     return this.broadcastService.schedule(tenantId, id, new Date(body.scheduledAt));
   }
 

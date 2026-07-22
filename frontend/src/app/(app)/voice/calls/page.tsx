@@ -95,9 +95,24 @@ export default function AllCallsPage() {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Total Calls', value: String(calls.length), icon: Phone, color: 'text-blue-400' },
-          { label: 'Inbound', value: String(inbound), icon: PhoneIncoming, color: 'text-green-400' },
-          { label: 'Outbound', value: String(outbound), icon: PhoneOutgoing, color: 'text-[hsl(246,80%,60%)]' },
+          {
+            label: 'Total Calls',
+            value: String(calls.length),
+            icon: Phone,
+            color: 'text-blue-400',
+          },
+          {
+            label: 'Inbound',
+            value: String(inbound),
+            icon: PhoneIncoming,
+            color: 'text-green-400',
+          },
+          {
+            label: 'Outbound',
+            value: String(outbound),
+            icon: PhoneOutgoing,
+            color: 'text-[hsl(246,80%,60%)]',
+          },
           { label: 'Missed', value: String(missed), icon: PhoneMissed, color: 'text-red-400' },
         ].map((s) => (
           <div key={s.label} className="stat-card flex items-center gap-4">

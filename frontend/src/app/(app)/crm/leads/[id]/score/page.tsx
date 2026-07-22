@@ -32,7 +32,10 @@ export default function LeadScorePage({ params }: { params: Promise<{ id: string
 
   return (
     <div className="space-y-6 max-w-lg animate-fade-in">
-      <Link href={`/crm/leads/${id}`} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        href={`/crm/leads/${id}`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Lead
       </Link>
       <h1 className="page-title">Lead Score</h1>

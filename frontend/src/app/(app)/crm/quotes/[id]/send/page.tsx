@@ -67,7 +67,10 @@ export default function QuoteSendPage({ params }: { params: Promise<{ id: string
   return (
     <div className="space-y-6 animate-fade-in max-w-2xl">
       <div className="flex items-center gap-3">
-        <Link href={`/crm/quotes/${id}`} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors">
+        <Link
+          href={`/crm/quotes/${id}`}
+          className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
@@ -78,7 +81,10 @@ export default function QuoteSendPage({ params }: { params: Promise<{ id: string
         </div>
       </div>
 
-      <form onSubmit={(e) => void handleSend(e)} className="rounded-xl border border-border bg-card p-6 space-y-4">
+      <form
+        onSubmit={(e) => void handleSend(e)}
+        className="rounded-xl border border-border bg-card p-6 space-y-4"
+      >
         <h2 className="text-sm font-semibold flex items-center gap-2">
           <Mail className="h-4 w-4 text-[hsl(246,80%,60%)]" />
           Send by Email

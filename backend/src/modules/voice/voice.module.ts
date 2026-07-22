@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BullModule } from '@nestjs/bull';
 
 import { RealtimeAiGateway } from './realtime-ai.gateway';
 import { TwilioController } from './twilio.controller';
@@ -15,14 +16,18 @@ import { TwilioModule } from './twilio.module';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { VoiceCampaign } from '../../database/entities/voice-campaign.entity';
 import { VoicePhoneNumber } from '../../database/entities/voice-phone-number.entity';
+import { Contact } from '../../database/entities/contact.entity';
+import { Segment } from '../../database/entities/segment.entity';
+import { QUEUE_NAMES } from '../../queue/queue.constants';
 
 @Module({
   imports: [
     ConfigModule,
     TwilioModule,
+    BullModule.registerQueue({ name: QUEUE_NAMES.VOICE }),
     forwardRef(() => AiModule),
     forwardRef(() => CrmModule),
-    TypeOrmModule.forFeature([VoiceCall, VoiceCampaign, VoicePhoneNumber]),
+    TypeOrmModule.forFeature([VoiceCall, VoiceCampaign, VoicePhoneNumber, Contact, Segment]),
   ],
   controllers: [TwilioController, VoiceController],
   providers: [
@@ -32,6 +37,12 @@ import { VoicePhoneNumber } from '../../database/entities/voice-phone-number.ent
     VoiceCampaignService,
     VoicePhoneNumberService,
   ],
-  exports: [TwilioModule, VoiceCallService, VoiceCallRepository, VoiceCampaignService, VoicePhoneNumberService],
+  exports: [
+    TwilioModule,
+    VoiceCallService,
+    VoiceCallRepository,
+    VoiceCampaignService,
+    VoicePhoneNumberService,
+  ],
 })
 export class VoiceModule {}

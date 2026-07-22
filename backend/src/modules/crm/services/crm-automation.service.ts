@@ -23,7 +23,7 @@ export class CrmAutomationService {
   @OnEvent('contact.created')
   async handleContactCreated(payload: { contact: Contact; tenantId: string }) {
     this.logger.debug(`Automating for New Contact: ${payload.contact.email}`);
-    
+
     // Auto-create welcome task for owner
     if (payload.contact.ownerId) {
       const task = this.taskRepo.create({
@@ -42,12 +42,12 @@ export class CrmAutomationService {
   @OnEvent('deal.created')
   async handleDealCreated(payload: { deal: Deal; tenantId: string }) {
     this.logger.debug(`Automating for New Deal: ${payload.deal.name}`);
-    
+
     // Auto-promote contact status if it was a LEAD
     if (payload.deal.contactId) {
       await this.contactRepo.update(
         { id: payload.deal.contactId, status: ContactStatus.LEAD },
-        { status: ContactStatus.PROSPECT }
+        { status: ContactStatus.PROSPECT },
       );
     }
 
@@ -63,15 +63,15 @@ export class CrmAutomationService {
   }
 
   @OnEvent('deal.stage.changed')
-  async handleDealStageChanged(payload: { 
-    deal: Deal; 
-    oldStageId: string; 
-    newStageId: string; 
+  async handleDealStageChanged(payload: {
+    deal: Deal;
+    oldStageId: string;
+    newStageId: string;
     tenantId: string;
     changedBy?: string;
   }) {
     this.logger.debug(`Tracking Stage Change for Deal: ${payload.deal.id}`);
-    
+
     // Record in history flow
     const history = this.dealHistoryRepo.create({
       dealId: payload.deal.id,
@@ -82,12 +82,12 @@ export class CrmAutomationService {
       tenantId: payload.tenantId,
       changedById: payload.changedBy,
     });
-    
+
     await this.dealHistoryRepo.save(history);
 
     // Automation: If moved to WON, send notification/create onboarding task
     if (payload.deal.status === DealStatus.WON) {
-       // Future: Trigger onboarding workflow
+      // Future: Trigger onboarding workflow
     }
   }
 }

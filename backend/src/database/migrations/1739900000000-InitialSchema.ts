@@ -105,11 +105,21 @@ export class InitialSchema1739900000000 implements MigrationInterface {
       )
     `);
 
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_api_keys_tenant ON api_keys(tenant_id)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_payment_methods_tenant ON payment_methods(tenant_id)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_voice_campaigns_tenant_status ON voice_campaigns(tenant_id, status)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_whatsapp_templates_tenant_name ON whatsapp_templates(tenant_id, name)`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS idx_ai_prompts_tenant_name ON ai_prompts(tenant_id, name)`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_api_keys_tenant ON api_keys(tenant_id)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_payment_methods_tenant ON payment_methods(tenant_id)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_voice_campaigns_tenant_status ON voice_campaigns(tenant_id, status)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_whatsapp_templates_tenant_name ON whatsapp_templates(tenant_id, name)`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS idx_ai_prompts_tenant_name ON ai_prompts(tenant_id, name)`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

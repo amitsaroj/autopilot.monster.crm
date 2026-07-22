@@ -37,10 +37,15 @@ export default function AIConversationsPage() {
     <div className="mx-auto max-w-4xl space-y-6 py-8">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/ai" className="text-sm text-muted-foreground hover:text-foreground">← AI Hub</Link>
+          <Link href="/ai" className="text-sm text-muted-foreground hover:text-foreground">
+            ← AI Hub
+          </Link>
           <h1 className="mt-2 text-2xl font-bold">Conversations</h1>
         </div>
-        <Link href="/ai/chat" className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white">
+        <Link
+          href="/ai/chat"
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"
+        >
           New chat
         </Link>
       </div>

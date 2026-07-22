@@ -10,7 +10,10 @@ import {
   CreateWhatsappBroadcastDto,
   ScheduleWhatsappBroadcastDto,
 } from './dto/whatsapp-broadcast.dto';
-import { AssignWhatsappConversationDto, SendConversationMessageDto } from './dto/whatsapp-conversation.dto';
+import {
+  AssignWhatsappConversationDto,
+  SendConversationMessageDto,
+} from './dto/whatsapp-conversation.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 

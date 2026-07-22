@@ -77,7 +77,7 @@ POST   /api/v1/whatsapp/webhook                (status updates)
 | Live Meta credentials / prod webhook handshake | High | Needs real `WHATSAPP_TOKEN`, `META_APP_SECRET`, tenant routing strategy |
 | Broadcast uses plain text not Meta template API | Medium | Processor calls `sendTextMessage`; should use `sendTemplateMessage` when template approved |
 | Dead duplicate broadcast module | Low | Remove `broadcast.controller.ts` / `broadcast.service.ts` or merge |
-| Flow execution engine | Medium | Palette + CRM `Flow` storage exist; no runtime executor on inbound keywords |
+| Flow execution engine | **Done** | Inbound → `MESSAGE_RECEIVED` → keyword match on published `type=whatsapp` flows → Bull `WorkflowProcessor` + `WorkflowActionExecutor` (SEND_MESSAGE/TEMPLATE/ASSIGN/RESOLVE) |
 | Per-tenant WABA credentials | High | Global env vars only; admin WhatsApp settings module exists but not wired to send path |
 | Omnichannel EMAIL/VOICE send | Medium | Still DB-stub for non-WA channels |
 | Admin WhatsApp nav children | Low | BL-H14 dead links under `/admin/whatsapp/*` |

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -152,9 +152,8 @@ export default function HomePageContent() {
             variants={fadeUp}
             className="text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            AutopilotMonster unifies CRM, AI Agents, Voice Calling, WhatsApp, and
-            Workflow Automation into one autonomous platform that sells, supports,
-            and scales — on autopilot.
+            AutopilotMonster unifies CRM, AI Agents, Voice Calling, WhatsApp, and Workflow
+            Automation into one autonomous platform that sells, supports, and scales — on autopilot.
           </motion.p>
 
           <motion.div
@@ -200,10 +199,12 @@ export default function HomePageContent() {
               ))}
             </div>
             <p className="text-sm text-gray-400 dark:text-gray-500">
-              Trusted by{' '}
-              <span className="text-gray-900 dark:text-white font-semibold">2,400+</span>{' '}
+              Trusted by <span className="text-gray-900 dark:text-white font-semibold">2,400+</span>{' '}
               revenue teams worldwide ·{' '}
-              <Link href="/testimonials" className="text-indigo-500 hover:text-indigo-400 underline-offset-2 hover:underline">
+              <Link
+                href="/testimonials"
+                className="text-indigo-500 hover:text-indigo-400 underline-offset-2 hover:underline"
+              >
                 Read testimonials
               </Link>
             </p>
@@ -282,7 +283,10 @@ export default function HomePageContent() {
       </section>
 
       <section aria-labelledby="cta-heading" className="relative py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-600/5 to-transparent" aria-hidden="true" />
+        <div
+          className="absolute inset-0 bg-gradient-to-b from-transparent via-indigo-600/5 to-transparent"
+          aria-hidden="true"
+        />
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}

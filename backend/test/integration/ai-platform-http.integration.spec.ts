@@ -4,7 +4,11 @@ import { INestApplication } from '@nestjs/common';
 
 import { createTestApp, isPostgresReachable } from '../e2e/helpers/app-test.helper';
 import { seedTestCredentials } from '../e2e/helpers/seed-test.helper';
-import { authRequestHeaders, extractResponseData, loginTestUser } from '../e2e/helpers/auth-test.helper';
+import {
+  authRequestHeaders,
+  extractResponseData,
+  loginTestUser,
+} from '../e2e/helpers/auth-test.helper';
 
 describe('HTTP Integration — AI Platform', () => {
   let app: INestApplication;
@@ -58,9 +62,7 @@ describe('HTTP Integration — AI Platform', () => {
     const agent = extractResponseData<{ id: string; name: string }>(agentRes.body);
     expect(agent.id).toBeDefined();
 
-    const listRes = await request(app.getHttpServer())
-      .get('/api/v1/ai/agents')
-      .set(headers);
+    const listRes = await request(app.getHttpServer()).get('/api/v1/ai/agents').set(headers);
     expect(listRes.status).toBe(200);
 
     const promptRes = await request(app.getHttpServer())
@@ -72,13 +74,9 @@ describe('HTTP Integration — AI Platform', () => {
     const prompt = extractResponseData<{ id: string }>(promptRes.body);
     expect(prompt.id).toBeDefined();
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/ai/agents/${agent.id}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/ai/agents/${agent.id}`).set(headers);
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/ai/prompts/${prompt.id}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/ai/prompts/${prompt.id}`).set(headers);
   });
 
   it('Knowledge base lifecycle', async () => {
@@ -100,9 +98,7 @@ describe('HTTP Integration — AI Platform', () => {
       .set(headers);
     expect(listRes.status).toBe(200);
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/ai/knowledge-bases/${kb.id}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/ai/knowledge-bases/${kb.id}`).set(headers);
   });
 
   it('GET /api/v1/ai/usage returns usage metrics', async () => {
@@ -143,14 +139,10 @@ describe('HTTP Integration — AI Platform', () => {
     const template = extractResponseData<{ id: string; name: string }>(createRes.body);
     expect(template.id).toBeDefined();
 
-    const listRes = await request(app.getHttpServer())
-      .get('/api/v1/ai/templates')
-      .set(headers);
+    const listRes = await request(app.getHttpServer()).get('/api/v1/ai/templates').set(headers);
     expect(listRes.status).toBe(200);
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/ai/templates/${template.id}`)
-      .set(headers);
+    await request(app.getHttpServer()).delete(`/api/v1/ai/templates/${template.id}`).set(headers);
   });
 
   it('POST /api/v1/ai/generate/async queues inference job', async () => {

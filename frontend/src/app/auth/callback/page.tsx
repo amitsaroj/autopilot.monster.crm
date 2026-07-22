@@ -12,7 +12,9 @@ function parseHashParams(): URLSearchParams {
   if (typeof window === 'undefined') {
     return new URLSearchParams();
   }
-  const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+  const hash = window.location.hash.startsWith('#')
+    ? window.location.hash.slice(1)
+    : window.location.hash;
   return new URLSearchParams(hash);
 }
 
@@ -37,22 +39,22 @@ function CallbackContent() {
         }
 
         setToken(accessToken, refreshToken, tenantId);
-        
+
         try {
           // 2. Fetch full user profile and tenant info from the newly created session
           const response = await api.get('/users/me');
           const userData = response.data.data;
-          
+
           // 3. Update global auth state
           setAuth({
             accessToken,
             refreshToken,
             user: userData,
-            tenant: { id: userData.tenantId }
+            tenant: { id: userData.tenantId },
           });
-          
+
           toast.success('Successfully logged in!');
-          
+
           const roles = userData?.roles || [];
           if (roles.includes('SUPER_ADMIN')) {
             router.push('/superadmin');
@@ -67,7 +69,7 @@ function CallbackContent() {
           router.push('/login');
         }
       };
-      
+
       handleAuth();
     } else {
       router.push('/login');
@@ -80,7 +82,9 @@ function CallbackContent() {
         <div className="w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-6">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-foreground mb-2">Finalizing Authentication</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-foreground mb-2">
+          Finalizing Authentication
+        </h2>
         <p className="text-gray-500 dark:text-muted-foreground text-sm">
           Please wait a moment while we synchronize your profile and secure your session.
         </p>
@@ -91,11 +95,13 @@ function CallbackContent() {
 
 export default function CallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        </div>
+      }
+    >
       <CallbackContent />
     </Suspense>
   );

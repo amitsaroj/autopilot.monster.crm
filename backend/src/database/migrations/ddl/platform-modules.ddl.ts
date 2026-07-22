@@ -3,7 +3,13 @@ import type { QueryRunner } from 'typeorm';
 import { createEnumType, runQueries } from './migration-utils';
 
 const MODULE_QUERIES: string[] = [
-  createEnumType('subscriptions_status_enum', ['ACTIVE', 'TRIAL', 'PAST_DUE', 'CANCELLED', 'EXPIRED']),
+  createEnumType('subscriptions_status_enum', [
+    'ACTIVE',
+    'TRIAL',
+    'PAST_DUE',
+    'CANCELLED',
+    'EXPIRED',
+  ]),
   createEnumType('invoices_status_enum', ['DRAFT', 'OPEN', 'PAID', 'UNCOLLECTIBLE', 'VOID']),
   createEnumType('conversations_status_enum', ['OPEN', 'PENDING', 'CLOSED']),
 

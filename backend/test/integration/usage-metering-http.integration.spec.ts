@@ -58,14 +58,10 @@ describe('HTTP E2E — Usage metering (secured)', () => {
   it('GET /usage and /limits reflect plan entitlements', async () => {
     if (!ctx.postgresAvailable) return;
 
-    const usageRes = await request(ctx.app.getHttpServer())
-      .get('/api/v1/usage')
-      .set(ctx.headers);
+    const usageRes = await request(ctx.app.getHttpServer()).get('/api/v1/usage').set(ctx.headers);
     expect(usageRes.status).toBe(200);
 
-    const limitsRes = await request(ctx.app.getHttpServer())
-      .get('/api/v1/limits')
-      .set(ctx.headers);
+    const limitsRes = await request(ctx.app.getHttpServer()).get('/api/v1/limits').set(ctx.headers);
     expect(limitsRes.status).toBe(200);
     expect(extractResponseData(limitsRes.body)).toBeDefined();
   });

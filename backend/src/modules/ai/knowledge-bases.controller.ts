@@ -114,16 +114,18 @@ export class KnowledgeBasesController {
       indexedAt: new Date().toISOString(),
     });
     indexMeta.documents = documents;
-    indexMeta.totalChunks = documents.reduce(
-      (sum, doc) => sum + Number(doc.chunksIndexed ?? 0),
-      0,
-    );
+    indexMeta.totalChunks = documents.reduce((sum, doc) => sum + Number(doc.chunksIndexed ?? 0), 0);
 
     const data = await this.kbService.update(tenantId, id, {
       status: indexResult.success ? 'READY' : 'FAILED',
       indexMeta,
     });
-    return { status: 201, message: 'Document indexed', error: false, data: { ...indexResult, knowledgeBase: data } };
+    return {
+      status: 201,
+      message: 'Document indexed',
+      error: false,
+      data: { ...indexResult, knowledgeBase: data },
+    };
   }
 
   @Delete(':id/documents/:docId')

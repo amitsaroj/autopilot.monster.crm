@@ -25,21 +25,48 @@ export class TwilioService {
   }
 
   private async getClient(tenantId: string): Promise<{ client: twilio.Twilio; from: string }> {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     if (this.clients.has(tenantId)) {
-      return { 
-        client: this.clients.get(tenantId)!, 
-        from: await this.configOrchestrator.get(tenantId, 'twilio_phone_number') || this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890' 
+      const fromNumber =
+        (await this.configOrchestrator.get(tenantId, 'twilio_phone_number')) ||
+        this.configService.get('TWILIO_PHONE_NUMBER') ||
+        '+1234567890';
+      if (isProduction && fromNumber === '+1234567890') {
+        throw new Error('Twilio phone number is not configured for production');
+      }
+      return {
+        client: this.clients.get(tenantId)!,
+        from: fromNumber,
       };
     }
 
-    const accountSid = await this.configOrchestrator.get(tenantId, 'twilio_account_sid') || this.configService.get('TWILIO_ACCOUNT_SID') || 'ACmock';
-    const authToken = await this.configOrchestrator.get(tenantId, 'twilio_auth_token') || this.configService.get('TWILIO_AUTH_TOKEN') || 'mocktoken';
-    const from = await this.configOrchestrator.get(tenantId, 'twilio_phone_number') || this.configService.get('TWILIO_PHONE_NUMBER') || '+1234567890';
+    const accountSid =
+      (await this.configOrchestrator.get(tenantId, 'twilio_account_sid')) ||
+      this.configService.get('TWILIO_ACCOUNT_SID') ||
+      'ACmock';
+    const authToken =
+      (await this.configOrchestrator.get(tenantId, 'twilio_auth_token')) ||
+      this.configService.get('TWILIO_AUTH_TOKEN') ||
+      'mocktoken';
+    const from =
+      (await this.configOrchestrator.get(tenantId, 'twilio_phone_number')) ||
+      this.configService.get('TWILIO_PHONE_NUMBER') ||
+      '+1234567890';
 
     let client: twilio.Twilio;
     if (accountSid.startsWith('AC') && accountSid.length === 34) {
+      if (isProduction && authToken === 'mocktoken') {
+        throw new Error(`Tenant ${tenantId} Twilio auth token is not configured for production`);
+      }
+      if (isProduction && from === '+1234567890') {
+        throw new Error(`Tenant ${tenantId} Twilio phone number is not configured for production`);
+      }
       client = twilio(accountSid, authToken);
     } else {
+      if (isProduction) {
+        throw new Error(`Tenant ${tenantId} Twilio account SID is not configured for production`);
+      }
       this.logger.warn(`Tenant ${tenantId} Twilio loaded with mock credentials.`);
       client = twilio('AC' + '0'.repeat(32), '0'.repeat(32)); // Fake but valid format for constructor
     }
@@ -187,7 +214,10 @@ export class TwilioService {
 
   generateIvrTwiml(_body: Record<string, any>): string {
     const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say({ voice: 'Polly.Amy' }, 'Welcome to our IVR system. Press 1 for sales, 2 for support.');
+    twiml.say(
+      { voice: 'Polly.Amy' },
+      'Welcome to our IVR system. Press 1 for sales, 2 for support.',
+    );
     return twiml.toString();
   }
 }

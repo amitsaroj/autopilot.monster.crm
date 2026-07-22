@@ -19,9 +19,7 @@ export function Header({ title }: { title?: string }) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        {title && (
-          <h1 className="text-sm font-semibold text-foreground">{title}</h1>
-        )}
+        {title && <h1 className="text-sm font-semibold text-foreground">{title}</h1>}
       </div>
 
       {/* Center: global search trigger */}

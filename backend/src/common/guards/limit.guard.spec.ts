@@ -62,9 +62,9 @@ describe('LimitGuard', () => {
     pricingService.getLimit.mockResolvedValue(100);
     billingService.getUsage.mockResolvedValue(100);
 
-    await expect(guard.canActivate(buildContext('contacts_limit', 'tenant-1'))).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+    await expect(
+      guard.canActivate(buildContext('contacts_limit', 'tenant-1')),
+    ).rejects.toBeInstanceOf(ForbiddenException);
     expect(pricingService.getLimit).toHaveBeenCalledWith('tenant-1', 'contacts_limit');
     expect(billingService.getUsage).toHaveBeenCalledWith('tenant-1', 'contacts_limit');
   });

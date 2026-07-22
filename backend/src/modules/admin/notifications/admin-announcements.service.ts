@@ -12,7 +12,7 @@ export class AdminAnnouncementsService {
 
   async findAll() {
     return this.announcementRepo.find({
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
   }
 

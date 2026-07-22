@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { LeadService } from './lead.service';
 import { ContactService } from './contact.service';
 import {
-  ActivityRepository, 
-  TaskCrmRepository, 
-  NoteRepository, 
-  ProductRepository, 
-  QuoteRepository, 
+  ActivityRepository,
+  TaskCrmRepository,
+  NoteRepository,
+  ProductRepository,
+  QuoteRepository,
   CampaignRepository,
   EmailRepository,
   TagRepository,
@@ -48,7 +48,10 @@ export class TaskCrmService {
   findAll(tid: string) {
     return this.repo.findAll(tid);
   }
-  async findPaginated(tid: string, query: { page?: number; limit?: number; search?: string; status?: string }) {
+  async findPaginated(
+    tid: string,
+    query: { page?: number; limit?: number; search?: string; status?: string },
+  ) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const [data, total] = await this.repo.findAndCount(tid, {
@@ -121,9 +124,7 @@ export class ProductService {
     const all = await this.repo.findAll(tid);
     const needle = query.search.toLowerCase();
     const matched = all.filter(
-      (p) =>
-        p.name?.toLowerCase().includes(needle) ||
-        p.sku?.toLowerCase().includes(needle),
+      (p) => p.name?.toLowerCase().includes(needle) || p.sku?.toLowerCase().includes(needle),
     );
     return toPaginatedResult(
       matched.slice((page - 1) * limit, page * limit),
@@ -254,39 +255,52 @@ export class AnalyticsCrmService {
   async getLeadFunnels(tid: string) {
     const leads = await this.leadService.findAll(tid);
     const statuses = ['NEW', 'CONTACTED', 'QUALIFIED', 'CONVERTED'];
-    return statuses.map(s => ({
+    return statuses.map((s) => ({
       name: s,
-      count: leads.filter(l => l.status === s).length,
+      count: leads.filter((l) => l.status === s).length,
     }));
   }
 
   async getRevenueTrend(tid: string) {
     const deals = await this.dealRepo.findAll(tid);
     const wonDeals = deals.filter((d) => d.status === DealStatus.WON);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
     return months.map((month, idx) => {
-       const monthlyDeals = wonDeals.filter(d => new Date(d.createdAt).getMonth() === idx);
-       return {
-          name: month,
-          revenue: monthlyDeals.reduce((sum, d) => sum + (Number(d.value) || 0), 0),
-       };
+      const monthlyDeals = wonDeals.filter((d) => new Date(d.createdAt).getMonth() === idx);
+      return {
+        name: month,
+        revenue: monthlyDeals.reduce((sum, d) => sum + (Number(d.value) || 0), 0),
+      };
     });
   }
 
   async getAgentPerformance(tid: string) {
     const deals = await this.dealRepo.findAll(tid);
-    const owners = Array.from(new Set(deals.map(d => d.ownerId).filter(id => !!id)));
-    
-    return owners.map(ownerId => {
-       const userDeals = deals.filter(d => d.ownerId === ownerId);
-       const won = userDeals.filter((d) => d.status === DealStatus.WON);
-       return {
-          ownerId,
-          totalDeals: userDeals.length,
-          wonValue: won.reduce((sum, d) => sum + (Number(d.value) || 0), 0),
-          winRate: userDeals.length > 0 ? (won.length / userDeals.length) * 100 : 0,
-       };
+    const owners = Array.from(new Set(deals.map((d) => d.ownerId).filter((id) => !!id)));
+
+    return owners.map((ownerId) => {
+      const userDeals = deals.filter((d) => d.ownerId === ownerId);
+      const won = userDeals.filter((d) => d.status === DealStatus.WON);
+      return {
+        ownerId,
+        totalDeals: userDeals.length,
+        wonValue: won.reduce((sum, d) => sum + (Number(d.value) || 0), 0),
+        winRate: userDeals.length > 0 ? (won.length / userDeals.length) * 100 : 0,
+      };
     });
   }
 }
@@ -326,14 +340,21 @@ export class BulkCrmService {
     private readonly contactService: ContactService,
   ) {}
 
-  async bulkUpdateStatus(tid: string, entityType: 'lead' | 'contact', ids: string[], status: string) {
-    const service = entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
-    return Promise.all(ids.map(id => service.update(tid, id, { status })));
+  async bulkUpdateStatus(
+    tid: string,
+    entityType: 'lead' | 'contact',
+    ids: string[],
+    status: string,
+  ) {
+    const service =
+      entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
+    return Promise.all(ids.map((id) => service.update(tid, id, { status })));
   }
 
   async bulkDelete(tid: string, entityType: 'lead' | 'contact', ids: string[]) {
-    const service = entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
-    return Promise.all(ids.map(id => service.remove(tid, id)));
+    const service =
+      entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
+    return Promise.all(ids.map((id) => service.remove(tid, id)));
   }
 }
 

@@ -1,18 +1,14 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { AgentService } from '../crm/agent.service';
 import { AiPromptService } from './ai-prompt.service';
-import { CreateAiAgentDto, CreateAiPromptDto, UpdateAiAgentDto, UpdateAiPromptDto } from './dto/ai-agent.dto';
+import {
+  CreateAiAgentDto,
+  CreateAiPromptDto,
+  UpdateAiAgentDto,
+  UpdateAiPromptDto,
+} from './dto/ai-agent.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { TenantId, ResourcePermissions, PlanFeature } from '../../common/decorators';
 

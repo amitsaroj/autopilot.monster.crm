@@ -26,9 +26,7 @@ export class WorkflowProcessor {
   ) {}
 
   @Process(JOB_NAMES.EXECUTE_WORKFLOW)
-  async handleExecuteWorkflow(
-    job: Job<WorkflowJobData>,
-  ): Promise<{ status: string }> {
+  async handleExecuteWorkflow(job: Job<WorkflowJobData>): Promise<{ status: string }> {
     const { workflowId, tenantId, eventName, payload, executionId, startStepIndex = 0 } = job.data;
     this.logger.log(`Executing workflow job ${job.id} (${workflowId}) for event: ${eventName}`);
 

@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import type { CrmListParams } from '../lib/api/pagination';
 
 export enum BillingType {
   ONE_TIME = 'ONE_TIME',
@@ -20,7 +21,8 @@ export interface Product {
 }
 
 export const productService = {
-  getProducts: () => api.get('/crm/products'),
+  getProducts: (params?: CrmListParams) =>
+    params ? api.get('/crm/products', { params }) : api.get('/crm/products'),
   getProduct: (id: string) => api.get(`/crm/products/${id}`),
   createProduct: (data: Partial<Product>) => api.post('/crm/products', data),
   updateProduct: (id: string, data: Partial<Product>) => api.put(`/crm/products/${id}`, data),

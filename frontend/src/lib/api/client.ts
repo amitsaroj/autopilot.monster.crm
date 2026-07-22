@@ -14,7 +14,7 @@ api.interceptors.request.use((config) => {
     const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
     return match ? match[2] : null;
   };
-  
+
   const token = extractCookie('access_token');
   const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
 
@@ -46,7 +46,7 @@ api.interceptors.response.use(
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? match[2] : null;
       };
-      
+
       const refreshToken = extractCookie('refresh_token');
 
       if (refreshToken) {
@@ -70,8 +70,10 @@ api.interceptors.response.use(
         } catch (refreshError) {
           // Refresh failed, logout user
           if (typeof window !== 'undefined') {
-            document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
-            document.cookie = 'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
+            document.cookie =
+              'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
+            document.cookie =
+              'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
             localStorage.removeItem('user');
             window.location.href = '/login';
           }
@@ -87,7 +89,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

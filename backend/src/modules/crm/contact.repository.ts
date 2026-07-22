@@ -14,10 +14,7 @@ export class ContactRepository extends BaseRepository<Contact> {
     super(contactRepository);
   }
 
-  async findFiltered(
-    tenantId: string,
-    query: CrmListQueryDto,
-  ): Promise<[Contact[], number]> {
+  async findFiltered(tenantId: string, query: CrmListQueryDto): Promise<[Contact[], number]> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const qb = this.contactRepository

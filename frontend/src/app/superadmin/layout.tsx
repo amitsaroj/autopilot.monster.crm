@@ -16,7 +16,7 @@ export default async function SuperAdminLayout({ children }: { children: React.R
     const payloadBase64 = token.split('.')[1];
     const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
     const payload = JSON.parse(decodedJson);
-    
+
     const roles: string[] = payload.roles || [];
     if (!roles.includes('SUPER_ADMIN')) {
       redirect('/403');

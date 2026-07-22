@@ -24,7 +24,9 @@ export interface OmnichannelMessage {
 export const omnichannelService = {
   getConversations: async () => {
     const res = await api.get('/omnichannel/conversations');
-    return parseApiData<OmnichannelConversation[]>(res) ?? (Array.isArray(res.data) ? res.data : []);
+    return (
+      parseApiData<OmnichannelConversation[]>(res) ?? (Array.isArray(res.data) ? res.data : [])
+    );
   },
   getMessages: async (id: string) => {
     const res = await api.get(`/omnichannel/conversations/${id}/messages`);

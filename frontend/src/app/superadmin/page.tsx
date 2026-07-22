@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   Building2,
   Users,
@@ -13,7 +13,7 @@ import {
   Cpu,
   Loader2,
   Zap,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -22,9 +22,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { adminMetricsService, type GlobalPlatformStats } from "@/services/admin-metrics.service";
-import { adminHealthService } from "@/services/admin-health.service";
+} from 'recharts';
+import { adminMetricsService, type GlobalPlatformStats } from '@/services/admin-metrics.service';
+import { adminHealthService } from '@/services/admin-health.service';
 
 export default function SuperAdminDashboard() {
   const [stats, setStats] = useState<GlobalPlatformStats | null>(null);
@@ -65,19 +65,19 @@ export default function SuperAdminDashboard() {
 
   const chartData = [
     {
-      name: "Tenants",
+      name: 'Tenants',
       value: stats?.tenants ?? 0,
     },
     {
-      name: "Users",
+      name: 'Users',
       value: stats?.users ?? 0,
     },
     {
-      name: "Subscriptions",
+      name: 'Subscriptions',
       value: stats?.activeSubscriptions ?? 0,
     },
     {
-      name: "Revenue",
+      name: 'Revenue',
       value: Math.round((stats?.totalRevenue ?? 0) / 1000),
     },
   ];
@@ -102,32 +102,32 @@ export default function SuperAdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
-            label: "Platform Revenue",
+            label: 'Platform Revenue',
             value: `$${(stats?.totalRevenue ?? 0).toLocaleString()}`,
             icon: CreditCard,
-            color: "text-emerald-400",
-            bg: "bg-emerald-400/10",
+            color: 'text-emerald-400',
+            bg: 'bg-emerald-400/10',
           },
           {
-            label: "Active Tenants",
+            label: 'Active Tenants',
             value: stats?.tenants ?? 0,
             icon: Building2,
-            color: "text-indigo-400",
-            bg: "bg-indigo-400/10",
+            color: 'text-indigo-400',
+            bg: 'bg-indigo-400/10',
           },
           {
-            label: "Total User Profiles",
+            label: 'Total User Profiles',
             value: stats?.users ?? 0,
             icon: Users,
-            color: "text-blue-400",
-            bg: "bg-blue-400/10",
+            color: 'text-blue-400',
+            bg: 'bg-blue-400/10',
           },
           {
-            label: "Active Subscriptions",
+            label: 'Active Subscriptions',
             value: stats?.activeSubscriptions ?? 0,
             icon: Zap,
-            color: "text-amber-400",
-            bg: "bg-amber-400/10",
+            color: 'text-amber-400',
+            bg: 'bg-amber-400/10',
           },
         ].map((kpi) => (
           <div
@@ -173,9 +173,9 @@ export default function SuperAdminDashboard() {
                 <YAxis stroke="#ffffff20" fontSize={10} tickLine={false} axisLine={false} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#0b0f19",
-                    border: "1px solid #ffffff10",
-                    borderRadius: "12px",
+                    backgroundColor: '#0b0f19',
+                    border: '1px solid #ffffff10',
+                    borderRadius: '12px',
                   }}
                 />
                 <Area
@@ -197,18 +197,18 @@ export default function SuperAdminDashboard() {
           </h3>
           <div className="space-y-6">
             {[
-              { label: "Heap Usage", value: healthLoad, icon: Cpu, color: "bg-blue-500" },
+              { label: 'Heap Usage', value: healthLoad, icon: Cpu, color: 'bg-blue-500' },
               {
-                label: "Active Tenants",
+                label: 'Active Tenants',
                 value: Math.min(100, (stats?.tenants ?? 0) * 5),
                 icon: Building2,
-                color: "bg-purple-500",
+                color: 'bg-purple-500',
               },
               {
-                label: "Subscriptions",
+                label: 'Subscriptions',
                 value: Math.min(100, (stats?.activeSubscriptions ?? 0) * 10),
                 icon: HardDrive,
-                color: "bg-indigo-500",
+                color: 'bg-indigo-500',
               },
             ].map((resource) => (
               <div key={resource.label} className="space-y-2">

@@ -1,5 +1,6 @@
 import type { JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import jwt, { type Algorithm, type SignOptions } from 'jsonwebtoken';
+import { createPrivateKey, createPublicKey } from 'node:crypto';
 
 import type { JwtConfig } from '../../config/jwt.config';
 
@@ -35,11 +36,7 @@ export function buildJwtSignOptions(config: JwtConfig, kind: JwtTokenKind): JwtS
   };
 }
 
-export function signJwtToken(
-  config: JwtConfig,
-  kind: JwtTokenKind,
-  payload: object,
-): string {
+export function signJwtToken(config: JwtConfig, kind: JwtTokenKind, payload: object): string {
   const expiresIn = kind === 'access' ? config.expiresIn : config.refreshExpiresIn;
   const signOptions: SignOptions = {
     expiresIn: expiresIn as SignOptions['expiresIn'],
@@ -51,9 +48,11 @@ export function signJwtToken(
     if (!config.privateKey) {
       throw new Error('JWT_PRIVATE_KEY is required when JWT_ALGORITHM=RS256');
     }
+    const keyid = config.keyId || undefined;
     return jwt.sign(payload, config.privateKey, {
       ...signOptions,
       algorithm: 'RS256',
+      keyid,
     });
   }
 
@@ -68,7 +67,10 @@ export function signJwtToken(
   });
 }
 
-export function buildJwtVerifyOptions(config: JwtConfig, kind: JwtTokenKind): Pick<JwtVerifyOptions, 'algorithms' | 'issuer' | 'audience'> {
+export function buildJwtVerifyOptions(
+  config: JwtConfig,
+  kind: JwtTokenKind,
+): Pick<JwtVerifyOptions, 'algorithms' | 'issuer' | 'audience'> {
   const algorithm = kind === 'access' ? config.algorithm : 'HS256';
   return {
     algorithms: [algorithm],
@@ -102,6 +104,16 @@ export function assertAccessJwtConfigured(config: JwtConfig): void {
     if (!config.privateKey) {
       throw new Error('JWT_PRIVATE_KEY is not configured');
     }
+    if (process.env['NODE_ENV'] === 'production' && !config.keyId) {
+      throw new Error('JWT_KEY_ID is required in production when JWT_ALGORITHM=RS256');
+    }
+    if (config.previousPublicKey && !config.previousKeyId) {
+      throw new Error('JWT_PREVIOUS_KEY_ID is required when JWT_PUBLIC_KEY_PREVIOUS is set');
+    }
+    if (config.previousPublicKey && config.previousPublicKey === config.publicKey) {
+      throw new Error('JWT_PUBLIC_KEY_PREVIOUS must differ from JWT_PUBLIC_KEY');
+    }
+    validateRs256KeyMaterial(config);
     return;
   }
 
@@ -132,4 +144,26 @@ export function buildJwtModuleOptions(config: JwtConfig): {
 
 export function normalizePemKey(raw: string): string {
   return raw.replace(/\\n/g, '\n').trim();
+}
+
+function validateRs256KeyMaterial(config: JwtConfig): void {
+  try {
+    createPrivateKey(config.privateKey);
+  } catch {
+    throw new Error('JWT_PRIVATE_KEY is not valid PEM key material');
+  }
+
+  try {
+    createPublicKey(config.publicKey);
+  } catch {
+    throw new Error('JWT_PUBLIC_KEY is not valid PEM key material');
+  }
+
+  if (config.previousPublicKey) {
+    try {
+      createPublicKey(config.previousPublicKey);
+    } catch {
+      throw new Error('JWT_PUBLIC_KEY_PREVIOUS is not valid PEM key material');
+    }
+  }
 }

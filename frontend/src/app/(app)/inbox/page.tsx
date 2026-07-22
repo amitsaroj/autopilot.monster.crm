@@ -2,19 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  MessageSquare,
-  Mail,
-  Phone,
-  Twitter,
-  Loader2,
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react';
-import {
-  omnichannelService,
-  type OmnichannelConversation,
-} from '@/services/omnichannel.service';
+import { MessageSquare, Mail, Phone, Twitter, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { omnichannelService, type OmnichannelConversation } from '@/services/omnichannel.service';
 import {
   whatsappConversationService,
   type WhatsAppConversationSummary,
@@ -35,7 +24,8 @@ type InboxItem = {
 
 function channelIcon(ch: string) {
   const normalized = ch.toLowerCase();
-  if (normalized.includes('whatsapp')) return <MessageSquare className="h-3.5 w-3.5 text-green-500" />;
+  if (normalized.includes('whatsapp'))
+    return <MessageSquare className="h-3.5 w-3.5 text-green-500" />;
   if (normalized.includes('email')) return <Mail className="h-3.5 w-3.5 text-blue-400" />;
   if (normalized.includes('phone') || normalized.includes('voice')) {
     return <Phone className="h-3.5 w-3.5 text-purple-400" />;
@@ -231,7 +221,9 @@ export default function InboxPage() {
                   <div className="flex items-center justify-between mb-0.5">
                     <div className="flex items-center gap-1.5">
                       {channelIcon(c.channel)}
-                      <span className="text-sm font-medium text-foreground truncate">{c.contact}</span>
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {c.contact}
+                      </span>
                     </div>
                     <span className="text-xs text-muted-foreground">{c.time}</span>
                   </div>

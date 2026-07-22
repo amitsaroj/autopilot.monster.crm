@@ -174,18 +174,14 @@ export class WhatsappBroadcastService {
 
     if (filter.customField) {
       contacts = contacts.filter(
-        (contact) =>
-          contact.customFields?.[filter.customField!.key] === filter.customField!.value,
+        (contact) => contact.customFields?.[filter.customField!.key] === filter.customField!.value,
       );
     }
 
     return contacts.filter((contact) => contact.mobile || contact.phone);
   }
 
-  private buildTemplateMessage(
-    variables: Record<string, string>,
-    contact: Contact,
-  ): string {
+  private buildTemplateMessage(variables: Record<string, string>, contact: Contact): string {
     let message = variables.body ?? 'Hello {{firstName}}';
     message = message.replace(/\{\{firstName\}\}/g, contact.firstName);
     message = message.replace(/\{\{lastName\}\}/g, contact.lastName);

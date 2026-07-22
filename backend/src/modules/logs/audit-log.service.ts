@@ -24,7 +24,10 @@ export class AuditLogService {
     try {
       await this.log(payload);
     } catch (error) {
-      this.logger.error('Failed to write audit log event', error instanceof Error ? error.stack : undefined);
+      this.logger.error(
+        'Failed to write audit log event',
+        error instanceof Error ? error.stack : undefined,
+      );
     }
   }
 

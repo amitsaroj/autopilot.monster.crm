@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://autopilotmonster.com';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://autopilotmonster.com';
 
 export const SITE_NAME = 'AutopilotMonster CRM';
 
@@ -29,9 +28,7 @@ export function buildPageMetadata({
     description,
     keywords,
     alternates: { canonical: url },
-    robots: noIndex
-      ? { index: false, follow: false }
-      : { index: true, follow: true },
+    robots: noIndex ? { index: false, follow: false } : { index: true, follow: true },
     openGraph: {
       type: 'website',
       locale: 'en_US',
@@ -56,13 +53,7 @@ export const marketingPages = {
     description:
       'AutopilotMonster unifies CRM, AI Agents, Voice Calling, WhatsApp, and Workflow Automation into one autonomous platform for modern revenue teams.',
     path: '/',
-    keywords: [
-      'AI CRM',
-      'revenue automation',
-      'voice AI',
-      'WhatsApp CRM',
-      'sales automation',
-    ],
+    keywords: ['AI CRM', 'revenue automation', 'voice AI', 'WhatsApp CRM', 'sales automation'],
   },
   features: {
     title: 'Platform Features',
@@ -363,6 +354,4 @@ export function testimonialsJsonLd(
   };
 }
 
-export const marketingSitemapPaths = Object.values(marketingPages).map(
-  (page) => page.path,
-);
+export const marketingSitemapPaths = Object.values(marketingPages).map((page) => page.path);

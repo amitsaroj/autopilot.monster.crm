@@ -13,7 +13,7 @@ export interface Note {
 }
 
 export const noteService = {
-  getNotes: (params?: { contactId?: string; dealId?: string; companyId?: string }) => 
+  getNotes: (params?: { contactId?: string; dealId?: string; companyId?: string }) =>
     api.get('/crm/notes', { params }),
   createNote: (data: Partial<Note>) => api.post('/crm/notes', data),
   deleteNote: (id: string) => api.delete(`/crm/notes/${id}`),

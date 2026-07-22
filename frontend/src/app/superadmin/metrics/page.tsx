@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   Cpu,
@@ -12,7 +12,7 @@ import {
   Loader2,
   CheckCircle2,
   Gauge,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -21,9 +21,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { toast } from "sonner";
-import { adminHealthService, type SystemHealth } from "@/services/admin-health.service";
+} from 'recharts';
+import { toast } from 'sonner';
+import { adminHealthService, type SystemHealth } from '@/services/admin-health.service';
 
 interface TelemetryPoint {
   time: string;
@@ -55,13 +55,16 @@ export default function SystemMetricsPage() {
           ? Math.round(((data.memory.total - data.memory.free) / data.memory.total) * 100)
           : 0;
       const label = new Date(data.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
       });
-      setSeries((prev) => [...prev.slice(-19), { time: label, cpu: Math.round(cpuLoad * 100), memory: memPct }]);
+      setSeries((prev) => [
+        ...prev.slice(-19),
+        { time: label, cpu: Math.round(cpuLoad * 100), memory: memPct },
+      ]);
     } catch {
-      toast.error("Failed to sync infrastructure telemetry");
+      toast.error('Failed to sync infrastructure telemetry');
     } finally {
       setLoading(false);
     }
@@ -103,39 +106,39 @@ export default function SystemMetricsPage() {
           onClick={() => void fetchHealth()}
           className="px-6 py-3 bg-white/[0.05] border border-white/10 hover:bg-white/[0.1] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Force Polling
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Force Polling
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           {
-            label: "System Uptime",
+            label: 'System Uptime',
             value: `${((health?.uptime ?? 0) / 3600).toFixed(1)} Hours`,
             icon: Clock,
-            color: "text-indigo-400",
-            sub: "Process Persistence",
+            color: 'text-indigo-400',
+            sub: 'Process Persistence',
           },
           {
-            label: "Available RAM",
+            label: 'Available RAM',
             value: formatBytes(health?.memory?.free ?? 0),
             icon: Database,
-            color: "text-blue-400",
+            color: 'text-blue-400',
             sub: `${health?.memory?.total ? Math.round((health.memory.free / health.memory.total) * 100) : 0}% Free`,
           },
           {
-            label: "CPU Load (1m)",
+            label: 'CPU Load (1m)',
             value: (health?.cpu?.load[0] ?? 0).toFixed(2),
             icon: Cpu,
-            color: "text-amber-400",
+            color: 'text-amber-400',
             sub: `${health?.cpu?.count ?? 0} Physical Cores`,
           },
           {
-            label: "Heap Usage",
+            label: 'Heap Usage',
             value: formatBytes(health?.memory?.usage?.heapUsed ?? 0),
             icon: Gauge,
-            color: "text-emerald-400",
-            sub: "Managed GC Heap",
+            color: 'text-emerald-400',
+            sub: 'Managed GC Heap',
           },
         ].map((tile) => (
           <div
@@ -165,9 +168,7 @@ export default function SystemMetricsPage() {
             <Gauge className="w-5 h-5 text-indigo-500" /> Live Workload Analysis
           </h3>
           {series.length === 0 ? (
-            <p className="text-sm text-gray-500 py-24 text-center">
-              Collecting telemetry samples…
-            </p>
+            <p className="text-sm text-gray-500 py-24 text-center">Collecting telemetry samples…</p>
           ) : (
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -193,11 +194,11 @@ export default function SystemMetricsPage() {
                   <YAxis stroke="#ffffff10" fontSize={10} tickLine={false} axisLine={false} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: "#060a14",
-                      border: "1px solid #ffffff10",
-                      borderRadius: "16px",
+                      backgroundColor: '#060a14',
+                      border: '1px solid #ffffff10',
+                      borderRadius: '16px',
                     }}
-                    itemStyle={{ fontSize: "12px" }}
+                    itemStyle={{ fontSize: '12px' }}
                   />
                   <Area
                     type="monotone"
@@ -229,10 +230,14 @@ export default function SystemMetricsPage() {
           </h3>
           <div className="space-y-4">
             {[
-              { label: "OS Kernel", value: health?.platform ?? "—", icon: Server },
-              { label: "Engine", value: health?.nodeVersion ?? "—", icon: Activity },
-              { label: "Status", value: health?.status ?? "—", icon: CheckCircle2 },
-              { label: "Last Check", value: health?.timestamp ? new Date(health.timestamp).toLocaleString() : "—", icon: Clock },
+              { label: 'OS Kernel', value: health?.platform ?? '—', icon: Server },
+              { label: 'Engine', value: health?.nodeVersion ?? '—', icon: Activity },
+              { label: 'Status', value: health?.status ?? '—', icon: CheckCircle2 },
+              {
+                label: 'Last Check',
+                value: health?.timestamp ? new Date(health.timestamp).toLocaleString() : '—',
+                icon: Clock,
+              },
             ].map((row) => (
               <div
                 key={row.label}

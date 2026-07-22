@@ -1,5 +1,15 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WebhookService } from './webhook.service';
@@ -59,7 +69,11 @@ export class WebhookController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a webhook' })
-  async update(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: UpdateWebhookDto) {
+  async update(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateWebhookDto,
+  ) {
     return this.webhookService.update(tenantId, id, dto);
   }
 

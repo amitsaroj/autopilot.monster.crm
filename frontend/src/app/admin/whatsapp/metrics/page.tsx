@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { BarChart3, TrendingUp, MessageSquare, RefreshCw, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { analyticsService } from "@/services/analytics.service";
+import { useEffect, useState } from 'react';
+import { BarChart3, TrendingUp, MessageSquare, RefreshCw, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { analyticsService } from '@/services/analytics.service';
 
 export default function WhatsAppMetricsPage() {
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ export default function WhatsAppMetricsPage() {
         setMetrics(data);
       }
     } catch {
-      toast.error("Failed to load WhatsApp metrics");
+      toast.error('Failed to load WhatsApp metrics');
     } finally {
       setLoading(false);
     }
@@ -28,39 +28,38 @@ export default function WhatsAppMetricsPage() {
     void load();
   }, []);
 
-  const deliveryRate =
-    metrics.total > 0 ? Math.round((metrics.outbound / metrics.total) * 100) : 0;
+  const deliveryRate = metrics.total > 0 ? Math.round((metrics.outbound / metrics.total) * 100) : 0;
   const responseRate =
     metrics.outbound > 0 ? Math.round((metrics.inbound / metrics.outbound) * 100) : 0;
 
   const stats = [
     {
-      label: "Total Messages",
+      label: 'Total Messages',
       value: metrics.total.toLocaleString(),
-      change: "",
-      trending: "up" as const,
-      color: "text-emerald-400",
+      change: '',
+      trending: 'up' as const,
+      color: 'text-emerald-400',
     },
     {
-      label: "Outbound",
+      label: 'Outbound',
       value: metrics.outbound.toLocaleString(),
       change: `${deliveryRate}% of total`,
-      trending: "up" as const,
-      color: "text-blue-400",
+      trending: 'up' as const,
+      color: 'text-blue-400',
     },
     {
-      label: "Inbound",
+      label: 'Inbound',
       value: metrics.inbound.toLocaleString(),
       change: `${responseRate}% response`,
-      trending: metrics.inbound >= metrics.outbound ? ("up" as const) : ("down" as const),
-      color: "text-amber-400",
+      trending: metrics.inbound >= metrics.outbound ? ('up' as const) : ('down' as const),
+      color: 'text-amber-400',
     },
     {
-      label: "Active Threads",
+      label: 'Active Threads',
       value: metrics.inbound.toLocaleString(),
-      change: "inbound conversations",
-      trending: "up" as const,
-      color: "text-violet-400",
+      change: 'inbound conversations',
+      trending: 'up' as const,
+      color: 'text-violet-400',
     },
   ];
 
@@ -106,17 +105,15 @@ export default function WhatsAppMetricsPage() {
               {s.label}
             </p>
             <div className="flex items-baseline gap-3">
-              <h2 className={cn("text-4xl font-black tracking-tighter", s.color)}>{s.value}</h2>
+              <h2 className={cn('text-4xl font-black tracking-tighter', s.color)}>{s.value}</h2>
               {s.change && (
                 <span
                   className={cn(
-                    "text-[10px] font-black uppercase flex items-center gap-1",
-                    s.trending === "up" ? "text-emerald-500" : "text-red-500",
+                    'text-[10px] font-black uppercase flex items-center gap-1',
+                    s.trending === 'up' ? 'text-emerald-500' : 'text-red-500',
                   )}
                 >
-                  <TrendingUp
-                    className={cn("w-3 h-3", s.trending === "down" && "rotate-180")}
-                  />
+                  <TrendingUp className={cn('w-3 h-3', s.trending === 'down' && 'rotate-180')} />
                   {s.change}
                 </span>
               )}
@@ -141,7 +138,7 @@ export default function WhatsAppMetricsPage() {
             <>
               <BarChart3 className="w-20 h-20 text-emerald-500/30 mb-6" />
               <h3 className="text-sm font-black text-white uppercase tracking-widest">
-                {metrics.outbound.toLocaleString()} outbound · {metrics.inbound.toLocaleString()}{" "}
+                {metrics.outbound.toLocaleString()} outbound · {metrics.inbound.toLocaleString()}{' '}
                 inbound
               </h3>
               <p className="text-[10px] text-gray-500 font-bold uppercase mt-2 tracking-tighter">

@@ -23,19 +23,14 @@ export async function loginTestUser(
   return response.body.data.accessToken as string;
 }
 
-export function authRequestHeaders(
-  tenantId: string,
-  accessToken: string,
-): Record<string, string> {
+export function authRequestHeaders(tenantId: string, accessToken: string): Record<string, string> {
   return {
     'x-tenant-id': tenantId,
     Authorization: `Bearer ${accessToken}`,
   };
 }
 
-export function extractResponseData<T = Record<string, unknown>>(
-  body: Record<string, unknown>,
-): T {
+export function extractResponseData<T = Record<string, unknown>>(body: Record<string, unknown>): T {
   const outer = body.data;
   if (outer && typeof outer === 'object' && outer !== null && 'data' in outer) {
     return (outer as { data: T }).data;

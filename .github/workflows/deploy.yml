@@ -4,6 +4,10 @@ on:
   push:
     branches: [ prod ]
 
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,6 +17,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate deploy contract files
+        run: |
+          test -f backend/.env.production
+          test -f docker-compose.prod.yml
+          test -f nginx/nginx.conf
+          required_keys=(
+            APP_PORT APP_HOST APP_URL NODE_ENV FRONTEND_URL
+            JWT_ALGORITHM JWT_PRIVATE_KEY JWT_PUBLIC_KEY JWT_KEY_ID
+            STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET
+          )
+          for key in "${required_keys[@]}"; do
+            if ! grep -q "^${key}=" backend/.env.production; then
+              echo "Missing required key in backend/.env.production: ${key}"
+              exit 1
+            fi
+          done
 
       - name: AWS Login
         uses: aws-actions/configure-aws-credentials@v4
@@ -51,30 +72,26 @@ jobs:
 
       - name: Terraform Init & Apply
         run: |
-          terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
-
-          # Step 1: Remove old orphan state entries (different resource names pointing to same AWS resources)
-          # These were left from a previous broken main.tf and cause race conditions on apply
-          terraform state rm aws_iam_role.autopilot_ssm_role 2>/dev/null || true
-          terraform state rm aws_iam_role_policy_attachment.autopilot_ssm_attach 2>/dev/null || true
-          terraform state rm aws_security_group.autopilot_sg 2>/dev/null || true
-
-          # Step 2: Remove current broken state for ssm_role since it was partially destroyed
-          terraform state rm aws_iam_role.ssm_role 2>/dev/null || true
-          terraform state rm aws_iam_role_policy_attachment.ssm_attach 2>/dev/null || true
-          terraform state rm aws_iam_role_policy_attachment.s3_read 2>/dev/null || true
-          terraform state rm aws_iam_instance_profile.ssm_profile 2>/dev/null || true
-
-          # Step 3: Re-import existing AWS resources into clean state
-          terraform import aws_iam_role.ssm_role autopilot-ssm-role 2>/dev/null || true
-          terraform import aws_iam_instance_profile.ssm_profile autopilot-ssm-profile 2>/dev/null || true
-          SG_ID=$(aws ec2 describe-security-groups --filters "Name=group-name,Values=autopilot-sg" --query "SecurityGroups[0].GroupId" --output text --region ap-south-1 2>/dev/null)
-          if [ -n "$SG_ID" ] && [ "$SG_ID" != "None" ]; then
-            terraform import aws_security_group.sg "$SG_ID" 2>/dev/null || true
+          export TF_IN_AUTOMATION=true
+          terraform init \
+            -backend-config="bucket=${{ env.BUCKET_NAME }}" \
+            -backend-config="key=terraform.tfstate" \
+            -backend-config="region=ap-south-1"
+          terraform fmt -check -recursive
+          terraform validate
+          set +e
+          terraform plan -out=tfplan -detailed-exitcode
+          TF_PLAN_EXIT=$?
+          set -e
+          if [ "$TF_PLAN_EXIT" -eq 1 ]; then
+            echo "Terraform plan failed"
+            exit 1
           fi
-
-          # Step 4: Apply with full refresh
-          terraform apply -auto-approve -refresh=true
+          if [ "$TF_PLAN_EXIT" -eq 2 ]; then
+            terraform apply -auto-approve tfplan
+          else
+            echo "No Terraform changes detected; skipping apply"
+          fi
           echo "INSTANCE_ID=$(terraform output -raw instance_id)" >> $GITHUB_ENV
           echo "ELASTIC_IP=$(terraform output -raw elastic_ip)" >> $GITHUB_ENV
 
@@ -110,7 +127,7 @@ jobs:
       - name: Deploy via SSM
         run: |
           REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          aws ssm send-command \
+          COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ env.INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters "commands=[
@@ -129,4 +146,41 @@ jobs:
               \"sudo docker compose -f docker-compose.prod.yml ps\"
             ]" \
             --region ap-south-1 \
-            --output text
+            --query 'Command.CommandId' \
+            --output text)
+          echo "SSM_COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV
+
+      - name: Wait for SSM completion
+        run: |
+          aws ssm wait command-executed \
+            --command-id "${{ env.SSM_COMMAND_ID }}" \
+            --instance-id "${{ env.INSTANCE_ID }}" \
+            --region ap-south-1
+          STATUS=$(aws ssm get-command-invocation \
+            --command-id "${{ env.SSM_COMMAND_ID }}" \
+            --instance-id "${{ env.INSTANCE_ID }}" \
+            --region ap-south-1 \
+            --query 'Status' \
+            --output text)
+          echo "SSM status: ${STATUS}"
+          if [ "${STATUS}" != "Success" ]; then
+            aws ssm get-command-invocation \
+              --command-id "${{ env.SSM_COMMAND_ID }}" \
+              --instance-id "${{ env.INSTANCE_ID }}" \
+              --region ap-south-1 \
+              --query 'StandardErrorContent' \
+              --output text
+            exit 1
+          fi
+
+      - name: Wait for API readiness
+        run: |
+          for i in $(seq 1 40); do
+            if curl -fsS --max-time 5 "https://api.autopilot.monster/api/v1/health/ready" >/dev/null; then
+              echo "API readiness check passed"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "API readiness did not pass in time"
+          exit 1

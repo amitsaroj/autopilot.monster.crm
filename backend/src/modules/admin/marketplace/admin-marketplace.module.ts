@@ -7,9 +7,7 @@ import { TenantPlugin } from '../../../database/entities/tenant-plugin.entity';
 import { Tenant } from '../../../database/entities/tenant.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Plugin, TenantPlugin, Tenant]),
-  ],
+  imports: [TypeOrmModule.forFeature([Plugin, TenantPlugin, Tenant])],
   controllers: [AdminMarketplaceController],
   providers: [AdminMarketplaceService],
   exports: [AdminMarketplaceService],

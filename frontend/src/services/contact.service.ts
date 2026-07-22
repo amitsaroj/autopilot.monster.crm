@@ -35,4 +35,5 @@ export const contactService = {
   exportContacts: () => api.get('/crm/export/contact'),
   mergeContacts: (primaryId: string, secondaryId: string) =>
     api.post('/crm/contacts/merge', { primaryId, secondaryId }),
+  findDuplicates: () => api.get('/crm/duplicates'),
 };

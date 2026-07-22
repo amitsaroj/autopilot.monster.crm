@@ -1,7 +1,16 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from 'react';
-import { Download, Receipt, ExternalLink, Filter, Search, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  Download,
+  Receipt,
+  ExternalLink,
+  Filter,
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
@@ -40,25 +49,31 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl">
-      
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Link href="/billing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Billing</Link>
+            <Link
+              href="/billing"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Billing
+            </Link>
             <span className="text-muted-foreground text-sm">/</span>
             <span className="text-sm font-medium text-foreground">Invoices</span>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Invoice History</h1>
-          <p className="text-sm text-muted-foreground mt-1">View, download, and manage your past billing statements.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            View, download, and manage your past billing statements.
+          </p>
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-4">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input 
-            type="text" 
-            placeholder="Search by Invoice ID..." 
+          <input
+            type="text"
+            placeholder="Search by Invoice ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none transition-shadow"
@@ -92,7 +107,10 @@ export default function InvoicesPage() {
                 filtered.map((inv) => (
                   <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-6 py-4">
-                      <Link href={`/billing/invoices/${inv.id}`} className="flex items-center gap-2 font-medium text-foreground hover:text-primary">
+                      <Link
+                        href={`/billing/invoices/${inv.id}`}
+                        className="flex items-center gap-2 font-medium text-foreground hover:text-primary"
+                      >
                         <Receipt className="w-4 h-4 text-muted-foreground" />
                         {inv.number}
                       </Link>
@@ -101,7 +119,8 @@ export default function InvoicesPage() {
                       {new Date(inv.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 font-bold text-foreground">
-                      {inv.currency} {Number(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {inv.currency}{' '}
+                      {Number(inv.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4">
                       {inv.status === 'PAID' ? (
@@ -116,11 +135,19 @@ export default function InvoicesPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        <Link href={`/billing/invoices/${inv.id}`} className="text-muted-foreground hover:text-foreground font-medium transition-colors flex items-center gap-1">
+                        <Link
+                          href={`/billing/invoices/${inv.id}`}
+                          className="text-muted-foreground hover:text-foreground font-medium transition-colors flex items-center gap-1"
+                        >
                           View <ExternalLink className="w-3.5 h-3.5" />
                         </Link>
                         {inv.pdfUrl && (
-                          <a href={inv.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 font-medium transition-colors flex items-center gap-1">
+                          <a
+                            href={inv.pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:text-primary/80 font-medium transition-colors flex items-center gap-1"
+                          >
                             PDF <Download className="w-3.5 h-3.5" />
                           </a>
                         )}

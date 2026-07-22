@@ -34,7 +34,10 @@ export default function NewDashboardPage() {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-xl">
-      <Link href="/analytics/dashboards" className="inline-flex items-center gap-2 text-sm text-[hsl(246,80%,60%)]">
+      <Link
+        href="/analytics/dashboards"
+        className="inline-flex items-center gap-2 text-sm text-[hsl(246,80%,60%)]"
+      >
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>
       <h1 className="page-title">New Dashboard</h1>

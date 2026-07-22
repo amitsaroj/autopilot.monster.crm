@@ -29,11 +29,17 @@ export default function NewVoiceCallPage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-6 py-8">
-      <Link href="/voice/calls" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600">
+      <Link
+        href="/voice/calls"
+        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to Calls
       </Link>
       <h1 className="text-2xl font-bold">New Outbound Call</h1>
-      <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4 rounded-xl border border-gray-200 bg-white p-6">
+      <form
+        onSubmit={(e) => void handleSubmit(e)}
+        className="space-y-4 rounded-xl border border-gray-200 bg-white p-6"
+      >
         <div>
           <label className="text-sm font-medium">Phone number (E.164)</label>
           <input
@@ -44,7 +50,11 @@ export default function NewVoiceCallPage() {
             required
           />
         </div>
-        <button type="submit" disabled={loading} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+        <button
+          type="submit"
+          disabled={loading}
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
           Start Call
         </button>

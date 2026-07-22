@@ -2,7 +2,10 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { VoicePhoneNumber, VoicePhoneNumberStatus } from '../../database/entities/voice-phone-number.entity';
+import {
+  VoicePhoneNumber,
+  VoicePhoneNumberStatus,
+} from '../../database/entities/voice-phone-number.entity';
 import { TwilioService } from './twilio.service';
 import { ProvisionPhoneNumberDto } from './dto/voice-phone-number.dto';
 

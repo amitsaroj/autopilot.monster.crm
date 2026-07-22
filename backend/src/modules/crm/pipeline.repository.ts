@@ -8,7 +8,7 @@ import { Pipeline } from '../../database/entities/pipeline.entity';
 export class PipelineRepository extends BaseRepository<Pipeline> {
   constructor(
     @InjectRepository(Pipeline)
-    pipelineRepo: Repository<Pipeline>
+    pipelineRepo: Repository<Pipeline>,
   ) {
     super(pipelineRepo);
   }

@@ -51,7 +51,9 @@ export class NotificationService {
     let count = 0;
     for (const notification of notifications) {
       if (notification.status !== 'READ') {
-        await this.repo.updateWithTenant(tid, notification.id, { status: 'READ' } as Partial<Notification>);
+        await this.repo.updateWithTenant(tid, notification.id, {
+          status: 'READ',
+        } as Partial<Notification>);
         count += 1;
       }
     }

@@ -55,7 +55,9 @@ export default function VoiceSettingsPage() {
           <label className="text-sm font-medium">Twilio Account SID</label>
           <input
             value={settings.twilio_account_sid ?? ''}
-            onChange={(e) => setSettings((prev) => ({ ...prev, twilio_account_sid: e.target.value }))}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, twilio_account_sid: e.target.value }))
+            }
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
@@ -64,7 +66,9 @@ export default function VoiceSettingsPage() {
           <input
             type="password"
             value={settings.twilio_auth_token ?? ''}
-            onChange={(e) => setSettings((prev) => ({ ...prev, twilio_auth_token: e.target.value }))}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, twilio_auth_token: e.target.value }))
+            }
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
@@ -72,7 +76,9 @@ export default function VoiceSettingsPage() {
           <label className="text-sm font-medium">From Number</label>
           <input
             value={settings.twilio_phone_number ?? ''}
-            onChange={(e) => setSettings((prev) => ({ ...prev, twilio_phone_number: e.target.value }))}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, twilio_phone_number: e.target.value }))
+            }
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
@@ -80,7 +86,9 @@ export default function VoiceSettingsPage() {
           <label className="text-sm font-medium">Default AI Voice Profile</label>
           <input
             value={settings.voice_default_profile ?? 'shimmer'}
-            onChange={(e) => setSettings((prev) => ({ ...prev, voice_default_profile: e.target.value }))}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, voice_default_profile: e.target.value }))
+            }
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />
         </div>
@@ -88,7 +96,9 @@ export default function VoiceSettingsPage() {
           <label className="text-sm font-medium">Human Routing Number</label>
           <input
             value={settings.voice_routing_number ?? ''}
-            onChange={(e) => setSettings((prev) => ({ ...prev, voice_routing_number: e.target.value }))}
+            onChange={(e) =>
+              setSettings((prev) => ({ ...prev, voice_routing_number: e.target.value }))
+            }
             placeholder="+15551234567"
             className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
           />

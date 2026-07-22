@@ -1,7 +1,17 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
-import { Rss, Calendar, Clock, Heart, MessageSquare, Share2, Plus, Filter, Loader2 } from 'lucide-react';
+import {
+  Rss,
+  Calendar,
+  Clock,
+  Heart,
+  MessageSquare,
+  Share2,
+  Plus,
+  Filter,
+  Loader2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { socialService } from '@/services/social.service';
@@ -41,18 +51,20 @@ export default function AdminSocialFeedPage() {
       try {
         const res = await socialService.getPosts();
         const payload = res.data?.data ?? res.data;
-        const items = Array.isArray(payload) ? payload : payload?.data ?? [];
-        setPosts(items.map((p: Record<string, unknown>) => ({
-          id: String(p.id),
-          content: String(p.content ?? p.body ?? ''),
-          platform: String(p.platform ?? 'LinkedIn'),
-          status: (p.status as SocialPost['status']) ?? 'DRAFT',
-          scheduledAt: p.scheduledAt as string | undefined,
-          likes: Number(p.likes ?? 0),
-          comments: Number(p.comments ?? 0),
-          shares: Number(p.shares ?? 0),
-          createdAt: String(p.createdAt ?? new Date().toISOString()),
-        })));
+        const items = Array.isArray(payload) ? payload : (payload?.data ?? []);
+        setPosts(
+          items.map((p: Record<string, unknown>) => ({
+            id: String(p.id),
+            content: String(p.content ?? p.body ?? ''),
+            platform: String(p.platform ?? 'LinkedIn'),
+            status: (p.status as SocialPost['status']) ?? 'DRAFT',
+            scheduledAt: p.scheduledAt as string | undefined,
+            likes: Number(p.likes ?? 0),
+            comments: Number(p.comments ?? 0),
+            shares: Number(p.shares ?? 0),
+            createdAt: String(p.createdAt ?? new Date().toISOString()),
+          })),
+        );
       } catch {
         toast.error('Failed to load social posts');
       } finally {
@@ -75,7 +87,9 @@ export default function AdminSocialFeedPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight">Social Feed</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">Post Scheduler & Feed Manager</p>
+          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+            Post Scheduler & Feed Manager
+          </p>
         </div>
         <button className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Post
@@ -84,40 +98,89 @@ export default function AdminSocialFeedPage() {
 
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: 'Published', value: posts.filter(p => p.status === 'PUBLISHED').length, color: 'text-emerald-400' },
-          { label: 'Scheduled', value: posts.filter(p => p.status === 'SCHEDULED').length, color: 'text-blue-400' },
-          { label: 'Drafts', value: posts.filter(p => p.status === 'DRAFT').length, color: 'text-gray-400' },
-          { label: 'Total Engagement', value: posts.reduce((s, p) => s + p.likes + p.comments + p.shares, 0), color: 'text-indigo-400' },
-        ].map(s => (
-          <div key={s.label} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center">
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">{s.label}</p>
+          {
+            label: 'Published',
+            value: posts.filter((p) => p.status === 'PUBLISHED').length,
+            color: 'text-emerald-400',
+          },
+          {
+            label: 'Scheduled',
+            value: posts.filter((p) => p.status === 'SCHEDULED').length,
+            color: 'text-blue-400',
+          },
+          {
+            label: 'Drafts',
+            value: posts.filter((p) => p.status === 'DRAFT').length,
+            color: 'text-gray-400',
+          },
+          {
+            label: 'Total Engagement',
+            value: posts.reduce((s, p) => s + p.likes + p.comments + p.shares, 0),
+            color: 'text-indigo-400',
+          },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center"
+          >
+            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">
+              {s.label}
+            </p>
             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
 
       <div className="space-y-4">
-        {posts.map(post => (
-          <div key={post.id} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group">
+        {posts.map((post) => (
+          <div
+            key={post.id}
+            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group"
+          >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-black uppercase tracking-widest ${PLATFORM_COLORS[post.platform] || 'text-gray-400'}`}>{post.platform}</span>
-                <span className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[post.status]}`}>{post.status}</span>
+                <span
+                  className={`text-xs font-black uppercase tracking-widest ${PLATFORM_COLORS[post.platform] || 'text-gray-400'}`}
+                >
+                  {post.platform}
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[post.status]}`}
+                >
+                  {post.status}
+                </span>
               </div>
               <div className="flex items-center gap-1.5 text-[10px] text-gray-600 font-mono">
                 {post.status === 'SCHEDULED' && post.scheduledAt ? (
-                  <><Calendar className="w-3 h-3" />{new Date(post.scheduledAt).toLocaleString()}</>
+                  <>
+                    <Calendar className="w-3 h-3" />
+                    {new Date(post.scheduledAt).toLocaleString()}
+                  </>
                 ) : (
-                  <><Clock className="w-3 h-3" />{new Date(post.createdAt).toLocaleDateString()}</>
+                  <>
+                    <Clock className="w-3 h-3" />
+                    {new Date(post.createdAt).toLocaleDateString()}
+                  </>
                 )}
               </div>
             </div>
-            <p className="text-sm text-gray-300 leading-relaxed mb-4 line-clamp-2">{post.content}</p>
+            <p className="text-sm text-gray-300 leading-relaxed mb-4 line-clamp-2">
+              {post.content}
+            </p>
             {post.status === 'PUBLISHED' && (
               <div className="flex items-center gap-5 text-xs text-gray-500">
-                <span className="flex items-center gap-1.5"><Heart className="w-3.5 h-3.5 text-red-400" />{post.likes}</span>
-                <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5 text-blue-400" />{post.comments}</span>
-                <span className="flex items-center gap-1.5"><Share2 className="w-3.5 h-3.5 text-emerald-400" />{post.shares}</span>
+                <span className="flex items-center gap-1.5">
+                  <Heart className="w-3.5 h-3.5 text-red-400" />
+                  {post.likes}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
+                  {post.comments}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+                  {post.shares}
+                </span>
               </div>
             )}
           </div>

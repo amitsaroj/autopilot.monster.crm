@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { 
-  Trophy, 
-  Plus, 
-  Search, 
+import {
+  Trophy,
+  Plus,
+  Search,
   Loader2,
   LayoutGrid,
   Kanban,
@@ -18,6 +18,7 @@ import { DealBoard } from '@/components/crm/DealBoard';
 import { ListPagination } from '@/components/ui/ListPagination';
 import { usePaginatedCrmList } from '@/hooks/usePaginatedCrmList';
 import { dealService } from '@/services/deal.service';
+import { forecastService, type ForecastSummary } from '@/services/forecast.service';
 import { pipelineService } from '@/services/pipeline.service';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ export default function DealsPage() {
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [pipelineMetrics, setPipelineMetrics] = useState<ForecastSummary | null>(null);
 
   const fetchDeals = useCallback(
     (params: Parameters<typeof dealService.getDeals>[0]) =>
@@ -70,7 +72,7 @@ export default function DealsPage() {
       const pRes = await pipelineService.getPipelines();
       const pipelineList = (pRes as any).data.data || [];
       setPipelines(pipelineList);
-      
+
       if (pipelineList.length > 0 && !selectedPipelineId) {
         setSelectedPipelineId(pipelineList[0].id);
       }
@@ -86,10 +88,32 @@ export default function DealsPage() {
   }, []);
 
   useEffect(() => {
+    if (!selectedPipelineId) {
+      setPipelineMetrics(null);
+      return;
+    }
+
+    forecastService
+      .getForecast(selectedPipelineId)
+      .then((res) => setPipelineMetrics((res as any).data.data ?? null))
+      .catch(() => setPipelineMetrics(null));
+  }, [selectedPipelineId]);
+
+  useEffect(() => {
     if (listError) {
       toast.error(listError);
     }
   }, [listError]);
+
+  const formatPipelineValue = (value: number, currency = 'USD') => {
+    if (value >= 1_000_000) {
+      return `${currency} ${(value / 1_000_000).toFixed(1)}M`;
+    }
+    if (value >= 1_000) {
+      return `${currency} ${(value / 1_000).toFixed(1)}k`;
+    }
+    return `${currency} ${value.toLocaleString()}`;
+  };
 
   return (
     <div className="max-w-[1600px] mx-auto py-12 px-6">
@@ -98,18 +122,31 @@ export default function DealsPage() {
         <div className="max-w-md">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest mb-4">
             <Trophy className="w-3 h-3" />
-            Revenue Acceleration 
+            Revenue Acceleration
           </div>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">Sales Pipeline</h1>
-          <p className="text-gray-500 font-bold leading-relaxed px-1">Orchestrate high-velocity deals and visualize your revenue trajectory in real-time.</p>
+          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+            Sales Pipeline
+          </h1>
+          <p className="text-gray-500 font-bold leading-relaxed px-1">
+            Orchestrate high-velocity deals and visualize your revenue trajectory in real-time.
+          </p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="p-8 bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-white/5 flex flex-col items-center min-w-[160px] shadow-soft">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 text-center">Open Pipeline</span>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 text-center">
+              Open Pipeline
+            </span>
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-500" />
-              <span className="text-3xl font-black text-gray-900 dark:text-white">$142.5k</span>
+              <span className="text-3xl font-black text-gray-900 dark:text-white">
+                {pipelineMetrics
+                  ? formatPipelineValue(
+                      pipelineMetrics.totalPipeline,
+                      pipelineMetrics.currency,
+                    )
+                  : '—'}
+              </span>
             </div>
           </div>
           <button className="h-[100px] px-8 bg-indigo-600 text-white rounded-[32px] font-black text-sm shadow-xl shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 group">
@@ -124,9 +161,9 @@ export default function DealsPage() {
         <div className="flex items-center gap-6 flex-1">
           <div className="relative max-w-sm w-full group">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Filter deals..." 
+            <input
+              type="text"
+              placeholder="Filter deals..."
               className="w-full pl-16 pr-8 py-4 bg-gray-50 dark:bg-white/5 border-none rounded-[20px] text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -135,13 +172,15 @@ export default function DealsPage() {
 
           <div className="h-10 w-[1px] bg-gray-100 dark:bg-white/10 mx-2" />
 
-          <select 
+          <select
             className="bg-transparent border-none text-sm font-black text-gray-900 dark:text-white focus:ring-0 cursor-pointer"
             value={selectedPipelineId}
             onChange={(e) => setSelectedPipelineId(e.target.value)}
           >
-            {pipelines.map(p => (
-              <option key={p.id} value={p.id} className="dark:bg-indigo-900">{p.name}</option>
+            {pipelines.map((p) => (
+              <option key={p.id} value={p.id} className="dark:bg-indigo-900">
+                {p.name}
+              </option>
             ))}
           </select>
         </div>
@@ -183,18 +222,24 @@ export default function DealsPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-40 animate-pulse">
           <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mb-4" />
-          <p className="text-sm font-black text-gray-400 uppercase tracking-widest">Orchestrating Pipeline...</p>
+          <p className="text-sm font-black text-gray-400 uppercase tracking-widest">
+            Orchestrating Pipeline...
+          </p>
         </div>
       ) : viewMode === 'kanban' ? (
         <DealBoard pipelineId={selectedPipelineId} searchQuery={search} />
       ) : listLoading ? (
         <div className="flex flex-col items-center justify-center py-40">
           <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mb-4" />
-          <p className="text-sm font-black text-gray-400 uppercase tracking-widest">Loading deals...</p>
+          <p className="text-sm font-black text-gray-400 uppercase tracking-widest">
+            Loading deals...
+          </p>
         </div>
       ) : listError ? (
         <div className="py-20 text-center">
-          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{listError}</p>
+          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">
+            {listError}
+          </p>
           <button
             type="button"
             onClick={() => reloadList()}
@@ -210,17 +255,27 @@ export default function DealsPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-gray-100 dark:border-white/5">
-                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Deal</th>
-                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Value</th>
-                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
-                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Close Date</th>
+                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Deal
+                    </th>
+                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Value
+                    </th>
+                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Status
+                    </th>
+                    <th className="p-6 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                      Close Date
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                   {listDeals.map((deal) => (
                     <tr key={deal.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                       <td className="p-6">
-                        <p className="text-sm font-black text-gray-900 dark:text-white">{deal.name}</p>
+                        <p className="text-sm font-black text-gray-900 dark:text-white">
+                          {deal.name}
+                        </p>
                         {deal.company?.name && (
                           <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-2 mt-1">
                             <Building2 className="w-3 h-3" /> {deal.company.name}
@@ -250,7 +305,10 @@ export default function DealsPage() {
                   ))}
                   {listDeals.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="p-20 text-center text-gray-500 font-black text-xs uppercase tracking-widest">
+                      <td
+                        colSpan={4}
+                        className="p-20 text-center text-gray-500 font-black text-xs uppercase tracking-widest"
+                      >
                         No deals found.
                       </td>
                     </tr>

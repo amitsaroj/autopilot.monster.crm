@@ -7,11 +7,7 @@ import { toast } from 'sonner';
 
 import { companyService, CompanyActivity } from '@/services/company.service';
 
-export default function CompanyActivitiesPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function CompanyActivitiesPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [activities, setActivities] = useState<CompanyActivity[]>([]);
   const [loading, setLoading] = useState(true);

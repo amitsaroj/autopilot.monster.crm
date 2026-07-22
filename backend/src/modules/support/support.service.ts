@@ -52,13 +52,13 @@ export class SupportService {
   }
 
   async getStats(tenantId: string) {
-     const tickets = await this.findAll(tenantId);
-     return {
-        total: tickets.length,
-        open: tickets.filter(t => t.status === TicketStatus.OPEN).length,
-        resolved: tickets.filter(t => t.status === TicketStatus.RESOLVED).length,
-        urgent: tickets.filter(t => t.priority === TicketPriority.URGENT).length,
-     };
+    const tickets = await this.findAll(tenantId);
+    return {
+      total: tickets.length,
+      open: tickets.filter((t) => t.status === TicketStatus.OPEN).length,
+      resolved: tickets.filter((t) => t.status === TicketStatus.RESOLVED).length,
+      urgent: tickets.filter((t) => t.priority === TicketPriority.URGENT).length,
+    };
   }
 
   // --- Knowledge Base (Articles) ---

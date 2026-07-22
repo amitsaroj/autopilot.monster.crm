@@ -7,6 +7,7 @@ import { TaskCrmService, NoteService, EmailCrmService } from '../crm/crm-support
 import { EmailService } from '../../shared/email/email.service';
 import { NotificationService } from '../notifications/notification.service';
 import { WhatsappService } from '../whatsapp/whatsapp.service';
+import { WhatsappTemplateService } from '../whatsapp/whatsapp-template.service';
 import { VoiceCallService } from '../voice/voice-call.service';
 import { PipelineService } from '../crm/pipeline.service';
 import { TaskPriority } from '../../database/entities/task.entity';
@@ -38,6 +39,12 @@ describe('WorkflowActionExecutorService', () => {
   };
   const mockWhatsappService = {
     sendTextMessage: jest.fn(),
+    sendTemplateMessage: jest.fn(),
+    assignConversation: jest.fn(),
+    resolveConversation: jest.fn(),
+  };
+  const mockWhatsappTemplateService = {
+    findOne: jest.fn(),
   };
   const mockVoiceCallService = {
     buildStreamUrl: jest.fn(),
@@ -59,6 +66,7 @@ describe('WorkflowActionExecutorService', () => {
         { provide: EmailCrmService, useValue: mockEmailCrmService },
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: WhatsappService, useValue: mockWhatsappService },
+        { provide: WhatsappTemplateService, useValue: mockWhatsappTemplateService },
         { provide: VoiceCallService, useValue: mockVoiceCallService },
         { provide: PipelineService, useValue: mockPipelineService },
       ],

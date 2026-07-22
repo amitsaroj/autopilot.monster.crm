@@ -7,11 +7,7 @@ import { toast } from 'sonner';
 
 import { companyService, CompanyContact } from '@/services/company.service';
 
-export default function CompanyContactsPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function CompanyContactsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [contacts, setContacts] = useState<CompanyContact[]>([]);
   const [loading, setLoading] = useState(true);

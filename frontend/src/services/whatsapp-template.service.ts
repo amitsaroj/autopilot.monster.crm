@@ -22,9 +22,7 @@ export interface CreateWhatsappTemplatePayload {
 
 function buildComponents(payload: CreateWhatsappTemplatePayload): Record<string, unknown> {
   const items = [
-    ...(payload.header
-      ? [{ type: 'HEADER', format: 'TEXT', text: payload.header }]
-      : []),
+    ...(payload.header ? [{ type: 'HEADER', format: 'TEXT', text: payload.header }] : []),
     { type: 'BODY', text: payload.body },
     ...(payload.footer ? [{ type: 'FOOTER', text: payload.footer }] : []),
   ];

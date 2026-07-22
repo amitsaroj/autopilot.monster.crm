@@ -14,7 +14,11 @@ export class SecurityService {
 
   // --- IP Whitelist ---
   async addIp(tenantId: string, ipAddress: string, description?: string): Promise<IpWhitelist> {
-    const entry = this.ipRepo.create({ tenantId, ipAddress, description } as any) as unknown as IpWhitelist;
+    const entry = this.ipRepo.create({
+      tenantId,
+      ipAddress,
+      description,
+    } as any) as unknown as IpWhitelist;
     return this.ipRepo.save(entry) as unknown as Promise<IpWhitelist>;
   }
 
@@ -31,22 +35,36 @@ export class SecurityService {
   async isIpAllowed(tenantId: string, ip: string): Promise<boolean> {
     const whitelist = await this.ipRepo.find({ where: { tenantId, enabled: true } as any });
     if (whitelist.length === 0) return true; // No whitelist = allow all
-    return whitelist.some(e => e.ipAddress === ip);
+    return whitelist.some((e) => e.ipAddress === ip);
   }
 
   // --- Consent Tracking ---
-  async recordConsent(tenantId: string, contactId: string, consentType: string, granted: boolean, source?: string, ipAddress?: string): Promise<ConsentRecord> {
+  async recordConsent(
+    tenantId: string,
+    contactId: string,
+    consentType: string,
+    granted: boolean,
+    source?: string,
+    ipAddress?: string,
+  ): Promise<ConsentRecord> {
     const record = this.consentRepo.create({
-      tenantId, contactId, consentType, granted,
+      tenantId,
+      contactId,
+      consentType,
+      granted,
       grantedAt: granted ? new Date() : undefined,
       revokedAt: !granted ? new Date() : undefined,
-      source, ipAddress,
+      source,
+      ipAddress,
     } as any) as unknown as ConsentRecord;
     return this.consentRepo.save(record) as unknown as Promise<ConsentRecord>;
   }
 
   async getConsent(tenantId: string, contactId: string): Promise<ConsentRecord[]> {
-    return this.consentRepo.find({ where: { tenantId, contactId } as any, order: { createdAt: 'DESC' } });
+    return this.consentRepo.find({
+      where: { tenantId, contactId } as any,
+      order: { createdAt: 'DESC' },
+    });
   }
 
   async hasConsent(tenantId: string, contactId: string, consentType: string): Promise<boolean> {
@@ -57,7 +75,11 @@ export class SecurityService {
     return latest?.granted ?? false;
   }
 
-  async revokeConsent(tenantId: string, contactId: string, consentType: string): Promise<ConsentRecord> {
+  async revokeConsent(
+    tenantId: string,
+    contactId: string,
+    consentType: string,
+  ): Promise<ConsentRecord> {
     return this.recordConsent(tenantId, contactId, consentType, false, 'manual_revoke');
   }
 

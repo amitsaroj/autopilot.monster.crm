@@ -40,9 +40,9 @@ export class SocialService {
     const totalLikes = posts.reduce((sum, p) => sum + (p.likesCount || 0), 0);
     const totalShares = posts.reduce((sum, p) => sum + (p.sharesCount || 0), 0);
     const totalClicks = posts.reduce((sum, p) => sum + (p.clicksCount || 0), 0);
-    
+
     // Engagement trend simulation
-    const engagementTrend = posts.map(p => ({
+    const engagementTrend = posts.map((p) => ({
       date: p.scheduledAt,
       likes: p.likesCount,
       shares: p.sharesCount,
@@ -53,10 +53,10 @@ export class SocialService {
       overview: { totalLikes, totalShares, totalClicks, totalPosts: posts.length },
       engagementTrend,
       platformDistribution: {
-        FACEBOOK: posts.filter(p => p.platform === 'FACEBOOK').length,
-        TWITTER: posts.filter(p => p.platform === 'TWITTER').length,
-        LINKEDIN: posts.filter(p => p.platform === 'LINKEDIN').length,
-      }
+        FACEBOOK: posts.filter((p) => p.platform === 'FACEBOOK').length,
+        TWITTER: posts.filter((p) => p.platform === 'TWITTER').length,
+        LINKEDIN: posts.filter((p) => p.platform === 'LINKEDIN').length,
+      },
     };
   }
 }

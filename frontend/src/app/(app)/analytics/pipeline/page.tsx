@@ -56,9 +56,19 @@ export default function AnalyticsPipelinePage() {
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Pipeline Value', value: `$${(totalValue / 1000).toFixed(1)}k`, icon: BarChart3, color: 'text-[hsl(246,80%,60%)]' },
+          {
+            label: 'Pipeline Value',
+            value: `$${(totalValue / 1000).toFixed(1)}k`,
+            icon: BarChart3,
+            color: 'text-[hsl(246,80%,60%)]',
+          },
           { label: 'Open Deals', value: String(totalDeals), icon: Target, color: 'text-blue-400' },
-          { label: 'Stages', value: String(stages.length), icon: TrendingUp, color: 'text-green-400' },
+          {
+            label: 'Stages',
+            value: String(stages.length),
+            icon: TrendingUp,
+            color: 'text-green-400',
+          },
         ].map((s) => (
           <div key={s.label} className="stat-card">
             <div className="flex items-center justify-between mb-2">
@@ -80,7 +90,9 @@ export default function AnalyticsPipelinePage() {
               const width = Math.max((stage.count / maxCount) * 100, 8);
               return (
                 <div key={stage.stage} className="flex items-center gap-4">
-                  <div className="w-28 text-xs text-right text-muted-foreground shrink-0">{stage.stage}</div>
+                  <div className="w-28 text-xs text-right text-muted-foreground shrink-0">
+                    {stage.stage}
+                  </div>
                   <div className="flex-1 relative">
                     <div className="h-9 bg-muted rounded-lg overflow-hidden">
                       <div

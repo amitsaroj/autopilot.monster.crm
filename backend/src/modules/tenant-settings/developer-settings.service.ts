@@ -136,7 +136,10 @@ export class DeveloperSettingsService {
     await this.webhookRepository.softDelete({ id, tenantId });
   }
 
-  async testWebhook(tenantId: string, id: string): Promise<{ delivered: boolean; statusCode: number }> {
+  async testWebhook(
+    tenantId: string,
+    id: string,
+  ): Promise<{ delivered: boolean; statusCode: number }> {
     const webhook = await this.webhookRepository.findOne({ where: { id, tenantId } });
     if (!webhook) {
       throw new NotFoundException('Webhook not found');

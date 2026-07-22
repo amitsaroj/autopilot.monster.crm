@@ -14,11 +14,7 @@ interface Activity {
   occurredAt: string;
 }
 
-export default function DealActivitiesPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function DealActivitiesPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <DealSubpage params={params} title="Activities">
       {(deal) => <ActivitiesList dealId={deal.id} />}
@@ -58,8 +54,12 @@ function ActivitiesList({ dealId }: { dealId: string }) {
       {items.map((item) => (
         <li key={item.id} className="p-4">
           <p className="font-medium">{item.subject}</p>
-          <p className="text-xs text-muted-foreground">{item.type} · {new Date(item.occurredAt).toLocaleString()}</p>
-          {item.description && <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>}
+          <p className="text-xs text-muted-foreground">
+            {item.type} · {new Date(item.occurredAt).toLocaleString()}
+          </p>
+          {item.description && (
+            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+          )}
         </li>
       ))}
     </ul>

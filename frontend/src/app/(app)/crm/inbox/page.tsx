@@ -1,23 +1,23 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  Mail, 
-  Send, 
-  Inbox, 
-  Star, 
-  Trash2, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  User, 
-  Reply, 
+import {
+  Mail,
+  Send,
+  Inbox,
+  Star,
+  Trash2,
+  Search,
+  Filter,
+  MoreVertical,
+  User,
+  Reply,
   Forward,
   Plus,
   Loader2,
   CheckCircle2,
   Clock,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 import { emailService, EmailMessage } from '@/services/email.service';
 import toast from 'react-hot-toast';
@@ -46,9 +46,10 @@ export default function InboxPage() {
     fetchEmails();
   }, []);
 
-  const filteredEmails = emails.filter(e => 
-    e.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    e.from.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredEmails = emails.filter(
+    (e) =>
+      e.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      e.from.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (isLoading) {
@@ -69,18 +70,27 @@ export default function InboxPage() {
         </button>
 
         <div className="space-y-1">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-3 mb-4">Mailboxes</p>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-3 mb-4">
+            Mailboxes
+          </p>
           {[
-            { label: 'Inbox', icon: Inbox, count: emails.filter(e => !e.isRead).length, active: true },
+            {
+              label: 'Inbox',
+              icon: Inbox,
+              count: emails.filter((e) => !e.isRead).length,
+              active: true,
+            },
             { label: 'Sent', icon: Send, count: 0 },
             { label: 'Starred', icon: Star, count: 0 },
             { label: 'Trash', icon: Trash2, count: 0 },
-          ].map(item => (
-            <button 
+          ].map((item) => (
+            <button
               key={item.label}
               className={cn(
-                "w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-bold transition-all",
-                item.active ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600" : "text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5"
+                'w-full flex items-center justify-between px-3 py-3 rounded-xl text-sm font-bold transition-all',
+                item.active
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600'
+                  : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5',
               )}
             >
               <div className="flex items-center gap-3">
@@ -102,8 +112,8 @@ export default function InboxPage() {
         <div className="p-6 border-b border-gray-100 dark:border-white/5">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-600 transition" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Search conversations..."
               className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-white/5 border-none rounded-2xl text-sm focus:ring-2 ring-indigo-500/20 transition"
               value={searchQuery}
@@ -114,12 +124,14 @@ export default function InboxPage() {
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           {filteredEmails.map((email) => (
-            <div 
+            <div
               key={email.id}
               onClick={() => setSelectedEmail(email)}
               className={cn(
-                "p-6 border-b border-gray-100 dark:border-white/5 cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-white/5 relative",
-                selectedEmail?.id === email.id ? "bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-l-indigo-600" : ""
+                'p-6 border-b border-gray-100 dark:border-white/5 cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-white/5 relative',
+                selectedEmail?.id === email.id
+                  ? 'bg-indigo-50/50 dark:bg-indigo-900/10 border-l-4 border-l-indigo-600'
+                  : '',
               )}
             >
               <div className="flex items-start justify-between gap-4 mb-2">
@@ -131,15 +143,19 @@ export default function InboxPage() {
                     <h4 className="text-sm font-black text-gray-900 dark:text-white truncate max-w-[180px]">
                       {email.from}
                     </h4>
-                    <p className="text-[10px] text-gray-500 font-bold">{format(new Date(email.createdAt), 'MMM dd, h:mm a')}</p>
+                    <p className="text-[10px] text-gray-500 font-bold">
+                      {format(new Date(email.createdAt), 'MMM dd, h:mm a')}
+                    </p>
                   </div>
                 </div>
-                {!email.isRead && (
-                  <div className="w-2 h-2 rounded-full bg-indigo-600" />
-                )}
+                {!email.isRead && <div className="w-2 h-2 rounded-full bg-indigo-600" />}
               </div>
-              <p className="text-xs font-black text-gray-700 dark:text-gray-300 mb-1 truncate">{email.subject}</p>
-              <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed italic">{email.body}</p>
+              <p className="text-xs font-black text-gray-700 dark:text-gray-300 mb-1 truncate">
+                {email.subject}
+              </p>
+              <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed italic">
+                {email.body}
+              </p>
             </div>
           ))}
         </div>
@@ -155,7 +171,9 @@ export default function InboxPage() {
                   {selectedEmail.from.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-gray-900 dark:text-white">{selectedEmail.subject}</h2>
+                  <h2 className="text-xl font-black text-gray-900 dark:text-white">
+                    {selectedEmail.subject}
+                  </h2>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-sm font-bold text-gray-500">From:</span>
                     <span className="text-sm font-black text-indigo-600">{selectedEmail.from}</span>
@@ -212,7 +230,9 @@ export default function InboxPage() {
               <Mail className="w-16 h-16" />
             </div>
             <h3 className="text-2xl font-black text-gray-400">Select a message to view</h3>
-            <p className="text-gray-500 mt-2 italic">Your centralized communication hub is ready.</p>
+            <p className="text-gray-500 mt-2 italic">
+              Your centralized communication hub is ready.
+            </p>
           </div>
         )}
       </div>

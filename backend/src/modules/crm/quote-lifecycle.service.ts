@@ -31,7 +31,8 @@ export class QuoteLifecycleService {
     }
 
     const viewToken = quote.viewToken ?? randomBytes(32).toString('hex');
-    const frontendUrl = this.configService.get<string>('app.frontendUrl') ?? 'http://localhost:3000';
+    const frontendUrl =
+      this.configService.get<string>('app.frontendUrl') ?? 'http://localhost:3000';
     const viewUrl = `${frontendUrl}/crm/quotes/view/${viewToken}`;
 
     const html = this.buildQuoteEmailHtml(quote, viewUrl, dto.message);

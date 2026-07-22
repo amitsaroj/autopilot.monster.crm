@@ -1,4 +1,5 @@
 import { Module, Global } from '@nestjs/common';
+import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { StorageModule } from '../storage/storage.module';
@@ -20,6 +21,9 @@ import { Deal } from '../database/entities/deal.entity';
 import { Company } from '../database/entities/company.entity';
 import { AuditLog } from '../database/entities/audit-log.entity';
 import { AuditLogListener } from './logs/audit-log.listener';
+import { SearchIndexQueueService } from './search/search-index-queue.service';
+import { SearchIndexEventListener } from './search/search-index-event.listener';
+import { QUEUE_NAMES } from '../queue/queue.constants';
 
 @Global()
 @Module({
@@ -37,23 +41,22 @@ import { AuditLogListener } from './logs/audit-log.listener';
     StorageModule,
     MonetizationModule,
     MarketplaceModule,
+    BullModule.registerQueue({ name: QUEUE_NAMES.SEARCH_INDEX }),
   ],
-  controllers: [
-    SearchController,
-    AuditLogController,
-    PluginsController,
-    PlatformController,
-  ],
+  controllers: [SearchController, AuditLogController, PluginsController, PlatformController],
   providers: [
     SearchService,
     AuditLogService,
     AuditLogListener,
+    SearchIndexQueueService,
+    SearchIndexEventListener,
     PluginsService,
   ],
   exports: [
     StorageModule,
     SearchService,
     AuditLogService,
+    SearchIndexQueueService,
     MarketplaceModule,
     PluginsService,
   ],

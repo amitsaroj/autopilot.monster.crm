@@ -122,7 +122,9 @@ export default function SearchPage() {
                 href={href}
                 className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-[hsl(246,80%,60%)]/50 hover:shadow-sm transition-all"
               >
-                <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 capitalize ${color}`}>
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 capitalize ${color}`}
+                >
                   {r.type}
                 </span>
                 <div>

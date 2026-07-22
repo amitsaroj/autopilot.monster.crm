@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   Facebook,
   Instagram,
@@ -11,29 +11,26 @@ import {
   Plus,
   Zap,
   Loader2,
-} from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { socialService } from "@/services/social.service";
-import { parseApiData } from "@/lib/api/parse-response";
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { socialService } from '@/services/social.service';
+import { parseApiData } from '@/lib/api/parse-response';
 
 interface PlatformConnection {
   platform: string;
-  status: "CONNECTED" | "DISCONNECTED";
+  status: 'CONNECTED' | 'DISCONNECTED';
   account: string;
   icon: typeof Facebook;
   color: string;
   posts: number;
 }
 
-const PLATFORM_CONFIG: Record<
-  string,
-  { label: string; icon: typeof Facebook; color: string }
-> = {
-  FACEBOOK: { label: "Facebook", icon: Facebook, color: "text-blue-500" },
-  INSTAGRAM: { label: "Instagram", icon: Instagram, color: "text-rose-500" },
-  LINKEDIN: { label: "LinkedIn", icon: Linkedin, color: "text-sky-600" },
-  TWITTER: { label: "Twitter/X", icon: Twitter, color: "text-sky-400" },
+const PLATFORM_CONFIG: Record<string, { label: string; icon: typeof Facebook; color: string }> = {
+  FACEBOOK: { label: 'Facebook', icon: Facebook, color: 'text-blue-500' },
+  INSTAGRAM: { label: 'Instagram', icon: Instagram, color: 'text-rose-500' },
+  LINKEDIN: { label: 'LinkedIn', icon: Linkedin, color: 'text-sky-600' },
+  TWITTER: { label: 'Twitter/X', icon: Twitter, color: 'text-sky-400' },
 };
 
 export default function SocialSettingsPage() {
@@ -60,12 +57,11 @@ export default function SocialSettingsPage() {
         }
 
         const built = Object.entries(PLATFORM_CONFIG).map(([platform, config]) => {
-          const count =
-            postCounts.get(platform) ?? analytics?.platformDistribution[platform] ?? 0;
+          const count = postCounts.get(platform) ?? analytics?.platformDistribution[platform] ?? 0;
           return {
             platform: config.label,
-            status: count > 0 ? ("CONNECTED" as const) : ("DISCONNECTED" as const),
-            account: count > 0 ? `${count} scheduled posts` : "N/A",
+            status: count > 0 ? ('CONNECTED' as const) : ('DISCONNECTED' as const),
+            account: count > 0 ? `${count} scheduled posts` : 'N/A',
             icon: config.icon,
             color: config.color,
             posts: count,
@@ -73,7 +69,7 @@ export default function SocialSettingsPage() {
         });
         setConnections(built);
       } catch {
-        toast.error("Failed to load social platform settings");
+        toast.error('Failed to load social platform settings');
       } finally {
         setLoading(false);
       }
@@ -125,16 +121,16 @@ export default function SocialSettingsPage() {
               <div className="flex justify-between items-start mb-6">
                 <div
                   className={cn(
-                    "w-14 h-14 rounded-[20px] bg-white/5 border border-white/10 flex items-center justify-center transition-all shadow-2xl relative",
+                    'w-14 h-14 rounded-[20px] bg-white/5 border border-white/10 flex items-center justify-center transition-all shadow-2xl relative',
                     conn.color,
                   )}
                 >
                   <conn.icon className="w-7 h-7" />
-                  {conn.status === "CONNECTED" && (
+                  {conn.status === 'CONNECTED' && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0b0f19] shadow-lg" />
                   )}
                 </div>
-                {conn.status === "CONNECTED" ? (
+                {conn.status === 'CONNECTED' ? (
                   <button className="p-2.5 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all">
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -157,10 +153,10 @@ export default function SocialSettingsPage() {
 
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
-                  conn.status === "CONNECTED"
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-white/5 text-gray-500 border-white/10",
+                  'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border',
+                  conn.status === 'CONNECTED'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                    : 'bg-white/5 text-gray-500 border-white/10',
                 )}
               >
                 {conn.status}

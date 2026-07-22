@@ -6,10 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-import {
-  analyticsReportService,
-  AnalyticsReportType,
-} from '@/services/analytics-report.service';
+import { analyticsReportService, AnalyticsReportType } from '@/services/analytics-report.service';
 
 const REPORT_TYPES: AnalyticsReportType[] = [
   'OVERVIEW',

@@ -42,12 +42,16 @@ function FilesList() {
   }, []);
 
   if (loading) return <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />;
-  if (items.length === 0) return <p className="text-sm text-muted-foreground">No files uploaded.</p>;
+  if (items.length === 0)
+    return <p className="text-sm text-muted-foreground">No files uploaded.</p>;
 
   return (
     <div className="space-y-3">
       {items.map((file) => (
-        <div key={file.id} className="rounded-xl border border-border bg-card p-4 flex justify-between">
+        <div
+          key={file.id}
+          className="rounded-xl border border-border bg-card p-4 flex justify-between"
+        >
           <div>
             <p className="font-medium">{file.filename}</p>
             <p className="text-sm text-muted-foreground">{file.mimeType}</p>

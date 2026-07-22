@@ -107,7 +107,9 @@ export default function DashboardPage() {
   ];
 
   const maxPipelineCount = Math.max(1, ...pipeline.map((s) => s.count));
-  const openTasks = tasks.filter((t) => t.status !== 'COMPLETED' && t.status !== 'CANCELLED').slice(0, 6);
+  const openTasks = tasks
+    .filter((t) => t.status !== 'COMPLETED' && t.status !== 'CANCELLED')
+    .slice(0, 6);
   const recentActivities = activities.slice(0, 5);
 
   if (loading) {

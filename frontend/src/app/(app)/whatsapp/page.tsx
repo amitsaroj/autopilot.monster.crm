@@ -24,7 +24,8 @@ export default function WhatsAppPage() {
   }, []);
 
   const filtered = conversations.filter((conversation) => {
-    const haystack = `${conversation.contactName ?? ''} ${conversation.phone} ${conversation.lastMessage}`.toLowerCase();
+    const haystack =
+      `${conversation.contactName ?? ''} ${conversation.phone} ${conversation.lastMessage}`.toLowerCase();
     return haystack.includes(query.toLowerCase());
   });
 
@@ -34,7 +35,10 @@ export default function WhatsAppPage() {
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between mb-3">
             <h1 className="font-semibold text-foreground">WhatsApp</h1>
-            <Link href="/whatsapp/broadcast" className="flex items-center gap-1.5 text-xs text-[hsl(246,80%,60%)] hover:underline">
+            <Link
+              href="/whatsapp/broadcast"
+              className="flex items-center gap-1.5 text-xs text-[hsl(246,80%,60%)] hover:underline"
+            >
               <Send className="h-3 w-3" /> Broadcast
             </Link>
           </div>
@@ -71,10 +75,15 @@ export default function WhatsAppPage() {
                       {conversation.contactName ?? conversation.phone}
                     </span>
                     <span className="text-xs text-muted-foreground shrink-0">
-                      {new Date(conversation.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {new Date(conversation.lastMessageAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{conversation.lastMessage}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {conversation.lastMessage}
+                  </p>
                 </div>
                 {conversation.unreadCount > 0 && (
                   <span className="w-5 h-5 rounded-full bg-[hsl(246,80%,60%)] text-white text-xs flex items-center justify-center shrink-0">

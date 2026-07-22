@@ -24,11 +24,12 @@ export const developerService = {
   getWebhooks: () => api.get('/developer/webhooks'),
   getWebhook: (id: string) => api.get(`/developer/webhooks/${id}`),
   createWebhook: (dto: WebhookDto) => api.post('/developer/webhooks', dto),
-  updateWebhook: (id: string, dto: Partial<WebhookDto>) => api.patch(`/developer/webhooks/${id}`, dto),
+  updateWebhook: (id: string, dto: Partial<WebhookDto>) =>
+    api.patch(`/developer/webhooks/${id}`, dto),
   deleteWebhook: (id: string) => api.delete(`/developer/webhooks/${id}`),
   testWebhook: (id: string) => api.post(`/developer/webhooks/${id}/test`),
   rotateWebhookSecret: (id: string) => api.post(`/developer/webhooks/${id}/rotate-secret`),
-  getWebhookDeliveries: (id: string, page = 1, limit = 20) => 
+  getWebhookDeliveries: (id: string, page = 1, limit = 20) =>
     api.get(`/developer/webhooks/${id}/deliveries`, { params: { page, limit } }),
 
   // OAuth Applications Management
@@ -38,7 +39,6 @@ export const developerService = {
   deleteOAuthApp: (id: string) => api.delete(`/developer/oauth/apps/${id}`),
 
   // API Usage Logs
-  getApiLogs: (page = 1, limit = 20) => 
-    api.get('/developer/logs', { params: { page, limit } }),
+  getApiLogs: (page = 1, limit = 20) => api.get('/developer/logs', { params: { page, limit } }),
   getApiLogStats: () => api.get('/developer/logs/stats'),
 };

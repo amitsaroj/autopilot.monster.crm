@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Loader2, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -14,6 +14,12 @@ export default function MfaPage() {
   const { login, mfaPendingEmail, mfaPendingPassword } = useAuth() as any; // Using any for new fields
   const router = useRouter();
 
+  useEffect(() => {
+    if (!mfaPendingEmail) {
+      router.replace('/login');
+    }
+  }, [mfaPendingEmail, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) {
@@ -23,13 +29,13 @@ export default function MfaPage() {
 
     setIsLoading(true);
     try {
-      const user = await login({ 
-        email: mfaPendingEmail, 
-        password: mfaPendingPassword, 
-        mfaCode: code 
+      const user = await login({
+        email: mfaPendingEmail,
+        password: mfaPendingPassword,
+        mfaCode: code,
       });
       toast.success('MFA Verified!');
-      
+
       const roles = user?.roles || [];
       if (roles.includes('SUPER_ADMIN')) {
         router.push('/superadmin');
@@ -46,7 +52,6 @@ export default function MfaPage() {
   };
 
   if (!mfaPendingEmail) {
-    router.push('/login');
     return null;
   }
 
@@ -56,14 +61,18 @@ export default function MfaPage() {
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
           <Zap className="w-5 h-5 text-white" />
         </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">AutopilotMonster</span>
+        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
+          AutopilotMonster
+        </span>
       </div>
 
       <div className="w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mx-auto mb-6">
         <ShieldCheck className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground text-center mb-1">Two-Factor Authentication</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground text-center mb-1">
+        Two-Factor Authentication
+      </h1>
       <p className="text-sm text-gray-500 dark:text-muted-foreground text-center mb-8">
         Enter the 6-digit code from your authenticator app.
       </p>
@@ -86,16 +95,19 @@ export default function MfaPage() {
           disabled={isLoading || code.length !== 6}
           className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50"
         >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            'Verify & Continue'
-          )}
+          {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify & Continue'}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-gray-500 dark:text-muted-foreground">
-        Having trouble? <Link href="/login" className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline" onClick={() => (useAuth as any).getState().clearAuth()}>Back to login</Link>
+        Having trouble?{' '}
+        <Link
+          href="/login"
+          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+          onClick={() => (useAuth as any).getState().clearAuth()}
+        >
+          Back to login
+        </Link>
       </p>
     </div>
   );

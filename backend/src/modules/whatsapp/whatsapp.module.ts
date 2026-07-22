@@ -21,7 +21,13 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
   imports: [
     ConfigModule,
     BullModule.registerQueue({ name: QUEUE_NAMES.WHATSAPP }),
-    TypeOrmModule.forFeature([WhatsAppMessage, WhatsAppTemplate, WhatsAppBroadcast, Contact, Segment]),
+    TypeOrmModule.forFeature([
+      WhatsAppMessage,
+      WhatsAppTemplate,
+      WhatsAppBroadcast,
+      Contact,
+      Segment,
+    ]),
   ],
   controllers: [MetaWebhookController, WhatsappController],
   providers: [

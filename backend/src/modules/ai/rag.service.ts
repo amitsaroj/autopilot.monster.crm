@@ -233,10 +233,7 @@ export class RagService {
     options: any,
   ) {
     const openai = await this.getOpenAIClient(tenantId);
-    const model =
-      typeof options.model === 'string'
-        ? options.model
-        : defaultModel;
+    const model = typeof options.model === 'string' ? options.model : defaultModel;
     const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
     const response = await openai.chat.completions.create({
       model,
@@ -360,8 +357,7 @@ export class RagService {
     }
 
     const pricing = MODEL_COST_PER_1K[model] ?? MODEL_COST_PER_1K['gpt-4o'];
-    const cost =
-      (inputTokens / 1000) * pricing.input + (outputTokens / 1000) * pricing.output;
+    const cost = (inputTokens / 1000) * pricing.input + (outputTokens / 1000) * pricing.output;
 
     await this.billingService.trackUsage(tenantId, 'ai_tokens', totalTokens);
     if (cost > 0) {
@@ -379,7 +375,7 @@ export class RagService {
       success: true,
       url,
       pagesIndexed: 5,
-      chunksAdded: 25
+      chunksAdded: 25,
     };
   }
 
@@ -390,7 +386,7 @@ export class RagService {
       totalChunks: 1500,
       queryCountLast30Days: 450,
       averageRetrievalTimeMs: 125,
-      topTopics: ['billing', 'integration', 'pricing']
+      topTopics: ['billing', 'integration', 'pricing'],
     };
   }
 }

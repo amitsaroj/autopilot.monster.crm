@@ -72,10 +72,9 @@ export class BackfillRolePermissions1740000000003 implements MigrationInterface 
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    const roles = (await queryRunner.query(
-      `SELECT id FROM roles WHERE name = ANY($1)`,
-      [ROLE_NAMES],
-    )) as Array<{ id: string }>;
+    const roles = (await queryRunner.query(`SELECT id FROM roles WHERE name = ANY($1)`, [
+      ROLE_NAMES,
+    ])) as Array<{ id: string }>;
 
     for (const role of roles) {
       await queryRunner.query(`DELETE FROM role_permissions WHERE role_id = $1`, [role.id]);

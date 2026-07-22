@@ -14,10 +14,7 @@ export class DealRepository extends BaseRepository<Deal> {
     super(dealRepo);
   }
 
-  async findFiltered(
-    tenantId: string,
-    query: CrmListQueryDto,
-  ): Promise<[Deal[], number]> {
+  async findFiltered(tenantId: string, query: CrmListQueryDto): Promise<[Deal[], number]> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const qb = this.dealRepo

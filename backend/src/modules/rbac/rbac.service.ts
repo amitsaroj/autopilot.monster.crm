@@ -15,7 +15,11 @@ export class RbacService {
     private readonly eventEmitter: EventEmitter2,
   ) {}
 
-  async createRole(tenantId: string, createRoleDto: CreateRoleDto, actorId?: string): Promise<Role> {
+  async createRole(
+    tenantId: string,
+    createRoleDto: CreateRoleDto,
+    actorId?: string,
+  ): Promise<Role> {
     const permissions = await this.rbacRepository.findPermissionsByIds(createRoleDto.permissionIds);
     const role = await this.rbacRepository.create(tenantId, {
       name: createRoleDto.name,
@@ -111,7 +115,12 @@ export class RbacService {
     await this.rbacRepository.delete(tenantId, id);
   }
 
-  async assignRole(tenantId: string, userId: string, roleId: string, actorId?: string): Promise<void> {
+  async assignRole(
+    tenantId: string,
+    userId: string,
+    roleId: string,
+    actorId?: string,
+  ): Promise<void> {
     await this.findRole(tenantId, roleId);
     await this.rbacRepository.assignRole(tenantId, userId, roleId, actorId);
     this.eventEmitter.emit(EVENT_NAMES.ROLE_ASSIGNED, {
@@ -124,7 +133,12 @@ export class RbacService {
     });
   }
 
-  async revokeRole(tenantId: string, userId: string, roleId: string, actorId?: string): Promise<void> {
+  async revokeRole(
+    tenantId: string,
+    userId: string,
+    roleId: string,
+    actorId?: string,
+  ): Promise<void> {
     await this.rbacRepository.revokeRole(tenantId, userId, roleId);
     this.eventEmitter.emit(EVENT_NAMES.ROLE_REVOKED, {
       name: EVENT_NAMES.ROLE_REVOKED,
