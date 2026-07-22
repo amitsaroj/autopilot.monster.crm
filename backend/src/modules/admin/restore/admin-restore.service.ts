@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { AdminBackupsService } from '../backups/admin-backups.service';
 import { StorageService } from '../../../storage/storage.service';
 import { exec } from 'child_process';
@@ -20,7 +20,7 @@ export class AdminRestoreService {
   async initiate(backupId: string) {
     const backup = await this.backupsService.findOne(backupId);
     if (!backup) {
-      throw new Error(`Backup record ${backupId} not found`);
+      throw new NotFoundException(`Backup record ${backupId} not found`);
     }
 
     const tempPath = path.join('/tmp', `restore-${backupId}-${backup.name}`);
@@ -41,15 +41,6 @@ export class AdminRestoreService {
     try {
       this.logger.log(`Starting restore process for backup ${backupId} (${fileName})`);
 
-      // 1. If it's a dummy backup that doesn't exist on storage, simulate recovery
-      if (backupId === 'bak-001' || backupId === 'bak-002') {
-        this.logger.log(`Simulating recovery process for dummy backup ${backupId}`);
-        await new Promise((resolve) => setTimeout(resolve, 4000));
-        this.logger.log(`Simulated recovery completed successfully for ${backupId}`);
-        return;
-      }
-
-      // 2. Real recovery
       const dbUrl = process.env.DATABASE_URL;
       if (!dbUrl) throw new Error('DATABASE_URL not set');
 
@@ -68,15 +59,8 @@ export class AdminRestoreService {
         await execAsync(`psql "${dbUrl}" -f "${tempPath}"`);
         this.logger.log(`Database restore from ${fileName} completed successfully via psql`);
       } catch (execErr: any) {
-        this.logger.warn(
-          `Failed to execute psql restore: ${execErr.message}. Checking if db sync can be simulated...`,
-        );
-        // If psql fails (e.g. command not found in container), we simulate success if we're in development
-        if (process.env.NODE_ENV !== 'production') {
-          this.logger.log(`Simulated psql execution success in non-prod environment`);
-        } else {
-          throw execErr;
-        }
+        this.logger.error(`Failed to execute psql restore: ${execErr.message}`);
+        throw execErr;
       }
 
       // Cleanup

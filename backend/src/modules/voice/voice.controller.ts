@@ -15,6 +15,7 @@ import { Response } from 'express';
 
 import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
+import { VoiceAiService } from './voice-ai.service';
 import {
   CallDto,
   CloneVoiceDto,
@@ -45,6 +46,7 @@ export class VoiceController {
     private readonly voiceCallService: VoiceCallService,
     private readonly voiceCampaignService: VoiceCampaignService,
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
+    private readonly voiceAiService: VoiceAiService,
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly tenantSettingsService: TenantSettingsService,
     private readonly twilioService: TwilioService,
@@ -135,34 +137,16 @@ export class VoiceController {
 
   @Post('synthesize')
   @ApiOperation({ summary: 'Convert text to speech' })
-  async synthesize(@Body() dto: SynthesizeDto, @Res() res: Response) {
-    res.json({
-      status: 200,
-      message: 'Synthesis queued',
-      error: false,
-      data: { text: dto.text, voice: dto.voice ?? 'default' },
-    });
+  async synthesize(@TenantId() tenantId: string, @Body() dto: SynthesizeDto) {
+    const data = await this.voiceAiService.synthesize(tenantId, dto.text, dto.voice ?? 'alloy');
+    return { status: 200, message: 'Speech synthesized', error: false, data };
   }
 
   @Post('transcribe')
   @ApiOperation({ summary: 'Convert audio to text' })
   async transcribe(@TenantId() tenantId: string, @Body() dto: TranscribeDto) {
-    const call = await this.voiceCallService.findByRecordingUrl(tenantId, dto.audioUrl);
-    if (!call?.transcript) {
-      return {
-        status: 202,
-        message: 'Transcription pending',
-        error: false,
-        data: { text: null, audioUrl: dto.audioUrl },
-      };
-    }
-
-    return {
-      status: 200,
-      message: 'Transcription retrieved',
-      error: false,
-      data: { text: call.transcript, audioUrl: dto.audioUrl },
-    };
+    const data = await this.voiceAiService.transcribe(tenantId, dto.audioUrl);
+    return { status: 200, message: 'Transcription completed', error: false, data };
   }
 
   @Get('profiles')
@@ -342,14 +326,15 @@ export class VoiceController {
   @Get('calls/:id/sentiment')
   @ApiOperation({ summary: 'Extract sentiment and keywords from a completed call' })
   async getSentiment(@TenantId() tenantId: string, @Param('id') id: string) {
-    return this.twilioService.extractSentimentStub(id, tenantId);
+    const data = await this.voiceAiService.analyzeSentiment(tenantId, id);
+    return { status: 200, message: 'Sentiment analyzed', error: false, data };
   }
 
   @Post('clone')
   @ApiOperation({ summary: 'Create a voice clone from sample audio' })
   async cloneVoice(@TenantId() tenantId: string, @Body() dto: CloneVoiceDto) {
-    const voiceId = await this.twilioService.cloneVoiceStub(tenantId, dto.sampleUrl);
-    return { success: true, voiceId };
+    const data = await this.voiceAiService.cloneVoice(tenantId, dto.sampleUrl);
+    return { status: 201, message: 'Voice clone created', error: false, data };
   }
 
   @Public()

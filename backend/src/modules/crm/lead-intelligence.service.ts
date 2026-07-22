@@ -8,16 +8,20 @@ import { NotificationService } from './notification.service';
 @Injectable()
 export class LeadIntelligenceService {
   private readonly logger = new Logger(LeadIntelligenceService.name);
-  private openai: OpenAI;
 
   constructor(
     private configService: ConfigService,
     private leadService: LeadService,
     private notificationService: NotificationService,
-  ) {
-    this.openai = new OpenAI({
-      apiKey: this.configService.get('OPENAI_API_KEY') || 'mock-api-key',
-    });
+  ) {}
+
+  private getOpenAiApiKey(): string {
+    return this.configService.get<string>('OPENAI_API_KEY') || '';
+  }
+
+  private isOpenAiAvailable(): boolean {
+    const apiKey = this.getOpenAiApiKey();
+    return !!apiKey && apiKey !== 'mock-api-key';
   }
 
   /**
@@ -75,18 +79,14 @@ export class LeadIntelligenceService {
       return null;
     }
 
-    if (this.configService.get('OPENAI_API_KEY') === 'mock-api-key') {
-      return {
-        summary: 'Call completed. AI analysis unavailable in mock mode.',
-        score: 0,
-        status: 'PROCESSED',
-        intent: 'UNKNOWN',
-        sentiment: 'NEUTRAL',
-      };
+    if (!this.isOpenAiAvailable()) {
+      this.logger.warn('OpenAI API key not configured — skipping transcript analysis');
+      return null;
     }
 
     try {
-      const response = await this.openai.chat.completions.create({
+      const openai = new OpenAI({ apiKey: this.getOpenAiApiKey() });
+      const response = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [
           {

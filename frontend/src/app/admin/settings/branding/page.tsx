@@ -1,40 +1,80 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Upload,
   Palette,
   Globe,
-  Target,
   Shield,
-  Check,
-  Info,
   Layout,
   Camera,
   Save,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { tenantService } from '@/services/tenant.service';
 
 export default function BrandingPage() {
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [existingBranding, setExistingBranding] = useState<Record<string, unknown>>({});
   const [formData, setFormData] = useState({
-    companyName: 'Autopilot Monster CRM',
+    companyName: '',
     primaryColor: '#6366f1',
     secondaryColor: '#10b981',
     fontFamily: 'Inter, sans-serif',
     logoUrl: '',
     faviconUrl: '',
-    customDomain: 'crm.mycompany.com',
-    whiteLabel: true,
+    customDomain: '',
+    whiteLabel: false,
   });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await tenantService.getSettings();
+        const data = response.data.data ?? response.data;
+        const branding = data.branding ?? {};
+        setExistingBranding(branding);
+        setFormData({
+          companyName: branding.companyName ?? data.name ?? '',
+          primaryColor: branding.primaryColor ?? '#6366f1',
+          secondaryColor: branding.secondaryColor ?? '#10b981',
+          fontFamily: branding.fontFamily ?? 'Inter, sans-serif',
+          logoUrl: branding.logoUrl ?? '',
+          faviconUrl: branding.faviconUrl ?? '',
+          customDomain: data.customDomain ?? branding.customDomain ?? '',
+          whiteLabel: branding.whiteLabel ?? false,
+        });
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Failed to load branding settings');
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
 
   const handleSave = async () => {
     setLoading(true);
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 1000));
-    toast.success('Brand identity synchronized successully');
-    setLoading(false);
+    try {
+      await tenantService.updateBranding({
+        ...existingBranding,
+        companyName: formData.companyName,
+        primaryColor: formData.primaryColor,
+        secondaryColor: formData.secondaryColor,
+        fontFamily: formData.fontFamily,
+        logoUrl: formData.logoUrl,
+        faviconUrl: formData.faviconUrl,
+        customDomain: formData.customDomain,
+        whiteLabel: formData.whiteLabel,
+      });
+      toast.success('Brand identity synchronized successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save branding settings');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const colors = [
@@ -46,9 +86,16 @@ export default function BrandingPage() {
     { name: 'Violet', hex: '#8b5cf6' },
   ];
 
+  if (initialLoading) {
+    return (
+      <div className="max-w-5xl mx-auto py-10 px-6 text-gray-500 text-sm font-bold uppercase tracking-widest">
+        Loading branding settings...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto py-10 px-6 space-y-12 animate-in fade-in duration-700">
-      {/* Header */}
       <div className="flex justify-between items-center bg-white/[0.02] p-8 rounded-[40px] border border-white/[0.05] backdrop-blur-md">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -78,7 +125,6 @@ export default function BrandingPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Visual Identity */}
         <div className="lg:col-span-12 space-y-8">
           <div className="p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden group">
             <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -87,11 +133,17 @@ export default function BrandingPage() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {/* Logo Upload */}
               <div className="space-y-6">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
-                  Corporate Emblem (Logo)
+                  Corporate Emblem (Logo URL)
                 </label>
+                <input
+                  type="text"
+                  value={formData.logoUrl}
+                  onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-indigo-400 font-bold outline-none focus:border-indigo-500/40 shadow-inner"
+                  placeholder="https://..."
+                />
                 <div className="aspect-video rounded-[32px] bg-white/[0.02] border-2 border-dashed border-white/5 flex flex-col items-center justify-center group/upload cursor-pointer hover:border-indigo-500/20 transition-all">
                   <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center text-gray-500 group-hover/upload:bg-indigo-500 group-hover/upload:text-white transition-all shadow-inner">
                     <Upload className="w-7 h-7" />
@@ -105,11 +157,17 @@ export default function BrandingPage() {
                 </div>
               </div>
 
-              {/* Favicon Upload */}
               <div className="space-y-6">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
-                  Browser Marker (Favicon)
+                  Browser Marker (Favicon URL)
                 </label>
+                <input
+                  type="text"
+                  value={formData.faviconUrl}
+                  onChange={(e) => setFormData({ ...formData, faviconUrl: e.target.value })}
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-indigo-400 font-bold outline-none focus:border-indigo-500/40 shadow-inner"
+                  placeholder="https://..."
+                />
                 <div className="aspect-square w-32 rounded-[32px] bg-white/[0.02] border-2 border-dashed border-white/5 flex flex-col items-center justify-center group/upload cursor-pointer hover:border-indigo-500/20 transition-all mx-auto md:ml-0">
                   <Layout className="w-7 h-7 text-gray-600 group-hover/upload:text-indigo-400 transition-colors" />
                 </div>
@@ -117,7 +175,6 @@ export default function BrandingPage() {
             </div>
           </div>
 
-          {/* Color Palette */}
           <div className="p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden group">
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-10 flex items-center gap-4">
               <Palette className="w-7 h-7 text-emerald-500" /> Chromatic Palette
@@ -161,7 +218,6 @@ export default function BrandingPage() {
             </div>
           </div>
 
-          {/* Custom Domain */}
           <div className="p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden group">
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-10 flex items-center gap-4">
               <Globe className="w-7 h-7 text-sky-500" /> DNS Orchestration

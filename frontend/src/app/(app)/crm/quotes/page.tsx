@@ -18,6 +18,10 @@ import { ListPagination } from '@/components/ui/ListPagination';
 import { usePaginatedCrmList } from '@/hooks/usePaginatedCrmList';
 import { quoteService } from '@/services/quote.service';
 
+function generateQuoteNumber(): string {
+  return `QT-${Date.now()}`;
+}
+
 interface Quote {
   id: string;
   number: string;
@@ -34,7 +38,7 @@ export default function QuotesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    number: `QT-${Math.floor(1000 + Math.random() * 9000)}`,
+    number: generateQuoteNumber(),
     total: 0,
     currency: 'USD',
     status: 'DRAFT',
@@ -95,7 +99,7 @@ export default function QuotesPage() {
   const openCreate = () => {
     setEditingId(null);
     setFormData({
-      number: `QT-${Math.floor(1000 + Math.random() * 9000)}`,
+      number: generateQuoteNumber(),
       total: 0,
       currency: 'USD',
       status: 'DRAFT',

@@ -197,21 +197,6 @@ export class TwilioService {
     }));
   }
 
-  async extractSentimentStub(callSid: string, tenantId: string) {
-    return {
-      callSid,
-      tenantId,
-      sentiment: 'POSITIVE',
-      keywords: ['support', 'billing', 'happy'],
-      confidence: 0.92,
-    };
-  }
-
-  async cloneVoiceStub(tenantId: string, sampleUrl: string): Promise<string> {
-    this.logger.log(`Cloning voice for tenant ${tenantId} using sample: ${sampleUrl}`);
-    return `voice_clone_${Math.random().toString(36).substring(7)}`;
-  }
-
   generateIvrTwiml(_body: Record<string, any>): string {
     const twiml = new twilio.twiml.VoiceResponse();
     twiml.say(

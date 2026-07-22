@@ -205,4 +205,23 @@ export class VoiceCallService {
   async findByRecordingUrl(tenantId: string, audioUrl: string): Promise<VoiceCall | null> {
     return this.voiceCallRepository.findByRecordingUrl(tenantId, audioUrl);
   }
+
+  async persistTranscriptById(
+    tenantId: string,
+    callId: string,
+    transcript: string,
+  ): Promise<VoiceCall> {
+    return this.voiceCallRepository.updateWithTenant(tenantId, callId, { transcript });
+  }
+
+  async updateAnalysisById(
+    tenantId: string,
+    callId: string,
+    analysis: CallAnalysisResult,
+  ): Promise<VoiceCall> {
+    return this.voiceCallRepository.updateWithTenant(tenantId, callId, {
+      aiSummary: analysis.summary,
+      sentiment: analysis.sentiment,
+    });
+  }
 }

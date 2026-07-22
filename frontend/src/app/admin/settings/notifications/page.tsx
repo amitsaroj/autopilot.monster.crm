@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Mail,
   MessageSquare,
@@ -11,26 +11,86 @@ import {
   Save,
   RefreshCw,
   Key,
-  Globe,
   Radio,
   Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminEmailSettingsService } from '@/services/admin-email-settings.service';
+
+interface EmailSettings {
+  host: string;
+  port: number;
+  user: string;
+  password: string;
+  fromEmail: string;
+  fromName: string;
+  encryption: string;
+}
 
 export default function NotificationsPage() {
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('email');
+  const [emailSettings, setEmailSettings] = useState<EmailSettings>({
+    host: '',
+    port: 587,
+    user: '',
+    password: '',
+    fromEmail: '',
+    fromName: '',
+    encryption: 'tls',
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await adminEmailSettingsService.getSettings();
+        const data = response.data.data ?? response.data;
+        setEmailSettings({
+          host: data.host ?? '',
+          port: data.port ?? 587,
+          user: data.user ?? '',
+          password: data.password ?? '',
+          fromEmail: data.fromEmail ?? '',
+          fromName: data.fromName ?? '',
+          encryption: data.encryption ?? 'tls',
+        });
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Failed to load notification settings');
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
 
   const handleSave = async () => {
+    if (activeTab !== 'email') {
+      toast.error('Only email SMTP settings can be saved via API');
+      return;
+    }
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    toast.success('Notification protocols synchronized successfully');
-    setLoading(false);
+    try {
+      await adminEmailSettingsService.updateSettings(emailSettings);
+      toast.success('Notification protocols synchronized successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save notification settings');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="max-w-5xl mx-auto py-10 px-6 text-gray-500 text-sm font-bold uppercase tracking-widest">
+        Loading notification settings...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-6 space-y-12 animate-in fade-in duration-700">
-      {/* Header */}
       <div className="flex justify-between items-center bg-white/[0.02] p-8 rounded-[40px] border border-white/[0.05] backdrop-blur-md">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -47,7 +107,8 @@ export default function NotificationsPage() {
         </div>
         <button
           onClick={handleSave}
-          className="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-500/20 flex items-center gap-2 group"
+          disabled={loading}
+          className="px-10 py-4 bg-emerald-500 hover:bg-emerald-400 disabled:bg-gray-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-2xl shadow-emerald-500/20 flex items-center gap-2 group"
         >
           {loading ? (
             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -89,6 +150,8 @@ export default function NotificationsPage() {
                 </label>
                 <input
                   type="text"
+                  value={emailSettings.host}
+                  onChange={(e) => setEmailSettings({ ...emailSettings, host: e.target.value })}
                   className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-indigo-400 font-bold outline-none focus:border-indigo-500/40"
                   placeholder="smtp.postmarkapp.com"
                 />
@@ -99,6 +162,10 @@ export default function NotificationsPage() {
                 </label>
                 <input
                   type="text"
+                  value={emailSettings.port}
+                  onChange={(e) =>
+                    setEmailSettings({ ...emailSettings, port: parseInt(e.target.value, 10) || 587 })
+                  }
                   className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-indigo-400 font-bold outline-none focus:border-indigo-500/40"
                   placeholder="587"
                 />
@@ -109,6 +176,8 @@ export default function NotificationsPage() {
                 </label>
                 <input
                   type="text"
+                  value={emailSettings.user}
+                  onChange={(e) => setEmailSettings({ ...emailSettings, user: e.target.value })}
                   className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-indigo-400 font-bold outline-none focus:border-indigo-500/40"
                 />
               </div>
@@ -119,6 +188,8 @@ export default function NotificationsPage() {
                 <input
                   type="password"
                   title="password"
+                  value={emailSettings.password}
+                  onChange={(e) => setEmailSettings({ ...emailSettings, password: e.target.value })}
                   className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-indigo-400 font-bold outline-none focus:border-indigo-500/40"
                 />
               </div>
@@ -148,6 +219,7 @@ export default function NotificationsPage() {
                     type="text"
                     className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] pl-16 pr-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 shadow-inner"
                     placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxx"
+                    disabled
                   />
                 </div>
               </div>
@@ -159,6 +231,7 @@ export default function NotificationsPage() {
                   type="password"
                   title="password"
                   className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 shadow-inner"
+                  disabled
                 />
               </div>
             </div>
@@ -178,6 +251,7 @@ export default function NotificationsPage() {
                 <textarea
                   title="VAPID Key"
                   className="w-full bg-white/[0.02] border border-white/5 rounded-3xl p-6 text-xs text-amber-500 font-mono outline-none min-h-[120px] shadow-inner"
+                  disabled
                 />
               </div>
               <div className="flex items-center gap-4 bg-amber-500/10 p-6 rounded-[32px] border border-amber-500/20 max-w-sm">

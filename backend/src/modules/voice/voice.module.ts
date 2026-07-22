@@ -10,9 +10,11 @@ import { VoiceCallRepository } from './voice-call.repository';
 import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
+import { VoiceAiService } from './voice-ai.service';
 import { AiModule } from '../ai/ai.module';
 import { CrmModule } from '../crm/crm.module';
 import { TwilioModule } from './twilio.module';
+import { TenantSettingsModule } from '../tenant-settings/tenant-settings.module';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { VoiceCampaign } from '../../database/entities/voice-campaign.entity';
 import { VoicePhoneNumber } from '../../database/entities/voice-phone-number.entity';
@@ -25,6 +27,7 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     ConfigModule,
     TwilioModule,
     BullModule.registerQueue({ name: QUEUE_NAMES.VOICE }),
+    TenantSettingsModule,
     forwardRef(() => AiModule),
     forwardRef(() => CrmModule),
     TypeOrmModule.forFeature([VoiceCall, VoiceCampaign, VoicePhoneNumber, Contact, Segment]),
@@ -36,6 +39,7 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     VoiceCallService,
     VoiceCampaignService,
     VoicePhoneNumberService,
+    VoiceAiService,
   ],
   exports: [
     TwilioModule,
@@ -43,6 +47,7 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     VoiceCallRepository,
     VoiceCampaignService,
     VoicePhoneNumberService,
+    VoiceAiService,
   ],
 })
 export class VoiceModule {}

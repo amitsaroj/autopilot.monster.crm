@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Globe,
   Clock,
   DollarSign,
   Languages,
@@ -11,23 +10,76 @@ import {
   MapPin,
   Calendar,
   Check,
-  Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { tenantService } from '@/services/tenant.service';
+
+interface LocalizationSettings {
+  language: string;
+  timezone: string;
+  currency: string;
+  dateFormat: string;
+}
 
 export default function LocalizationPage() {
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [existingBranding, setExistingBranding] = useState<Record<string, unknown>>({});
+  const [settings, setSettings] = useState<LocalizationSettings>({
+    language: 'en',
+    timezone: 'UTC',
+    currency: 'USD',
+    dateFormat: 'MM/DD/YYYY',
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await tenantService.getSettings();
+        const data = response.data.data ?? response.data;
+        const branding = data.branding ?? {};
+        setExistingBranding(branding);
+        const localization = branding.localization ?? {};
+        setSettings({
+          language: localization.language ?? 'en',
+          timezone: localization.timezone ?? 'UTC',
+          currency: localization.currency ?? 'USD',
+          dateFormat: localization.dateFormat ?? 'MM/DD/YYYY',
+        });
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Failed to load localization settings');
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
 
   const handleSave = async () => {
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    toast.success('Global locale synchronized successfully');
-    setLoading(false);
+    try {
+      await tenantService.updateBranding({
+        ...existingBranding,
+        localization: settings,
+      });
+      toast.success('Global locale synchronized successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save localization settings');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="max-w-5xl mx-auto py-10 px-6 text-gray-500 text-sm font-bold uppercase tracking-widest">
+        Loading localization settings...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-6 space-y-12 animate-in fade-in duration-700">
-      {/* Header */}
       <div className="flex justify-between items-center bg-white/[0.02] p-8 rounded-[40px] border border-white/[0.05] backdrop-blur-md">
         <div>
           <div className="flex items-center gap-2 mb-2">
@@ -57,7 +109,6 @@ export default function LocalizationPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Language & Timezone */}
         <div className="p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden group">
           <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-10 flex items-center gap-4">
             <Languages className="w-7 h-7 text-violet-500" /> Dialect & Time
@@ -68,7 +119,11 @@ export default function LocalizationPage() {
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
                 System Primary Language
               </label>
-              <select className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-violet-400 font-bold outline-none focus:border-violet-500/40 appearance-none cursor-pointer">
+              <select
+                value={settings.language}
+                onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+                className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-violet-400 font-bold outline-none focus:border-violet-500/40 appearance-none cursor-pointer"
+              >
                 <option value="en" className="bg-[#0b0f19]">
                   English (Global Standard)
                 </option>
@@ -90,7 +145,11 @@ export default function LocalizationPage() {
               </label>
               <div className="relative">
                 <Clock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-500" />
-                <select className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] pl-16 pr-8 py-5 text-sm text-violet-400 font-bold outline-none focus:border-violet-500/40 appearance-none cursor-pointer">
+                <select
+                  value={settings.timezone}
+                  onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] pl-16 pr-8 py-5 text-sm text-violet-400 font-bold outline-none focus:border-violet-500/40 appearance-none cursor-pointer"
+                >
                   <option value="UTC" className="bg-[#0b0f19]">
                     Coordinated Universal Time (UTC)
                   </option>
@@ -109,7 +168,6 @@ export default function LocalizationPage() {
           </div>
         </div>
 
-        {/* Currency & Format */}
         <div className="p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden group">
           <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-10 flex items-center gap-4">
             <DollarSign className="w-7 h-7 text-emerald-500" /> Fiscal & Formats
@@ -120,7 +178,11 @@ export default function LocalizationPage() {
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
                 Primary Fiscal Unit (Currency)
               </label>
-              <select className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer">
+              <select
+                value={settings.currency}
+                onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
+              >
                 <option value="USD" className="bg-[#0b0f19]">
                   US Dollar ($)
                 </option>
@@ -142,7 +204,11 @@ export default function LocalizationPage() {
               </label>
               <div className="relative">
                 <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
-                <select className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] pl-16 pr-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer">
+                <select
+                  value={settings.dateFormat}
+                  onChange={(e) => setSettings({ ...settings, dateFormat: e.target.value })}
+                  className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] pl-16 pr-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
+                >
                   <option value="MM/DD/YYYY" className="bg-[#0b0f19]">
                     MM/DD/YYYY (USA)
                   </option>
@@ -158,7 +224,6 @@ export default function LocalizationPage() {
           </div>
         </div>
 
-        {/* Regional Lock */}
         <div className="md:col-span-2 p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] flex items-center gap-10">
           <div className="w-20 h-20 rounded-[32px] bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
             <MapPin className="w-10 h-10" />

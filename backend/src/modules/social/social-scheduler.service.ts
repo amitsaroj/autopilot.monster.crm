@@ -22,7 +22,6 @@ export class SocialSchedulerService {
       try {
         this.logger.log(`Publishing post ${post.id} to ${post.platform}`);
 
-        // Dispatch to platform-specific publisher
         await this.publishToExternalPlatform(post);
 
         await this.socialService.updatePost(post.tenantId, post.id, {
@@ -52,10 +51,7 @@ export class SocialSchedulerService {
         const pageToken = process.env.FACEBOOK_PAGE_TOKEN;
         const pageId = process.env.FACEBOOK_PAGE_ID;
         if (!pageToken || !pageId) {
-          this.logger.warn(
-            `Facebook/Instagram credentials not configured — skipping publish for post ${post.id}`,
-          );
-          return;
+          throw new Error('Facebook/Instagram credentials not configured');
         }
         const res = await fetch(`https://graph.facebook.com/v17.0/${pageId}/feed`, {
           method: 'POST',
@@ -75,10 +71,7 @@ export class SocialSchedulerService {
       case 'TWITTER': {
         const bearerToken = process.env.TWITTER_BEARER_TOKEN;
         if (!bearerToken) {
-          this.logger.warn(
-            `Twitter credentials not configured — skipping publish for post ${post.id}`,
-          );
-          return;
+          throw new Error('Twitter credentials not configured');
         }
         const res = await fetch('https://api.twitter.com/2/tweets', {
           method: 'POST',
@@ -99,10 +92,7 @@ export class SocialSchedulerService {
         const accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
         const authorUrn = process.env.LINKEDIN_AUTHOR_URN;
         if (!accessToken || !authorUrn) {
-          this.logger.warn(
-            `LinkedIn credentials not configured — skipping publish for post ${post.id}`,
-          );
-          return;
+          throw new Error('LinkedIn credentials not configured');
         }
         const res = await fetch('https://api.linkedin.com/v2/ugcPosts', {
           method: 'POST',
@@ -131,7 +121,7 @@ export class SocialSchedulerService {
       }
 
       default:
-        this.logger.warn(`Unsupported platform: ${platform}`);
+        throw new Error(`Unsupported platform: ${platform}`);
     }
   }
 }

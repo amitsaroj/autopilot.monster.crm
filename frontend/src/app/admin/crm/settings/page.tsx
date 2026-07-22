@@ -1,24 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Settings,
-  Globe,
   Bell,
   Mail,
   Sliders,
   Shield,
-  Palette,
-  Database,
   Save,
-  CheckCircle2,
-  Clock,
-  Users,
-  Zap,
-  Tag,
-  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { tenantService } from '@/services/tenant.service';
 
 const SECTIONS = [
   { id: 'general', label: 'General', icon: Settings },
@@ -28,35 +20,70 @@ const SECTIONS = [
   { id: 'security', label: 'Data Privacy', icon: Shield },
 ];
 
+const DEFAULT_SETTINGS = {
+  workspaceName: '',
+  timezone: 'Asia/Kolkata',
+  currency: 'USD',
+  language: 'en',
+  emailNotifications: true,
+  dealAlerts: true,
+  leadAssignment: true,
+  activityReminders: true,
+  emailFromName: 'CRM Team',
+  emailFromAddress: 'crm@workspace.com',
+  emailSignature: 'Best regards,\nThe CRM Team',
+  defaultPipeline: 'Sales Pipeline',
+  dealRotting: '14',
+  autoClose: false,
+  gdprMode: false,
+  dataRetention: '24',
+  anonymizeDeleted: true,
+};
+
 export default function AdminCRMSettingsPage() {
   const [activeSection, setActiveSection] = useState('general');
   const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState({
-    workspaceName: 'My CRM Workspace',
-    timezone: 'Asia/Kolkata',
-    currency: 'USD',
-    language: 'en',
-    emailNotifications: true,
-    dealAlerts: true,
-    leadAssignment: true,
-    activityReminders: true,
-    emailFromName: 'CRM Team',
-    emailFromAddress: 'crm@workspace.com',
-    emailSignature: 'Best regards,\nThe CRM Team',
-    defaultPipeline: 'Sales Pipeline',
-    dealRotting: '14',
-    autoClose: false,
-    gdprMode: false,
-    dataRetention: '24',
-    anonymizeDeleted: true,
-  });
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [existingBranding, setExistingBranding] = useState<Record<string, unknown>>({});
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
-  const handleSave = () => {
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await tenantService.getSettings();
+        const data = response.data.data ?? response.data;
+        const branding = data.branding ?? {};
+        const crmSettings = branding.crmSettings ?? {};
+        setExistingBranding(branding);
+        setSettings({
+          ...DEFAULT_SETTINGS,
+          ...crmSettings,
+          workspaceName: data.name ?? crmSettings.workspaceName ?? '',
+        });
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Failed to load CRM settings');
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const { workspaceName, ...crmSettings } = settings;
+      await tenantService.updateSettings({ name: workspaceName });
+      await tenantService.updateBranding({
+        ...existingBranding,
+        crmSettings: { ...crmSettings, workspaceName },
+      });
       toast.success('Settings saved successfully');
-    }, 1200);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to save CRM settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const renderSection = () => {
@@ -304,6 +331,14 @@ export default function AdminCRMSettingsPage() {
         );
     }
   };
+
+  if (initialLoading) {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-700 text-gray-500 text-sm font-bold uppercase tracking-widest">
+        Loading CRM settings...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">

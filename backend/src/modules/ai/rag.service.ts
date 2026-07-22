@@ -1,6 +1,11 @@
 import * as crypto from 'crypto';
 
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QdrantClient } from '@qdrant/js-client-rest';
 import OpenAI from 'openai';
@@ -12,6 +17,7 @@ import { QdrantConfig } from '../../config/qdrant.config';
 import { BillingService } from '../billing/billing.service';
 import { resolveUsagePeriodBounds } from '../billing/usage-period.util';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { KnowledgeBaseService } from './knowledge-base.service';
 
 const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
   'gpt-4o': { input: 0.005, output: 0.015 },
@@ -29,6 +35,7 @@ export class RagService {
     private configService: ConfigService,
     private configOrchestrator: ConfigOrchestratorService,
     private billingService: BillingService,
+    private knowledgeBaseService: KnowledgeBaseService,
   ) {
     const qdrantCfg = this.configService.get<QdrantConfig>('qdrant');
     this.qdrant = new QdrantClient({
@@ -43,10 +50,19 @@ export class RagService {
       return this.openaiClients.get(cacheKey)!;
     }
 
-    const apiKey = await this.configOrchestrator.get(tenantId || '', 'openai_key');
-    const client = new OpenAI({
-      apiKey: apiKey || this.configService.get('OPENAI_API_KEY') || 'mock-api-key',
-    });
+    const tenantKey = await this.configOrchestrator.get(tenantId || '', 'openai_key');
+    const apiKey =
+      (typeof tenantKey === 'string' && tenantKey.trim()) ||
+      this.configService.get<string>('OPENAI_API_KEY') ||
+      '';
+
+    if (!apiKey || apiKey === 'mock-api-key') {
+      throw new ServiceUnavailableException(
+        'OpenAI API key is not configured for this tenant. Set openai_key or OPENAI_API_KEY.',
+      );
+    }
+
+    const client = new OpenAI({ apiKey });
 
     this.openaiClients.set(cacheKey, client);
     return client;
@@ -369,24 +385,106 @@ export class RagService {
     return `kb_${tenantId.replace(/[^a-zA-Z0-9]/g, '_')}`.toLowerCase();
   }
 
-  async crawlUrl(tenantId: string, url: string) {
-    this.logger.log(`[STUB] Crawling URL ${url} for tenant ${tenantId}`);
+  async crawlUrl(tenantId: string, url: string, knowledgeBaseId?: string) {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      throw new BadRequestException('Invalid URL');
+    }
+
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      throw new BadRequestException('URL must use http or https');
+    }
+
+    this.logger.log(`Crawling URL ${url} for tenant ${tenantId}`);
+
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        headers: { 'User-Agent': 'AutopilotMonsterCRM/1.0' },
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch (err) {
+      this.logger.error(`Failed to fetch URL ${url}`, err);
+      throw new ServiceUnavailableException(`Unable to fetch URL: ${url}`);
+    }
+
+    if (!response.ok) {
+      throw new BadRequestException(`URL fetch failed with status ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    const body = await response.text();
+    const text = contentType.includes('html') ? this.extractTextFromHtml(body) : body;
+
+    if (!text.trim()) {
+      throw new BadRequestException('No extractable text at URL');
+    }
+
+    const fileName = parsedUrl.pathname.split('/').filter(Boolean).pop() || parsedUrl.hostname;
+    const indexResult = await this.processFileAndIndex(
+      tenantId,
+      Buffer.from(text, 'utf-8'),
+      fileName,
+      'text/plain',
+      knowledgeBaseId,
+    );
+
+    if (!indexResult.success) {
+      throw new BadRequestException(indexResult.error || 'Failed to index URL content');
+    }
+
     return {
       success: true,
       url,
-      pagesIndexed: 5,
-      chunksAdded: 25,
+      pagesIndexed: 1,
+      chunksAdded: indexResult.chunksIndexed,
+      documentId: indexResult.documentId,
     };
   }
 
   async getKnowledgeAnalytics(tenantId: string) {
-    this.logger.log(`[STUB] Fetching knowledge analytics for tenant ${tenantId}`);
+    const knowledgeBases = await this.knowledgeBaseService.findAll(tenantId);
+
+    let totalDocuments = 0;
+    let totalChunks = 0;
+
+    for (const kb of knowledgeBases) {
+      const documents =
+        (kb.indexMeta?.documents as Array<{ chunksIndexed?: number }> | undefined) ?? [];
+      totalDocuments += documents.length;
+
+      if (typeof kb.indexMeta?.totalChunks === 'number') {
+        totalChunks += kb.indexMeta.totalChunks;
+      } else {
+        totalChunks += documents.reduce((sum, doc) => sum + Number(doc.chunksIndexed ?? 0), 0);
+      }
+    }
+
+    let qdrantPointCount = 0;
+    try {
+      const collectionInfo = await this.qdrant.getCollection(this.getCollectionName(tenantId));
+      qdrantPointCount = collectionInfo.points_count ?? 0;
+    } catch {
+      qdrantPointCount = 0;
+    }
+
     return {
-      totalDocuments: 15,
-      totalChunks: 1500,
-      queryCountLast30Days: 450,
-      averageRetrievalTimeMs: 125,
-      topTopics: ['billing', 'integration', 'pricing'],
+      totalDocuments,
+      totalChunks: Math.max(totalChunks, qdrantPointCount),
+      queryCountLast30Days: 0,
+      averageRetrievalTimeMs: 0,
+      topTopics: [] as string[],
     };
+  }
+
+  private extractTextFromHtml(html: string): string {
+    return html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 }
