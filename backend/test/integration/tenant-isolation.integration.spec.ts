@@ -15,6 +15,7 @@ import { WhatsAppMessage } from '../../src/database/entities/whatsapp-message.en
 import { Wallet } from '../../src/database/entities/wallet.entity';
 import { WalletTransaction } from '../../src/database/entities/wallet-transaction.entity';
 import { PipelineStage } from '../../src/database/entities/pipeline-stage.entity';
+import { UserEntity } from '../../src/modules/auth/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 const TENANT_A = '11111111-1111-1111-1111-111111111111';
@@ -76,6 +77,7 @@ describe('Tenant isolation (DealService)', () => {
         { provide: DealRepository, useValue: mockDealRepository },
         { provide: PipelineService, useValue: { findOne: jest.fn(), findDefault: jest.fn() } },
         { provide: getRepositoryToken(PipelineStage), useValue: { findOne: jest.fn() } },
+        { provide: getRepositoryToken(UserEntity), useValue: { find: jest.fn() } },
         { provide: EventEmitter2, useValue: { emit: jest.fn() } },
       ],
     }).compile();

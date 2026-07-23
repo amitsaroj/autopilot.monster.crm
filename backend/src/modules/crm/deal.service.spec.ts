@@ -7,6 +7,7 @@ import { DealRepository } from './deal.repository';
 import { PipelineService } from './pipeline.service';
 import { Deal, DealStatus } from '../../database/entities/deal.entity';
 import { PipelineStage } from '../../database/entities/pipeline-stage.entity';
+import { UserEntity } from '../auth/entities/user.entity';
 
 describe('DealService', () => {
   let service: DealService;
@@ -28,6 +29,10 @@ describe('DealService', () => {
     findOne: jest.fn(),
   };
 
+  const mockUserRepository = {
+    find: jest.fn(),
+  };
+
   const mockEventEmitter = {
     emit: jest.fn(),
   };
@@ -39,6 +44,7 @@ describe('DealService', () => {
         { provide: DealRepository, useValue: mockDealRepository },
         { provide: PipelineService, useValue: mockPipelineService },
         { provide: getRepositoryToken(PipelineStage), useValue: mockStageRepository },
+        { provide: getRepositoryToken(UserEntity), useValue: mockUserRepository },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
