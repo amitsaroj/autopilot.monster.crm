@@ -7,6 +7,7 @@ import { DealRepository } from '../../src/modules/crm/deal.repository';
 import { PipelineService } from '../../src/modules/crm/pipeline.service';
 import { Deal, DealStatus } from '../../src/database/entities/deal.entity';
 import { PipelineStage } from '../../src/database/entities/pipeline-stage.entity';
+import { UserEntity } from '../../src/modules/auth/entities/user.entity';
 
 describe('Deal lifecycle integration', () => {
   let service: DealService;
@@ -28,6 +29,10 @@ describe('Deal lifecycle integration', () => {
     findOne: jest.fn(),
   };
 
+  const mockUserRepository = {
+    find: jest.fn(),
+  };
+
   const mockEventEmitter = {
     emit: jest.fn(),
   };
@@ -39,6 +44,7 @@ describe('Deal lifecycle integration', () => {
         { provide: DealRepository, useValue: mockDealRepository },
         { provide: PipelineService, useValue: mockPipelineService },
         { provide: getRepositoryToken(PipelineStage), useValue: mockStageRepository },
+        { provide: getRepositoryToken(UserEntity), useValue: mockUserRepository },
         { provide: EventEmitter2, useValue: mockEventEmitter },
       ],
     }).compile();
