@@ -19,6 +19,36 @@ const nextConfig = {
       },
     ];
   },
+  async headers() {
+    return [
+      {
+        source: '/.well-known/llms.txt',
+        headers: [
+          { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
+          { key: 'Vary', value: 'Accept, Accept-Encoding' }
+        ]
+      },
+      {
+        source: '/openapi.json',
+        headers: [
+          { key: 'Content-Type', value: 'application/json; charset=utf-8' }
+        ]
+      }
+      ,
+      {
+        source: '/.well-known/mcp',
+        headers: [
+          { key: 'Content-Type', value: 'application/json; charset=utf-8' }
+        ]
+      },
+      {
+        source: '/.well-known/protected-resource.json',
+        headers: [
+          { key: 'Content-Type', value: 'application/json; charset=utf-8' }
+        ]
+      }
+    ];
+  },
 };
 
 export default nextConfig;

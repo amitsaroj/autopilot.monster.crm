@@ -1,0 +1,9 @@
+{
+  "resource": "https://autopilot.monster",
+  "scopes_supported": [
+    "read:contacts",
+    "write:contacts",
+    "read:analytics",
+    "agent:invoke"
+  ]
+}

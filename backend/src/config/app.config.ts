@@ -53,6 +53,7 @@ export interface AppConfig {
     keySecret: string;
     webhookSecret: string;
   };
+  publishOpenApi?: boolean;
 }
 
 export const appConfig = registerAs(
@@ -115,5 +116,6 @@ export const appConfig = registerAs(
       keySecret: process.env['RAZORPAY_KEY_SECRET'] ?? '',
       webhookSecret: process.env['RAZORPAY_WEBHOOK_SECRET'] ?? '',
     },
+    publishOpenApi: (process.env['PUBLISH_OPENAPI'] ?? 'false') === 'true',
   }),
 );

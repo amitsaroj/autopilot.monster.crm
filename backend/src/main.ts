@@ -61,31 +61,52 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api/v1');
 
   // Swagger — disabled in production to reduce attack surface
-  if (!isProd) {
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle('AutopilotMonster CRM API')
-      .setDescription('Full-Stack AI-Powered CRM Platform')
-      .setVersion('1.0.0')
-      .addBearerAuth()
-      .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'ApiKey')
-      .addGlobalParameters({
-        in: 'header',
-        name: 'x-tenant-id',
-        required: true,
-        schema: { type: 'string' },
-      })
-      .addGlobalParameters({
-        in: 'header',
-        name: 'x-correlation-id',
-        required: false,
-        schema: { type: 'string' },
-      })
-      .addSecurityRequirements('bearer')
-      .build();
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('AutopilotMonster CRM API')
+    .setDescription('Full-Stack AI-Powered CRM Platform')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'ApiKey')
+    .addGlobalParameters({
+      in: 'header',
+      name: 'x-tenant-id',
+      required: true,
+      schema: { type: 'string' },
+    })
+    .addGlobalParameters({
+      in: 'header',
+      name: 'x-correlation-id',
+      required: false,
+      schema: { type: 'string' },
+    })
+    .addSecurityRequirements('bearer')
+    .build();
 
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+  // Provide interactive docs in non-production only
+  if (!isProd) {
     SwaggerModule.setup('api/docs', app, document, {
       swaggerOptions: { persistAuthorization: true },
+    });
+  }
+
+  // Serve the OpenAPI JSON at /openapi.json (no auth) — always published
+  app.getHttpAdapter().get('/openapi.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.status(200).send(document);
+  });
+
+  // MCP handshake endpoint (minimal) for agents — optional
+  if (appCfg.publishOpenApi) {
+    app.getHttpAdapter().get('/.well-known/mcp/handshake', (_req, res) => {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(200).json({
+        name: 'AutopilotMonster MCP',
+        transport: 'streamablehttp',
+        openapi: '/openapi.json',
+      });
     });
   }
 

@@ -27,6 +27,14 @@ nginx (HTTP/HTTPS) ──► Next.js UI
                         └── Audit log + analytics emitters
 ```
 
+## Documentation (generated)
+
+- High Level Design: [`/docs/HLD.md`](docs/HLD.md)
+- Low Level Design: [`/docs/LLD.md`](docs/LLD.md)
+
+Runbook and implementation documents remain authoritative under `docs/`.
+
+
 Runtime topology for production-like deploys: single EC2 host running `docker-compose.prod.yml` (API, UI, Postgres, Redis, MinIO, Qdrant, nginx, certbot path). Terraform provisions the host, security group, SSM role, and Elastic IP. Queue processors run **in-process** with the API.
 
 ## Technology Stack
