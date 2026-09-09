@@ -1,4 +1,4 @@
-# Autopilot Monster CRM
+# Autopilots Monster CRM
 
 Autopilot Monster CRM is a multi-tenant, AI-oriented CRM and communications platform. The repository contains a Next.js UI, a NestJS API, PostgreSQL schema/migrations, Redis/Bull job processing, MinIO storage, Qdrant configuration, Docker Compose, Terraform, nginx, and GitHub Actions.
 
