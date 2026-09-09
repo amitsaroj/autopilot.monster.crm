@@ -2,10 +2,10 @@ name: Auto Deploy to EC2
 
 on:
   push:
-    branches: [ prod ]
+    branches: [ main ]
 
 concurrency:
-  group: deploy-prod
+  group: deploy-main
   cancel-in-progress: false
 
 jobs:
@@ -103,15 +103,6 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}/api:latest
 
-      - name: Build and Push UI Image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ghcr.io/${{ github.repository }}/ui:latest
-          build-args: |
-            NEXT_PUBLIC_API_URL=https://api.autopilot.monster/api/v1
-
       # --- UPLOAD CONFIG FILES TO S3 ---
       - name: Sync Config to S3
         run: |
@@ -137,7 +128,7 @@ jobs:
               \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/nginx/nginx.conf /home/ubuntu/app/nginx/nginx.conf\",
               \"aws s3 cp s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production /home/ubuntu/app/backend/.env.production\",
               \"cd /home/ubuntu/app\",
-              \"printf 'GITHUB_REPOSITORY=%s\\nDOMAIN=%s\\nNEXT_PUBLIC_API_URL=%s\\n' '${REPO_LOWER}' 'api.autopilot.monster' 'https://api.autopilot.monster/api/v1' > .env\",
+              \"printf 'GITHUB_REPOSITORY=%s\\nDOMAIN=%s\\nNEXT_PUBLIC_API_URL=%s\\n' '${REPO_LOWER}' 'api.autopilots.monster' 'https://api.autopilots.monster/api/v1' > .env\",
               \"sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}\",
               \"sudo docker compose -f docker-compose.prod.yml pull\",
               \"sudo docker compose -f docker-compose.prod.yml run --rm api npm run migrate:prod\",
@@ -176,7 +167,7 @@ jobs:
       - name: Wait for API readiness
         run: |
           for i in $(seq 1 40); do
-            if curl -fsS --max-time 5 "https://api.autopilot.monster/api/v1/health/ready" >/dev/null; then
+            if curl -fsS --max-time 5 "https://api.autopilots.monster/api/v1/health/ready" >/dev/null; then
               echo "API readiness check passed"
               exit 0
             fi

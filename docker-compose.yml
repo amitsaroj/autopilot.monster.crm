@@ -105,34 +105,7 @@ services:
       retries: 3
       start_period: 60s
 
-  ui:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-    restart: always
-    depends_on:
-      api:
-        condition: service_healthy
-    ports:
-      - "${UI_PORT:-3000}:3000"
-    env_file:
-      - ./frontend/.env
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:${API_PORT:-8000}/api/v1
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://127.0.0.1:3000/',(r)=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 45s
+  # Frontend is hosted on Vercel, not in Docker
 
   adminer:
     image: adminer

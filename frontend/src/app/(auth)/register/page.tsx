@@ -127,7 +127,7 @@ export default function RegisterPage() {
           <input
             {...register('email')}
             type="email"
-            placeholder="autopilot.monster@gmail.com"
+            placeholder="autopilots.monster@gmail.com"
             disabled={isLoading}
             className={cn(
               'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',

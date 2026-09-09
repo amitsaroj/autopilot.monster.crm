@@ -43,8 +43,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         }
       },
       algorithms: [jwt.algorithm],
-      issuer: 'autopilot.monster',
-      audience: 'autopilot.monster.user',
+      issuer: 'autopilots.monster',
+      audience: 'autopilots.monster.user',
     });
   }
 

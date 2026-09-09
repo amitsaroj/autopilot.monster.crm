@@ -24,7 +24,7 @@ export class EmailService {
       const info = await this.transporter.sendMail({
         from: this.configService.get<string>(
           'SMTP_FROM',
-          '"Autopilot Monster" <noreply@autopilot.monster>',
+          '"Autopilot Monster" <noreply@autopilots.monster>',
         ),
         to,
         subject,

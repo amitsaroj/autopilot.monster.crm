@@ -16,7 +16,7 @@
         "type": "oauth2",
         "flows": {
           "clientCredentials": {
-            "tokenUrl": "https://auth.autopilot.monster/oauth/token",
+            "tokenUrl": "https://auth.autopilots.monster/oauth/token",
             "scopes": {
               "read:contacts": "Read contacts and leads",
               "write:contacts": "Create and update contacts",

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-22  
 **Agent:** 14 findings + Agent 15 verification (post Wave 4)  
-**Repo:** `/data/Antier-project/Demo/autopilot.monster.crm`
+**Repo:** `/data/Antier-project/Demo/autopilots.monster.crm`
 
 ---
 

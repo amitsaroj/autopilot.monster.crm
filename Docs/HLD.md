@@ -1,5 +1,5 @@
 # High Level Design (HLD)
-Project: autopilot.monster.crm  
+Project: autopilots.monster.crm  
 Type: Multi-tenant Enterprise CRM SaaS Platform  
 Backend: NestJS  
 Frontend: Next.js  

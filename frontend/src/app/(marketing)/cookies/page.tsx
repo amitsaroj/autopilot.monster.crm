@@ -158,10 +158,10 @@ export default function CookiesPage() {
                 If you have further questions about how we use cookies or other technologies, please
                 email us at{' '}
                 <a
-                  href="mailto:autopilot.monster@gmail.com"
+                  href="mailto:autopilots.monster@gmail.com"
                   className="text-indigo-500 hover:underline font-semibold"
                 >
-                  autopilot.monster@gmail.com
+                  autopilots.monster@gmail.com
                 </a>
                 .
               </p>

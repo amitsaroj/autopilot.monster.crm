@@ -1,5 +1,5 @@
 # Low Level Design (LLD)
-Project: autopilot.monster.crm  
+Project: autopilots.monster.crm  
 Version: 1.0.0  
 Date: 2024-03-21
 
@@ -915,7 +915,7 @@ Collection: tenant_{tenant_id}
 {
   sub: 'user-uuid',
   tenantId: 'tenant-uuid',
-  email: 'autopilot.monster@gmail.com',
+  email: 'autopilots.monster@gmail.com',
   role: 'SALES_REP',
   permissions: ['crm:read', 'crm:write'],
   iat: 1700000000,

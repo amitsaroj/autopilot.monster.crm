@@ -1,7 +1,7 @@
 # CHECKPOINT — Repository Audit (Steps 1–10)
 
 **Date:** 2026-07-22  
-**Repo:** `/data/Antier-project/Demo/autopilot.monster.crm`  
+**Repo:** `/data/Antier-project/Demo/autopilots.monster.crm`  
 **Mode:** **Waves 1–4 complete** · Step 8/10 reports regenerated (Agent 15 post Wave 4)
 
 ---

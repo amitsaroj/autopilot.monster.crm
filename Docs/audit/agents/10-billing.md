@@ -1,7 +1,7 @@
 # Agent 10 — Billing Platform
 
 **Date:** 2026-07-22  
-**Repo:** `/data/Antier-project/Demo/autopilot.monster.crm`  
+**Repo:** `/data/Antier-project/Demo/autopilots.monster.crm`  
 **Wave:** Billing platform fixes (BL-C09, F-031, F-032 partial)
 
 ---

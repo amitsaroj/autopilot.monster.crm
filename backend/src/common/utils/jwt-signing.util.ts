@@ -4,8 +4,8 @@ import { createPrivateKey, createPublicKey } from 'node:crypto';
 
 import type { JwtConfig } from '../../config/jwt.config';
 
-const ISSUER = 'autopilot.monster';
-const AUDIENCE = 'autopilot.monster.user';
+const ISSUER = 'autopilots.monster';
+const AUDIENCE = 'autopilots.monster.user';
 
 export type JwtTokenKind = 'access' | 'refresh';
 

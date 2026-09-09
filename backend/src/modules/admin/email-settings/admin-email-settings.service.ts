@@ -22,7 +22,7 @@ export class AdminEmailSettingsService {
       port: config['smtp_port'] || 587,
       user: config['smtp_user'] || 'apikey',
       password: config['smtp_password'] || '',
-      fromEmail: config['from_email'] || 'noreply@autopilot.monster',
+      fromEmail: config['from_email'] || 'noreply@autopilots.monster',
       fromName: config['from_name'] || 'Autopilot Monster',
       encryption: config['smtp_encryption'] || 'tls',
     };

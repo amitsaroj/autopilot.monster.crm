@@ -7,7 +7,7 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },
-      { protocol: 'https', hostname: 'cdn.autopilot.monster' }
+      { protocol: 'https', hostname: 'cdn.autopilots.monster' }
     ],
     formats: ['image/avif', 'image/webp'],
   },

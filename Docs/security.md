@@ -1,5 +1,5 @@
 # Security & Compliance Design
-Project: autopilot.monster.crm
+Project: autopilots.monster.crm
 
 ---
 
@@ -64,7 +64,7 @@ Strict rate limits applied globally per tenant/IP to prevent abuse:
 
 ### 2.3 CORS & Headers
 - Helmet.js applied for secure HTTP headers (HSTS, NoSniff, XSS Filter).
-- CORS strictly limited to allowed frontend domains (`app.autopilot.monster`).
+- CORS strictly limited to allowed frontend domains (`app.autopilots.monster`).
 
 ### 2.4 Zero Trust Implementation
 - **Edge Layer**: Next.js Middleware verifies session cookies before serving components.
