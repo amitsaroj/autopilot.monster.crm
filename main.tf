@@ -17,7 +17,8 @@ resource "aws_iam_role" "ssm_role" {
   })
 
   lifecycle {
-    ignore_changes = [assume_role_policy]
+    ignore_changes        = [assume_role_policy]
+    create_before_destroy = true
   }
 }
 
@@ -44,12 +45,13 @@ resource "aws_iam_instance_profile" "ssm_profile" {
   role = aws_iam_role.ssm_role.name
 
   lifecycle {
-    ignore_changes = [role]
+    ignore_changes        = [role]
+    create_before_destroy = true
   }
 }
 
 resource "aws_security_group" "sg" {
-  name        = "${local.name_prefix}-sg"
+  name_prefix = "${local.name_prefix}-sg-"
   description = "Allow HTTP and HTTPS for nginx ingress"
 
   ingress {
@@ -84,7 +86,8 @@ resource "aws_security_group" "sg" {
   }
 
   lifecycle {
-    ignore_changes = [ingress, egress]
+    create_before_destroy = true
+    ignore_changes        = [ingress, egress]
   }
 
   tags = {
