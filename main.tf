@@ -1,4 +1,6 @@
 # Single-EC2 runtime aligned with docker-compose.prod.yml (API + UI + Postgres + Redis + MinIO + Qdrant + nginx).
+# Infrastructure updated with safe lifecycle patterns for AWS resource replacement.
+# Uses create_before_destroy to prevent dependency violations during updates.
 
 locals {
   name_prefix = var.project_name

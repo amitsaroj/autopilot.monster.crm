@@ -13,7 +13,7 @@ variable "project_name" {
 variable "instance_type" {
   description = "EC2 instance type hosting docker-compose.prod.yml"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.micro"
 }
 
 variable "root_volume_gb" {
