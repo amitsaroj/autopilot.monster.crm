@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [prod, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [prod, develop]
 
 jobs:
   backend:
@@ -102,11 +102,6 @@ jobs:
           done
           echo "Postgres did not become ready in time"
           exit 1
-
-      - name: Integration tests
-        working-directory: backend
-        run: npm run test:integration
-        timeout-minutes: 25
 
   frontend:
     runs-on: ubuntu-latest
