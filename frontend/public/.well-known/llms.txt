@@ -1,6 +1,6 @@
 # AutopilotMonster agent discoverability
 name: AutopilotMonster
-site: https://autopilot.monster
+site: https://autopilots.monster/demo
 api: /openapi.json
 docs: /api-docs
 when-to-use: |

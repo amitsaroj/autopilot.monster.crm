@@ -3,7 +3,7 @@
   "description": "Model Context Protocol manifest exposing AutopilotMonster API as callable tools for agents.",
   "version": "1.0.0",
   "handshake": {
-    "url": "https://autopilot.monster/.well-known/mcp/handshake",
+    "url": "https://autopilots.monster/demo/.well-known/mcp/handshake",
     "transport": "streamablehttp"
   },
   "tools": [

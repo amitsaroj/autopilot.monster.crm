@@ -6,7 +6,9 @@
     "description": "Public API surface for AutopilotMonster. Contains machine-readable OAuth scopes and example endpoints for agent use."
   },
   "servers": [
-    { "url": "https://autopilot.monster" }
+    {
+      "url": "https://autopilots.monster/demo"
+    }
   ],
   "components": {
     "securitySchemes": {
@@ -29,15 +31,25 @@
       "Error": {
         "type": "object",
         "properties": {
-          "code": { "type": "string" },
-          "message": { "type": "string" },
-          "hint": { "type": "string" }
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          }
         }
       }
     }
   },
   "security": [
-    { "oauth2": ["read:contacts"] }
+    {
+      "oauth2": [
+        "read:contacts"
+      ]
+    }
   ],
   "paths": {
     "/api/health": {
@@ -49,7 +61,14 @@
             "description": "OK",
             "content": {
               "application/json": {
-                "schema": { "type": "object", "properties": { "status": { "type": "string" } } }
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           }
@@ -65,7 +84,9 @@
             "description": "Bad Request",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
