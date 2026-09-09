@@ -20,20 +20,9 @@ jobs:
 
       - name: Validate deploy contract files
         run: |
-          test -f backend/.env.production
           test -f docker-compose.prod.yml
           test -f nginx/nginx.conf
-          required_keys=(
-            APP_PORT APP_HOST APP_URL NODE_ENV FRONTEND_URL
-            JWT_ALGORITHM JWT_PRIVATE_KEY JWT_PUBLIC_KEY JWT_KEY_ID
-            STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET
-          )
-          for key in "${required_keys[@]}"; do
-            if ! grep -q "^${key}=" backend/.env.production; then
-              echo "Missing required key in backend/.env.production: ${key}"
-              exit 1
-            fi
-          done
+          echo "✓ Required deployment files found"
 
       - name: AWS Login
         uses: aws-actions/configure-aws-credentials@v4
@@ -103,16 +92,92 @@ jobs:
           push: true
           tags: ghcr.io/${{ github.repository }}/api:latest
 
+      # --- CREATE .ENV FROM GITHUB SECRETS ---
+      - name: Generate backend .env.production from GitHub Secrets
+        run: |
+          cat > backend/.env.production << 'EOF'
+          # Production Environment — Generated from GitHub Secrets
+          
+          # Application
+          APP_PORT=${{ secrets.PROD_APP_PORT }}
+          APP_HOST=${{ secrets.PROD_APP_HOST }}
+          APP_URL=${{ secrets.PROD_APP_URL }}
+          NODE_ENV=production
+          APP_SECRET=${{ secrets.PROD_APP_SECRET }}
+          LOG_LEVEL=${{ secrets.PROD_LOG_LEVEL }}
+          LOG_FORMAT=${{ secrets.PROD_LOG_FORMAT }}
+          
+          # Database
+          DATABASE_URL=${{ secrets.PROD_DATABASE_URL }}
+          DB_SYNCHRONIZE=false
+          DB_SSL=true
+          DB_LOGGING=false
+          DB_POOL_SIZE=20
+          
+          # Cache / Queue (Redis)
+          REDIS_HOST=redis
+          REDIS_PORT=6379
+          REDIS_PASSWORD=${{ secrets.PROD_REDIS_PASSWORD }}
+          REDIS_DB=0
+          REDIS_TLS=false
+          REDIS_TTL=3600
+          
+          # Storage (S3)
+          MINIO_ENDPOINT=${{ secrets.PROD_MINIO_ENDPOINT }}
+          MINIO_PORT=${{ secrets.PROD_MINIO_PORT }}
+          MINIO_ACCESS_KEY=${{ secrets.PROD_MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY=${{ secrets.PROD_MINIO_SECRET_KEY }}
+          
+          # Vector Database
+          QDRANT_URL=${{ secrets.PROD_QDRANT_URL }}
+          
+          # Authentication (RS256)
+          JWT_ALGORITHM=${{ secrets.PROD_JWT_ALGORITHM }}
+          JWT_PRIVATE_KEY=${{ secrets.PROD_JWT_PRIVATE_KEY }}
+          JWT_PUBLIC_KEY=${{ secrets.PROD_JWT_PUBLIC_KEY }}
+          JWT_KEY_ID=${{ secrets.PROD_JWT_KEY_ID }}
+          JWT_EXPIRES_IN=15m
+          JWT_REFRESH_SECRET=${{ secrets.PROD_JWT_REFRESH_SECRET }}
+          JWT_REFRESH_EXPIRES_IN=7d
+          
+          # AI Services
+          OPENAI_API_KEY=${{ secrets.PROD_OPENAI_API_KEY }}
+          FRONTEND_URL=https://autopilots.monster
+          
+          # Stripe
+          STRIPE_SECRET_KEY=${{ secrets.PROD_STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET=${{ secrets.PROD_STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PRICE_STARTER_MONTHLY=${{ secrets.PROD_STRIPE_PRICE_STARTER_MONTHLY }}
+          STRIPE_PRICE_STARTER_ANNUAL=${{ secrets.PROD_STRIPE_PRICE_STARTER_ANNUAL }}
+          STRIPE_PRICE_PRO_MONTHLY=${{ secrets.PROD_STRIPE_PRICE_PRO_MONTHLY }}
+          STRIPE_PRICE_PRO_ANNUAL=${{ secrets.PROD_STRIPE_PRICE_PRO_ANNUAL }}
+          STRIPE_PRICE_ENTERPRISE_MONTHLY=${{ secrets.PROD_STRIPE_PRICE_ENTERPRISE_MONTHLY }}
+          STRIPE_PRICE_ENTERPRISE_ANNUAL=${{ secrets.PROD_STRIPE_PRICE_ENTERPRISE_ANNUAL }}
+          
+          # Rate Limiting
+          THROTTLE_TTL=60
+          THROTTLE_LIMIT=100
+          
+          # OAuth
+          GOOGLE_CLIENT_ID=${{ secrets.PROD_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CALLBACK_URL=https://api.autopilots.monster/api/v1/auth/google/callback
+          FACEBOOK_APP_ID=${{ secrets.PROD_FACEBOOK_APP_ID }}
+          FACEBOOK_APP_SECRET=${{ secrets.PROD_FACEBOOK_APP_SECRET }}
+          FACEBOOK_CALLBACK_URL=https://api.autopilots.monster/api/v1/auth/facebook/callback
+          GITHUB_CLIENT_ID=${{ secrets.PROD_GITHUB_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET=${{ secrets.PROD_GITHUB_CLIENT_SECRET }}
+          GITHUB_CALLBACK_URL=https://api.autopilots.monster/api/v1/auth/github/callback
+          EOF
+          echo "✓ .env.production generated from GitHub Secrets"
+
       # --- UPLOAD CONFIG FILES TO S3 ---
       - name: Sync Config to S3
         run: |
           aws s3 cp docker-compose.prod.yml s3://${{ env.BUCKET_NAME }}/deploy/docker-compose.prod.yml
           aws s3 cp nginx/nginx.conf s3://${{ env.BUCKET_NAME }}/deploy/nginx/nginx.conf
-          if [ -f backend/.env.production ]; then
-            aws s3 cp backend/.env.production s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production
-          else
-            echo "backend/.env.production not in repo — expecting file at s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production"
-          fi
+          aws s3 cp backend/.env.production s3://${{ env.BUCKET_NAME }}/deploy/backend/.env.production
+          echo "✓ Config files synced to S3"
 
       # --- DEPLOY VIA SSM ---
       - name: Deploy via SSM
