@@ -3,7 +3,7 @@ export const env = {
   isProduction: process.env['NODE_ENV'] === 'production',
 
   app: {
-    port: Number.parseInt(process.env['APP_PORT'] ?? '3333', 10),
+    port: Number.parseInt(process.env['APP_PORT'] ?? process.env['PORT'] ?? '8000', 10),
     host: process.env['APP_HOST'] ?? '0.0.0.0',
     url: process.env['APP_URL'] ?? 'http://localhost:8000',
     frontendUrl: process.env['FRONTEND_URL'] ?? 'http://localhost:3000',
