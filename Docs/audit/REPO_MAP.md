@@ -1,7 +1,7 @@
 # Autopilot Monster CRM — Repository Map
 
 **Audit date:** 2026-07-22  
-**Repo root:** `/data/Antier-project/Demo/autopilot.monster.crm`  
+**Repo root:** `/data/Antier-project/Demo/autopilots.monster.crm`  
 **Method:** Static discovery (no runtime). Docs purged via recent merges — missing Docs ≠ missing features.
 
 ---
@@ -9,7 +9,7 @@
 ## High-level layout
 
 ```
-autopilot.monster.crm/
+autopilots.monster.crm/
 ├── backend/                 # NestJS 11 modular monolith (API)
 ├── frontend/                # Next.js 16 App Router (UI)
 ├── Docs/                    # Remnant design docs only (5 files)

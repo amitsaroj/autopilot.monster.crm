@@ -2,7 +2,7 @@
 
 **Audit date:** 2026-07-22  
 **Agent:** 15 — Production Readiness Auditor (Step 10 synthesis, post Wave 4)  
-**Repo:** `/data/Antier-project/Demo/autopilot.monster.crm`
+**Repo:** `/data/Antier-project/Demo/autopilots.monster.crm`
 
 ---
 

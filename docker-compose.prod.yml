@@ -1,6 +1,6 @@
 # Production / demo stack — single Postgres, API, UI, Redis, MinIO, Qdrant, nginx TLS.
 # Copy backend/.env.production.example → backend/.env.production and fill secrets before up.
-# Set GITHUB_REPOSITORY (lowercase) when pulling GHCR images, e.g. owner/autopilot.monster.crm
+# Set GITHUB_REPOSITORY (lowercase) when pulling GHCR images, e.g. owner/autopilots.monster.crm
 
 services:
   ssl-init:
@@ -45,8 +45,6 @@ services:
         condition: service_completed_successfully
       api:
         condition: service_healthy
-      ui:
-        condition: service_healthy
     restart: unless-stopped
     networks:
       - autopilot_net
@@ -74,7 +72,7 @@ services:
       - autopilot_net
 
   api:
-    image: ghcr.io/${GITHUB_REPOSITORY:-owner/autopilot.monster.crm}/api:latest
+    image: ghcr.io/${GITHUB_REPOSITORY:-owner/autopilots.monster.crm}/api:latest
     container_name: autopilot_api
     env_file:
       - path: ./backend/.env.production
@@ -128,21 +126,7 @@ services:
 
   # Queue processors (WhatsApp broadcast, import/export, workflow) run in-process with the API.
   # No separate worker image exists yet — missing queue processors are application gaps (BL-C08).
-
-  ui:
-    image: ghcr.io/${GITHUB_REPOSITORY:-owner/autopilot.monster.crm}/ui:latest
-    container_name: autopilot_ui
-    env_file:
-      - path: ./frontend/.env.production
-        required: false
-    environment:
-      - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://localhost/api/v1}
-    expose:
-      - 3000
-    depends_on:
-      api:
-        condition: service_healthy
+  # Frontend is hosted on Vercel — not deployed to AWS.
     restart: always
     healthcheck:
       test:

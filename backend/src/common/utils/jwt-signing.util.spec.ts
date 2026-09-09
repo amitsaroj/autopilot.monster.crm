@@ -55,8 +55,8 @@ describe('jwt-signing.util', () => {
     expect(resolveJwtVerifyKey(config, 'refresh')).toBe('test-refresh-secret');
     expect(buildJwtSignOptions(config, 'access')).toMatchObject({
       algorithm: 'HS256',
-      issuer: 'autopilot.monster',
-      audience: 'autopilot.monster.user',
+      issuer: 'autopilots.monster',
+      audience: 'autopilots.monster.user',
     });
     const token = signJwtToken(config, 'access', { sub: 'user-1' });
     expect(typeof token).toBe('string');

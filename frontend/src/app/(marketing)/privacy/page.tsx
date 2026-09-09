@@ -196,10 +196,10 @@ export default function PrivacyPage() {
                 If you have any questions about this Privacy Policy, please contact our data
                 protection officer at{' '}
                 <a
-                  href="mailto:autopilot.monster@gmail.com"
+                  href="mailto:autopilots.monster@gmail.com"
                   className="text-indigo-500 hover:underline font-semibold"
                 >
-                  autopilot.monster@gmail.com
+                  autopilots.monster@gmail.com
                 </a>
                 .
               </p>

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-22  
 **Role:** CTO / Product / Engineering Director / Release Manager  
-**Repo:** `/data/Antier-project/Demo/autopilot.monster.crm`
+**Repo:** `/data/Antier-project/Demo/autopilots.monster.crm`
 
 ## Verdict
 

@@ -23,7 +23,7 @@ export class AdminSystemSettingsService {
       maintenanceMode: config['maintenance_mode'] || false,
       allowRegistration:
         config['allow_registration'] !== undefined ? config['allow_registration'] : true,
-      contactEmail: config['contact_email'] || 'admin@autopilot.monster',
+      contactEmail: config['contact_email'] || 'admin@autopilots.monster',
       logoUrl: config['logo_url'] || '',
       ...config,
     };

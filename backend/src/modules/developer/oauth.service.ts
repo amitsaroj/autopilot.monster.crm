@@ -140,8 +140,8 @@ export class OAuthService {
     const accessToken = await this.jwtService.signAsync(payload, {
       secret: this.jwtConfig.secret,
       expiresIn: '1h',
-      issuer: 'autopilot.monster',
-      audience: 'autopilot.monster.user',
+      issuer: 'autopilots.monster',
+      audience: 'autopilots.monster.user',
     });
 
     return {

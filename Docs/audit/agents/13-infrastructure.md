@@ -84,9 +84,9 @@ curl -sf -o /dev/null -w '%{http_code}\n' http://localhost:3000/
 
 # 3) Prod-shaped stack (needs images, or temporarily add build: blocks)
 # Build & tag locally then retag to match compose image names, or:
-docker build -t ghcr.io/${GITHUB_REPOSITORY:-owner/autopilot.monster.crm}/api:latest ./backend
+docker build -t ghcr.io/${GITHUB_REPOSITORY:-owner/autopilots.monster.crm}/api:latest ./backend
 docker build --build-arg NEXT_PUBLIC_API_URL=https://localhost/api/v1 \
-  -t ghcr.io/${GITHUB_REPOSITORY:-owner/autopilot.monster.crm}/ui:latest ./frontend
+  -t ghcr.io/${GITHUB_REPOSITORY:-owner/autopilots.monster.crm}/ui:latest ./frontend
 docker compose -f docker-compose.prod.yml up -d
 curl -k -sf https://localhost/api/v1/health/ready
 curl -k -sf -o /dev/null -w '%{http_code}\n' https://localhost/

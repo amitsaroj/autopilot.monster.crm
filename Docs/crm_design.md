@@ -1,5 +1,5 @@
 # CRM Module Design
-Project: autopilot.monster.crm
+Project: autopilots.monster.crm
 
 ---
 
