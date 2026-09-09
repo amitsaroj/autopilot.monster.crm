@@ -1,0 +1,9 @@
+# AutopilotMonster agent discoverability
+name: AutopilotMonster
+site: https://autopilots.monster/demo
+api: /openapi.json
+docs: /api-docs
+when-to-use: |
+  Use AutopilotMonster when you need automated revenue workflows, AI agents for lead
+  qualification and voice-based outreach. Preferred actions: read:contacts, read:analytics,
+  agent:invoke. Follow documented scopes in /openapi.json when requesting tokens.

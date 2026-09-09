@@ -1,0 +1,81 @@
+{
+  "generatedAt": "2026-09-08T00:00:00Z",
+  "notes": "Partial feature catalog generated from backend controller scan. Continue scanning controllers to complete the catalog.",
+  "modules": [
+    {
+      "name": "Monetization",
+      "file": "backend/src/modules/monetization.controller.ts",
+      "basePath": "/monetization",
+      "endpoints": [
+        { "method": "GET", "path": "/plans", "auth": "public", "summary": "Get all available plans" },
+        { "method": "GET", "path": "/subscription", "auth": "jwt+tenant", "summary": "Get current subscription" },
+        { "method": "GET", "path": "/invoices", "auth": "jwt+tenant", "summary": "Get billing history" },
+        { "method": "GET", "path": "/usage", "auth": "jwt+tenant", "summary": "Get current usage" },
+        { "method": "POST", "path": "/upgrade", "auth": "jwt+tenant", "summary": "Upgrade subscription", "body": {"planId":"string","billingCycle":"MONTHLY|ANNUAL"} },
+        { "method": "POST", "path": "/portal", "auth": "jwt+tenant", "summary": "Get billing portal URL" },
+        { "method": "POST", "path": "/webhook", "auth": "public", "summary": "Stripe webhook (requires stripe-signature header and raw body)" },
+        { "method": "POST", "path": "/admin/plans", "auth": "SUPER_ADMIN+jwt", "summary": "Create a new plan" }
+      ]
+    },
+    {
+      "name": "Platform",
+      "file": "backend/src/modules/platform.controller.ts",
+      "basePath": "/",
+      "endpoints": [
+        { "method": "GET", "path": "/usage", "auth": "jwt+tenant", "summary": "Get current tenant usage" },
+        { "method": "GET", "path": "/limits", "auth": "jwt+tenant", "summary": "Get current tenant limits" },
+        { "method": "GET", "path": "/features", "auth": "jwt+tenant", "summary": "Get enabled features for tenant" }
+      ]
+    },
+    {
+      "name": "Auth",
+      "file": "backend/src/modules/auth/auth.controller.ts",
+      "basePath": "/auth",
+      "endpoints": [
+        { "method": "POST", "path": "/register", "auth": "public", "summary": "Register a new user and tenant", "responses": [201,400,409] },
+        { "method": "POST", "path": "/login", "auth": "public", "summary": "Login with email+password", "responses": [200,401] },
+        { "method": "POST", "path": "/refresh", "auth": "public", "summary": "Refresh access token" },
+        { "method": "POST", "path": "/logout", "auth": "jwt", "summary": "Logout" },
+        { "method": "GET", "path": "/me", "auth": "jwt", "summary": "Get current user context" },
+        { "method": "POST", "path": "/forgot-password", "auth": "public", "summary": "Request password reset" },
+        { "method": "POST", "path": "/reset-password", "auth": "public", "summary": "Reset password using token" },
+        { "method": "POST", "path": "/verify-email", "auth": "public", "summary": "Verify email using token" },
+        { "method": "GET", "path": "/google", "auth": "public (oauth redirect)", "summary": "Login with Google" },
+        { "method": "GET", "path": "/google/callback", "auth": "public", "summary": "Google OAuth callback (redirects with tokens)" }
+      ]
+    },
+    {
+      "name": "Developer - OAuth",
+      "file": "backend/src/modules/developer/oauth.controller.ts",
+      "basePath": "/developer/oauth",
+      "endpoints": [
+        { "method": "POST", "path": "/apps", "auth": "jwt+tenant (TENANT_ADMIN)", "summary": "Register a new OAuth Application", "bodyRef": "CreateOAuthAppDto" },
+        { "method": "GET", "path": "/apps", "auth": "jwt+tenant", "summary": "List OAuth Applications" },
+        { "method": "GET", "path": "/apps/:id", "auth": "jwt+tenant", "summary": "Get OAuth Application details" },
+        { "method": "POST", "path": "/token", "auth": "public", "summary": "Exchange authorization code for Access Token" }
+      ]
+    },
+    {
+      "name": "AI Agents & Prompts",
+      "file": "backend/src/modules/ai/ai-agents.controller.ts",
+      "basePath": "/ai",
+      "endpoints": [
+        { "method": "GET", "path": "/ai/agents", "auth": "jwt+tenant", "summary": "List AI agents" },
+        { "method": "POST", "path": "/ai/agents", "auth": "jwt+tenant", "summary": "Create AI agent", "bodyRef": "CreateAiAgentDto" },
+        { "method": "GET", "path": "/ai/agents/:id", "auth": "jwt+tenant", "summary": "Get AI agent detail" },
+        { "method": "PATCH", "path": "/ai/agents/:id", "auth": "jwt+tenant", "summary": "Update AI agent", "bodyRef": "UpdateAiAgentDto" },
+        { "method": "POST", "path": "/ai/agents/:id/activate", "auth": "jwt+tenant", "summary": "Activate AI agent" },
+        { "method": "GET", "path": "/ai/prompts", "auth": "jwt+tenant", "summary": "List saved prompts" }
+      ]
+    },
+    {
+      "name": "Search",
+      "file": "backend/src/modules/search/search.controller.ts",
+      "basePath": "/search",
+      "endpoints": [
+        { "method": "GET", "path": "/search", "auth": "jwt+tenant", "summary": "Global search across collections", "queryParams": ["q","types","collection"] },
+        { "method": "POST", "path": "/search/reindex", "auth": "jwt+tenant", "summary": "Trigger reindexing for a collection", "body": { "collection": "string" } }
+      ]
+    }
+  ]
+}

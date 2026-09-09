@@ -1,226 +1,190 @@
 # Autopilot Monster CRM
 
-Autopilot Monster CRM is a multi-tenant, AI-first CRM and communications platform. It combines NestJS APIs, a Next.js App Router UI, PostgreSQL, Redis/Bull queues, MinIO object storage, and optional Qdrant/OpenAI services in one monorepo.
+Autopilot Monster CRM is a multi-tenant, AI-oriented CRM and communications platform. The repository contains a Next.js UI, a NestJS API, PostgreSQL schema/migrations, Redis/Bull job processing, MinIO storage, Qdrant configuration, Docker Compose, Terraform, nginx, and GitHub Actions.
 
-## Project Overview
+This README describes the checked-in implementation as of 2026-09-09. It does not imply that third-party services are configured or production-ready.
 
-Purpose: operate sales CRM, billing, automation, AI assistants, WhatsApp, and voice outreach for multiple tenants from one control plane.
+## Product vision
 
-Business value: unify pipeline management, monetization, omnichannel messaging, and AI workflows under tenant-isolated RBAC with auditability.
+The product combines CRM data, tenant-aware access controls, subscriptions, automated workflows, AI assistance, voice, WhatsApp, analytics, and platform administration so organizations can operate sales and customer workflows from one system.
 
-**Current status (2026-07-22):** engineering completion **~86%**. Critical/High implementation backlog is **empty**. Production go-live is **Conditional** on ops runbooks (secrets, Stripe, TLS) in `docs/OPS_RUNBOOKS.md`. See `docs/FINAL_COMPLETION_REPORT.md`.
+## Current project status
 
-## Architecture
+Implementation evidence is strong across API, UI, data, and infrastructure artifacts, but live provider validation and operating runbooks remain deployment work.
+
+| Area | Estimate | Evidence |
+|---|---:|---|
+| Overall | 82% | 337 UI pages, 122 controller files, 80 entity classes, 10 migrations and 12 queues |
+| Frontend / backend | 84% / 86% | App Router UI, Nest modules, controllers, services, DTOs and guards |
+| CRM / auth / workflow | 88% / 84% / 82% | End-to-end entity, API and UI footprints |
+| AI / voice / WhatsApp / billing | 76% / 74% / 78% / 76% | Application paths implemented; providers must be configured |
+| Infrastructure / production readiness | 74% / 63% | Compose, nginx, Terraform and CI exist; TLS, secrets, provider cutovers, DR and scale validation remain operational concerns |
+
+These are implementation-evidence estimates, not acceptance-test results or a go-live approval. See [HLD](docs/HLD.md), [LLD](docs/LLD.md), and the [feature catalog](docs/FEATURE_CATALOG.md) for the basis.
+
+## Architecture summary
 
 ```text
-Clients (Web)
-   │
-   ▼
-nginx (HTTP/HTTPS) ──► Next.js UI
-   │
-   └── /api/v1/* ──► NestJS API
-                        ├── TypeORM → PostgreSQL
-                        ├── Bull → Redis (workflow, voice, email, search-index, …)
-                        ├── MinIO (files / backups)
-                        ├── Qdrant (RAG vectors)
-                        ├── Stripe / Twilio / Meta / OpenAI
-                        └── Audit log + analytics emitters
+Browser → nginx → Next.js UI
+                 → NestJS API (/api/v1)
+                       ├─ PostgreSQL (TypeORM)
+                       ├─ Redis (cache, throttling, Bull)
+                       ├─ MinIO (object storage)
+                       ├─ Qdrant (RAG vectors)
+                       └─ Stripe / Twilio / Meta / OpenAI / SMTP
 ```
 
-Runtime topology for production-like deploys: single EC2 host running `docker-compose.prod.yml` (API, UI, Postgres, Redis, MinIO, Qdrant, nginx, certbot path). Terraform provisions the host, security group, SSM role, and Elastic IP. Queue processors run **in-process** with the API.
+The deployment model in this repository is a modular monolith on one Docker Compose host. Bull processors run in the API process; there is no standalone worker service or Kubernetes deployment.
 
-## Technology Stack
+## Technology stack
 
 | Layer | Technologies |
 |---|---|
-| Frontend | Next.js 16, React 19, TypeScript, Zustand |
-| Backend | NestJS 11, TypeORM, class-validator, Swagger |
-| Data | PostgreSQL, Redis |
-| Queues | Bull (`@nestjs/bull`) |
-| Storage / AI | MinIO, Qdrant, OpenAI |
-| Comms | Meta WhatsApp Cloud API, Twilio Voice |
-| Billing | Stripe (env-driven price IDs) |
-| Infra | Docker Compose, nginx, Terraform (AWS EC2) |
-| CI/CD | GitHub Actions (`ci.yml`, `deploy.yml`) |
+| Frontend | Next.js 16, React 19, TypeScript, Tailwind CSS, Zustand, TanStack Query, Axios |
+| Backend | NestJS 11, TypeORM, class-validator, Swagger, Passport, EventEmitter2 |
+| Data/async | PostgreSQL 15, Redis 7, Bull 4 via `@nestjs/bull` |
+| Storage/AI | MinIO, Qdrant, OpenAI SDK |
+| Communications/billing | Meta WhatsApp Cloud API, Twilio, SMTP, Stripe |
+| Operations | Docker Compose, nginx, Terraform (AWS), GitHub Actions, Sentry/Winston |
 
-## Folder Structure
+## Repository structure
 
 ```text
-autopilot.monster.crm/
-├── backend/                 # NestJS API, migrations, queue processors
-├── frontend/                # Next.js App Router UI (~337 pages)
-├── docs/                    # Authoritative product docs (ONLY place for new markdown)
-│   ├── FEATURE_INVENTORY.md
-│   ├── COMPLETION_SCORECARD.md
-│   ├── MASTER_PRODUCT_BACKLOG.md
-│   ├── ENTERPRISE_BASELINE.md
-│   ├── IMPLEMENTATION_STATUS.md
-│   ├── OPS_RUNBOOKS.md
-│   └── FINAL_COMPLETION_REPORT.md
-├── Docs/audit/              # Historical audit evidence (may be stale)
-├── nginx/                   # Ingress + TLS mount points
-├── docker-compose.yml       # Local stack
-├── docker-compose.prod.yml  # Production-shaped stack
-├── main.tf / provider.tf / variables.tf / outputs.tf
-└── README.md                # This file
+.
+├── backend/                  # NestJS API, entities, migrations, queue processors
+├── frontend/                 # Next.js App Router UI, components and API services
+├── docs/                     # Architecture and feature documentation
+├── nginx/                    # Production reverse-proxy configuration and TLS mount
+├── docker-compose.yml        # Local services: API, UI, DB, Redis, MinIO, Qdrant
+├── docker-compose.prod.yml   # Production-shaped single-host stack
+├── *.tf                      # AWS EC2/SSM/EIP Terraform configuration
+└── .github/workflows/        # CI and prod deployment workflows
 ```
 
-## Installation
+## Local development
+
+### Prerequisites
+
+- Node.js 20 (CI version)
+- Docker Engine with Docker Compose
+- npm
+
+### Install and run
 
 ```bash
-git clone <repo-url>
-cd autopilot.monster.crm
-cp .env.example .env
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
-docker compose up -d
-cd backend && npm ci && npm run migration:run && npm run seed
-cd ../frontend && npm ci
+
+docker compose up -d postgres redis minio qdrant
+
+cd backend && npm ci && npm run migration:run && npm run start:dev
+# In another terminal:
+cd frontend && npm ci && npm run dev
 ```
 
-## Environment Variables
+The default API is `http://localhost:8000/api/v1`; the UI is normally `http://localhost:3000`. The non-production Swagger UI is at `http://localhost:8000/api/docs`; OpenAPI JSON is `http://localhost:8000/openapi.json`.
 
-Use examples only in git:
-
-- Root: `.env.example`
-- Backend: `backend/.env.example`, `backend/.env.production.example`
-- Frontend: `frontend/.env.example`, `frontend/.env.production.example`
-
-Critical production keys (secret manager, not git):
-
-- `JWT_PRIVATE_KEY` / `JWT_PUBLIC_KEY` / `JWT_KEY_ID` (RS256)
-- `DATABASE_URL`, Redis, MinIO, Qdrant URLs
-- `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*`
-- `TWILIO_*`, WhatsApp/Meta tokens, `OPENAI_API_KEY`
-- Optional: `ELEVENLABS_API_KEY` for voice cloning
-
-## Docker Setup
-
-Local:
+To run the full local stack in containers:
 
 ```bash
 docker compose up -d --build
 curl -sf http://localhost:8000/api/v1/health/ready
 ```
 
-Production-shaped:
+## Environment variables
+
+Use the checked-in examples as the authoritative variable lists:
+
+- Root compose defaults: `.env.example`
+- Backend development: `backend/.env.example`
+- Backend production: `backend/.env.production.example`
+- Frontend: `frontend/.env.example` and `frontend/.env.production.example`
+
+Important backend groups are:
+
+| Group | Variables (examples) |
+|---|---|
+| App/security | `NODE_ENV`, `APP_PORT`, `APP_URL`, `FRONTEND_URL`, `JWT_*`, `THROTTLE_*` |
+| Database/cache | `DATABASE_URL` or `DB_*`, `REDIS_*` |
+| Storage/AI | `MINIO_*`, `QDRANT_*`, `OPENAI_API_KEY` |
+| Providers | `STRIPE_*`, `TWILIO_*` where configured, `WHATSAPP_*`, `SMTP_*`, OAuth client settings |
+| Frontend | `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` |
+
+Never commit valid secrets. `docker-compose.prod.yml` expects a real `backend/.env.production` at deployment time; it is not supplied in this repository.
+
+## Available scripts
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d
-curl -k -sf https://localhost/api/v1/health/ready
+# Backend
+cd backend
+npm run build
+npm run typecheck
+npm run lint:check
+npm test
+npm run test:integration
+npm run migration:run
+npm run seed:dev
+
+# Frontend
+cd frontend
+npm run dev
+npm run build
+npm run lint
+npm test
 ```
 
-## Development Guide
+## Authentication, authorization and tenancy
 
-```bash
-cd backend && npm run start:dev
-cd frontend && npm run dev
-```
+The API uses a global `/api/v1` prefix. Requests generally use `Authorization: Bearer <token>` and `x-tenant-id`. The frontend client reads access/refresh tokens from cookies and the tenant ID from `localStorage`.
 
-Swagger: `http://localhost:8000/api/docs` (disabled in production).
+The Nest global request pipeline includes throttling, JWT authentication, tenant and active-tenant checks, roles, resource permissions, plan features and limits. Local auth, refresh, MFA, password/email flows and OAuth strategy paths for Google, Facebook, GitHub and Apple are implemented. OAuth requires deployment-specific credentials and callback URLs.
 
-## Deployment Guide
+## Product modules
 
-1. Provision host with Terraform (`terraform init -backend-config=...`, `plan`, `apply`).
-2. Point DNS to Elastic IP output.
-3. Inject secrets via SSM/CI; never commit production env files.
-4. Deploy images via `.github/workflows/deploy.yml` (env contract checks, terraform gate, SSM wait, health poll).
-5. Complete TLS + Stripe + provider cutovers using `docs/OPS_RUNBOOKS.md`.
-
-## Authentication / Authorization / Multi-tenancy
-
-- JWT access tokens (RS256 in production) + refresh flow
-- MFA at login and enrollment in settings
-- OAuth providers (Google/Facebook/GitHub/Apple) when env configured
-- Global JWT + tenant guards; RBAC resource permissions and roles
-- Tenant-scoped repositories and settings overrides
-
-## Modules
-
-| Module | Purpose | Status |
+| Area | Implemented scope | Operational note |
 |---|---|---|
-| Auth | Login, refresh, MFA, OAuth | Ready |
-| Tenant / Teams / Users | Org structure | Ready |
-| RBAC | Roles, permissions | Ready |
-| CRM | Contacts, companies, leads, deals, pipelines, tasks, products, quotes, duplicates | Ready |
-| Billing | Plans, checkout, invoices, wallet, usage | Ready (Stripe ops cutover) |
-| WhatsApp | Inbox, templates, broadcast, flows | Ready (Meta ops cutover) |
-| Voice | Outbound/inbound, campaigns, STT/TTS/sentiment | Ready (Twilio/OpenAI ops) |
-| AI | Agents, prompts, KB, RAG (file + URL), fine-tuning | Ready |
-| Workflow | Triggers, actions, retries | Ready |
-| Analytics | Overview, pipeline, revenue, PDF export | Ready |
-| Marketplace | Plugins + templates | Ready |
-| Developer | Webhooks, OAuth apps, API logs | Ready |
-| Admin / Super Admin | Settings, queues, security, metrics | Ready |
-| Search | Global search + index queue | Ready |
-| Infra | Compose, nginx, Terraform, CI/CD | Ready (TLS ops) |
+| CRM | Contacts, companies, leads, deals, pipelines/stages, activities, tasks, notes, tags, segments, products, quotes, duplicates, forecasting | PostgreSQL-backed |
+| AI | Agents, prompts/templates, conversations, KB, RAG, fine-tuning job records | OpenAI/Qdrant/MinIO required for relevant operations |
+| Voice | Calls, campaigns, phone numbers, callbacks, queue processing | Twilio/provider setup required |
+| WhatsApp | Messages, templates, inbox, broadcast, webhook, queue processor | Meta account/token/webhook required |
+| Workflow | Flows, executions, action executor, events, processor and builder routes | Workers run in the API process |
+| Billing | Plans, limits, subscriptions, invoices, payments, wallet, usage, coupons | Valid Stripe configuration required for payments |
+| Analytics | Dashboards, reports, analytics event listener and queue | Depends on emitted domain events |
+| Marketplace/developer | Plugins, templates, OAuth apps, webhooks, API logs | No sandboxed plugin runtime is present |
+| Admin/platform | Tenant/user/RBAC/security/configuration/queue/log/system administration | Restricted by API RBAC |
 
-## Feature List (product)
+The full feature-by-feature status, dependencies, and limitations are in [docs/FEATURE_CATALOG.md](docs/FEATURE_CATALOG.md).
 
-Contacts, companies, leads, deals, pipelines, activities, tasks, products, quotes, forecasting, duplicate merge, billing plans/subscriptions/wallet/usage, WhatsApp inbox/broadcast/templates/flows, voice campaigns + AI speech pipeline, AI agents/KB/RAG/prompts, workflow automation, analytics dashboards/exports, marketplace templates, developer webhooks/OAuth, audit logs, feature flags, import/export/backup/storage/notifications, admin and super-admin consoles.
+## API, queues, caching and storage
 
-## API Overview
+Controller groups include `auth`, `crm`, `ai`, `voice`, `whatsapp`, `workflows`, `billing`, `analytics`, `marketplace`, `developer`, `admin`, `search`, `storage`, `import`, `export`, `backup`, `notifications`, and `health`. Use `/openapi.json` for the exact method-level contract.
 
-- Base path: `/api/v1`
-- Auth: `Authorization: Bearer <accessToken>` + `x-tenant-id`
-- Domains: `/auth`, `/crm`, `/billing`, `/whatsapp`, `/voice`, `/ai`, `/workflows`, `/analytics`, `/marketplace`, `/developer`, `/admin`, `/search`, `/health`, `/notifications`, `/import`, `/export`, `/backup`, `/storage`
+Redis supports cache/throttling and the following Bull queues: `email`, `sms`, `whatsapp`, `voice`, `notification`, `ai-inference`, `workflow`, `billing`, `analytics`, `import`, `export`, and `search-index`. MinIO is the S3-compatible object store. Qdrant is configured for vector/RAG use.
 
-## Database Overview
+## Docker and deployment
 
-- PostgreSQL via TypeORM entities under `backend/src/database/entities` (78 entities)
-- Migrations under `backend/src/database/migrations` (10)
-- Soft-delete and tenant columns used across CRM/platform tables
+`docker-compose.yml` starts PostgreSQL, Redis, MinIO, Qdrant, API, UI, and Adminer. `docker-compose.prod.yml` adds nginx, certificate bootstrap/renewal plumbing and uses published images. It is a production-shaped baseline, not proof of a finished production environment.
 
-## Infrastructure / Queues / Caching / Storage
+The `prod` GitHub Actions workflow builds/pushes GHCR images, uses Terraform to manage AWS infrastructure, uploads deploy artifacts to S3, and sends an SSM deployment command that migrates and recreates the Compose stack. It requires AWS credentials, GitHub package permissions, S3, SSM, runtime secrets, DNS, and TLS setup.
 
-- Redis + Bull queues: workflow, voice, email, sms, notification, ai-inference, billing, analytics, search-index, whatsapp, import/export
-- Storage: MinIO via `StorageService`
-- Vectors: Qdrant for RAG embeddings
+## Security, monitoring and troubleshooting
 
-## Known Integrations
-
-Stripe, Twilio, Meta WhatsApp, OpenAI, optional ElevenLabs, SMTP/SMS via admin settings, GitHub Actions + AWS SSM deploy path. PayPal/Razorpay are explicitly unavailable stubs (not launch scope).
-
-## Scripts
-
-```bash
-cd backend && npm run format && npm run build
-cd frontend && npm run build
-cd backend && npm run migration:run && npm run seed
-```
-
-## Troubleshooting
+The API initializes Helmet, compression, production CORS validation, Sentry (when configured), correlation IDs, Winston logging, exception filters, rate limits, health endpoints and audit/error/security records. There is no managed alerting, external log sink, verified restore drill, or separate worker deployment checked in.
 
 | Symptom | Check |
 |---|---|
-| API won’t boot in production | RS256 keys + `JWT_KEY_ID`, HTTPS URLs, DB connectivity |
-| Checkout 400 | `STRIPE_PRICE_*` env values / seed sync |
-| WhatsApp send fails | Tenant WABA credentials completeness |
-| Voice AI 503 | `OPENAI_API_KEY` / tenant `openai_key` |
-| Voice clone 503 | `ELEVENLABS_API_KEY` |
-| Search stale | Redis + search-index queue processor |
-| RAG crawl fails | Reachable URL + OpenAI + Qdrant |
+| API does not boot | Backend env contract, DB/Redis reachability, production HTTPS URLs and JWT keys |
+| Checkout fails | Stripe secret/webhook and non-placeholder `STRIPE_PRICE_*` values |
+| WhatsApp/voice fails | Meta/Twilio tenant/provider credentials, webhook/public URL and queue health |
+| RAG fails | OpenAI API key, Qdrant/MinIO availability, source content |
+| Asynchronous work stalls | Redis connection and the API process, which hosts consumers |
 
-## Contribution Guide
+## Documentation
 
-1. Work from a feature branch.
-2. Keep new markdown under `docs/` (except root `README.md`).
-3. Do not commit secrets.
-4. Run format + build before PR.
-5. Prefer extending existing modules over parallel implementations.
-6. Never ship fake-success stubs; fail honestly or implement for real.
+- [High-Level Design](docs/HLD.md)
+- [Low-Level Design](docs/LLD.md)
+- [Feature Catalog](docs/FEATURE_CATALOG.md)
 
 ## License
 
-Proprietary — all rights reserved unless otherwise stated by the repository owner.
-
-## Authoritative Product Docs
-
-- Inventory: [`docs/FEATURE_INVENTORY.md`](docs/FEATURE_INVENTORY.md)
-- Scorecard: [`docs/COMPLETION_SCORECARD.md`](docs/COMPLETION_SCORECARD.md)
-- Backlog: [`docs/MASTER_PRODUCT_BACKLOG.md`](docs/MASTER_PRODUCT_BACKLOG.md)
-- Implementation status: [`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md)
-- Enterprise baseline: [`docs/ENTERPRISE_BASELINE.md`](docs/ENTERPRISE_BASELINE.md)
-- Ops runbooks: [`docs/OPS_RUNBOOKS.md`](docs/OPS_RUNBOOKS.md)
-- Final report: [`docs/FINAL_COMPLETION_REPORT.md`](docs/FINAL_COMPLETION_REPORT.md)
-- Historical audits: `Docs/audit/` (may be stale)
+Proprietary — all rights reserved unless the repository owner states otherwise.

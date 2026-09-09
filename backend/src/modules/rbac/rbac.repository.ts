@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 import { Role } from '../../database/entities/role.entity';
 import { Permission } from '../../database/entities/permission.entity';
 import { UserRole } from '../../database/entities/user-role.entity';
+import { UserEntity } from '../auth/entities/user.entity';
 import { BaseRepository } from '../../database/base.repository';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class RbacRepository extends BaseRepository<Role> {
     private readonly permissionRepository: Repository<Permission>,
     @InjectRepository(UserRole)
     private readonly userRoleRepository: Repository<UserRole>,
+    @InjectRepository(UserEntity)
+    private readonly userRepository: Repository<UserEntity>,
   ) {
     super(roleRepository);
   }
@@ -35,6 +38,10 @@ export class RbacRepository extends BaseRepository<Role> {
 
   async findUserRoles(tenantId: string, userId: string): Promise<UserRole[]> {
     return this.userRoleRepository.find({ where: { tenantId, userId } });
+  }
+
+  async userExistsInTenant(tenantId: string, userId: string): Promise<boolean> {
+    return this.userRepository.exists({ where: { id: userId, tenantId } });
   }
 
   async findAllPaginated(tenantId: string, filter: any = {}): Promise<[Role[], number]> {

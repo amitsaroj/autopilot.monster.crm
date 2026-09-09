@@ -122,6 +122,9 @@ export class RbacService {
     actorId?: string,
   ): Promise<void> {
     await this.findRole(tenantId, roleId);
+    if (!(await this.rbacRepository.userExistsInTenant(tenantId, userId))) {
+      throw new NotFoundException('User not found');
+    }
     await this.rbacRepository.assignRole(tenantId, userId, roleId, actorId);
     this.eventEmitter.emit(EVENT_NAMES.ROLE_ASSIGNED, {
       name: EVENT_NAMES.ROLE_ASSIGNED,
@@ -139,6 +142,10 @@ export class RbacService {
     roleId: string,
     actorId?: string,
   ): Promise<void> {
+    if (!(await this.rbacRepository.userExistsInTenant(tenantId, userId))) {
+      throw new NotFoundException('User not found');
+    }
+    await this.findRole(tenantId, roleId);
     await this.rbacRepository.revokeRole(tenantId, userId, roleId);
     this.eventEmitter.emit(EVENT_NAMES.ROLE_REVOKED, {
       name: EVENT_NAMES.ROLE_REVOKED,

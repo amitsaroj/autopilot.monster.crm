@@ -1,4 +1,4 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'crypto';
 import * as Minio from 'minio';
@@ -78,13 +78,14 @@ export class StorageService {
     mimeType: string,
   ): Promise<PresignedUploadResult> {
     await this.ensureBucket(this.bucketAssets);
-    const objectKey = `${tenantId}/${randomUUID()}/${filename}`;
+    const safeFilename = this.sanitizeFilename(filename);
+    const objectKey = `${tenantId}/${randomUUID()}/${safeFilename}`;
     const uploadUrl = await this.client.presignedPutObject(this.bucketAssets, objectKey, 3600);
 
     await this.fileRepository.save(
       this.fileRepository.create({
         tenantId,
-        filename,
+        filename: safeFilename,
         objectKey,
         mimeType,
         size: 0,
@@ -113,7 +114,7 @@ export class StorageService {
     fileName: string,
     mimeType: string,
   ): Promise<StoredObjectResult> {
-    return this.putObject(tenantId, `${randomUUID()}/${fileName}`, fileBuffer, mimeType);
+    return this.putObject(tenantId, `${randomUUID()}/${this.sanitizeFilename(fileName)}`, fileBuffer, mimeType);
   }
 
   async delete(tenantId: string, key: string): Promise<void> {
@@ -128,6 +129,9 @@ export class StorageService {
     mimeType: string,
     useBackupsBucket = false,
   ): Promise<StoredObjectResult> {
+    if (!tenantId || !tenantId.trim()) {
+      throw new BadRequestException('Tenant context is required for storage operations');
+    }
     const bucket = useBackupsBucket ? this.bucketBackups : this.bucketAssets;
     await this.ensureBucket(bucket);
     const objectKey = `${tenantId}/${relativeKey}`;
@@ -167,5 +171,19 @@ export class StorageService {
     if (!exists) {
       await this.client.makeBucket(bucket);
     }
+  }
+
+  private sanitizeFilename(filename: string): string {
+    const normalized = filename.trim().replace(/\\\\/g, '/').split('/').pop() ?? '';
+    if (
+      !normalized ||
+      normalized === '.' ||
+      normalized === '..' ||
+      normalized.includes('\0') ||
+      normalized.length > 255
+    ) {
+      throw new BadRequestException('Invalid file name');
+    }
+    return normalized;
   }
 }

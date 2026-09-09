@@ -10,13 +10,17 @@ import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 import { CoreModule } from './app.module';
 import type { AppConfig } from './config/app.config';
+import { AppLogger } from './logger/logger.service';
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  integrations: [nodeProfilingIntegration()],
-  tracesSampleRate: 1.0,
-  profilesSampleRate: 1.0,
-});
+const sentryDsn = process.env.SENTRY_DSN;
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    integrations: [nodeProfilingIntegration()],
+    tracesSampleRate: Number.parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE ?? '0.1'),
+    profilesSampleRate: Number.parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? '0.1'),
+  });
+}
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(CoreModule, {
@@ -25,6 +29,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const configService = app.get(ConfigService);
+  app.useLogger(app.get(AppLogger));
   const appCfg = configService.get<AppConfig>('app');
   if (appCfg === undefined) {
     throw new Error('App configuration missing');
@@ -36,6 +41,11 @@ async function bootstrap(): Promise<void> {
 
   // CORS
   const isProd = appCfg.nodeEnv === 'production';
+  if (isProd) {
+    // The production compose stack places nginx in front of the API. This keeps
+    // client IP based controls (such as throttling) accurate behind that proxy.
+    app.getHttpAdapter().getInstance().set('trust proxy', 1);
+  }
   if (isProd) {
     if (!appCfg.url.startsWith('https://')) {
       throw new Error('APP_URL must use https:// in production');
@@ -61,31 +71,55 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('api/v1');
 
   // Swagger — disabled in production to reduce attack surface
-  if (!isProd) {
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle('AutopilotMonster CRM API')
-      .setDescription('Full-Stack AI-Powered CRM Platform')
-      .setVersion('1.0.0')
-      .addBearerAuth()
-      .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'ApiKey')
-      .addGlobalParameters({
-        in: 'header',
-        name: 'x-tenant-id',
-        required: true,
-        schema: { type: 'string' },
-      })
-      .addGlobalParameters({
-        in: 'header',
-        name: 'x-correlation-id',
-        required: false,
-        schema: { type: 'string' },
-      })
-      .addSecurityRequirements('bearer')
-      .build();
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('AutopilotMonster CRM API')
+    .setDescription('Full-Stack AI-Powered CRM Platform')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'ApiKey')
+    .addGlobalParameters({
+      in: 'header',
+      name: 'x-tenant-id',
+      required: true,
+      schema: { type: 'string' },
+    })
+    .addGlobalParameters({
+      in: 'header',
+      name: 'x-correlation-id',
+      required: false,
+      schema: { type: 'string' },
+    })
+    .addSecurityRequirements('bearer')
+    .build();
 
-    const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+  // Provide interactive docs in non-production only
+  if (!isProd) {
     SwaggerModule.setup('api/docs', app, document, {
       swaggerOptions: { persistAuthorization: true },
+    });
+  }
+
+  // Keep the API contract private in production unless it is deliberately
+  // published for an integration. Non-production environments always expose it.
+  if (!isProd || appCfg.publishOpenApi) {
+    app.getHttpAdapter().get('/openapi.json', (_req, res) => {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=60');
+      res.status(200).send(document);
+    });
+  }
+
+  // MCP handshake endpoint (minimal) for agents — optional
+  if (appCfg.publishOpenApi) {
+    app.getHttpAdapter().get('/.well-known/mcp/handshake', (_req, res) => {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.status(200).json({
+        name: 'AutopilotMonster MCP',
+        transport: 'streamablehttp',
+        openapi: '/openapi.json',
+      });
     });
   }
 

@@ -1,0 +1,97 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "AutopilotMonster Public API",
+    "version": "1.0.0",
+    "description": "Public API surface for AutopilotMonster. Contains machine-readable OAuth scopes and example endpoints for agent use."
+  },
+  "servers": [
+    {
+      "url": "https://autopilots.monster/demo"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://auth.autopilot.monster/oauth/token",
+            "scopes": {
+              "read:contacts": "Read contacts and leads",
+              "write:contacts": "Create and update contacts",
+              "read:analytics": "Read analytics and revenue metrics",
+              "agent:invoke": "Invoke autonomous agent actions"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "hint": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "oauth2": [
+        "read:contacts"
+      ]
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/error-example": {
+      "get": {
+        "summary": "Example error response",
+        "operationId": "errorExample",
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
