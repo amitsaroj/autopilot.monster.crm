@@ -6,6 +6,8 @@ import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs';
 
+import { env } from '../../../config/env.config';
+
 const execAsync = promisify(exec);
 
 @Injectable()
@@ -41,7 +43,7 @@ export class AdminRestoreService {
     try {
       this.logger.log(`Starting restore process for backup ${backupId} (${fileName})`);
 
-      const dbUrl = process.env.DATABASE_URL;
+      const dbUrl = env.database.url;
       if (!dbUrl) throw new Error('DATABASE_URL not set');
 
       this.logger.log(`Downloading backup archive from MinIO to ${tempPath}`);

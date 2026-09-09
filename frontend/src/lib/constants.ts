@@ -1,4 +1,9 @@
-export const API_BASE = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000';
+import { API_BASE as API_BASE_VALUE, env } from './env.config';
+
+export const DEFAULT_API_BASE = API_BASE_VALUE;
+export const API_BASE = API_BASE_VALUE;
+export const getSocketBaseUrl = () => API_BASE.replace(/\/api\/v1$/, '');
+export const ENV = env;
 
 export const ROUTES = {
   // Auth

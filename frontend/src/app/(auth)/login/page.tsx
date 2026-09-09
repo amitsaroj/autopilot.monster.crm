@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import { API_BASE } from '@/lib/constants';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -137,7 +138,7 @@ export default function LoginPage() {
 
       <div className="flex items-center justify-center gap-4">
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+          href={`${API_BASE}/auth/google`}
           title="Google"
           className="p-2.5 rounded-full border border-gray-300 dark:border-input bg-white dark:bg-background hover:bg-gray-50 dark:hover:bg-accent/50 transition-all text-gray-700 dark:text-foreground shadow-sm"
         >
@@ -161,14 +162,14 @@ export default function LoginPage() {
           </svg>
         </a>
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/auth/github`}
+          href={`${API_BASE}/auth/github`}
           title="GitHub"
           className="p-2.5 rounded-full border border-gray-300 dark:border-input bg-white dark:bg-background hover:bg-gray-50 dark:hover:bg-accent/50 transition-all text-gray-700 dark:text-foreground shadow-sm"
         >
           <Github className="w-5 h-5" />
         </a>
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`}
+          href={`${API_BASE}/auth/facebook`}
           title="Facebook"
           className="p-2.5 rounded-full border border-gray-300 dark:border-input bg-white dark:bg-background hover:bg-gray-50 dark:hover:bg-accent/50 transition-all text-gray-700 dark:text-foreground shadow-sm"
         >
@@ -177,7 +178,7 @@ export default function LoginPage() {
           </svg>
         </a>
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/auth/apple`}
+          href={`${API_BASE}/auth/apple`}
           title="Apple"
           className="p-2.5 rounded-full border border-gray-300 dark:border-input bg-white dark:bg-background hover:bg-gray-50 dark:hover:bg-accent/50 transition-all text-gray-700 dark:text-foreground shadow-sm"
         >

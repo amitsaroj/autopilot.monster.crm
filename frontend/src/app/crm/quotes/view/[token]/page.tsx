@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import { CheckCircle, XCircle, Download, Loader2 } from 'lucide-react';
+import { API_BASE } from '@/lib/constants';
 
 interface QuoteLineItem {
   description: string;
@@ -32,7 +33,7 @@ export default function PublicQuoteViewPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
+  const baseUrl = API_BASE;
 
   const loadQuote = async () => {
     setLoading(true);

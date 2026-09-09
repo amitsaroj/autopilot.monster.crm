@@ -17,6 +17,7 @@ import { WhatsappService } from './whatsapp.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { env } from '../../config/env.config';
 
 @SkipThrottle()
 @Controller('whatsapp/webhook')
@@ -29,8 +30,8 @@ export class MetaWebhookController {
     private configService: ConfigService,
     private readonly configOrchestrator: ConfigOrchestratorService,
   ) {
-    this.isProduction = process.env.NODE_ENV === 'production';
-    this.appSecret = this.configService.get('META_APP_SECRET') || '';
+    this.isProduction = env.isProduction;
+    this.appSecret = env.whatsapp.appSecret || this.configService.get('META_APP_SECRET') || '';
   }
 
   private isMockSecret(): boolean {

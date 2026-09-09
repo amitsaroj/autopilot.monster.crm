@@ -4,9 +4,10 @@ import { FormEvent, useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 
+import { env } from '@/lib/env.config';
 import { billingService } from '@/services/billing.service';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
+const stripePromise = loadStripe(env.stripe.publishableKey);
 
 interface StripeCardSetupFormProps {
   onComplete: () => void;

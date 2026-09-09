@@ -10,15 +10,16 @@ import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 import { CoreModule } from './app.module';
 import type { AppConfig } from './config/app.config';
+import { env } from './config/env.config';
 import { AppLogger } from './logger/logger.service';
 
-const sentryDsn = process.env.SENTRY_DSN;
+const sentryDsn = env.sentry.dsn;
 if (sentryDsn) {
   Sentry.init({
     dsn: sentryDsn,
     integrations: [nodeProfilingIntegration()],
-    tracesSampleRate: Number.parseFloat(process.env.SENTRY_TRACES_SAMPLE_RATE ?? '0.1'),
-    profilesSampleRate: Number.parseFloat(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? '0.1'),
+    tracesSampleRate: env.sentry.tracesSampleRate,
+    profilesSampleRate: env.sentry.profilesSampleRate,
   });
 }
 

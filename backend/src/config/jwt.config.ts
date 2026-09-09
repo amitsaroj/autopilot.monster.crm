@@ -1,5 +1,6 @@
 import { registerAs } from '@nestjs/config';
 
+import { env } from './env.config';
 import { normalizePemKey } from '../common/utils/jwt-signing.util';
 
 export type JwtAlgorithm = 'HS256' | 'RS256';
@@ -18,10 +19,9 @@ export interface JwtConfig {
 }
 
 function resolveAlgorithm(): JwtAlgorithm {
-  const nodeEnv = process.env['NODE_ENV'] ?? 'development';
-  const explicit = process.env['JWT_ALGORITHM'];
-  const hasRs256Keys =
-    Boolean(process.env['JWT_PRIVATE_KEY']) && Boolean(process.env['JWT_PUBLIC_KEY']);
+  const nodeEnv = env.nodeEnv;
+  const explicit = env.jwt.algorithm;
+  const hasRs256Keys = Boolean(env.jwt.privateKey) && Boolean(env.jwt.publicKey);
 
   if (nodeEnv === 'production') {
     if (explicit === 'HS256') {
@@ -46,14 +46,14 @@ export const jwtConfig = registerAs(
   'jwt',
   (): JwtConfig => ({
     algorithm: resolveAlgorithm(),
-    secret: process.env['JWT_SECRET'] ?? '',
-    privateKey: normalizePemKey(process.env['JWT_PRIVATE_KEY'] ?? ''),
-    publicKey: normalizePemKey(process.env['JWT_PUBLIC_KEY'] ?? ''),
-    previousPublicKey: normalizePemKey(process.env['JWT_PUBLIC_KEY_PREVIOUS'] ?? ''),
-    keyId: (process.env['JWT_KEY_ID'] ?? '').trim(),
-    previousKeyId: (process.env['JWT_PREVIOUS_KEY_ID'] ?? '').trim(),
-    expiresIn: process.env['JWT_EXPIRES_IN'] ?? '15m',
-    refreshSecret: process.env['JWT_REFRESH_SECRET'] ?? process.env['JWT_SECRET'] ?? '',
-    refreshExpiresIn: process.env['JWT_REFRESH_EXPIRES_IN'] ?? '7d',
+    secret: env.jwt.secret,
+    privateKey: normalizePemKey(env.jwt.privateKey),
+    publicKey: normalizePemKey(env.jwt.publicKey),
+    previousPublicKey: normalizePemKey(env.jwt.previousPublicKey),
+    keyId: env.jwt.keyId.trim(),
+    previousKeyId: env.jwt.previousKeyId.trim(),
+    expiresIn: env.jwt.expiresIn,
+    refreshSecret: env.jwt.refreshSecret || env.jwt.secret,
+    refreshExpiresIn: env.jwt.refreshExpiresIn,
   }),
 );

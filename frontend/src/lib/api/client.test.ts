@@ -1,5 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { API_BASE } from '../constants';
 import api from './client';
 
 describe('api client', () => {
@@ -18,9 +19,7 @@ describe('api client', () => {
   });
 
   it('uses the default API base URL', () => {
-    expect(api.defaults.baseURL).toBe(
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
-    );
+    expect(api.defaults.baseURL).toBe(API_BASE);
   });
 
   it('attaches auth and tenant headers on outgoing requests', async () => {

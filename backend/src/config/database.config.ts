@@ -1,5 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
+import { env } from './env.config';
+
 export interface DatabaseConfig {
   host: string;
   port: number;
@@ -27,20 +29,20 @@ function parseDatabaseUrl(url: string) {
 }
 
 export const databaseConfig = registerAs('database', (): DatabaseConfig & { type: 'postgres' } => {
-  const dbUrl = process.env['DATABASE_URL'];
+  const dbUrl = env.database.url;
   const parsed = dbUrl ? parseDatabaseUrl(dbUrl) : null;
 
   return {
     type: 'postgres',
-    host: parsed?.host ?? process.env['DB_HOST'] ?? 'localhost',
-    port: parsed?.port ?? parseInt(process.env['DB_PORT'] ?? '5432', 10),
-    database: parsed?.database ?? process.env['DB_NAME'] ?? 'autopilot_crm',
-    username: parsed?.username ?? process.env['DB_USER'] ?? 'autopilot',
-    password: parsed?.password ?? process.env['DB_PASSWORD'] ?? '',
-    ssl: process.env['DB_SSL'] === 'true',
-    logging: process.env['DB_LOGGING'] === 'true',
-    synchronize: process.env['DB_SYNCHRONIZE'] === 'true',
-    poolSize: parseInt(process.env['DB_POOL_SIZE'] ?? '10', 10),
+    host: parsed?.host ?? env.database.host,
+    port: parsed?.port ?? env.database.port,
+    database: parsed?.database ?? env.database.database,
+    username: parsed?.username ?? env.database.username,
+    password: parsed?.password ?? env.database.password,
+    ssl: env.database.ssl,
+    logging: env.database.logging,
+    synchronize: env.database.synchronize,
+    poolSize: env.database.poolSize,
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     migrations: [__dirname + '/../database/migrations/*{.ts,.js}'],
     migrationsTableName: 'migrations',

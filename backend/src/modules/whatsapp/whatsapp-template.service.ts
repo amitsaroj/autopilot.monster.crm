@@ -10,6 +10,7 @@ import {
 } from '../../database/entities/whatsapp-template.entity';
 import { CreateWhatsappTemplateDto, UpdateWhatsappTemplateDto } from './dto/whatsapp-template.dto';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { env } from '../../config/env.config';
 
 @Injectable()
 export class WhatsappTemplateService {
@@ -74,12 +75,14 @@ export class WhatsappTemplateService {
     const token = String(
       (await this.configOrchestrator.get(tenantId, 'whatsapp_access_token')) ||
         this.configService.get<string>('WHATSAPP_TOKEN') ||
+        env.whatsapp.token ||
         '',
     ).trim();
     const businessAccountId = String(
       (await this.configOrchestrator.get(tenantId, 'whatsapp_business_account_id')) ||
         (await this.configOrchestrator.get(tenantId, 'whatsapp_business_id')) ||
         this.configService.get<string>('WHATSAPP_BUSINESS_ACCOUNT_ID') ||
+        env.whatsapp.businessAccountId ||
         '',
     ).trim();
 
@@ -91,14 +94,14 @@ export class WhatsappTemplateService {
       throw new BadRequestException('WhatsApp tenant credentials are not configured');
     }
 
-    if (process.env.NODE_ENV === 'production' && token === 'mocktoken') {
+    if (env.isProduction && token === 'mocktoken') {
       template.status = WhatsAppTemplateStatus.REJECTED;
       template.rejectionReason = 'Mock WhatsApp credentials are not allowed in production';
       await this.templateRepository.save(template);
       throw new BadRequestException('Mock WhatsApp credentials are not allowed in production');
     }
 
-    if (process.env.NODE_ENV === 'production' && businessAccountId.startsWith('mock')) {
+    if (env.isProduction && businessAccountId.startsWith('mock')) {
       template.status = WhatsAppTemplateStatus.REJECTED;
       template.rejectionReason = 'Mock WhatsApp business account is not allowed in production';
       return this.templateRepository.save(template);
