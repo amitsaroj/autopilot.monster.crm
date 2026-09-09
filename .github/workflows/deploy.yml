@@ -2,10 +2,10 @@ name: Auto Deploy to EC2
 
 on:
   push:
-    branches: [ prod ]
+    branches: [ main ]
 
 concurrency:
-  group: deploy-prod
+  group: deploy-main
   cancel-in-progress: false
 
 jobs:
