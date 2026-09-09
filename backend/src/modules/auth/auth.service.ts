@@ -11,6 +11,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { JwtService } from '@nestjs/jwt';
+import { createHash, randomBytes } from 'node:crypto';
 import { v4 as uuidv4 } from 'uuid';
 
 import { AuthRepository } from './auth.repository';
@@ -156,7 +157,7 @@ export class AuthService {
       status: 'TRIAL' as any,
     });
 
-    const token = uuidv4();
+    const token = this.createOpaqueToken();
     const user = await this.authRepo.createUser({
       email: dto.email,
       passwordHash: dto.password,
@@ -164,7 +165,7 @@ export class AuthService {
       lastName: dto.lastName,
       tenantId: tenant.id,
       status: UserStatus.PENDING_VERIFICATION,
-      verificationToken: token,
+      verificationToken: this.hashOpaqueToken(token),
     });
 
     this.eventEmitter.emit(EVENT_NAMES.USER_REGISTERED, {
@@ -276,10 +277,10 @@ export class AuthService {
     const user = await this.authRepo.findUserByEmail(email, tenantId);
     if (!user) return;
 
-    const token = uuidv4();
+    const token = this.createOpaqueToken();
     const expiresAt = new Date(Date.now() + 3600000); // 1 hour
     await this.authRepo.updateUser(user.id, tenantId, {
-      resetToken: token,
+      resetToken: this.hashOpaqueToken(token),
       resetTokenExpiresAt: expiresAt,
     });
 
@@ -517,5 +518,17 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken, expiresIn: 900, tokenType: 'Bearer' };
+  }
+
+  /**
+   * Password-reset and email-verification secrets are bearer credentials. Store
+   * only a deterministic hash so a database read cannot be used to redeem them.
+   */
+  private createOpaqueToken(): string {
+    return randomBytes(32).toString('hex');
+  }
+
+  private hashOpaqueToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 }

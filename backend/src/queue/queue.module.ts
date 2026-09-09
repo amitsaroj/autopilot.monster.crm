@@ -21,7 +21,9 @@ const queueList = Object.values(QUEUE_NAMES);
           redis: {
             host: redis.host,
             port: redis.port,
-            password: redis.password,
+            password: redis.password || undefined,
+            db: redis.db,
+            tls: redis.tls ? {} : undefined,
           },
           defaultJobOptions: {
             removeOnComplete: true,

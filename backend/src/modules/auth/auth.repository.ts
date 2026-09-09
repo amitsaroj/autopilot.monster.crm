@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
+import { createHash } from 'node:crypto';
 import { Repository } from 'typeorm';
 
 import { RefreshTokenEntity } from './entities/refresh-token.entity';
@@ -196,14 +197,18 @@ export class AuthRepository {
   }
 
   async findUserByVerificationToken(token: string): Promise<UserEntity | null> {
-    return this.userRepo.findOne({ where: { verificationToken: token } });
+    return this.userRepo.findOne({ where: { verificationToken: this.hashOpaqueToken(token) } });
   }
 
   async findUserByResetToken(token: string): Promise<UserEntity | null> {
     return this.userRepo.findOne({
-      where: { resetToken: token },
+      where: { resetToken: this.hashOpaqueToken(token) },
       select: ['id', 'email', 'tenantId', 'resetTokenExpiresAt'],
     });
+  }
+
+  private hashOpaqueToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   // ─── RBAC ──────────────────────────────────────────────────────────────────
