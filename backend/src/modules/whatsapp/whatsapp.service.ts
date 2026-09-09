@@ -11,6 +11,7 @@ import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity
 import { Contact } from '../../database/entities/contact.entity';
 import { EVENT_NAMES } from '../../events/event.constants';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { env } from '../../config/env.config';
 
 export type WhatsappConversationStatus = 'OPEN' | 'RESOLVED';
 
@@ -48,8 +49,8 @@ export class WhatsappService {
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly eventEmitter: EventEmitter2,
   ) {
-    this.verifyToken = this.configService.get('META_WEBHOOK_VERIFY_TOKEN') || '';
-    this.isProduction = process.env.NODE_ENV === 'production';
+    this.verifyToken = this.configService.get('META_WEBHOOK_VERIFY_TOKEN') || env.whatsapp.verifyToken || '';
+    this.isProduction = env.isProduction;
   }
 
   getVerifyToken(): string {

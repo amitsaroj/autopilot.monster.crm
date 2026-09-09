@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://autopilotmonster.com';
+import { env } from '@/lib/env.config';
+
+export const SITE_URL = env.site.url;
 
 export const SITE_NAME = 'AutopilotMonster CRM';
 

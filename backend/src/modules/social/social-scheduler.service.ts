@@ -3,6 +3,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { SocialService } from './social.service';
 import { SocialPostStatus } from '../../database/entities/social-post.entity';
 
+import { env } from '../../config/env.config';
+
 @Injectable()
 export class SocialSchedulerService {
   private readonly logger = new Logger(SocialSchedulerService.name);
@@ -48,8 +50,8 @@ export class SocialSchedulerService {
     switch (platform) {
       case 'FACEBOOK':
       case 'INSTAGRAM': {
-        const pageToken = process.env.FACEBOOK_PAGE_TOKEN;
-        const pageId = process.env.FACEBOOK_PAGE_ID;
+        const pageToken = env.social.facebookPageToken;
+        const pageId = env.social.facebookPageId;
         if (!pageToken || !pageId) {
           throw new Error('Facebook/Instagram credentials not configured');
         }
@@ -69,7 +71,7 @@ export class SocialSchedulerService {
       }
 
       case 'TWITTER': {
-        const bearerToken = process.env.TWITTER_BEARER_TOKEN;
+        const bearerToken = env.social.twitterBearerToken;
         if (!bearerToken) {
           throw new Error('Twitter credentials not configured');
         }
@@ -89,8 +91,8 @@ export class SocialSchedulerService {
       }
 
       case 'LINKEDIN': {
-        const accessToken = process.env.LINKEDIN_ACCESS_TOKEN;
-        const authorUrn = process.env.LINKEDIN_AUTHOR_URN;
+        const accessToken = env.social.linkedinAccessToken;
+        const authorUrn = env.social.linkedinAuthorUrn;
         if (!accessToken || !authorUrn) {
           throw new Error('LinkedIn credentials not configured');
         }

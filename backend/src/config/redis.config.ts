@@ -1,5 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
+import { env } from './env.config';
+
 export interface RedisConfig {
   host: string;
   port: number;
@@ -12,11 +14,11 @@ export interface RedisConfig {
 export const redisConfig = registerAs(
   'redis',
   (): RedisConfig => ({
-    host: process.env['REDIS_HOST'] ?? 'localhost',
-    port: parseInt(process.env['REDIS_PORT'] ?? '6379', 10),
-    password: process.env['REDIS_PASSWORD'] ?? '',
-    db: parseInt(process.env['REDIS_DB'] ?? '0', 10),
-    tls: process.env['REDIS_TLS'] === 'true',
-    ttl: parseInt(process.env['REDIS_TTL'] ?? '3600', 10),
+    host: env.redis.host,
+    port: env.redis.port,
+    password: env.redis.password,
+    db: env.redis.db,
+    tls: env.redis.tls,
+    ttl: env.redis.ttl,
   }),
 );

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import { API_BASE } from '@/lib/constants';
 
 interface HealthCheck {
   name: string;
@@ -15,8 +16,6 @@ interface HealthResponse {
   info?: Record<string, { status: string }>;
   error?: Record<string, { status: string }>;
 }
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1';
 
 export default function StatusPage() {
   const [loading, setLoading] = useState(true);

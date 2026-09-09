@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { toast } from 'sonner';
+import { getSocketBaseUrl } from '@/lib/constants';
 import { useAuth } from './use-auth';
 
 export const useNotifications = () => {
@@ -12,7 +13,7 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!user || !token) return;
 
-    const socketUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const socketUrl = getSocketBaseUrl();
 
     socketRef.current = io(`${socketUrl}/notifications`, {
       auth: { token },

@@ -1,5 +1,6 @@
 import api from '../lib/api/client';
 import { parseApiData } from '../lib/api/parse-response';
+import { API_BASE } from '../lib/constants';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -42,7 +43,7 @@ export const aiChatService = {
     conversationId?: string,
     useRag = false,
   ): Promise<string> => {
-    const baseURL = api.defaults.baseURL ?? 'http://localhost:8000/api/v1';
+    const baseURL = api.defaults.baseURL ?? API_BASE;
     const response = await fetch(`${baseURL}/ai/chat/stream`, {
       method: 'POST',
       headers: getAuthHeaders(),

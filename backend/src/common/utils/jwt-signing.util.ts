@@ -2,6 +2,7 @@ import type { JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import jwt, { type Algorithm, type SignOptions } from 'jsonwebtoken';
 import { createPrivateKey, createPublicKey } from 'node:crypto';
 
+import { env } from '../../config/env.config';
 import type { JwtConfig } from '../../config/jwt.config';
 
 const ISSUER = 'autopilots.monster';
@@ -104,7 +105,7 @@ export function assertAccessJwtConfigured(config: JwtConfig): void {
     if (!config.privateKey) {
       throw new Error('JWT_PRIVATE_KEY is not configured');
     }
-    if (process.env['NODE_ENV'] === 'production' && !config.keyId) {
+    if (env.nodeEnv === 'production' && !config.keyId) {
       throw new Error('JWT_KEY_ID is required in production when JWT_ALGORITHM=RS256');
     }
     if (config.previousPublicKey && !config.previousKeyId) {

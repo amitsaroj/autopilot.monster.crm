@@ -1,5 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
+import { env } from './env.config';
+
 export interface AppConfig {
   nodeEnv: string;
   port: number;
@@ -59,63 +61,58 @@ export interface AppConfig {
 export const appConfig = registerAs(
   'app',
   (): AppConfig => ({
-    nodeEnv: process.env['NODE_ENV'] ?? 'development',
-    port: parseInt(process.env['APP_PORT'] ?? '3333', 10),
-    host: process.env['APP_HOST'] ?? '0.0.0.0',
-    url: process.env['APP_URL'] ?? 'http://localhost:8000',
-    frontendUrl: process.env['FRONTEND_URL'] ?? 'http://localhost:3000',
-    secret: process.env['APP_SECRET'] ?? '',
-    logLevel: process.env['LOG_LEVEL'] ?? 'debug',
-    logFormat: process.env['LOG_FORMAT'] ?? 'json',
+    nodeEnv: env.nodeEnv,
+    port: env.app.port,
+    host: env.app.host,
+    url: env.app.url,
+    frontendUrl: env.app.frontendUrl,
+    secret: env.app.secret,
+    logLevel: env.app.logLevel,
+    logFormat: env.app.logFormat,
     google: {
-      clientId: process.env['GOOGLE_CLIENT_ID'] ?? '',
-      clientSecret: process.env['GOOGLE_CLIENT_SECRET'] ?? '',
-      callbackUrl:
-        process.env['GOOGLE_CALLBACK_URL'] ?? 'http://localhost:8000/api/v1/auth/google/callback',
+      clientId: env.oauth.googleClientId,
+      clientSecret: env.oauth.googleClientSecret,
+      callbackUrl: env.oauth.googleCallbackUrl,
     },
     facebook: {
-      appId: process.env['FACEBOOK_APP_ID'] ?? '',
-      appSecret: process.env['FACEBOOK_APP_SECRET'] ?? '',
-      callbackUrl:
-        process.env['FACEBOOK_CALLBACK_URL'] ??
-        'http://localhost:8000/api/v1/auth/facebook/callback',
+      appId: env.oauth.facebookAppId,
+      appSecret: env.oauth.facebookAppSecret,
+      callbackUrl: env.oauth.facebookCallbackUrl,
     },
     github: {
-      clientId: process.env['GITHUB_CLIENT_ID'] ?? '',
-      clientSecret: process.env['GITHUB_CLIENT_SECRET'] ?? '',
-      callbackUrl:
-        process.env['GITHUB_CALLBACK_URL'] ?? 'http://localhost:8000/api/v1/auth/github/callback',
+      clientId: env.oauth.githubClientId,
+      clientSecret: env.oauth.githubClientSecret,
+      callbackUrl: env.oauth.githubCallbackUrl,
     },
     apple: {
-      clientId: process.env['APPLE_CLIENT_ID'] ?? '',
-      teamId: process.env['APPLE_TEAM_ID'] ?? '',
-      keyId: process.env['APPLE_KEY_ID'] ?? '',
-      privateKey: process.env['APPLE_PRIVATE_KEY'] ?? '',
-      callbackUrl:
-        process.env['APPLE_CALLBACK_URL'] ?? 'http://localhost:8000/api/v1/auth/apple/callback',
+      clientId: env.oauth.appleClientId,
+      teamId: env.oauth.appleTeamId,
+      keyId: env.oauth.appleKeyId,
+      privateKey: env.oauth.applePrivateKey,
+      callbackUrl: env.oauth.appleCallbackUrl,
     },
     stripe: {
-      secretKey: process.env['STRIPE_SECRET_KEY'] ?? '',
-      webhookSecret: process.env['STRIPE_WEBHOOK_SECRET'] ?? '',
+      secretKey: env.stripe.secretKey,
+      webhookSecret: env.stripe.webhookSecret,
       prices: {
-        starterMonthly: process.env['STRIPE_PRICE_STARTER_MONTHLY'] ?? '',
-        starterAnnual: process.env['STRIPE_PRICE_STARTER_ANNUAL'] ?? '',
-        proMonthly: process.env['STRIPE_PRICE_PRO_MONTHLY'] ?? '',
-        proAnnual: process.env['STRIPE_PRICE_PRO_ANNUAL'] ?? '',
-        enterpriseMonthly: process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'] ?? '',
-        enterpriseAnnual: process.env['STRIPE_PRICE_ENTERPRISE_ANNUAL'] ?? '',
+        starterMonthly: env.stripe.priceStarterMonthly,
+        starterAnnual: env.stripe.priceStarterAnnual,
+        proMonthly: env.stripe.priceProMonthly,
+        proAnnual: env.stripe.priceProAnnual,
+        enterpriseMonthly: env.stripe.priceEnterpriseMonthly,
+        enterpriseAnnual: env.stripe.priceEnterpriseAnnual,
       },
     },
     paypal: {
-      clientId: process.env['PAYPAL_CLIENT_ID'] ?? '',
-      clientSecret: process.env['PAYPAL_CLIENT_SECRET'] ?? '',
-      webhookId: process.env['PAYPAL_WEBHOOK_ID'] ?? '',
+      clientId: env.paypal.clientId,
+      clientSecret: env.paypal.clientSecret,
+      webhookId: env.paypal.webhookId,
     },
     razorpay: {
-      keyId: process.env['RAZORPAY_KEY_ID'] ?? '',
-      keySecret: process.env['RAZORPAY_KEY_SECRET'] ?? '',
-      webhookSecret: process.env['RAZORPAY_WEBHOOK_SECRET'] ?? '',
+      keyId: env.razorpay.keyId,
+      keySecret: env.razorpay.keySecret,
+      webhookSecret: env.razorpay.webhookSecret,
     },
-    publishOpenApi: (process.env['PUBLISH_OPENAPI'] ?? 'false') === 'true',
+    publishOpenApi: env.app.publishOpenApi,
   }),
 );

@@ -6,6 +6,8 @@ import { StorageService } from '../../../storage/storage.service';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { env } from '../../../config/env.config';
+
 const execAsync = promisify(exec);
 
 export interface BackupRecord {
@@ -116,7 +118,7 @@ export class AdminBackupsService {
 
   private async runBackup(id: string, tempPath: string, fileName: string) {
     try {
-      const dbUrl = process.env.DATABASE_URL;
+      const dbUrl = env.database.url;
       if (!dbUrl) throw new Error('DATABASE_URL not set');
 
       this.logger.log(`Starting DB dump to ${tempPath}`);

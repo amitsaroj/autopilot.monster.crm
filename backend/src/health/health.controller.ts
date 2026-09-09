@@ -14,6 +14,8 @@ import {
 } from '@nestjs/terminus';
 import { Transport } from '@nestjs/microservices';
 
+import { env } from '../config/env.config';
+
 @ApiTags('Health')
 @SkipThrottle()
 @Controller('health')
@@ -32,9 +34,9 @@ export class HealthController {
       this.microservice.pingCheck('redis', {
         transport: Transport.REDIS,
         options: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+          host: env.redis.host,
+          port: env.redis.port,
+          ...(env.redis.password ? { password: env.redis.password } : {}),
         },
       });
   }
@@ -42,15 +44,15 @@ export class HealthController {
   private optionalDependencyChecks() {
     const checks = [];
 
-    const qdrantUrl = process.env.QDRANT_URL;
+    const qdrantUrl = env.qdrant.url;
     if (qdrantUrl) {
       const base = qdrantUrl.replace(/\/$/, '');
       checks.push(() => this.http.pingCheck('qdrant', `${base}/healthz`));
     }
 
-    const minioHost = process.env.MINIO_ENDPOINT;
+    const minioHost = env.minio.endpoint;
     if (minioHost) {
-      const minioPort = process.env.MINIO_PORT ?? '9000';
+      const minioPort = env.minio.port;
       checks.push(() =>
         this.http.pingCheck('minio', `http://${minioHost}:${minioPort}/minio/health/live`),
       );
@@ -64,7 +66,7 @@ export class HealthController {
   @HealthCheck()
   @ApiOperation({ summary: 'Liveness probe' })
   check() {
-    const diskThreshold = parseFloat(process.env.HEALTH_DISK_THRESHOLD ?? '0.98');
+    const diskThreshold = env.health.diskThreshold;
     return this.health.check([
       () => this.db.pingCheck('database'),
       () => this.memory.checkHeap('memory_heap', 512 * 1024 * 1024),

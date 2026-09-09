@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import twilio from 'twilio';
 
+import { env } from '../../config/env.config';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 
 @Injectable()
@@ -25,7 +26,7 @@ export class TwilioService {
   }
 
   private async getClient(tenantId: string): Promise<{ client: twilio.Twilio; from: string }> {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = env.isProduction;
 
     if (this.clients.has(tenantId)) {
       const fromNumber =
@@ -119,7 +120,7 @@ export class TwilioService {
     const authToken = this.configService.get<string>('TWILIO_AUTH_TOKEN') ?? '';
     const isMockToken = !authToken || authToken === 'mocktoken';
 
-    if (process.env.NODE_ENV === 'production' && isMockToken) {
+    if (env.isProduction && isMockToken) {
       return false;
     }
 

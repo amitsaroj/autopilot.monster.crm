@@ -1,5 +1,7 @@
 import { registerAs } from '@nestjs/config';
 
+import { env } from './env.config';
+
 export interface QdrantConfig {
   url: string;
   apiKey: string;
@@ -10,9 +12,9 @@ export interface QdrantConfig {
 export const qdrantConfig = registerAs(
   'qdrant',
   (): QdrantConfig => ({
-    url: process.env['QDRANT_URL'] ?? 'http://localhost:6333',
-    apiKey: process.env['QDRANT_API_KEY'] ?? '',
-    collectionCrm: process.env['QDRANT_COLLECTION_CRM'] ?? 'crm-vectors',
-    collectionAi: process.env['QDRANT_COLLECTION_AI'] ?? 'ai-vectors',
+    url: env.qdrant.url,
+    apiKey: env.qdrant.apiKey,
+    collectionCrm: env.qdrant.collectionCrm,
+    collectionAi: env.qdrant.collectionAi,
   }),
 );
