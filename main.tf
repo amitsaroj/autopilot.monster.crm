@@ -117,11 +117,23 @@ resource "aws_instance" "app_server" {
               mkswap /swapfile
               swapon /swapfile
               echo '/swapfile none swap sw 0 0' >> /etc/fstab
+
               apt-get update -y
-              apt-get install -y docker.io docker-compose-plugin awscli
+              apt-get install -y ca-certificates curl unzip
+
+              # Docker + compose plugin: not available as apt packages on this
+              # Ubuntu release, install via Docker's official script instead.
+              curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+              sh /tmp/get-docker.sh
               systemctl enable docker
               systemctl start docker
               usermod -aG docker ubuntu
+
+              # AWS CLI v2: the apt "awscli" package has no installation
+              # candidate on this Ubuntu release, install the official zip.
+              curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+              unzip -q /tmp/awscliv2.zip -d /tmp
+              /tmp/aws/install
               EOF
 
   lifecycle {

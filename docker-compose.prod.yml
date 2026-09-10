@@ -127,21 +127,6 @@ services:
   # Queue processors (WhatsApp broadcast, import/export, workflow) run in-process with the API.
   # No separate worker image exists yet — missing queue processors are application gaps (BL-C08).
   # Frontend is hosted on Vercel — not deployed to AWS.
-    restart: always
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://127.0.0.1:3000/',(r)=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 45s
-    networks:
-      - autopilot_net
 
   redis:
     image: redis:7-alpine
