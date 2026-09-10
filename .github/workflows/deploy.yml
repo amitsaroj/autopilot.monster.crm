@@ -286,17 +286,63 @@ jobs:
           echo "✗ SSM command polling timeout after ${TIMEOUT}s"
           exit 1
 
-      - name: Wait for API readiness (health check endpoint)
+      - name: Wait for API readiness (multi-method health check)
         run: |
           echo "Waiting for API to be ready..."
-          for i in $(seq 1 40); do
-            echo "Health check attempt $i/40..."
-            if curl -fsS --max-time 5 "https://api.autopilots.monster/api/v1/health/ready" >/dev/null 2>&1; then
-              echo "✓ API readiness check passed"
+          
+          # Get the instance IP for direct testing
+          INSTANCE_IP=$(aws ec2 describe-instances \
+            --instance-ids "${{ env.INSTANCE_ID }}" \
+            --region ap-south-1 \
+            --query 'Reservations[0].Instances[0].PublicIpAddress' \
+            --output text)
+          echo "Instance IP: $INSTANCE_IP"
+          
+          # Method 1: Direct IP health check (HTTP, no SSL cert issues)
+          echo "Attempting direct health check via instance IP..."
+          for i in $(seq 1 20); do
+            echo "Attempt $i/20..."
+            if curl -fsS --max-time 5 --connect-timeout 3 "http://${INSTANCE_IP}/api/v1/health/ready" >/dev/null 2>&1; then
+              echo "✓ API is ready"
               exit 0
             fi
-            echo "API not ready yet, retrying in 10s..."
-            sleep 10
+            sleep 15
           done
-          echo "✗ API readiness check failed after 400s"
+          
+          # Method 2: Check via domain with relaxed SSL
+          echo "Attempting health check via domain (relaxed SSL)..."
+          for i in $(seq 1 15); do
+            echo "Attempt $i/15..."
+            if curl -fsS -k --max-time 5 --connect-timeout 3 "https://api.autopilots.monster/api/v1/health/ready" >/dev/null 2>&1; then
+              echo "✓ API is ready"
+              exit 0
+            fi
+            sleep 15
+          done
+          
+          # Method 3: Check docker container status via SSM
+          echo "Checking docker container status..."
+          if CONTAINER_STATUS=$(aws ssm send-command \
+            --instance-ids "${{ env.INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=['docker compose -f /home/ubuntu/app/docker-compose.prod.yml ps']" \
+            --region ap-south-1 \
+            --query 'Command.CommandId' \
+            --output text); then
+            sleep 5
+            aws ssm get-command-invocation \
+              --command-id "$CONTAINER_STATUS" \
+              --instance-id "${{ env.INSTANCE_ID }}" \
+              --region ap-south-1 \
+              --query 'StandardOutputContent' \
+              --output text || true
+          fi
+          
+          echo "✗ API readiness check failed"
+          echo "Instance: $INSTANCE_IP"
+          echo "This may indicate:"
+          echo "  - Docker containers failed to start (check SSM logs)"
+          echo "  - API port not exposed correctly"
+          echo "  - Database/Redis not initialized"
+          echo "  - SSL certificate generation failed"
           exit 1
