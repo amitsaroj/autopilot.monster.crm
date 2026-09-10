@@ -206,37 +206,97 @@ jobs:
             --output text)
           echo "SSM_COMMAND_ID=$COMMAND_ID" >> $GITHUB_ENV
 
-      - name: Wait for SSM completion
+      - name: Wait for instance to be ready (Approach 1 - EC2 status check)
         run: |
-          aws ssm wait command-executed \
-            --command-id "${{ env.SSM_COMMAND_ID }}" \
-            --instance-id "${{ env.INSTANCE_ID }}" \
+          echo "Waiting for EC2 instance to be in running state..."
+          aws ec2 wait instance-running \
+            --instance-ids "${{ env.INSTANCE_ID }}" \
             --region ap-south-1
-          STATUS=$(aws ssm get-command-invocation \
-            --command-id "${{ env.SSM_COMMAND_ID }}" \
-            --instance-id "${{ env.INSTANCE_ID }}" \
-            --region ap-south-1 \
-            --query 'Status' \
-            --output text)
-          echo "SSM status: ${STATUS}"
-          if [ "${STATUS}" != "Success" ]; then
-            aws ssm get-command-invocation \
+          echo "✓ EC2 instance is running"
+
+      - name: Wait for SSM agent to be ready (Approach 2 - Simple SSM health check)
+        run: |
+          echo "Polling for SSM agent readiness (up to 5 minutes)..."
+          for i in $(seq 1 30); do
+            echo "Attempt $i/30: Checking SSM agent status..."
+            if aws ssm describe-instance-information \
+              --filters "Key=InstanceIds,Values=${{ env.INSTANCE_ID }}" \
+              --region ap-south-1 \
+              --query 'InstanceInformationList[0].PingStatus' \
+              --output text | grep -q "Online"; then
+              echo "✓ SSM agent is online"
+              break
+            fi
+            if [ "$i" -lt 30 ]; then
+              sleep 10
+            fi
+          done
+
+      - name: Poll SSM command status (Approach 3 - Manual polling with timeout)
+        run: |
+          echo "Polling for SSM command completion..."
+          TIMEOUT=300
+          ELAPSED=0
+          POLL_INTERVAL=5
+          
+          while [ $ELAPSED -lt $TIMEOUT ]; do
+            STATUS=$(aws ssm get-command-invocation \
               --command-id "${{ env.SSM_COMMAND_ID }}" \
               --instance-id "${{ env.INSTANCE_ID }}" \
               --region ap-south-1 \
-              --query 'StandardErrorContent' \
-              --output text
-            exit 1
-          fi
-
-      - name: Wait for API readiness
-        run: |
-          for i in $(seq 1 40); do
-            if curl -fsS --max-time 5 "https://api.autopilots.monster/api/v1/health/ready" >/dev/null; then
-              echo "API readiness check passed"
+              --query 'Status' \
+              --output text 2>/dev/null || echo "Unknown")
+            
+            echo "SSM Command Status: $STATUS (elapsed: ${ELAPSED}s)"
+            
+            if [ "$STATUS" = "Success" ]; then
+              echo "✓ SSM command completed successfully"
+              aws ssm get-command-invocation \
+                --command-id "${{ env.SSM_COMMAND_ID }}" \
+                --instance-id "${{ env.INSTANCE_ID }}" \
+                --region ap-south-1 \
+                --query 'StandardOutputContent' \
+                --output text | tail -20
               exit 0
             fi
+            
+            if [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ]; then
+              echo "✗ SSM command failed with status: $STATUS"
+              echo "--- Standard Output ---"
+              aws ssm get-command-invocation \
+                --command-id "${{ env.SSM_COMMAND_ID }}" \
+                --instance-id "${{ env.INSTANCE_ID }}" \
+                --region ap-south-1 \
+                --query 'StandardOutputContent' \
+                --output text || true
+              echo "--- Standard Error ---"
+              aws ssm get-command-invocation \
+                --command-id "${{ env.SSM_COMMAND_ID }}" \
+                --instance-id "${{ env.INSTANCE_ID }}" \
+                --region ap-south-1 \
+                --query 'StandardErrorContent' \
+                --output text || true
+              exit 1
+            fi
+            
+            sleep $POLL_INTERVAL
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+          
+          echo "✗ SSM command polling timeout after ${TIMEOUT}s"
+          exit 1
+
+      - name: Wait for API readiness (health check endpoint)
+        run: |
+          echo "Waiting for API to be ready..."
+          for i in $(seq 1 40); do
+            echo "Health check attempt $i/40..."
+            if curl -fsS --max-time 5 "https://api.autopilots.monster/api/v1/health/ready" >/dev/null 2>&1; then
+              echo "✓ API readiness check passed"
+              exit 0
+            fi
+            echo "API not ready yet, retrying in 10s..."
             sleep 10
           done
-          echo "API readiness did not pass in time"
+          echo "✗ API readiness check failed after 400s"
           exit 1
