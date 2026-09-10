@@ -199,7 +199,8 @@ jobs:
               \"sudo docker compose -f docker-compose.prod.yml run --rm api npm run migrate:prod\",
               \"sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans --force-recreate\",
               \"echo 'Deployment complete. Services running:'\",
-              \"sudo docker compose -f docker-compose.prod.yml ps\"
+              \"sudo docker compose -f docker-compose.prod.yml ps\",
+              \"sudo docker compose -f docker-compose.prod.yml logs --tail=100 api qdrant nginx || true\"
             ]" \
             --region ap-south-1 \
             --query 'Command.CommandId' \
@@ -325,7 +326,7 @@ jobs:
           if CONTAINER_STATUS=$(aws ssm send-command \
             --instance-ids "${{ env.INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=['docker compose -f /home/ubuntu/app/docker-compose.prod.yml ps']" \
+            --parameters "commands=['cd /home/ubuntu/app && docker compose -f docker-compose.prod.yml ps -a && docker compose -f docker-compose.prod.yml logs --tail=100 api qdrant nginx']" \
             --region ap-south-1 \
             --query 'Command.CommandId' \
             --output text); then

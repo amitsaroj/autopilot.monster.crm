@@ -56,7 +56,13 @@ services:
     volumes:
       - qdrantdata:/qdrant/storage
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      # The Qdrant image does not include curl or wget. Use its bundled Bash
+      # instead, so the API's service_healthy dependency can actually resolve.
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333 && printf \"GET /healthz HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -qm1 \"200 OK\" <&3'",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
