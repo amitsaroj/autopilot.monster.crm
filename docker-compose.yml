@@ -90,6 +90,8 @@ services:
       - DB_NAME=autopilot_monster
       - DB_USER=root
       - DB_PASSWORD=password
+      # Local Compose Postgres does not expose TLS.
+      - DB_SSL=false
       - REDIS_HOST=redis
       - REDIS_PASSWORD=password
       - MINIO_ENDPOINT=minio

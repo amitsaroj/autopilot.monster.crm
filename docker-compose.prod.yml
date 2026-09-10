@@ -85,6 +85,9 @@ services:
       - DB_USER=${DB_USER:-root}
       - DB_PASSWORD=${DB_PASSWORD:-password}
       - DB_NAME=${DB_NAME:-autopilot_monster}
+      # The bundled Postgres container serves the private Docker network without
+      # TLS. Override the externally-oriented env file value (DB_SSL=true).
+      - DB_SSL=false
       - DB_SYNCHRONIZE=false
       - REDIS_HOST=redis
       - REDIS_PORT=6379
