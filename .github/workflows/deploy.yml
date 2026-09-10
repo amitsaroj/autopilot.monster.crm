@@ -24,6 +24,34 @@ jobs:
           test -f nginx/nginx.conf
           echo "✓ Required deployment files found"
 
+      - name: Validate production JWT signing configuration
+        env:
+          JWT_ALGORITHM: ${{ secrets.PROD_JWT_ALGORITHM }}
+          JWT_PRIVATE_KEY: ${{ secrets.PROD_JWT_PRIVATE_KEY }}
+          JWT_PUBLIC_KEY: ${{ secrets.PROD_JWT_PUBLIC_KEY }}
+          JWT_KEY_ID: ${{ secrets.PROD_JWT_KEY_ID }}
+        run: |
+          if [ "$JWT_ALGORITHM" != "RS256" ]; then
+            echo "PROD_JWT_ALGORITHM must be RS256."
+            exit 1
+          fi
+
+          missing=0
+          for key in JWT_PRIVATE_KEY JWT_PUBLIC_KEY JWT_KEY_ID; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required GitHub Actions secret: PROD_${key}"
+              missing=1
+            fi
+          done
+
+          for key in JWT_PRIVATE_KEY JWT_PUBLIC_KEY; do
+            if [[ "${!key}" == *$'\n'* ]]; then
+              echo "PROD_${key} must be a single line with literal \\n escapes."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
       - name: AWS Login
         uses: aws-actions/configure-aws-credentials@v4
         with:
