@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
@@ -20,6 +21,7 @@ import { resolveStripePriceId, stripePriceConfigHint } from './stripe-price.util
 
 @Injectable()
 export class BillingService {
+  private static readonly logger = new Logger(BillingService.name);
   private stripe: Stripe;
 
   constructor(
@@ -38,16 +40,19 @@ export class BillingService {
     private readonly configService: ConfigService,
   ) {
     const stripeConfig = this.configService.get<AppConfig['stripe']>('app.stripe');
-    if (!stripeConfig?.secretKey) {
-      throw new Error('STRIPE_SECRET_KEY is missing');
+    const isProduction = (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production';
+    const isPlaceholder =
+      !stripeConfig?.secretKey || /placeholder|changeme|change-me/i.test(stripeConfig.secretKey);
+
+    if (isPlaceholder) {
+      BillingService.logger.warn(
+        isProduction
+          ? 'STRIPE_SECRET_KEY is missing or a placeholder in production — billing endpoints will fail until a live key is configured.'
+          : 'STRIPE_SECRET_KEY is not configured — billing endpoints will fail until a key is provided.',
+      );
     }
-    if (
-      (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production' &&
-      /placeholder|changeme|change-me/i.test(stripeConfig.secretKey)
-    ) {
-      throw new Error('STRIPE_SECRET_KEY must be a live injected secret in production');
-    }
-    this.stripe = new Stripe(stripeConfig.secretKey, {
+
+    this.stripe = new Stripe(stripeConfig?.secretKey || 'sk_not_configured', {
       apiVersion: '2025-01-27' as Stripe.LatestApiVersion,
     });
   }
