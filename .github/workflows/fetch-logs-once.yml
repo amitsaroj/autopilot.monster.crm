@@ -20,7 +20,7 @@ jobs:
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=["cd /home/ubuntu/app && sudo docker compose -f docker-compose.prod.yml logs --tail=300 api"]' \
+            --parameters 'commands=["cd /home/ubuntu/app && sudo docker compose -f docker-compose.prod.yml logs --since=5m api"]' \
             --region ap-south-1 \
             --query 'Command.CommandId' \
             --output text)
