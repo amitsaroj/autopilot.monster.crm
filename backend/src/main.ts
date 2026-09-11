@@ -56,7 +56,7 @@ async function bootstrap(): Promise<void> {
     }
   }
   app.enableCors({
-    origin: isProd ? [appCfg.url, appCfg.frontendUrl] : true,
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
