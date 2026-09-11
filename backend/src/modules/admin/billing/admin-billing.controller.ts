@@ -16,36 +16,18 @@ export class AdminBillingController {
   @Get('settings')
   @ApiOperation({ summary: 'Get global billing settings' })
   async getSettings() {
-    const data = await this.adminBillingService.getSettings();
-    return {
-      status: 200,
-      message: 'Billing settings retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminBillingService.getSettings();
   }
 
   @Post('settings')
   @ApiOperation({ summary: 'Update global billing settings' })
   async updateSettings(@Body() body: any) {
-    const data = await this.adminBillingService.updateSettings(body);
-    return {
-      status: 200,
-      message: 'Billing settings updated',
-      error: false,
-      data,
-    };
+    return await this.adminBillingService.updateSettings(body);
   }
 
   @Get('stats')
   @ApiOperation({ summary: 'Get billing overview stats' })
   async getStats() {
-    const data = await this.adminBillingService.getStats();
-    return {
-      status: 200,
-      message: 'Billing stats retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminBillingService.getStats();
   }
 }

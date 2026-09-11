@@ -94,6 +94,7 @@ lerna-debug.log*
 .rts2_cache_es/
 .rts2_cache_umd/
 *.tsbuildinfo
+.playwright-mcp
 
 # ─── Docker ─────────────────────────────────────────────────
 # Ignore local volume data; keep Dockerfiles and compose files

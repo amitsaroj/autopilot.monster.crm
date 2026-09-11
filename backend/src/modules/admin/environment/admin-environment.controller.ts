@@ -16,7 +16,6 @@ export class AdminEnvironmentController {
   @Get()
   @ApiOperation({ summary: 'Get redacted environment variables and system info' })
   async getEnv() {
-    const data = await this.envService.getEnv();
-    return { status: 200, message: 'Environment info retrieved', error: false, data };
+    return await this.envService.getEnv();
   }
 }

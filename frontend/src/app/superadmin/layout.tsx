@@ -2,10 +2,11 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { readChunkedCookie } from '@/lib/cookie-chunks';
 
 export default async function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
-  const token = cookieStore.get('access_token')?.value;
+  const token = readChunkedCookie((name) => cookieStore.get(name), 'access_token');
 
   if (!token) {
     redirect('/login');

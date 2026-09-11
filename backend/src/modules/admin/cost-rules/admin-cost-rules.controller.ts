@@ -16,14 +16,12 @@ export class AdminCostRulesController {
   @Get()
   @ApiOperation({ summary: 'Get global cost/markup rules' })
   async getSettings() {
-    const data = await this.costRulesService.getSettings();
-    return { status: 200, message: 'Cost rules retrieved', error: false, data };
+    return await this.costRulesService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global cost/markup rules' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.costRulesService.updateSettings(settings);
-    return { status: 200, message: 'Cost rules updated', error: false, data };
+    return await this.costRulesService.updateSettings(settings);
   }
 }

@@ -86,8 +86,10 @@ export const useAuth = create<AuthState>()(
           try {
             const payload = JSON.parse(atob(authData.accessToken.split('.')[1]));
             userData.roles = payload.roles || [];
+            userData.permissions = payload.permissions || [];
           } catch (e) {
             userData.roles = [];
+            userData.permissions = [];
           }
 
           set({

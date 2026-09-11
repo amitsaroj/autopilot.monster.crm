@@ -16,21 +16,18 @@ export class AdminEmailSettingsController {
   @Get()
   @ApiOperation({ summary: 'Get global email/SMTP settings' })
   async getSettings() {
-    const data = await this.emailSettingsService.getSettings();
-    return { status: 200, message: 'Email settings retrieved', error: false, data };
+    return await this.emailSettingsService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global email/SMTP settings' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.emailSettingsService.updateSettings(settings);
-    return { status: 200, message: 'Email settings updated', error: false, data };
+    return await this.emailSettingsService.updateSettings(settings);
   }
 
   @Post('test')
   @ApiOperation({ summary: 'Send a test email to verify settings' })
   async testEmail(@Body() data: { to: string }) {
-    const result = await this.emailSettingsService.sendTestEmail(data.to);
-    return { status: 200, message: 'Test email sent', error: false, data: result };
+    return await this.emailSettingsService.sendTestEmail(data.to);
   }
 }

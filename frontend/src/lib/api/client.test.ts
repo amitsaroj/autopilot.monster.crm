@@ -8,13 +8,15 @@ describe('api client', () => {
 
   beforeEach(() => {
     mock = new MockAdapter(api);
-    document.cookie = 'access_token=test-token; path=/';
+    // access_token is stored as chunked cookies (access_token.0, .1, ...) so a
+    // single JWT can exceed the ~4KB per-cookie limit — see lib/cookie-chunks.ts.
+    document.cookie = 'access_token.0=test-token; path=/';
     localStorage.setItem('tenant_id', 'tenant-1');
   });
 
   afterEach(() => {
     mock.restore();
-    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'access_token.0=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     localStorage.clear();
   });
 

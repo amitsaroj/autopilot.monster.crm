@@ -29,7 +29,7 @@ export class AdminAuditLogsController {
     @Query('category') category?: string,
     @Query('outcome') outcome?: string,
   ) {
-    const data = await this.adminAuditLogsService.findAll({
+    return await this.adminAuditLogsService.findAll({
       tenantId,
       userId,
       action,
@@ -37,11 +37,5 @@ export class AdminAuditLogsController {
       category,
       outcome,
     });
-    return {
-      status: 200,
-      message: 'Audit logs retrieved',
-      error: false,
-      data,
-    };
   }
 }

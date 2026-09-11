@@ -23,12 +23,6 @@ export class AdminApiLogsController {
     @Query('method') method?: string,
     @Query('statusCode') statusCode?: number,
   ) {
-    const data = await this.adminApiLogsService.findAll({ tenantId, method, statusCode });
-    return {
-      status: 200,
-      message: 'API logs retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminApiLogsService.findAll({ tenantId, method, statusCode });
   }
 }

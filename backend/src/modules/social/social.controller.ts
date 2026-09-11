@@ -57,12 +57,6 @@ export class SocialController {
   @ApiOperation({ summary: 'Get social media analytics' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getAnalytics(@TenantId() tenantId: string) {
-    const analytics = await this.socialService.getAnalytics(tenantId);
-    return {
-      status: 200,
-      message: 'Analytics retrieved',
-      error: false,
-      data: analytics,
-    };
+    return await this.socialService.getAnalytics(tenantId);
   }
 }

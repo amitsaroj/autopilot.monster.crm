@@ -77,7 +77,7 @@ export class RbacRepository extends BaseRepository<Role> {
     query
       .skip((page - 1) * limit)
       .take(limit)
-      .orderBy('permission.module', 'ASC')
+      .orderBy('permission.resource', 'ASC')
       .addOrderBy('permission.name', 'ASC');
 
     return query.getManyAndCount();

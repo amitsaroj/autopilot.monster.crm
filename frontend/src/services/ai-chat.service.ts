@@ -1,6 +1,7 @@
 import api from '../lib/api/client';
 import { parseApiData } from '../lib/api/parse-response';
 import { API_BASE } from '../lib/constants';
+import { getToken } from '../lib/auth';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -19,8 +20,7 @@ export interface ConversationSummary {
 function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (typeof window !== 'undefined') {
-    const match = document.cookie.match(/(^| )access_token=([^;]+)/);
-    const token = match ? match[2] : null;
+    const token = getToken();
     const tenantId = localStorage.getItem('tenant_id');
     if (token) headers.Authorization = `Bearer ${token}`;
     if (tenantId) headers['x-tenant-id'] = tenantId;

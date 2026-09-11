@@ -17,20 +17,19 @@ export class AdminDebugController {
   @ApiOperation({ summary: 'Clear all system caches (Redis)' })
   async clearCache() {
     await this.debugService.clearCache();
-    return { status: 200, message: 'Redundant memory buffers purged', error: false };
+    return { message: 'Redundant memory buffers purged' };
   }
 
   @Post('events/simulate-error')
   @ApiOperation({ summary: 'Simulate a core system error for testing' })
   async simulateError() {
     await this.debugService.simulateError();
-    return { status: 200, message: 'Exception trajectory initiated', error: false };
+    return { message: 'Exception trajectory initiated' };
   }
 
   @Get('environment/safe')
   @ApiOperation({ summary: 'Get sanitized environment variables' })
   async getEnv() {
-    const data = await this.debugService.getSanitizedEnv();
-    return { status: 200, message: 'Environment blueprint retrieved', error: false, data };
+    return await this.debugService.getSanitizedEnv();
   }
 }
