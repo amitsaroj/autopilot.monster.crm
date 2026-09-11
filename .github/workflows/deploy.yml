@@ -245,9 +245,9 @@ jobs:
 
       - name: Wait for SSM agent to be ready (Approach 2 - Simple SSM health check)
         run: |
-          echo "Polling for SSM agent readiness (up to 5 minutes)..."
-          for i in $(seq 1 10); do
-            echo "Attempt $i/10: Checking SSM agent status..."
+          echo "Polling for SSM agent readiness (up to 50 seconds)..."
+          for i in $(seq 1 5); do
+            echo "Attempt $i/5: Checking SSM agent status..."
             if aws ssm describe-instance-information \
               --filters "Key=InstanceIds,Values=${{ env.INSTANCE_ID }}" \
               --region ap-south-1 \
@@ -256,7 +256,7 @@ jobs:
               echo "✓ SSM agent is online"
               break
             fi
-            if [ "$i" -lt 10 ]; then
+            if [ "$i" -lt 5 ]; then
               sleep 10
             fi
           done
@@ -329,8 +329,8 @@ jobs:
           
           # Method 1: Direct IP health check (HTTP, no SSL cert issues)
           echo "Attempting direct health check via instance IP..."
-          for i in $(seq 1 20); do
-            echo "Attempt $i/20..."
+          for i in $(seq 1 5); do
+            echo "Attempt $i/5..."
             if curl -fsS --max-time 5 --connect-timeout 3 "http://${INSTANCE_IP}/api/v1/health/ready" >/dev/null 2>&1; then
               echo "✓ API is ready"
               exit 0
@@ -340,8 +340,8 @@ jobs:
           
           # Method 2: Check via domain with relaxed SSL
           echo "Attempting health check via domain (relaxed SSL)..."
-          for i in $(seq 1 15); do
-            echo "Attempt $i/15..."
+          for i in $(seq 1 5); do
+            echo "Attempt $i/5..."
             if curl -fsS -k --max-time 5 --connect-timeout 3 "https://api.autopilots.monster/api/v1/health/ready" >/dev/null 2>&1; then
               echo "✓ API is ready"
               exit 0
