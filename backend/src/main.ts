@@ -13,15 +13,16 @@ import type { AppConfig } from './config/app.config';
 import { env } from './config/env.config';
 import { AppLogger } from './logger/logger.service';
 
-function isAllowedCorsOrigin(origin: string, frontendUrl: string): boolean {
+function buildAllowedCorsOrigins(appUrl: string, frontendUrl: string): Set<string> {
+  const origins = new Set<string>([appUrl, frontendUrl]);
   try {
-    const requestUrl = new URL(origin);
-    if (requestUrl.protocol !== 'https:') return false;
     const rootHost = new URL(frontendUrl).hostname.replace(/^www\./, '');
-    return requestUrl.hostname === rootHost || requestUrl.hostname.endsWith(`.${rootHost}`);
+    origins.add(`https://${rootHost}`);
+    origins.add(`https://www.${rootHost}`);
   } catch {
-    return false;
+    // frontendUrl is validated as https:// earlier in bootstrap; this is defensive only.
   }
+  return origins;
 }
 
 const sentryDsn = env.sentry.dsn;
@@ -66,10 +67,11 @@ async function bootstrap(): Promise<void> {
       throw new Error('FRONTEND_URL must use https:// in production');
     }
   }
+  const allowedCorsOrigins = buildAllowedCorsOrigins(appCfg.url, appCfg.frontendUrl);
   app.enableCors({
     origin: isProd
       ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-          if (!origin || isAllowedCorsOrigin(origin, appCfg.frontendUrl)) {
+          if (!origin || allowedCorsOrigins.has(origin)) {
             callback(null, true);
           } else {
             callback(new Error(`Origin ${origin} not allowed by CORS`));
