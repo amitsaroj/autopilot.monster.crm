@@ -167,6 +167,37 @@ Redis supports cache/throttling and the following Bull queues: `email`, `sms`, `
 
 The `prod` GitHub Actions workflow builds/pushes GHCR images, uses Terraform to manage AWS infrastructure, uploads deploy artifacts to S3, and sends an SSM deployment command that migrates and recreates the Compose stack. It requires AWS credentials, GitHub package permissions, S3, SSM, runtime secrets, DNS, and TLS setup.
 
+### Connecting to the production instance
+
+SSH is disabled by design (`main.tf`'s `allowed_ssh_cidr` defaults to `""`, which skips the port-22 security group rule entirely — see the comment "Empty disables SSH ingress (SSM preferred)"). All remote access goes through AWS Systems Manager instead, using the same IAM credentials the deploy pipeline already has.
+
+**Interactive shell** (requires the [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) for the AWS CLI, or use the AWS Console's Session Manager tab with no local setup at all):
+
+```bash
+aws ssm start-session --target <instance-id> --region ap-south-1
+```
+
+**One-off command without an interactive session** (what the deploy pipeline itself uses to check container status/logs):
+
+```bash
+COMMAND_ID=$(aws ssm send-command \
+  --instance-ids <instance-id> \
+  --document-name "AWS-RunShellScript" \
+  --parameters 'commands=["cd /home/ubuntu/app && sudo docker compose -f docker-compose.prod.yml logs --tail=200 api"]' \
+  --region ap-south-1 \
+  --query 'Command.CommandId' --output text)
+
+aws ssm get-command-invocation \
+  --command-id "$COMMAND_ID" \
+  --instance-id <instance-id> \
+  --region ap-south-1 \
+  --query 'StandardOutputContent' --output text
+```
+
+Find the current `<instance-id>` with `aws ec2 describe-instances --filters "Name=tag:Name,Values=*autopilot*" --query 'Reservations[].Instances[].InstanceId' --region ap-south-1`, or read it from the most recent deploy run's Terraform output.
+
+If you genuinely need SSH (e.g. an interactive debugger that doesn't work over SSM), set the `allowed_ssh_cidr` Terraform variable to your IP as a `/32` CIDR and re-apply — this opens port 22 to that address only. Treat this as a deliberate, temporary security-posture change, not a default way of working.
+
 ## Security, monitoring and troubleshooting
 
 The API initializes Helmet, compression, production CORS validation, Sentry (when configured), correlation IDs, Winston logging, exception filters, rate limits, health endpoints and audit/error/security records. There is no managed alerting, external log sink, verified restore drill, or separate worker deployment checked in.
