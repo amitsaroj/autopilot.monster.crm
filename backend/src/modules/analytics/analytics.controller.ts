@@ -22,8 +22,7 @@ export class AnalyticsController {
   @Get('overview')
   @ApiOperation({ summary: 'Dashboard KPI summary' })
   async getOverview(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getOverview(tenantId);
-    return { status: 200, message: 'Overview retrieved', error: false, data };
+    return await this.analyticsService.getOverview(tenantId);
   }
 
   @Get('dashboard')
@@ -43,15 +42,13 @@ export class AnalyticsController {
   @Get('revenue')
   @ApiOperation({ summary: 'Revenue analytics' })
   async getRevenue(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getRevenueAnalytics(tenantId);
-    return { status: 200, message: 'Revenue analytics retrieved', error: false, data };
+    return await this.analyticsService.getRevenueAnalytics(tenantId);
   }
 
   @Get('pipeline')
   @ApiOperation({ summary: 'Pipeline funnel analytics' })
   async getPipeline(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getPipelineAnalytics(tenantId);
-    return { status: 200, message: 'Pipeline analytics retrieved', error: false, data };
+    return await this.analyticsService.getPipelineAnalytics(tenantId);
   }
 
   @Get('team')

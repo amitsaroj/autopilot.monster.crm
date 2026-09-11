@@ -5,6 +5,7 @@ import type { Request } from 'express';
 import { METADATA_KEYS } from '../constants/app.constants';
 import { ERROR_CODES } from '../constants/error-codes.constants';
 import type { IRequestContext } from '../interfaces/request-context.interface';
+import { PricingService } from '../../modules/pricing/pricing.service';
 
 @Injectable()
 export class PlanGuard implements CanActivate {
@@ -34,7 +35,7 @@ export class PlanGuard implements CanActivate {
     }
 
     try {
-      const pricingService = this.moduleRef.get('PricingService', { strict: false });
+      const pricingService = this.moduleRef.get(PricingService, { strict: false });
       if (pricingService) {
         const isEnabled = await pricingService.isFeatureEnabled(tenantId, requiredFeature);
         if (!isEnabled) {

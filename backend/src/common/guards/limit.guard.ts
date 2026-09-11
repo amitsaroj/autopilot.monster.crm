@@ -5,6 +5,8 @@ import { METADATA_KEYS } from '../constants/app.constants';
 import { ERROR_CODES } from '../constants/error-codes.constants';
 import type { IRequestContext } from '../interfaces/request-context.interface';
 import type { Request } from 'express';
+import { PricingService } from '../../modules/pricing/pricing.service';
+import { BillingService } from '../../modules/billing/billing.service';
 
 @Injectable()
 export class LimitGuard implements CanActivate {
@@ -30,8 +32,8 @@ export class LimitGuard implements CanActivate {
     if (!tenantId) return false;
 
     try {
-      const pricingService = this.moduleRef.get('PricingService', { strict: false });
-      const billingService = this.moduleRef.get('BillingService', { strict: false });
+      const pricingService = this.moduleRef.get(PricingService, { strict: false });
+      const billingService = this.moduleRef.get(BillingService, { strict: false });
 
       if (pricingService && billingService) {
         const limit = await pricingService.getLimit(tenantId, metric);

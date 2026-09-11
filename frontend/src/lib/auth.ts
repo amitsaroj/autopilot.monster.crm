@@ -12,8 +12,14 @@ function parseCookie(name: string): string | null {
   return match ? match[2] : null;
 }
 
+// Browsers silently drop `Secure` cookies set from a non-HTTPS origin (e.g.
+// http://localhost during local dev) — omit it there so auth actually works.
+function cookieSecurityFlag(): string {
+  return typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; secure' : '';
+}
+
 function expireCookie(name: string) {
-  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict; secure`;
+  document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=strict${cookieSecurityFlag()}`;
 }
 
 /** Read the JWT access token from the browser cookie. */
@@ -24,12 +30,13 @@ export function getToken(): string | null {
 /** Persist the JWT access token (and optionally refresh / tenant) into cookies. */
 export function setToken(accessToken: string, refreshToken?: string, tenantId?: string) {
   if (typeof window === 'undefined') return;
-  document.cookie = `${COOKIE_ACCESS}=${accessToken}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=strict; secure`;
+  const secure = cookieSecurityFlag();
+  document.cookie = `${COOKIE_ACCESS}=${accessToken}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=strict${secure}`;
   if (refreshToken) {
-    document.cookie = `${COOKIE_REFRESH}=${refreshToken}; path=/; max-age=604800; samesite=strict; secure`;
+    document.cookie = `${COOKIE_REFRESH}=${refreshToken}; path=/; max-age=604800; samesite=strict${secure}`;
   }
   if (tenantId) {
-    document.cookie = `${COOKIE_TENANT}=${tenantId}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=strict; secure`;
+    document.cookie = `${COOKIE_TENANT}=${tenantId}; path=/; max-age=${COOKIE_MAX_AGE}; samesite=strict${secure}`;
     localStorage.setItem('tenant_id', tenantId);
   }
 }

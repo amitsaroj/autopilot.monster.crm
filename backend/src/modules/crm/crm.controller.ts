@@ -684,20 +684,13 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getTasks(@TenantId() tenantId: string, @Query() query: CrmListQueryDto) {
     if (wantsPagination(query) || query.search || query.status) {
-      const data = await this.taskService.findPaginated(tenantId, {
+      return await this.taskService.findPaginated(tenantId, {
         ...query,
         page: query.page ?? 1,
         limit: query.limit ?? 20,
       });
-      return { status: 200, message: 'Tasks retrieved', error: false, data };
     }
-    const data = await this.taskService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Tasks retrieved',
-      error: false,
-      data,
-    };
+    return await this.taskService.findAll(tenantId);
   }
 
   @Post('tasks')
