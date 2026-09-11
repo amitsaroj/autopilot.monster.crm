@@ -8,7 +8,7 @@ export class TenantPlugin extends BaseEntity {
   @Column()
   tenantId!: string;
 
-  @Column()
+  @Column({ name: 'plugin_id' })
   pluginId!: string;
 
   @ManyToOne(() => Tenant)
@@ -16,7 +16,7 @@ export class TenantPlugin extends BaseEntity {
   tenant!: Tenant;
 
   @ManyToOne(() => Plugin)
-  @JoinColumn({ name: 'pluginId' })
+  @JoinColumn({ name: 'plugin_id' })
   plugin!: Plugin;
 
   @Column({ type: 'jsonb', default: {} })

@@ -10,6 +10,7 @@ vendor/
 .pnp
 .pnp.js
 .yarn/install-state.gz
+.pem
 
 # ─── Build Outputs ──────────────────────────────────────────
 dist/
