@@ -41,18 +41,17 @@ export class BillingService {
   ) {
     const stripeConfig = this.configService.get<AppConfig['stripe']>('app.stripe');
     const isProduction = (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production';
-    const isPlaceholder =
-      !stripeConfig?.secretKey || /placeholder|changeme|change-me/i.test(stripeConfig.secretKey);
+    const secretKey = stripeConfig?.secretKey;
 
-    if (isPlaceholder) {
+    if (!secretKey) {
       BillingService.logger.warn(
-        isProduction
-          ? 'STRIPE_SECRET_KEY is missing or a placeholder in production — billing endpoints will fail until a live key is configured.'
-          : 'STRIPE_SECRET_KEY is not configured — billing endpoints will fail until a key is provided.',
+        'STRIPE_SECRET_KEY is not configured — billing endpoints will fail until a live key is provided.',
       );
+    } else if (isProduction && /placeholder|changeme|change-me/i.test(secretKey)) {
+      throw new Error('STRIPE_SECRET_KEY must be a live injected secret in production');
     }
 
-    this.stripe = new Stripe(stripeConfig?.secretKey || 'sk_not_configured', {
+    this.stripe = new Stripe(secretKey || 'sk_not_configured', {
       apiVersion: '2025-01-27' as Stripe.LatestApiVersion,
     });
   }
