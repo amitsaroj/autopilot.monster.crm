@@ -13,6 +13,17 @@ import type { AppConfig } from './config/app.config';
 import { env } from './config/env.config';
 import { AppLogger } from './logger/logger.service';
 
+function isAllowedCorsOrigin(origin: string, frontendUrl: string): boolean {
+  try {
+    const requestUrl = new URL(origin);
+    if (requestUrl.protocol !== 'https:') return false;
+    const rootHost = new URL(frontendUrl).hostname.replace(/^www\./, '');
+    return requestUrl.hostname === rootHost || requestUrl.hostname.endsWith(`.${rootHost}`);
+  } catch {
+    return false;
+  }
+}
+
 const sentryDsn = env.sentry.dsn;
 if (sentryDsn) {
   Sentry.init({
@@ -56,7 +67,15 @@ async function bootstrap(): Promise<void> {
     }
   }
   app.enableCors({
-    origin: true,
+    origin: isProd
+      ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+          if (!origin || isAllowedCorsOrigin(origin, appCfg.frontendUrl)) {
+            callback(null, true);
+          } else {
+            callback(new Error(`Origin ${origin} not allowed by CORS`));
+          }
+        }
+      : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
