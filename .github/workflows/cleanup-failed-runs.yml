@@ -1,0 +1,19 @@
+name: Cleanup Failed Workflow Runs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Failed Workflow Runs
+        run: |
+          FAILED_RUNS="34574175329 34573383723 34572406899 34446965507 34445397580 34443451808 34441016976 34439910297 34358476139 34355125199 34353021962 34345750016 34345275617 34343716285 34340218713 34340026986 30015571308 29895939804 28813891463 28813880736 27911015798 27910985879 27812816225 27812774739 27810141160"
+          
+          for run_id in $FAILED_RUNS; do
+            echo "Deleting run: $run_id"
+            gh run delete $run_id -R amitsaroj/autopilot.monster.crm --confirm
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
