@@ -11,6 +11,8 @@ const publicRoutes = [
   '/mfa',
   '/401',
   '/403',
+  '/openapi.json',
+  '/.well-known/',
 ];
 const marketingRoutes = [
   '/pricing',

@@ -116,8 +116,9 @@ async function bootstrap(): Promise<void> {
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
 
-  // Provide interactive docs in non-production only
-  if (!isProd) {
+  // Interactive docs: always in non-production; in production only when
+  // deliberately published (same flag that gates /openapi.json below).
+  if (!isProd || appCfg.publishOpenApi) {
     SwaggerModule.setup('api/docs', app, document, {
       swaggerOptions: { persistAuthorization: true },
     });

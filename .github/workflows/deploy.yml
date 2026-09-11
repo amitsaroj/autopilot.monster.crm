@@ -131,6 +131,7 @@ jobs:
           APP_HOST=${{ secrets.PROD_APP_HOST }}
           APP_URL=${{ secrets.PROD_APP_URL }}
           NODE_ENV=production
+          PUBLISH_OPENAPI=true
           APP_SECRET=${{ secrets.PROD_APP_SECRET }}
           LOG_LEVEL=${{ secrets.PROD_LOG_LEVEL }}
           LOG_FORMAT=${{ secrets.PROD_LOG_FORMAT }}
