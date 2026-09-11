@@ -12,7 +12,7 @@ export class AppleStrategy extends PassportStrategy(Strategy, 'apple') {
     if (!appCfg) throw new Error('App config missing');
 
     super({
-      clientID: appCfg.apple.clientId,
+      clientID: appCfg.apple.clientId || 'oauth-not-configured',
       teamID: appCfg.apple.teamId,
       keyID: appCfg.apple.keyId,
       privateKeyString: appCfg.apple.privateKey,

@@ -12,7 +12,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     if (!appCfg) throw new Error('App config missing');
 
     super({
-      clientID: appCfg.google.clientId,
+      clientID: appCfg.google.clientId || 'oauth-not-configured',
       clientSecret: appCfg.google.clientSecret,
       callbackURL: appCfg.google.callbackUrl,
       scope: ['email', 'profile'],

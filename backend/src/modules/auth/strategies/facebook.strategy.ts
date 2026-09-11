@@ -12,7 +12,7 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     if (!appCfg) throw new Error('App config missing');
 
     super({
-      clientID: appCfg.facebook.appId,
+      clientID: appCfg.facebook.appId || 'oauth-not-configured',
       clientSecret: appCfg.facebook.appSecret,
       callbackURL: appCfg.facebook.callbackUrl,
       scope: 'email',

@@ -12,7 +12,7 @@ export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
     if (!appCfg) throw new Error('App config missing');
 
     super({
-      clientID: appCfg.github.clientId,
+      clientID: appCfg.github.clientId || 'oauth-not-configured',
       clientSecret: appCfg.github.clientSecret,
       callbackURL: appCfg.github.callbackUrl,
       scope: ['user:email'],
