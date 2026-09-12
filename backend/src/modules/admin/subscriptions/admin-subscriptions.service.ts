@@ -17,7 +17,6 @@ export class AdminSubscriptionsService {
 
     return this.subscriptionRepo.find({
       where,
-      relations: ['tenant', 'plan'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -25,7 +24,6 @@ export class AdminSubscriptionsService {
   async findOne(id: string) {
     const sub = await this.subscriptionRepo.findOne({
       where: { id },
-      relations: ['tenant', 'plan'],
     });
     if (!sub) throw new NotFoundException('Subscription not found');
     return sub;

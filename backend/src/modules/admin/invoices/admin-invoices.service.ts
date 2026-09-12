@@ -17,7 +17,6 @@ export class AdminInvoicesService {
 
     return this.invoiceRepo.find({
       where,
-      relations: ['tenant'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -25,7 +24,6 @@ export class AdminInvoicesService {
   async findOne(id: string) {
     const invoice = await this.invoiceRepo.findOne({
       where: { id },
-      relations: ['tenant'],
     });
     if (!invoice) throw new NotFoundException('Invoice not found');
     return invoice;

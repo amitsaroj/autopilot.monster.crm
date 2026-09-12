@@ -20,7 +20,6 @@ export class AdminUsersService {
     }
     return this.userRepo.find({
       where,
-      relations: ['tenant', 'roles'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -28,7 +27,6 @@ export class AdminUsersService {
   async findOne(id: string) {
     const user = await this.userRepo.findOne({
       where: { id },
-      relations: ['tenant', 'roles'],
     });
     if (!user) throw new NotFoundException('User not found');
     return user;

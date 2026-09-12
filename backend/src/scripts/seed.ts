@@ -74,6 +74,9 @@ async function seed() {
     const roleMappings = [
       { name: 'SUPER_ADMIN', perms: allPermissions },
       { name: 'TENANT_ADMIN', perms: allPermissions.filter((p) => p.resource !== 'admin') },
+      // Sub-admin tier: a delegated department admin, scoped like TENANT_ADMIN.
+      // Backs the /sub-admin/* controllers (@Roles('ADMIN')).
+      { name: 'ADMIN', perms: allPermissions.filter((p) => p.resource !== 'admin') },
       {
         name: 'MANAGER',
         perms: allPermissions.filter(
@@ -306,6 +309,13 @@ async function seed() {
         email: 'admin@autopilotmonster.com',
         role: 'TENANT_ADMIN',
         firstName: 'System',
+        lastName: 'Admin',
+      },
+      {
+        key: 'subadmin',
+        email: 'subadmin@autopilotmonster.com',
+        role: 'ADMIN',
+        firstName: 'Delegated',
         lastName: 'Admin',
       },
       {
