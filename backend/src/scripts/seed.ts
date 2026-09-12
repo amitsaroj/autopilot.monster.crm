@@ -276,6 +276,19 @@ async function seed() {
         } else {
           console.log(`Plan already exists: ${pd.name}`);
         }
+
+        // Backfill any features added to plansData since this plan was first seeded.
+        const existingFeatures = await featureRepo.find({ where: { planId: plan.id } });
+        const existingFeatureKeys = new Set(existingFeatures.map((f) => f.featureKey));
+        const missingFeatures = pd.features.filter((f) => !existingFeatureKeys.has(f));
+        if (missingFeatures.length > 0) {
+          await featureRepo.save(
+            missingFeatures.map((f) =>
+              featureRepo.create({ planId: plan!.id, featureKey: f, enabled: true, config: {} }),
+            ),
+          );
+          console.log(`Backfilled features for plan ${pd.name}: ${missingFeatures.join(', ')}`);
+        }
       }
     }
 
