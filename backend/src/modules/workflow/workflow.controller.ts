@@ -17,59 +17,51 @@ export class WorkflowController {
   @Get()
   @ApiOperation({ summary: 'Get all workflows' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.workflowService.findAll(tenantId);
-    return { status: 200, message: 'Workflows retrieved', error: false, data };
+    return await this.workflowService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow' })
   @Roles('TENANT_ADMIN')
   async create(@TenantId() tenantId: string, @Body() dto: CreateWorkflowDto) {
-    const data = await this.workflowService.create(tenantId, dto);
-    return { status: 201, message: 'Workflow created', error: false, data };
+    return await this.workflowService.create(tenantId, dto);
   }
 
   @Get('executions/:execId')
   @ApiOperation({ summary: 'Get workflow execution detail' })
   async getExecution(@TenantId() tenantId: string, @Param('execId') execId: string) {
-    const data = await this.workflowService.getExecution(tenantId, execId);
-    return { status: 200, message: 'Execution retrieved', error: false, data };
+    return await this.workflowService.getExecution(tenantId, execId);
   }
 
   @Post('executions/:execId/retry')
   @ApiOperation({ summary: 'Retry a failed workflow execution' })
   @Roles('TENANT_ADMIN')
   async retryExecution(@TenantId() tenantId: string, @Param('execId') execId: string) {
-    const data = await this.workflowService.retryExecution(tenantId, execId);
-    return { status: 200, message: 'Execution retry queued', error: false, data };
+    return await this.workflowService.retryExecution(tenantId, execId);
   }
 
   @Get('executions')
   @ApiOperation({ summary: 'Get workflow execution history' })
   async getExecutions(@TenantId() tenantId: string) {
-    const data = await this.workflowService.getExecutions(tenantId);
-    return { status: 200, message: 'Executions retrieved', error: false, data };
+    return await this.workflowService.getExecutions(tenantId);
   }
 
   @Get('workflow-triggers')
   @ApiOperation({ summary: 'List available workflow trigger types' })
   getTriggers() {
-    const data = this.workflowService.getTriggerTypes();
-    return { status: 200, message: 'Triggers retrieved', error: false, data };
+    return this.workflowService.getTriggerTypes();
   }
 
   @Get('workflow-actions')
   @ApiOperation({ summary: 'List available workflow action types' })
   getActions() {
-    const data = this.workflowService.getActionTypes();
-    return { status: 200, message: 'Actions retrieved', error: false, data };
+    return this.workflowService.getActionTypes();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get workflow by ID' })
   async findOne(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.workflowService.findOne(tenantId, id);
-    return { status: 200, message: 'Workflow retrieved', error: false, data };
+    return await this.workflowService.findOne(tenantId, id);
   }
 
   @Patch(':id')
@@ -80,8 +72,7 @@ export class WorkflowController {
     @Param('id') id: string,
     @Body() dto: Partial<CreateWorkflowDto>,
   ) {
-    const data = await this.workflowService.update(tenantId, id, dto);
-    return { status: 200, message: 'Workflow updated', error: false, data };
+    return await this.workflowService.update(tenantId, id, dto);
   }
 
   @Delete(':id')
@@ -89,31 +80,28 @@ export class WorkflowController {
   @Roles('TENANT_ADMIN')
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.workflowService.remove(tenantId, id);
-    return { status: 200, message: 'Workflow deleted', error: false, data: null };
+    return null;
   }
 
   @Post(':id/activate')
   @ApiOperation({ summary: 'Activate workflow' })
   @Roles('TENANT_ADMIN')
   async activate(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.workflowService.activate(tenantId, id);
-    return { status: 200, message: 'Workflow activated', error: false, data };
+    return await this.workflowService.activate(tenantId, id);
   }
 
   @Post(':id/deactivate')
   @ApiOperation({ summary: 'Deactivate workflow' })
   @Roles('TENANT_ADMIN')
   async deactivate(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.workflowService.deactivate(tenantId, id);
-    return { status: 200, message: 'Workflow deactivated', error: false, data };
+    return await this.workflowService.deactivate(tenantId, id);
   }
 
   @Post(':id/duplicate')
   @ApiOperation({ summary: 'Duplicate workflow' })
   @Roles('TENANT_ADMIN')
   async duplicate(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.workflowService.duplicate(tenantId, id);
-    return { status: 201, message: 'Workflow duplicated', error: false, data };
+    return await this.workflowService.duplicate(tenantId, id);
   }
 
   @Post(':id/trigger')
@@ -123,8 +111,7 @@ export class WorkflowController {
     @Param('id') id: string,
     @Body() payload: Record<string, unknown>,
   ) {
-    const data = await this.workflowService.triggerWorkflow(tenantId, `manual_${id}`, payload, id);
-    return { status: 200, message: 'Workflow triggered', error: false, data };
+    return await this.workflowService.triggerWorkflow(tenantId, `manual_${id}`, payload, id);
   }
 
   @Post(':id/execute')
@@ -134,7 +121,6 @@ export class WorkflowController {
     @Param('id') id: string,
     @Body() payload: Record<string, unknown>,
   ) {
-    const data = await this.workflowService.triggerWorkflow(tenantId, `manual_${id}`, payload, id);
-    return { status: 200, message: 'Workflow executed', error: false, data };
+    return await this.workflowService.triggerWorkflow(tenantId, `manual_${id}`, payload, id);
   }
 }

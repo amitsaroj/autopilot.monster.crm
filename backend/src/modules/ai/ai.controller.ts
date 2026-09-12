@@ -42,7 +42,7 @@ export class AiController {
   @ApiOperation({ summary: 'Generate text completion' })
   async generate(@TenantId() tenantId: string, @Body() dto: GenerateDto) {
     const reply = await this.ragService.generate(tenantId, dto.prompt, dto.options);
-    return { status: 200, message: 'Generated', error: false, data: { reply } };
+    return { reply };
   }
 
   @Post('generate/async')
@@ -52,19 +52,14 @@ export class AiController {
       model: typeof dto.options?.model === 'string' ? dto.options.model : undefined,
       context: dto.options,
     });
-    return {
-      status: 202,
-      message: 'Inference queued',
-      error: false,
-      data: { jobId: job.id, status: 'queued' },
-    };
+    return { jobId: job.id, status: 'queued' };
   }
 
   @Post('chat')
   @ApiOperation({ summary: 'Chat with AI (optional RAG)' })
   async chat(@TenantId() tenantId: string, @Body() dto: ChatDto) {
     const { conversationId, reply } = await this.runChat(tenantId, dto);
-    return { status: 200, message: 'Chat reply', error: false, data: { reply, conversationId } };
+    return { reply, conversationId };
   }
 
   @Post('chat/stream')
@@ -101,15 +96,13 @@ export class AiController {
   @Post('analyze')
   @ApiOperation({ summary: 'Analyze text' })
   async analyze(@TenantId() tenantId: string, @Body() dto: AnalyzeDto) {
-    const data = await this.ragService.analyze(tenantId, dto.text, dto.task);
-    return { status: 200, message: 'Analysis complete', error: false, data };
+    return await this.ragService.analyze(tenantId, dto.text, dto.task);
   }
 
   @Get('models')
   @ApiOperation({ summary: 'List available AI models' })
   async getModels() {
-    const data = await this.ragService.getModels();
-    return { status: 200, message: 'Models retrieved', error: false, data };
+    return await this.ragService.getModels();
   }
 
   @Get('usage')
@@ -126,13 +119,11 @@ export class AiController {
       return sum + (typeof totalChunks === 'number' ? totalChunks : 0);
     }, 0);
 
-    const data = {
+    return {
       ...usage,
       conversations: conversations.total,
       embeddings,
     };
-
-    return { status: 200, message: 'Usage retrieved', error: false, data };
   }
 
   @Post('knowledge-base/upload')
@@ -143,52 +134,47 @@ export class AiController {
       throw new BadRequestException('File is required');
     }
 
-    const data = await this.ragService.processFileAndIndex(
+    return await this.ragService.processFileAndIndex(
       tenantId,
       file.buffer,
       file.originalname,
       file.mimetype,
     );
-    return { status: 201, message: 'Document indexed', error: false, data };
   }
 
   @Get('kb')
   @ApiOperation({ summary: 'Get all knowledge bases' })
   async getKBs(@TenantId() tenantId: string) {
-    const data = await this.kbService.findAll(tenantId);
-    return { status: 200, message: 'Knowledge bases retrieved', error: false, data };
+    return await this.kbService.findAll(tenantId);
   }
 
   @Post('kb')
   @ApiOperation({ summary: 'Create a knowledge base' })
   async createKB(@TenantId() tenantId: string, @Body() dto: CreateLegacyKnowledgeBaseDto) {
-    const kb = await this.kbService.create(tenantId, {
+    return await this.kbService.create(tenantId, {
       name: dto.name,
       description: dto.description,
       sourceType: 'FILE',
     });
-    return { status: 201, message: 'Knowledge base created', error: false, data: kb };
   }
 
   @Delete('kb/:id')
   @ApiOperation({ summary: 'Delete a knowledge base' })
   async deleteKB(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.kbService.remove(tenantId, id);
-    return { status: 200, message: 'Knowledge base deleted', error: false, data: null };
+    return null;
   }
 
   @Get('chats')
   @ApiOperation({ summary: 'Get all conversations (legacy)' })
   async getChats(@TenantId() tenantId: string) {
-    const data = await this.chatService.findAll(tenantId);
-    return { status: 200, message: 'Conversations retrieved', error: false, data };
+    return await this.chatService.findAll(tenantId);
   }
 
   @Get('chats/:id/messages')
   @ApiOperation({ summary: 'Get conversation history (legacy)' })
   async getMessages(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.chatService.getMessages(tenantId, id);
-    return { status: 200, message: 'Messages retrieved', error: false, data };
+    return await this.chatService.getMessages(tenantId, id);
   }
 
   private async runChat(tenantId: string, dto: ChatDto) {

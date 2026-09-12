@@ -16,14 +16,12 @@ export class AdminFeatureRulesController {
   @Get()
   @ApiOperation({ summary: 'Get global feature rules' })
   async getSettings() {
-    const data = await this.featureRulesService.getSettings();
-    return { status: 200, message: 'Feature rules retrieved', error: false, data };
+    return await this.featureRulesService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global feature rules' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.featureRulesService.updateSettings(settings);
-    return { status: 200, message: 'Feature rules updated', error: false, data };
+    return await this.featureRulesService.updateSettings(settings);
   }
 }

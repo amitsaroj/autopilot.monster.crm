@@ -28,15 +28,13 @@ export class AnalyticsController {
   @Get('dashboard')
   @ApiOperation({ summary: 'Get main dashboard metrics (legacy)' })
   async getDashboard(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getOverview(tenantId);
-    return { status: 200, message: 'Dashboard retrieved', error: false, data };
+    return await this.analyticsService.getOverview(tenantId);
   }
 
   @Get('crm')
   @ApiOperation({ summary: 'CRM KPIs' })
   async getCrm(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getCrmAnalytics(tenantId);
-    return { status: 200, message: 'CRM analytics retrieved', error: false, data };
+    return await this.analyticsService.getCrmAnalytics(tenantId);
   }
 
   @Get('revenue')
@@ -54,36 +52,31 @@ export class AnalyticsController {
   @Get('team')
   @ApiOperation({ summary: 'Team performance analytics' })
   async getTeam(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getTeamAnalytics(tenantId);
-    return { status: 200, message: 'Team analytics retrieved', error: false, data };
+    return await this.analyticsService.getTeamAnalytics(tenantId);
   }
 
   @Get('voice')
   @ApiOperation({ summary: 'Voice call analytics' })
   async getVoice(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getVoiceAnalytics(tenantId);
-    return { status: 200, message: 'Voice analytics retrieved', error: false, data };
+    return await this.analyticsService.getVoiceAnalytics(tenantId);
   }
 
   @Get('whatsapp')
   @ApiOperation({ summary: 'WhatsApp message analytics' })
   async getWhatsapp(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getWhatsappAnalytics(tenantId);
-    return { status: 200, message: 'WhatsApp analytics retrieved', error: false, data };
+    return await this.analyticsService.getWhatsappAnalytics(tenantId);
   }
 
   @Get('ai')
   @ApiOperation({ summary: 'AI usage analytics' })
   async getAiUsage(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getAiUsageAnalytics(tenantId);
-    return { status: 200, message: 'AI usage analytics retrieved', error: false, data };
+    return await this.analyticsService.getAiUsageAnalytics(tenantId);
   }
 
   @Get('forecast')
   @ApiOperation({ summary: 'Weighted pipeline forecast' })
   async getForecast(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
-    const data = await this.analyticsService.getForecastAnalytics(tenantId, pipelineId);
-    return { status: 200, message: 'Forecast retrieved', error: false, data };
+    return await this.analyticsService.getForecastAnalytics(tenantId, pipelineId);
   }
 
   @Get('metrics')
@@ -93,22 +86,19 @@ export class AnalyticsController {
     @Query('name') name: string,
     @Query('period') period: string = 'DAILY',
   ) {
-    const data = await this.analyticsService.getMetrics(tenantId, name, period);
-    return { status: 200, message: 'Metrics retrieved', error: false, data };
+    return await this.analyticsService.getMetrics(tenantId, name, period);
   }
 
   @Get('roi')
   @ApiOperation({ summary: 'Campaign ROI analytics' })
   async getRoi(@TenantId() tenantId: string) {
-    const data = await this.advancedAnalyticsService.getRoiReport(tenantId);
-    return { status: 200, message: 'ROI analytics retrieved', error: false, data };
+    return await this.advancedAnalyticsService.getRoiReport(tenantId);
   }
 
   @Get('ai-vs-human')
   @ApiOperation({ summary: 'AI vs human agent performance comparison' })
   async getAiVsHuman(@TenantId() tenantId: string) {
-    const data = await this.advancedAnalyticsService.getAiVsHumanReport(tenantId);
-    return { status: 200, message: 'AI vs human analytics retrieved', error: false, data };
+    return await this.advancedAnalyticsService.getAiVsHumanReport(tenantId);
   }
 
   @Get('export-pdf')

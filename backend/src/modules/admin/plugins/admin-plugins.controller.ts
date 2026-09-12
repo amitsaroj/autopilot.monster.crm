@@ -16,12 +16,6 @@ export class AdminPluginsController {
   @Get()
   @ApiOperation({ summary: 'Get all installed plugins' })
   async findAll() {
-    const data = await this.pluginsService.findAll();
-    return {
-      status: 200,
-      message: 'Plugins retrieved',
-      error: false,
-      data,
-    };
+    return await this.pluginsService.findAll();
   }
 }

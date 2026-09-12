@@ -16,12 +16,6 @@ export class AdminHealthController {
   @Get()
   @ApiOperation({ summary: 'Get system health status' })
   async getHealth() {
-    const data = await this.healthService.getHealth();
-    return {
-      status: 200,
-      message: 'System health retrieved',
-      error: false,
-      data,
-    };
+    return await this.healthService.getHealth();
   }
 }

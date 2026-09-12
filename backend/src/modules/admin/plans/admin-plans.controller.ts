@@ -16,60 +16,31 @@ export class AdminPlansController {
   @Get()
   @ApiOperation({ summary: 'Get all subscription plans' })
   async findAll() {
-    const data = await this.adminPlansService.findAll();
-    return {
-      status: 200,
-      message: 'Plans retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminPlansService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get plan details' })
   async findOne(@Param('id') id: string) {
-    const data = await this.adminPlansService.findOne(id);
-    return {
-      status: 200,
-      message: 'Plan retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminPlansService.findOne(id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new plan' })
   async create(@Body() body: any) {
-    const data = await this.adminPlansService.create(body);
-    return {
-      status: 201,
-      message: 'Plan created',
-      error: false,
-      data,
-    };
+    return await this.adminPlansService.create(body);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update plan' })
   async update(@Param('id') id: string, @Body() body: any) {
-    const data = await this.adminPlansService.update(id, body);
-    return {
-      status: 200,
-      message: 'Plan updated',
-      error: false,
-      data,
-    };
+    return await this.adminPlansService.update(id, body);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete plan' })
   async remove(@Param('id') id: string) {
     await this.adminPlansService.remove(id);
-    return {
-      status: 200,
-      message: 'Plan deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 }

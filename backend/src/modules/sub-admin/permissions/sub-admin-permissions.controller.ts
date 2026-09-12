@@ -16,7 +16,6 @@ export class SubAdminPermissionsController {
   @Get()
   @ApiOperation({ summary: 'Get all available permissions (catalog)' })
   async findAll() {
-    const data = await this.permissionsService.findAll();
-    return { status: 200, message: 'Permission catalog retrieved', error: false, data };
+    return await this.permissionsService.findAll();
   }
 }

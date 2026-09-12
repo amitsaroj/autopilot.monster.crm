@@ -16,14 +16,12 @@ export class AdminUsageRulesController {
   @Get()
   @ApiOperation({ summary: 'Get global usage rules' })
   async getSettings() {
-    const data = await this.usageRulesService.getSettings();
-    return { status: 200, message: 'Usage rules retrieved', error: false, data };
+    return await this.usageRulesService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global usage rules' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.usageRulesService.updateSettings(settings);
-    return { status: 200, message: 'Usage rules updated', error: false, data };
+    return await this.usageRulesService.updateSettings(settings);
   }
 }

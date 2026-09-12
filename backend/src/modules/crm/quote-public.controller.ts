@@ -14,24 +14,21 @@ export class QuotePublicController {
   @Public()
   @ApiOperation({ summary: 'Public quote view (no auth)' })
   async viewQuote(@Param('token') token: string) {
-    const data = await this.quoteLifecycleService.getPublicView(token);
-    return { status: 200, message: 'Quote retrieved', error: false, data };
+    return await this.quoteLifecycleService.getPublicView(token);
   }
 
   @Post('view/:token/accept')
   @Public()
   @ApiOperation({ summary: 'Accept quote via public token' })
   async acceptQuote(@Param('token') token: string) {
-    const data = await this.quoteLifecycleService.acceptByToken(token);
-    return { status: 200, message: 'Quote accepted', error: false, data };
+    return await this.quoteLifecycleService.acceptByToken(token);
   }
 
   @Post('view/:token/decline')
   @Public()
   @ApiOperation({ summary: 'Decline quote via public token' })
   async declineQuote(@Param('token') token: string) {
-    const data = await this.quoteLifecycleService.declineByToken(token);
-    return { status: 200, message: 'Quote declined', error: false, data };
+    return await this.quoteLifecycleService.declineByToken(token);
   }
 
   @Get('view/:token/pdf')

@@ -29,15 +29,13 @@ export class BillingExtController {
   @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Create a coupon' })
   async createCoupon(@TenantId() tenantId: string, @Body() dto: Record<string, unknown>) {
-    const data = await this.couponService.create(tenantId, dto);
-    return { status: 201, message: 'Coupon created', error: false, data };
+    return await this.couponService.create(tenantId, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all coupons' })
   async listCoupons(@TenantId() tenantId: string) {
-    const data = await this.couponService.findAll(tenantId);
-    return { status: 200, message: 'Coupons retrieved', error: false, data };
+    return await this.couponService.findAll(tenantId);
   }
 
   @Post('validate')
@@ -46,15 +44,13 @@ export class BillingExtController {
     @TenantId() tenantId: string,
     @Body() body: { code: string; amount?: number },
   ) {
-    const data = await this.couponService.validate(tenantId, body.code, body.amount);
-    return { status: 200, message: 'Coupon validated', error: false, data };
+    return await this.couponService.validate(tenantId, body.code, body.amount);
   }
 
   @Post(':code/redeem')
   @ApiOperation({ summary: 'Redeem a coupon' })
   async redeemCoupon(@TenantId() tenantId: string, @Param('code') code: string) {
-    const data = await this.couponService.redeem(tenantId, code);
-    return { status: 200, message: 'Coupon redeemed', error: false, data };
+    return await this.couponService.redeem(tenantId, code);
   }
 
   @Patch(':id')
@@ -66,8 +62,7 @@ export class BillingExtController {
     @Param('id') id: string,
     @Body() dto: Record<string, unknown>,
   ) {
-    const data = await this.couponService.update(tenantId, id, dto);
-    return { status: 200, message: 'Coupon updated', error: false, data };
+    return await this.couponService.update(tenantId, id, dto);
   }
 
   @Delete(':id')

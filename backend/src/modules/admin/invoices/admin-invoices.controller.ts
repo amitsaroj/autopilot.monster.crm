@@ -18,48 +18,25 @@ export class AdminInvoicesController {
   @ApiQuery({ name: 'tenantId', required: false })
   @ApiQuery({ name: 'status', required: false })
   async findAll(@Query('tenantId') tenantId?: string, @Query('status') status?: string) {
-    const data = await this.adminInvoicesService.findAll({ tenantId, status });
-    return {
-      status: 200,
-      message: 'Invoices retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminInvoicesService.findAll({ tenantId, status });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get invoice details' })
   async findOne(@Param('id') id: string) {
-    const data = await this.adminInvoicesService.findOne(id);
-    return {
-      status: 200,
-      message: 'Invoice retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminInvoicesService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update invoice status' })
   async update(@Param('id') id: string, @Body() body: any) {
-    const data = await this.adminInvoicesService.update(id, body);
-    return {
-      status: 200,
-      message: 'Invoice updated',
-      error: false,
-      data,
-    };
+    return await this.adminInvoicesService.update(id, body);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete invoice' })
   async remove(@Param('id') id: string) {
     await this.adminInvoicesService.remove(id);
-    return {
-      status: 200,
-      message: 'Invoice deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 }

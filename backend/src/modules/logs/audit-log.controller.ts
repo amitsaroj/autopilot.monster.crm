@@ -16,25 +16,13 @@ export class AuditLogController {
   @ApiOperation({ summary: 'Get audit logs' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async getLogs(@TenantId() tenantId: string) {
-    const data = await this.auditLogService.findByTenant(tenantId);
-    return {
-      status: 200,
-      message: 'Audit logs retrieved',
-      error: false,
-      data,
-    };
+    return await this.auditLogService.findByTenant(tenantId);
   }
 
   @Get('platform')
   @ApiOperation({ summary: 'Get platform-wide audit logs' })
   @Roles('SUPER_ADMIN')
   async getPlatformLogs() {
-    const data = await this.auditLogService.findAll();
-    return {
-      status: 200,
-      message: 'Platform audit logs retrieved',
-      error: false,
-      data,
-    };
+    return await this.auditLogService.findAll();
   }
 }

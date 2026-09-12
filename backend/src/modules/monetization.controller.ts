@@ -168,13 +168,7 @@ export class MonetizationController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getAllInvoices() {
-    const data = await this.billingService.getAllInvoices();
-    return {
-      status: 200,
-      message: 'Invoices retrieved',
-      error: false,
-      data,
-    };
+    return await this.billingService.getAllInvoices();
   }
 
   @Get('admin/subscriptions')
@@ -182,13 +176,7 @@ export class MonetizationController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getAllSubscriptions() {
-    const data = await this.billingService.getAllSubscriptions();
-    return {
-      status: 200,
-      message: 'Subscriptions retrieved',
-      error: false,
-      data,
-    };
+    return await this.billingService.getAllSubscriptions();
   }
 
   @Get('admin/usage')
@@ -196,12 +184,6 @@ export class MonetizationController {
   @Roles('SUPER_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async getGlobalUsage() {
-    const data = await this.billingService.getGlobalUsage();
-    return {
-      status: 200,
-      message: 'Global usage retrieved',
-      error: false,
-      data,
-    };
+    return await this.billingService.getGlobalUsage();
   }
 }

@@ -55,8 +55,7 @@ export class VoiceController {
   @Get('calls')
   @ApiOperation({ summary: 'List voice calls' })
   async listCalls(@TenantId() tenantId: string) {
-    const data = await this.voiceCallService.findAll(tenantId);
-    return { status: 200, message: 'Calls retrieved', error: false, data };
+    return await this.voiceCallService.findAll(tenantId);
   }
 
   @Post('calls')
@@ -72,12 +71,11 @@ export class VoiceController {
       leadId: dto.leadId,
       voice: dto.voice ?? defaultVoice,
     });
-    const data = await this.voiceCallService.initiateOutbound(tenantId, {
+    return await this.voiceCallService.initiateOutbound(tenantId, {
       to: dto.to,
       wssUrl,
       voiceProfile: dto.voice ?? defaultVoice,
     });
-    return { status: 201, message: 'Call initiated', error: false, data };
   }
 
   @Post('call')
@@ -89,15 +87,13 @@ export class VoiceController {
   @Get('calls/:id')
   @ApiOperation({ summary: 'Get call details' })
   async getCall(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCallService.findOne(tenantId, id);
-    return { status: 200, message: 'Call retrieved', error: false, data };
+    return await this.voiceCallService.findOne(tenantId, id);
   }
 
   @Delete('calls/:id/hang-up')
   @ApiOperation({ summary: 'End an active call' })
   async hangUp(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCallService.hangUp(tenantId, id);
-    return { status: 200, message: 'Call ended', error: false, data };
+    return await this.voiceCallService.hangUp(tenantId, id);
   }
 
   @Post('calls/:id/transfer')
@@ -107,46 +103,40 @@ export class VoiceController {
     @Param('id') id: string,
     @Body() dto: TransferCallDto,
   ) {
-    const data = await this.voiceCallService.transferCall(tenantId, id, dto.to);
-    return { status: 200, message: 'Call transfer initiated', error: false, data };
+    return await this.voiceCallService.transferCall(tenantId, id, dto.to);
   }
 
   @Get('calls/:id/recording')
   @ApiOperation({ summary: 'Get call recording URL' })
   async getRecording(@TenantId() tenantId: string, @Param('id') id: string) {
     const call = await this.voiceCallService.findOne(tenantId, id);
-    const data = this.voiceCallService.getRecordingUrl(call);
-    return { status: 200, message: 'Recording URL retrieved', error: false, data };
+    return this.voiceCallService.getRecordingUrl(call);
   }
 
   @Get('calls/:id/transcript')
   @ApiOperation({ summary: 'Get call transcript' })
   async getTranscript(@TenantId() tenantId: string, @Param('id') id: string) {
     const call = await this.voiceCallService.findOne(tenantId, id);
-    const data = this.voiceCallService.getTranscript(call);
-    return { status: 200, message: 'Transcript retrieved', error: false, data };
+    return this.voiceCallService.getTranscript(call);
   }
 
   @Get('calls/:id/summary')
   @ApiOperation({ summary: 'Get AI call summary and sentiment' })
   async getSummary(@TenantId() tenantId: string, @Param('id') id: string) {
     const call = await this.voiceCallService.findOne(tenantId, id);
-    const data = this.voiceCallService.getSummary(call);
-    return { status: 200, message: 'Call summary retrieved', error: false, data };
+    return this.voiceCallService.getSummary(call);
   }
 
   @Post('synthesize')
   @ApiOperation({ summary: 'Convert text to speech' })
   async synthesize(@TenantId() tenantId: string, @Body() dto: SynthesizeDto) {
-    const data = await this.voiceAiService.synthesize(tenantId, dto.text, dto.voice ?? 'alloy');
-    return { status: 200, message: 'Speech synthesized', error: false, data };
+    return await this.voiceAiService.synthesize(tenantId, dto.text, dto.voice ?? 'alloy');
   }
 
   @Post('transcribe')
   @ApiOperation({ summary: 'Convert audio to text' })
   async transcribe(@TenantId() tenantId: string, @Body() dto: TranscribeDto) {
-    const data = await this.voiceAiService.transcribe(tenantId, dto.audioUrl);
-    return { status: 200, message: 'Transcription completed', error: false, data };
+    return await this.voiceAiService.transcribe(tenantId, dto.audioUrl);
   }
 
   @Get('profiles')
@@ -157,18 +147,13 @@ export class VoiceController {
       'voice_default_profile',
       'shimmer',
     );
-    return {
-      status: 200,
-      message: 'Voice profiles retrieved',
-      error: false,
-      data: { profiles: VOICE_PROFILES, defaultProfile },
-    };
+    return { profiles: VOICE_PROFILES, defaultProfile };
   }
 
   @Get('settings')
   @ApiOperation({ summary: 'Get tenant voice settings' })
   async getSettings(@TenantId() tenantId: string) {
-    const data = {
+    return {
       twilio_account_sid: await this.configOrchestrator.get(tenantId, 'twilio_account_sid', ''),
       twilio_auth_token: await this.configOrchestrator.get(tenantId, 'twilio_auth_token', ''),
       twilio_phone_number: await this.configOrchestrator.get(tenantId, 'twilio_phone_number', ''),
@@ -179,7 +164,6 @@ export class VoiceController {
       ),
       voice_routing_number: await this.configOrchestrator.get(tenantId, 'voice_routing_number', ''),
     };
-    return { status: 200, message: 'Voice settings retrieved', error: false, data };
   }
 
   @Patch('settings')
@@ -210,22 +194,19 @@ export class VoiceController {
   @Get('campaigns')
   @ApiOperation({ summary: 'List voice campaigns' })
   async listCampaigns(@TenantId() tenantId: string) {
-    const data = await this.voiceCampaignService.findAll(tenantId);
-    return { status: 200, message: 'Campaigns retrieved', error: false, data };
+    return await this.voiceCampaignService.findAll(tenantId);
   }
 
   @Post('campaigns')
   @ApiOperation({ summary: 'Create voice campaign' })
   async createCampaign(@TenantId() tenantId: string, @Body() dto: CreateVoiceCampaignDto) {
-    const data = await this.voiceCampaignService.create(tenantId, dto);
-    return { status: 201, message: 'Campaign created', error: false, data };
+    return await this.voiceCampaignService.create(tenantId, dto);
   }
 
   @Get('campaigns/:id')
   @ApiOperation({ summary: 'Get voice campaign detail' })
   async getCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCampaignService.findOne(tenantId, id);
-    return { status: 200, message: 'Campaign retrieved', error: false, data };
+    return await this.voiceCampaignService.findOne(tenantId, id);
   }
 
   @Patch('campaigns/:id')
@@ -235,43 +216,38 @@ export class VoiceController {
     @Param('id') id: string,
     @Body() dto: UpdateVoiceCampaignDto,
   ) {
-    const data = await this.voiceCampaignService.update(tenantId, id, dto);
-    return { status: 200, message: 'Campaign updated', error: false, data };
+    return await this.voiceCampaignService.update(tenantId, id, dto);
   }
 
   @Delete('campaigns/:id')
   @ApiOperation({ summary: 'Delete voice campaign' })
   async deleteCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.voiceCampaignService.remove(tenantId, id);
-    return { status: 200, message: 'Campaign deleted', error: false, data: null };
+    return null;
   }
 
   @Post('campaigns/:id/start')
   @ApiOperation({ summary: 'Start voice campaign' })
   async startCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCampaignService.start(tenantId, id);
-    return { status: 200, message: 'Campaign started', error: false, data };
+    return await this.voiceCampaignService.start(tenantId, id);
   }
 
   @Post('campaigns/:id/pause')
   @ApiOperation({ summary: 'Pause voice campaign' })
   async pauseCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCampaignService.pause(tenantId, id);
-    return { status: 200, message: 'Campaign paused', error: false, data };
+    return await this.voiceCampaignService.pause(tenantId, id);
   }
 
   @Post('campaigns/:id/resume')
   @ApiOperation({ summary: 'Resume voice campaign' })
   async resumeCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCampaignService.resume(tenantId, id);
-    return { status: 200, message: 'Campaign resumed', error: false, data };
+    return await this.voiceCampaignService.resume(tenantId, id);
   }
 
   @Get('campaigns/:id/stats')
   @ApiOperation({ summary: 'Get voice campaign stats' })
   async getCampaignStats(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCampaignService.getStats(tenantId, id);
-    return { status: 200, message: 'Campaign stats retrieved', error: false, data };
+    return await this.voiceCampaignService.getStats(tenantId, id);
   }
 
   @Get('phone-numbers/available')
@@ -280,61 +256,54 @@ export class VoiceController {
     @TenantId() tenantId: string,
     @Query() query: SearchAvailableNumbersDto,
   ) {
-    const data = await this.voicePhoneNumberService.searchAvailable(
+    return await this.voicePhoneNumberService.searchAvailable(
       tenantId,
       query.country,
       query.areaCode,
     );
-    return { status: 200, message: 'Available numbers retrieved', error: false, data };
   }
 
   @Get('phone-numbers')
   @ApiOperation({ summary: 'List provisioned phone numbers' })
   async listPhoneNumbers(@TenantId() tenantId: string) {
-    const data = await this.voicePhoneNumberService.findAll(tenantId);
-    return { status: 200, message: 'Phone numbers retrieved', error: false, data };
+    return await this.voicePhoneNumberService.findAll(tenantId);
   }
 
   @Post('phone-numbers')
   @ApiOperation({ summary: 'Provision phone number' })
   async provisionPhoneNumber(@TenantId() tenantId: string, @Body() dto: ProvisionPhoneNumberDto) {
-    const data = await this.voicePhoneNumberService.provision(tenantId, dto);
-    return { status: 201, message: 'Phone number provisioned', error: false, data };
+    return await this.voicePhoneNumberService.provision(tenantId, dto);
   }
 
   @Delete('phone-numbers/:id')
   @ApiOperation({ summary: 'Release phone number' })
   async releasePhoneNumber(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.voicePhoneNumberService.release(tenantId, id);
-    return { status: 200, message: 'Phone number released', error: false, data: null };
+    return null;
   }
 
   @Get('transcripts')
   @ApiOperation({ summary: 'List call transcripts' })
   async listTranscripts(@TenantId() tenantId: string) {
-    const data = await this.voiceCallService.findTranscripts(tenantId);
-    return { status: 200, message: 'Transcripts retrieved', error: false, data };
+    return await this.voiceCallService.findTranscripts(tenantId);
   }
 
   @Get('transcripts/:id')
   @ApiOperation({ summary: 'Get transcript detail' })
   async getTranscriptDetail(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceCallService.findTranscriptById(tenantId, id);
-    return { status: 200, message: 'Transcript retrieved', error: false, data };
+    return await this.voiceCallService.findTranscriptById(tenantId, id);
   }
 
   @Get('calls/:id/sentiment')
   @ApiOperation({ summary: 'Extract sentiment and keywords from a completed call' })
   async getSentiment(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.voiceAiService.analyzeSentiment(tenantId, id);
-    return { status: 200, message: 'Sentiment analyzed', error: false, data };
+    return await this.voiceAiService.analyzeSentiment(tenantId, id);
   }
 
   @Post('clone')
   @ApiOperation({ summary: 'Create a voice clone from sample audio' })
   async cloneVoice(@TenantId() tenantId: string, @Body() dto: CloneVoiceDto) {
-    const data = await this.voiceAiService.cloneVoice(tenantId, dto.sampleUrl);
-    return { status: 201, message: 'Voice clone created', error: false, data };
+    return await this.voiceAiService.cloneVoice(tenantId, dto.sampleUrl);
   }
 
   @Public()

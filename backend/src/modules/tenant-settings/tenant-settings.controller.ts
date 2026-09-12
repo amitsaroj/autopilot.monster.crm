@@ -17,8 +17,7 @@ export class TenantSettingsController {
   @Get()
   @ApiOperation({ summary: 'Get all integration settings for the current workspace' })
   async findAll(@CurrentUser() user: IRequestContext) {
-    const data = await this.service.findAll(user.tenantId);
-    return { status: 200, message: 'Integration settings retrieved', error: false, data };
+    return await this.service.findAll(user.tenantId);
   }
 
   @Post()
@@ -27,14 +26,13 @@ export class TenantSettingsController {
     @CurrentUser() user: IRequestContext,
     @Body() data: { key: string; value: any; group?: string },
   ) {
-    const result = await this.service.updateSetting(user.tenantId, data);
-    return { status: 200, message: 'Integration setting updated', error: false, data: result };
+    return await this.service.updateSetting(user.tenantId, data);
   }
 
   @Delete(':key')
   @ApiOperation({ summary: 'Remove a tenant-specific integration override' })
   async remove(@CurrentUser() user: IRequestContext, @Param('key') key: string) {
     await this.service.removeSetting(user.tenantId, key);
-    return { status: 200, message: 'Integration override removed', error: false, data: null };
+    return null;
   }
 }

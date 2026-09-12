@@ -21,22 +21,19 @@ export class AnalyticsDashboardsController {
   @Get()
   @ApiOperation({ summary: 'List saved dashboards' })
   async list(@TenantId() tenantId: string) {
-    const data = await this.dashboardService.findAll(tenantId);
-    return { status: 200, message: 'Dashboards retrieved', error: false, data };
+    return await this.dashboardService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create dashboard' })
   async create(@TenantId() tenantId: string, @Body() dto: CreateAnalyticsDashboardDto) {
-    const data = await this.dashboardService.create(tenantId, dto);
-    return { status: 201, message: 'Dashboard created', error: false, data };
+    return await this.dashboardService.create(tenantId, dto);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get dashboard detail' })
   async findOne(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.dashboardService.findOne(tenantId, id);
-    return { status: 200, message: 'Dashboard retrieved', error: false, data };
+    return await this.dashboardService.findOne(tenantId, id);
   }
 
   @Patch(':id')
@@ -46,14 +43,13 @@ export class AnalyticsDashboardsController {
     @Param('id') id: string,
     @Body() dto: UpdateAnalyticsDashboardDto,
   ) {
-    const data = await this.dashboardService.update(tenantId, id, dto);
-    return { status: 200, message: 'Dashboard updated', error: false, data };
+    return await this.dashboardService.update(tenantId, id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete dashboard' })
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.dashboardService.remove(tenantId, id);
-    return { status: 200, message: 'Dashboard deleted', error: false, data: null };
+    return null;
   }
 }

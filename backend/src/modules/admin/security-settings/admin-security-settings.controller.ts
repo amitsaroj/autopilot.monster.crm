@@ -16,14 +16,12 @@ export class AdminSecuritySettingsController {
   @Get()
   @ApiOperation({ summary: 'Get global security policies' })
   async getSettings() {
-    const data = await this.securitySettingsService.getSettings();
-    return { status: 200, message: 'Security settings retrieved', error: false, data };
+    return await this.securitySettingsService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global security policies' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.securitySettingsService.updateSettings(settings);
-    return { status: 200, message: 'Security settings updated', error: false, data };
+    return await this.securitySettingsService.updateSettings(settings);
   }
 }

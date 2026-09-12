@@ -16,21 +16,19 @@ export class SubAdminWorkflowsController {
   @Get()
   @ApiOperation({ summary: 'Get all workflows for tenant' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.workflowsService.findAll(tenantId);
-    return { status: 200, message: 'Workflow manifold synchronized', error: false, data };
+    return await this.workflowsService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow' })
   async create(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.workflowsService.create(tenantId, dto);
-    return { status: 201, message: 'Workflow vector established', error: false, data };
+    return await this.workflowsService.create(tenantId, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Abolish a workflow' })
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.workflowsService.remove(tenantId, id);
-    return { status: 200, message: 'Workflow vector severed', error: false };
+    return null;
   }
 }

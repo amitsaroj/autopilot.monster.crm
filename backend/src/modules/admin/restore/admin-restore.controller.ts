@@ -16,12 +16,6 @@ export class AdminRestoreController {
   @Post('initiate')
   @ApiOperation({ summary: 'Initiate a platform restore from backup' })
   async initiate(@Body() data: { backupId: string }) {
-    const result = await this.restoreService.initiate(data.backupId);
-    return {
-      status: 200,
-      message: 'Restore process initiated',
-      error: false,
-      data: result,
-    };
+    return await this.restoreService.initiate(data.backupId);
   }
 }

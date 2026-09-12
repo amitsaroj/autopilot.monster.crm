@@ -16,14 +16,12 @@ export class SubAdminWhatsappController {
   @Get('profiles')
   @ApiOperation({ summary: 'Get WhatsApp business profiles for tenant' })
   async findProfiles(@TenantId() tenantId: string) {
-    const data = await this.whatsappService.findProfiles(tenantId);
-    return { status: 200, message: 'WhatsApp manifold synchronized', error: false, data };
+    return await this.whatsappService.findProfiles(tenantId);
   }
 
   @Post('profiles')
   @ApiOperation({ summary: 'Link a new WhatsApp business profile' })
   async linkProfile(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.whatsappService.linkProfile(tenantId, dto);
-    return { status: 201, message: 'WhatsApp vector established', error: false, data };
+    return await this.whatsappService.linkProfile(tenantId, dto);
   }
 }

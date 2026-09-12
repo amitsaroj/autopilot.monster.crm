@@ -18,48 +18,25 @@ export class AdminSubscriptionsController {
   @ApiQuery({ name: 'tenantId', required: false })
   @ApiQuery({ name: 'status', required: false })
   async findAll(@Query('tenantId') tenantId?: string, @Query('status') status?: string) {
-    const data = await this.adminSubscriptionsService.findAll({ tenantId, status });
-    return {
-      status: 200,
-      message: 'Subscriptions retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminSubscriptionsService.findAll({ tenantId, status });
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get subscription details' })
   async findOne(@Param('id') id: string) {
-    const data = await this.adminSubscriptionsService.findOne(id);
-    return {
-      status: 200,
-      message: 'Subscription retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminSubscriptionsService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update subscription (status, plan, etc.)' })
   async update(@Param('id') id: string, @Body() body: any) {
-    const data = await this.adminSubscriptionsService.update(id, body);
-    return {
-      status: 200,
-      message: 'Subscription updated',
-      error: false,
-      data,
-    };
+    return await this.adminSubscriptionsService.update(id, body);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Cancel/Delete subscription' })
   async remove(@Param('id') id: string) {
     await this.adminSubscriptionsService.remove(id);
-    return {
-      status: 200,
-      message: 'Subscription deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 }

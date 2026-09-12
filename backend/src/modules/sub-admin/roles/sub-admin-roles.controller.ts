@@ -16,21 +16,19 @@ export class SubAdminRolesController {
   @Get()
   @ApiOperation({ summary: 'Get all roles in tenant' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.rolesService.findAll(tenantId);
-    return { status: 200, message: 'Tenant RBAC manifold synchronized', error: false, data };
+    return await this.rolesService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a custom role' })
   async create(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.rolesService.create(tenantId, dto);
-    return { status: 201, message: 'Custom RBAC node established', error: false, data };
+    return await this.rolesService.create(tenantId, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a custom role' })
   async remove(@TenantId() tenantId: string, @Param('id') roleId: string) {
     await this.rolesService.remove(tenantId, roleId);
-    return { status: 200, message: 'RBAC node evicted', error: false };
+    return null;
   }
 }

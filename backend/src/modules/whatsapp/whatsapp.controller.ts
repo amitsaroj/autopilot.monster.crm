@@ -33,19 +33,13 @@ export class WhatsappController {
   @Post('send')
   @ApiOperation({ summary: 'Send a WhatsApp message' })
   async sendMessage(@TenantId() tenantId: string, @Body() dto: SendWhatsappDto) {
-    const data = await this.whatsappService.sendTextMessage(
-      tenantId,
-      dto.to,
-      dto.message,
-      dto.wabaId,
-    );
-    return { status: 201, message: 'Message sent', error: false, data };
+    return await this.whatsappService.sendTextMessage(tenantId, dto.to, dto.message, dto.wabaId);
   }
 
   @Post('send-template')
   @ApiOperation({ summary: 'Send a WhatsApp template message' })
   async sendTemplateMessage(@TenantId() tenantId: string, @Body() dto: SendWhatsappTemplateDto) {
-    const data = await this.whatsappService.sendTemplateMessage(
+    return await this.whatsappService.sendTemplateMessage(
       tenantId,
       dto.to,
       dto.templateName,
@@ -53,28 +47,24 @@ export class WhatsappController {
       dto.components ?? [],
       dto.wabaId,
     );
-    return { status: 201, message: 'Template message sent', error: false, data };
   }
 
   @Get('messages')
   @ApiOperation({ summary: 'Get WhatsApp message history' })
   async getMessages(@TenantId() tenantId: string) {
-    const data = await this.whatsappService.listMessages(tenantId);
-    return { status: 200, message: 'Messages retrieved', error: false, data };
+    return await this.whatsappService.listMessages(tenantId);
   }
 
   @Get('conversations')
   @ApiOperation({ summary: 'List WhatsApp conversations' })
   async getConversations(@TenantId() tenantId: string) {
-    const data = await this.whatsappService.listConversations(tenantId);
-    return { status: 200, message: 'Conversations retrieved', error: false, data };
+    return await this.whatsappService.listConversations(tenantId);
   }
 
   @Get('conversations/:phone')
   @ApiOperation({ summary: 'Get conversation messages by phone' })
   async getConversation(@TenantId() tenantId: string, @Param('phone') phone: string) {
-    const data = await this.whatsappService.getConversation(tenantId, phone);
-    return { status: 200, message: 'Conversation retrieved', error: false, data };
+    return await this.whatsappService.getConversation(tenantId, phone);
   }
 
   @Post('conversations/:phone/messages')
@@ -84,13 +74,7 @@ export class WhatsappController {
     @Param('phone') phone: string,
     @Body() dto: SendConversationMessageDto,
   ) {
-    const data = await this.whatsappService.sendTextMessage(
-      tenantId,
-      phone,
-      dto.message,
-      dto.wabaId,
-    );
-    return { status: 201, message: 'Message sent', error: false, data };
+    return await this.whatsappService.sendTextMessage(tenantId, phone, dto.message, dto.wabaId);
   }
 
   @Post('conversations/:phone/assign')
@@ -100,36 +84,31 @@ export class WhatsappController {
     @Param('phone') phone: string,
     @Body() dto: AssignWhatsappConversationDto,
   ) {
-    const data = await this.whatsappService.assignConversation(tenantId, phone, dto.assigneeId);
-    return { status: 200, message: 'Conversation assigned', error: false, data };
+    return await this.whatsappService.assignConversation(tenantId, phone, dto.assigneeId);
   }
 
   @Post('conversations/:phone/resolve')
   @ApiOperation({ summary: 'Resolve a conversation' })
   async resolveConversation(@TenantId() tenantId: string, @Param('phone') phone: string) {
-    const data = await this.whatsappService.resolveConversation(tenantId, phone);
-    return { status: 200, message: 'Conversation resolved', error: false, data };
+    return await this.whatsappService.resolveConversation(tenantId, phone);
   }
 
   @Get('templates')
   @ApiOperation({ summary: 'List WhatsApp templates' })
   async getTemplates(@TenantId() tenantId: string) {
-    const data = await this.templateService.findAll(tenantId);
-    return { status: 200, message: 'Templates retrieved', error: false, data };
+    return await this.templateService.findAll(tenantId);
   }
 
   @Post('templates')
   @ApiOperation({ summary: 'Create WhatsApp template' })
   async createTemplate(@TenantId() tenantId: string, @Body() dto: CreateWhatsappTemplateDto) {
-    const data = await this.templateService.create(tenantId, dto);
-    return { status: 201, message: 'Template created', error: false, data };
+    return await this.templateService.create(tenantId, dto);
   }
 
   @Get('templates/:id')
   @ApiOperation({ summary: 'Get WhatsApp template detail' })
   async getTemplate(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.templateService.findOne(tenantId, id);
-    return { status: 200, message: 'Template retrieved', error: false, data };
+    return await this.templateService.findOne(tenantId, id);
   }
 
   @Patch('templates/:id')
@@ -139,50 +118,44 @@ export class WhatsappController {
     @Param('id') id: string,
     @Body() dto: UpdateWhatsappTemplateDto,
   ) {
-    const data = await this.templateService.update(tenantId, id, dto);
-    return { status: 200, message: 'Template updated', error: false, data };
+    return await this.templateService.update(tenantId, id, dto);
   }
 
   @Delete('templates/:id')
   @ApiOperation({ summary: 'Delete WhatsApp template' })
   async deleteTemplate(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.templateService.remove(tenantId, id);
-    return { status: 200, message: 'Template deleted', error: false, data: null };
+    return null;
   }
 
   @Post('templates/:id/sync')
   @ApiOperation({ summary: 'Submit template to Meta for approval' })
   async syncTemplate(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.templateService.syncWithMeta(tenantId, id);
-    return { status: 200, message: 'Template sync submitted', error: false, data };
+    return await this.templateService.syncWithMeta(tenantId, id);
   }
 
   @Get('broadcasts')
   @ApiOperation({ summary: 'List WhatsApp broadcasts' })
   async listBroadcasts(@TenantId() tenantId: string) {
-    const data = await this.broadcastService.findAll(tenantId);
-    return { status: 200, message: 'Broadcasts retrieved', error: false, data };
+    return await this.broadcastService.findAll(tenantId);
   }
 
   @Post('broadcasts')
   @ApiOperation({ summary: 'Create WhatsApp broadcast' })
   async createBroadcast(@TenantId() tenantId: string, @Body() dto: CreateWhatsappBroadcastDto) {
-    const data = await this.broadcastService.create(tenantId, dto);
-    return { status: 201, message: 'Broadcast created', error: false, data };
+    return await this.broadcastService.create(tenantId, dto);
   }
 
   @Get('broadcasts/:id')
   @ApiOperation({ summary: 'Get broadcast detail' })
   async getBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.broadcastService.findOne(tenantId, id);
-    return { status: 200, message: 'Broadcast retrieved', error: false, data };
+    return await this.broadcastService.findOne(tenantId, id);
   }
 
   @Post('broadcasts/:id/send')
   @ApiOperation({ summary: 'Send broadcast now' })
   async sendBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.broadcastService.send(tenantId, id);
-    return { status: 200, message: 'Broadcast sent', error: false, data };
+    return await this.broadcastService.send(tenantId, id);
   }
 
   @Patch('broadcasts/:id/schedule')
@@ -192,28 +165,25 @@ export class WhatsappController {
     @Param('id') id: string,
     @Body() dto: ScheduleWhatsappBroadcastDto,
   ) {
-    const data = await this.broadcastService.schedule(tenantId, id, dto);
-    return { status: 200, message: 'Broadcast scheduled', error: false, data };
+    return await this.broadcastService.schedule(tenantId, id, dto);
   }
 
   @Delete('broadcasts/:id')
   @ApiOperation({ summary: 'Delete broadcast' })
   async deleteBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.broadcastService.remove(tenantId, id);
-    return { status: 200, message: 'Broadcast deleted', error: false, data: null };
+    return null;
   }
 
   @Get('inbox/sla')
   @ApiOperation({ summary: 'Get shared inbox SLA metrics' })
   async getInboxSLA(@TenantId() tenantId: string) {
-    const data = await this.whatsappService.calculateInboxSLA(tenantId);
-    return { status: 200, message: 'Inbox SLA retrieved', error: false, data };
+    return await this.whatsappService.calculateInboxSLA(tenantId);
   }
 
   @Get('flow-builder/nodes')
   @ApiOperation({ summary: 'Get flow builder node definitions' })
   async getFlowNodes(@TenantId() tenantId: string) {
-    const data = this.whatsappService.getFlowBuilderNodes(tenantId);
-    return { status: 200, message: 'Flow builder nodes retrieved', error: false, data };
+    return this.whatsappService.getFlowBuilderNodes(tenantId);
   }
 }

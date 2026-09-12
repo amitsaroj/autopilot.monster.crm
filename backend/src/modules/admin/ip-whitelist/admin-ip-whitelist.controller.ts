@@ -16,21 +16,19 @@ export class AdminIpWhitelistController {
   @Get()
   @ApiOperation({ summary: 'Get global IP whitelist' })
   async getWhitelist() {
-    const data = await this.ipService.getWhitelist();
-    return { status: 200, message: 'IP Whitelist retrieved', error: false, data };
+    return await this.ipService.getWhitelist();
   }
 
   @Post()
   @ApiOperation({ summary: 'Add IP to whitelist' })
   async addIp(@Body() data: { ip: string; description?: string }) {
-    const result = await this.ipService.addIp(data.ip, data.description);
-    return { status: 201, message: 'IP added to whitelist', error: false, data: result };
+    return await this.ipService.addIp(data.ip, data.description);
   }
 
   @Delete(':ip')
   @ApiOperation({ summary: 'Remove IP from whitelist' })
   async removeIp(@Param('ip') ip: string) {
     await this.ipService.removeIp(ip);
-    return { status: 200, message: 'IP removed from whitelist', error: false, data: null };
+    return null;
   }
 }

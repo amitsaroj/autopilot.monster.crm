@@ -16,14 +16,12 @@ export class SubAdminMarketplaceController {
   @Get('discover')
   @ApiOperation({ summary: 'Discover available marketplace items' })
   async discover(@TenantId() tenantId: string) {
-    const data = await this.marketplaceService.discover(tenantId);
-    return { status: 200, message: 'Marketplace discovery synchronized', error: false, data };
+    return await this.marketplaceService.discover(tenantId);
   }
 
   @Post('install/:itemId')
   @ApiOperation({ summary: 'Install a marketplace item' })
   async install(@TenantId() tenantId: string, @Param('itemId') itemId: string) {
-    const data = await this.marketplaceService.install(tenantId, itemId);
-    return { status: 201, message: 'Marketplace vector deployed', error: false, data };
+    return await this.marketplaceService.install(tenantId, itemId);
   }
 }

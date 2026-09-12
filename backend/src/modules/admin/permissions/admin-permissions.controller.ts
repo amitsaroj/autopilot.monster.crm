@@ -16,36 +16,19 @@ export class AdminPermissionsController {
   @Get()
   @ApiOperation({ summary: 'Get all permissions' })
   async findAll() {
-    const data = await this.adminPermissionsService.findAll();
-    return {
-      status: 200,
-      message: 'Permissions retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminPermissionsService.findAll();
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new permission' })
   async create(@Body() body: any) {
-    const data = await this.adminPermissionsService.create(body);
-    return {
-      status: 201,
-      message: 'Permission created',
-      error: false,
-      data,
-    };
+    return await this.adminPermissionsService.create(body);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete permission' })
   async remove(@Param('id') id: string) {
     await this.adminPermissionsService.remove(id);
-    return {
-      status: 200,
-      message: 'Permission deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 }

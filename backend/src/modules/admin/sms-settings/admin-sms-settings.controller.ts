@@ -16,14 +16,12 @@ export class AdminSmsSettingsController {
   @Get()
   @ApiOperation({ summary: 'Get global SMS/Twilio settings' })
   async getSettings() {
-    const data = await this.smsSettingsService.getSettings();
-    return { status: 200, message: 'SMS settings retrieved', error: false, data };
+    return await this.smsSettingsService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global SMS/Twilio settings' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.smsSettingsService.updateSettings(settings);
-    return { status: 200, message: 'SMS settings updated', error: false, data };
+    return await this.smsSettingsService.updateSettings(settings);
   }
 }

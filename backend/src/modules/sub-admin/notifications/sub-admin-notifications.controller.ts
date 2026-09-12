@@ -16,14 +16,12 @@ export class SubAdminNotificationsController {
   @Get()
   @ApiOperation({ summary: 'Get all notifications for tenant' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.notificationsService.findAll(tenantId);
-    return { status: 200, message: 'Notification manifold synchronized', error: false, data };
+    return await this.notificationsService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Send a targeted notification' })
   async create(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.notificationsService.create(tenantId, dto);
-    return { status: 201, message: 'Notification vector established', error: false, data };
+    return await this.notificationsService.create(tenantId, dto);
   }
 }

@@ -20,7 +20,6 @@ export class AdminErrorLogsController {
     @Query('limit') limit = 50,
     @Query('search') search?: string,
   ) {
-    const data = await this.errorLogsService.getLogs({ page, limit, search });
-    return { status: 200, message: 'Error logs retrieved', error: false, data };
+    return await this.errorLogsService.getLogs({ page, limit, search });
   }
 }

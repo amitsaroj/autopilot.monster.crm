@@ -16,14 +16,12 @@ export class AdminWhatsAppSettingsController {
   @Get()
   @ApiOperation({ summary: 'Get global WhatsApp Business settings' })
   async getSettings() {
-    const data = await this.whatsappSettingsService.getSettings();
-    return { status: 200, message: 'WhatsApp settings retrieved', error: false, data };
+    return await this.whatsappSettingsService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global WhatsApp Business settings' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.whatsappSettingsService.updateSettings(settings);
-    return { status: 200, message: 'WhatsApp settings updated', error: false, data };
+    return await this.whatsappSettingsService.updateSettings(settings);
   }
 }

@@ -16,21 +16,19 @@ export class SubAdminPluginsController {
   @Get()
   @ApiOperation({ summary: 'Get enabled plugins for tenant' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.pluginsService.findAll(tenantId);
-    return { status: 200, message: 'Plugin manifold synchronized', error: false, data };
+    return await this.pluginsService.findAll(tenantId);
   }
 
   @Post(':id/enable')
   @ApiOperation({ summary: 'Enable a plugin for tenant' })
   async enable(@TenantId() tenantId: string, @Param('id') pluginId: string) {
-    const data = await this.pluginsService.enable(tenantId, pluginId);
-    return { status: 200, message: 'Plugin vector activated', error: false, data };
+    return await this.pluginsService.enable(tenantId, pluginId);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Disable a plugin for tenant' })
   async disable(@TenantId() tenantId: string, @Param('id') pluginId: string) {
     await this.pluginsService.disable(tenantId, pluginId);
-    return { status: 200, message: 'Plugin vector severed', error: false };
+    return null;
   }
 }

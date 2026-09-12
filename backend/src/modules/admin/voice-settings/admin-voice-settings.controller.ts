@@ -16,14 +16,12 @@ export class AdminVoiceSettingsController {
   @Get()
   @ApiOperation({ summary: 'Get global Voice/TTS settings' })
   async getSettings() {
-    const data = await this.voiceSettingsService.getSettings();
-    return { status: 200, message: 'Voice settings retrieved', error: false, data };
+    return await this.voiceSettingsService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global Voice/TTS settings' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.voiceSettingsService.updateSettings(settings);
-    return { status: 200, message: 'Voice settings updated', error: false, data };
+    return await this.voiceSettingsService.updateSettings(settings);
   }
 }

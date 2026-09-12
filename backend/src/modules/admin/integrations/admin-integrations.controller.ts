@@ -16,14 +16,12 @@ export class AdminIntegrationsController {
   @Get()
   @ApiOperation({ summary: 'Get all global integrations' })
   async findAll() {
-    const data = await this.integrationsService.findAll();
-    return { status: 200, message: 'Integrations retrieved', error: false, data };
+    return await this.integrationsService.findAll();
   }
 
   @Post(':id/config')
   @ApiOperation({ summary: 'Update integration configuration' })
   async updateConfig(@Param('id') id: string, @Body() config: any) {
-    const data = await this.integrationsService.updateConfig(id, config);
-    return { status: 200, message: 'Configuration updated', error: false, data };
+    return await this.integrationsService.updateConfig(id, config);
   }
 }

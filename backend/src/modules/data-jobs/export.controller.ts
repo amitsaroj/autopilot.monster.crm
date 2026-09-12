@@ -19,21 +19,18 @@ export class ExportController {
   @Post()
   @ApiOperation({ summary: 'Start export job' })
   async start(@TenantId() tenantId: string, @Body() dto: StartExportDto) {
-    const data = await this.dataJobService.startExport(tenantId, dto);
-    return { status: 202, message: 'Export job started', error: false, data };
+    return await this.dataJobService.startExport(tenantId, dto);
   }
 
   @Get('history')
   @ApiOperation({ summary: 'Export job history' })
   async history(@TenantId() tenantId: string) {
-    const data = await this.dataJobService.getHistory(tenantId, DataJobType.EXPORT);
-    return { status: 200, message: 'Export history retrieved', error: false, data };
+    return await this.dataJobService.getHistory(tenantId, DataJobType.EXPORT);
   }
 
   @Get(':jobId')
   @ApiOperation({ summary: 'Export job status and download URL' })
   async status(@TenantId() tenantId: string, @Param('jobId') jobId: string) {
-    const data = await this.dataJobService.getJob(tenantId, jobId);
-    return { status: 200, message: 'Export job retrieved', error: false, data };
+    return await this.dataJobService.getJob(tenantId, jobId);
   }
 }

@@ -33,22 +33,19 @@ export class PromptTemplateController {
   @Post()
   @ApiOperation({ summary: 'Create a prompt template' })
   async create(@TenantId() tenantId: string, @Body() dto: CreatePromptTemplateDto) {
-    const data = await this.templateService.create(tenantId, dto);
-    return { status: 201, message: 'Prompt template created', error: false, data };
+    return await this.templateService.create(tenantId, dto);
   }
 
   @Get()
   @ApiOperation({ summary: 'List all prompt templates' })
   async findAll(@TenantId() tenantId: string, @Query('category') category?: string) {
-    const data = await this.templateService.findAll(tenantId, category);
-    return { status: 200, message: 'Prompt templates retrieved', error: false, data };
+    return await this.templateService.findAll(tenantId, category);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get prompt template' })
   async findOne(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.templateService.findOne(tenantId, id);
-    return { status: 200, message: 'Prompt template retrieved', error: false, data };
+    return await this.templateService.findOne(tenantId, id);
   }
 
   @Post(':id/render')
@@ -59,7 +56,7 @@ export class PromptTemplateController {
     @Body() body: RenderPromptTemplateDto,
   ) {
     const rendered = await this.templateService.render(tenantId, id, body.variables);
-    return { status: 200, message: 'Prompt template rendered', error: false, data: { rendered } };
+    return { rendered };
   }
 
   @Patch(':id')
@@ -69,8 +66,7 @@ export class PromptTemplateController {
     @Param('id') id: string,
     @Body() dto: UpdatePromptTemplateDto,
   ) {
-    const data = await this.templateService.update(tenantId, id, dto);
-    return { status: 200, message: 'Prompt template updated', error: false, data };
+    return await this.templateService.update(tenantId, id, dto);
   }
 
   @Delete(':id')

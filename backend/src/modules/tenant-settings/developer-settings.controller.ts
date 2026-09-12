@@ -24,36 +24,32 @@ export class DeveloperSettingsController {
   @Get('api-keys')
   @ApiOperation({ summary: 'List API keys for the workspace' })
   async listApiKeys(@CurrentUser() user: IRequestContext) {
-    const data = await this.developerSettingsService.listApiKeys(user.tenantId);
-    return { status: 200, message: 'API keys retrieved', error: false, data };
+    return await this.developerSettingsService.listApiKeys(user.tenantId);
   }
 
   @Post('api-keys')
   @ApiOperation({ summary: 'Create a new API key' })
   async createApiKey(@CurrentUser() user: IRequestContext, @Body() dto: CreateApiKeyDto) {
-    const data = await this.developerSettingsService.createApiKey(user.tenantId, user.userId, dto);
-    return { status: 201, message: 'API key created', error: false, data };
+    return await this.developerSettingsService.createApiKey(user.tenantId, user.userId, dto);
   }
 
   @Delete('api-keys/:id')
   @ApiOperation({ summary: 'Revoke an API key' })
   async revokeApiKey(@CurrentUser() user: IRequestContext, @Param('id') id: string) {
     await this.developerSettingsService.revokeApiKey(user.tenantId, id);
-    return { status: 200, message: 'API key revoked', error: false, data: null };
+    return null;
   }
 
   @Get('webhooks')
   @ApiOperation({ summary: 'List outbound webhooks' })
   async listWebhooks(@CurrentUser() user: IRequestContext) {
-    const data = await this.developerSettingsService.listWebhooks(user.tenantId);
-    return { status: 200, message: 'Webhooks retrieved', error: false, data };
+    return await this.developerSettingsService.listWebhooks(user.tenantId);
   }
 
   @Post('webhooks')
   @ApiOperation({ summary: 'Create an outbound webhook' })
   async createWebhook(@CurrentUser() user: IRequestContext, @Body() dto: CreateWebhookDto) {
-    const data = await this.developerSettingsService.createWebhook(user.tenantId, dto);
-    return { status: 201, message: 'Webhook created', error: false, data };
+    return await this.developerSettingsService.createWebhook(user.tenantId, dto);
   }
 
   @Patch('webhooks/:id')
@@ -63,42 +59,38 @@ export class DeveloperSettingsController {
     @Param('id') id: string,
     @Body() dto: UpdateWebhookDto,
   ) {
-    const data = await this.developerSettingsService.updateWebhook(user.tenantId, id, dto);
-    return { status: 200, message: 'Webhook updated', error: false, data };
+    return await this.developerSettingsService.updateWebhook(user.tenantId, id, dto);
   }
 
   @Delete('webhooks/:id')
   @ApiOperation({ summary: 'Delete a webhook' })
   async deleteWebhook(@CurrentUser() user: IRequestContext, @Param('id') id: string) {
     await this.developerSettingsService.deleteWebhook(user.tenantId, id);
-    return { status: 200, message: 'Webhook deleted', error: false, data: null };
+    return null;
   }
 
   @Post('webhooks/:id/test')
   @ApiOperation({ summary: 'Send a test payload to a webhook' })
   async testWebhook(@CurrentUser() user: IRequestContext, @Param('id') id: string) {
-    const data = await this.developerSettingsService.testWebhook(user.tenantId, id);
-    return { status: 200, message: 'Webhook test completed', error: false, data };
+    return await this.developerSettingsService.testWebhook(user.tenantId, id);
   }
 
   @Get('oauth-apps')
   @ApiOperation({ summary: 'List OAuth applications' })
   async listOAuthApps(@CurrentUser() user: IRequestContext) {
-    const data = await this.developerSettingsService.listOAuthApps(user.tenantId);
-    return { status: 200, message: 'OAuth apps retrieved', error: false, data };
+    return await this.developerSettingsService.listOAuthApps(user.tenantId);
   }
 
   @Post('oauth-apps')
   @ApiOperation({ summary: 'Create OAuth application' })
   async createOAuthApp(@CurrentUser() user: IRequestContext, @Body() dto: CreateOAuthAppDto) {
-    const data = await this.developerSettingsService.createOAuthApp(user.tenantId, dto);
-    return { status: 201, message: 'OAuth app created', error: false, data };
+    return await this.developerSettingsService.createOAuthApp(user.tenantId, dto);
   }
 
   @Delete('oauth-apps/:id')
   @ApiOperation({ summary: 'Revoke OAuth application' })
   async revokeOAuthApp(@CurrentUser() user: IRequestContext, @Param('id') id: string) {
     await this.developerSettingsService.revokeOAuthApp(user.tenantId, id);
-    return { status: 200, message: 'OAuth app revoked', error: false, data: null };
+    return null;
   }
 }

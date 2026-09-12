@@ -15,7 +15,6 @@ export class SubAdminLogsController {
   @Get()
   @ApiOperation({ summary: 'Get tenant-specific logs' })
   async findAll(@TenantId() tenantId: string, @Query() query: any) {
-    const data = await this.logsService.findAll(tenantId, query);
-    return { status: 200, message: 'Tenant log stream synchronized', error: false, data };
+    return await this.logsService.findAll(tenantId, query);
   }
 }

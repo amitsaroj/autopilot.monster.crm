@@ -16,13 +16,7 @@ export class AdminMetricsController {
   @Get('stats')
   @ApiOperation({ summary: 'Get global platform statistics' })
   async getStats() {
-    const data = await this.metricsService.getGlobalStats();
-    return {
-      status: 200,
-      message: 'Platform statistics retrieved',
-      error: false,
-      data,
-    };
+    return await this.metricsService.getGlobalStats();
   }
 
   @Get('global')
@@ -34,12 +28,6 @@ export class AdminMetricsController {
   @Get('health')
   @ApiOperation({ summary: 'Get global platform health' })
   async getHealth() {
-    const data = await this.metricsService.getHealth();
-    return {
-      status: 200,
-      message: 'Platform health retrieved',
-      error: false,
-      data,
-    };
+    return await this.metricsService.getHealth();
   }
 }

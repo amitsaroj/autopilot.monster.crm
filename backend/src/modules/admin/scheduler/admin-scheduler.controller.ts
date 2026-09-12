@@ -16,12 +16,6 @@ export class AdminSchedulerController {
   @Get('jobs')
   @ApiOperation({ summary: 'Get all scheduled cron jobs' })
   async getCronJobs() {
-    const data = await this.schedulerService.getCronJobs();
-    return {
-      status: 200,
-      message: 'Scheduled jobs retrieved',
-      error: false,
-      data,
-    };
+    return await this.schedulerService.getCronJobs();
   }
 }

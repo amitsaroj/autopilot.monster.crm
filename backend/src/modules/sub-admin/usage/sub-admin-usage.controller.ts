@@ -16,7 +16,6 @@ export class SubAdminUsageController {
   @Get('summary')
   @ApiOperation({ summary: 'Get tenant usage summary' })
   async getUsageSummary(@TenantId() tenantId: string) {
-    const data = await this.usageService.getUsageSummary(tenantId);
-    return { status: 200, message: 'Resource usage profile synchronized', error: false, data };
+    return await this.usageService.getUsageSummary(tenantId);
   }
 }
