@@ -2,7 +2,7 @@
 
 Autopilot Monster CRM is a multi-tenant, AI-oriented CRM and communications platform. The repository contains a Next.js UI, a NestJS API, PostgreSQL schema/migrations, Redis/Bull job processing, MinIO storage, Qdrant configuration, Docker Compose, Terraform, nginx, and GitHub Actions.
 
-This README describes the checked-in implementation as of 2026-09-09. It does not imply that third-party services are configured or production-ready.
+This README describes the checked-in implementation as of 2026-09-12. It does not imply that third-party services are configured or production-ready.
 
 ## Product vision
 
@@ -14,13 +14,25 @@ Implementation evidence is strong across API, UI, data, and infrastructure artif
 
 | Area | Estimate | Evidence |
 |---|---:|---|
-| Overall | 82% | 337 UI pages, 122 controller files, 80 entity classes, 10 migrations and 12 queues |
+| Overall | 82% | 337 UI pages, 122 controller files, 80 entity classes, 15 migrations and 12 queues |
 | Frontend / backend | 84% / 86% | App Router UI, Nest modules, controllers, services, DTOs and guards |
 | CRM / auth / workflow | 88% / 84% / 82% | End-to-end entity, API and UI footprints |
 | AI / voice / WhatsApp / billing | 76% / 74% / 78% / 76% | Application paths implemented; providers must be configured |
 | Infrastructure / production readiness | 74% / 63% | Compose, nginx, Terraform and CI exist; TLS, secrets, provider cutovers, DR and scale validation remain operational concerns |
 
 These are implementation-evidence estimates, not acceptance-test results or a go-live approval. See [HLD](docs/HLD.md), [LLD](docs/LLD.md), and the [feature catalog](docs/FEATURE_CATALOG.md) for the basis.
+
+### Recent fixes (this branch)
+
+- The tenant admin panel (`/admin`) previously exposed only 3 sidebar links even though 74 `page.tsx` routes already existed under it; it now has a dedicated `AdminSidebar` covering all of them, grouped by domain.
+- The global `TransformInterceptor` wraps every controller response once; nearly every controller across the backend (`admin/*`, `sub-admin/*`, `crm`, `analytics`, `social`, `billing`, ...) additionally wrapped its own return value, producing a doubly-nested payload the frontend couldn't parse. Fixed across ~97 controller files.
+- JWT `permissions` were decoded but never stored on the client auth user object, so every permission-gated sidebar item and route silently disappeared regardless of role.
+- A JWT embedding a role's full flat permissions list can exceed the ~4KB browser per-cookie limit (TENANT_ADMIN's did, once RBAC/social/support/etc. permissions were backfilled) — the browser silently drops the cookie and login breaks. `access_token`/`refresh_token` are now split across numbered cookies and rejoined on read (`frontend/src/lib/cookie-chunks.ts`).
+- Local schema drift (existing migrations never applied, plus a missing `prompt_templates` table and a `tenant_plugins.pluginId`/`plugin_id` mismatch) 500'd several admin endpoints; closed with migrations `1740000000006`–`1740000000009`.
+- `PlanGuard`/`LimitGuard` resolved `PricingService`/`BillingService` by a string token that never matched their real DI token, `PlanGuard` crashed on `@Public()` routes, and the Enterprise/Pro/Starter/Free plans were missing feature flags (`billing`, `storage`, `export`, `import`) added to the seed script after those plans were first created — all three blocked or 403'd real pages regardless of role.
+- The `@Roles('ADMIN')` sub-admin tier (14 controllers) had no seeded role or demo user, so it was completely unreachable; added the `ADMIN` role and `subadmin@autopilotmonster.com`.
+
+See [`Docs/audit/FEATURE_COVERAGE_MATRIX.md`](Docs/audit/FEATURE_COVERAGE_MATRIX.md) and [`Docs/audit/UI_AUDIT.md`](Docs/audit/UI_AUDIT.md) for what these fixes change relative to the last full audit (2026-07-22).
 
 ## Architecture summary
 
@@ -77,19 +89,49 @@ cp frontend/.env.example frontend/.env
 
 docker compose up -d postgres redis minio qdrant
 
-cd backend && npm ci && npm run migration:run && npm run start:dev
-# In another terminal:
-cd frontend && npm ci && npm run dev
+cd backend && npm ci
+cd ../frontend && npm ci
+```
+
+**Important:** `backend/src/config/env.config.ts` reads `process.env` directly at module-import time — nothing in the app calls `dotenv.config()` before that happens, so a `backend/.env` file alone is not enough to boot the API. Export it into the shell first:
+
+```bash
+cd backend
+set -a && source .env && set +a
+npm run migration:run   # first run only, or after pulling new migrations
+npm run seed:dev        # idempotent — safe to re-run; seeds tenant, plans, RBAC, demo users/CRM data
+npm run start:dev
+```
+
+In another terminal, point the frontend at the local API (`.env.local` defaults to the production API) and run it:
+
+```bash
+cd frontend
+echo "NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1" > .env.local
+npm run dev
 ```
 
 The default API is `http://localhost:8000/api/v1`; the UI is normally `http://localhost:3000`. The non-production Swagger UI is at `http://localhost:8000/api/docs`; OpenAPI JSON is `http://localhost:8000/openapi.json`.
 
-To run the full local stack in containers:
+To run the full local stack in containers instead:
 
 ```bash
 docker compose up -d --build
 curl -sf http://localhost:8000/api/v1/health/ready
 ```
+
+#### Demo personas
+
+`npm run seed:dev` creates one demo user per role, all sharing the password `SecureP@ssw0rd!`:
+
+| Email | Role | Notes |
+|---|---|---|
+| `superadmin@autopilotmonster.com` | `SUPER_ADMIN` | Platform-wide control center at `/superadmin` |
+| `admin@autopilotmonster.com` | `TENANT_ADMIN` | Tenant admin panel at `/admin` (74 pages across CRM, RBAC, billing, AI, voice, WhatsApp, workflows, social, support, settings, ...) |
+| `subadmin@autopilotmonster.com` | `ADMIN` | Delegated sub-admin tier (`/sub-admin/*` API only — no dedicated frontend pages exist yet) |
+| `manager@autopilotmonster.com` | `USER` (Sales Manager) | Workspace app at `/dashboard` |
+| `user@autopilotmonster.com` | `USER` (Staff Member) | Workspace app at `/dashboard` |
+| `agent@autopilotmonster.com` | `USER` + `AGENT` | Workspace app at `/dashboard`, scoped to CRM/voice/WhatsApp |
 
 ## Environment variables
 

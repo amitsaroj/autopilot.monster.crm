@@ -1,6 +1,6 @@
 # Autopilot Monster CRM | Next.js Presentation Layer
 
-Welcome to the **Frontend Client** of the Autopilot Monster CRM. This interface is built utilizing bleeding-edge React architectures (Next.js 14 App Router) engineered to deliver an uncompromising user experience, blazing-fast data fetching, and an incredibly dense UI built for operational efficiency.
+Welcome to the **Frontend Client** of the Autopilot Monster CRM. This interface is built utilizing bleeding-edge React architectures (Next.js 16 App Router) engineered to deliver an uncompromising user experience, blazing-fast data fetching, and an incredibly dense UI built for operational efficiency.
 
 ## 🎨 Design & UI Philosophy
 
@@ -13,7 +13,7 @@ Welcome to the **Frontend Client** of the Autopilot Monster CRM. This interface 
 *   **CRM Kanban Boards:** Highly optimized drag-and-drop Deal interfaces. Local state is synchronized seamlessly via optimistic UI updates before confirming with the NestJS backend.
 *   **Unified Inbox & Communications:** A real-time, socket-ready inbox that amalgamates Email, SMS, WhatsApp, and internal system logs into one cohesive feed per contact.
 *   **AI Visual Flow Builders:** React Flow powers our custom bot-building graphical interfaces. Users can drag nodes and define branching logic visually.
-*   **Admin Portals:** Dynamic, data-heavy tables with serverside pagination, sorting, and inline editing for tenant and sub-admin operations.
+*   **Admin Portals:** Dynamic, data-heavy tables with serverside pagination, sorting, and inline editing for tenant and platform operations. The tenant admin panel (`/admin`) has a dedicated `AdminSidebar` (`src/components/layout/admin-sidebar.tsx`) exposing all 74 admin pages grouped by domain (CRM, Users & RBAC, Billing, AI, Voice, WhatsApp, Workflows, Social, Support, Marketplace, Notifications, Settings) — separate from the tenant workspace `Sidebar` used under `/dashboard`. The `SUB_ADMIN`-tier API (`/sub-admin/*`) has services wired (`src/services/sub-admin-*.service.ts`) but no dedicated pages yet.
 
 ## 🛠 Development & Deployment
 

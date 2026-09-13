@@ -19,13 +19,21 @@ Welcome to the **Backend Control Plane** of the Autopilot Monster CRM. This laye
 
 ## 🛠 Local Development
 
-The backend is intended to be run exclusively via the container orchestrator defined in the parent directory (`docker-compose.yml`), which guarantees consistent network access to PostgreSQL, Redis, and MinIO.
+The backend can run either via the container orchestrator defined in the parent directory (`docker-compose.yml`), or directly on the host against dockerized PostgreSQL/Redis/MinIO/Qdrant — both are used in practice; there is no hard requirement to containerize the API itself for local dev.
 
-However, to run scripts directly on the host machine:
+To run directly on the host:
 
 ```bash
 # Install exact dependencies
 npm install
+
+# backend/src/config/env.config.ts reads process.env directly at import time —
+# nothing calls dotenv.config() first, so a .env file alone will NOT be picked
+# up. Export it into the shell before starting Nest:
+set -a && source .env && set +a
+
+npm run migration:run   # first run only, or after pulling new migrations
+npm run seed:dev        # idempotent; seeds tenant/plans/RBAC/demo users+CRM data
 
 # Start development server with SWC fast-compilation
 npm run start:dev
@@ -33,6 +41,8 @@ npm run start:dev
 # Build production artifacts targeting dist/
 npm run build
 ```
+
+Health check: `curl http://localhost:8000/api/v1/health/ready`. Demo login credentials for every role are listed in the [root README](../README.md#demo-personas).
 
 ## 🔒 Environment Requirements
 
@@ -43,4 +53,4 @@ You MUST supply exactly these secrets in `backend/.env` to successfully boot the
 *   `JWT_SECRET`, `JWT_REFRESH_SECRET`
 *   `QDRANT_URL`, `OPENAI_API_KEY` (For AI modules)
 
-Failure to supply these will automatically halt the bootstrap process to protect against misconfigured staging/production setups.
+Failure to supply these will automatically halt the bootstrap process to protect against misconfigured staging/production setups — but only once they actually reach `process.env` (see the `dotenv` note above).
