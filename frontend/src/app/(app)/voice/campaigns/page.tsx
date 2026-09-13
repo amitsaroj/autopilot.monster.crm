@@ -1,193 +1,162 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Phone,
-  Users,
-  Mic,
-  Clock,
-  BarChart2,
+  Plus,
+  Search,
+  Loader2,
+  PlayCircle,
+  PauseCircle,
   CheckCircle2,
-  PhoneOutgoing,
-  Settings,
+  FileEdit,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
 import { voiceCampaignService, VoiceCampaign } from '@/services/voice-campaign.service';
 
-export default function VoiceCampaignsPage() {
-  const [activeTab, setActiveTab] = useState<'new' | 'active'>('new');
-  const [campaigns, setCampaigns] = useState<VoiceCampaign[]>([]);
-  const [name, setName] = useState('');
-  const [fromNumber, setFromNumber] = useState('');
-  const [script, setScript] = useState(
-    'You are an outbound sales representative. Your goal is to qualify the lead and ask if they are ready for a demo.',
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const STATUS_STYLES: Record<VoiceCampaign['status'], { label: string; className: string; icon: typeof Phone }> = {
+  DRAFT: { label: 'Draft', className: 'text-muted-foreground bg-muted', icon: FileEdit },
+  RUNNING: { label: 'Running', className: 'text-green-500 bg-green-500/10', icon: PlayCircle },
+  PAUSED: { label: 'Paused', className: 'text-amber-500 bg-amber-500/10', icon: PauseCircle },
+  COMPLETED: { label: 'Completed', className: 'text-blue-400 bg-blue-400/10', icon: CheckCircle2 },
+};
 
-  const loadCampaigns = async () => {
-    try {
-      const res = await voiceCampaignService.list();
-      setCampaigns(res.data.data ?? []);
-    } catch {
-      setError('Failed to load campaigns');
-    }
-  };
+export default function VoiceCampaignsPage() {
+  const [campaigns, setCampaigns] = useState<VoiceCampaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
-    if (activeTab === 'active') {
-      void loadCampaigns();
-    }
-  }, [activeTab]);
+    void voiceCampaignService
+      .list()
+      .then((res) => setCampaigns(res.data.data ?? []))
+      .catch(() => toast.error('Failed to load campaigns'))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleLaunch = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const created = await voiceCampaignService.create({
-        name: name || 'Outbound Campaign',
-        fromNumber: fromNumber || '+10000000000',
-        script,
-      });
-      await voiceCampaignService.start(created.data.data.id);
-      setActiveTab('active');
-      await loadCampaigns();
-    } catch {
-      setError('Failed to launch campaign');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filtered = campaigns.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()));
 
-  const handlePause = async (id: string) => {
-    await voiceCampaignService.pause(id);
-    await loadCampaigns();
-  };
+  const running = campaigns.filter((c) => c.status === 'RUNNING').length;
+  const paused = campaigns.filter((c) => c.status === 'PAUSED').length;
+  const completed = campaigns.filter((c) => c.status === 'COMPLETED').length;
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-6xl">
-      <div className="flex items-center justify-between border-b border-gray-200 pb-5">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Phone className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">AI Voice Calling</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Autonomous outbound calling powered by OpenAI Realtime interactions.
-            </p>
-          </div>
+    <div className="space-y-6 animate-fade-in">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Bulk Voice Campaigns</h1>
+          <p className="page-description">
+            Autonomous outbound calling across a contact list, powered by the AI voice engine
+          </p>
         </div>
-      </div>
-
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      <div className="flex items-center gap-6 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('new')}
-          className={`pb-4 font-medium text-sm transition-colors relative ${activeTab === 'new' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+        <Link
+          href="/voice/campaigns/new"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
         >
+          <Plus className="h-4 w-4" />
           New Campaign
-          {activeTab === 'new' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-lg" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('active')}
-          className={`pb-4 font-medium text-sm transition-colors relative ${activeTab === 'active' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
-        >
-          Active Dialers
-          {activeTab === 'active' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-t-lg" />
-          )}
-        </button>
+        </Link>
       </div>
 
-      {activeTab === 'new' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white border rounded-xl p-6 shadow-sm">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-gray-500" /> Campaign Setup
-              </h2>
-              <div className="space-y-4">
-                <input
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                  placeholder="Campaign name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-                <input
-                  className="w-full border rounded-lg px-3 py-2 text-sm"
-                  placeholder="From number (E.164)"
-                  value={fromNumber}
-                  onChange={(e) => setFromNumber(e.target.value)}
-                />
-                <textarea
-                  className="w-full text-sm font-mono border border-gray-300 rounded-lg p-3 h-32"
-                  value={script}
-                  onChange={(e) => setScript(e.target.value)}
-                />
-              </div>
+      <div className="grid grid-cols-4 gap-4">
+        {[
+          { label: 'Total Campaigns', value: String(campaigns.length), icon: Phone },
+          { label: 'Running', value: String(running), icon: PlayCircle },
+          { label: 'Paused', value: String(paused), icon: PauseCircle },
+          { label: 'Completed', value: String(completed), icon: CheckCircle2 },
+        ].map((s) => (
+          <div key={s.label} className="stat-card flex items-center gap-4">
+            <div className="p-3 rounded-lg bg-muted text-[hsl(246,80%,60%)]">
+              <s.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xl font-bold text-foreground">{s.value}</p>
+              <p className="text-xs text-muted-foreground">{s.label}</p>
             </div>
           </div>
+        ))}
+      </div>
 
-          <div className="space-y-6">
-            <div className="bg-gradient-to-br from-blue-900 to-indigo-900 rounded-xl p-6 text-white shadow-lg">
-              <h2 className="font-semibold mb-6 flex items-center gap-2">
-                <PhoneOutgoing className="w-5 h-5" /> Launch Control
-              </h2>
-              <button
-                onClick={handleLaunch}
-                disabled={loading}
-                className="w-full bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white font-bold py-3.5 rounded-lg"
-              >
-                {loading ? 'Launching...' : 'Launch Campaign'}
-              </button>
-            </div>
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search campaigns..."
+          className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+        />
+      </div>
+
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">
+            {campaigns.length === 0 ? (
+              <>
+                No campaigns yet.{' '}
+                <Link href="/voice/campaigns/new" className="text-[hsl(246,80%,60%)] hover:underline">
+                  Create one to get started.
+                </Link>
+              </>
+            ) : (
+              'No campaigns match your search.'
+            )}
           </div>
-        </div>
-      ) : (
-        <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
-          <table className="w-full text-left border-collapse">
+        ) : (
+          <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                <th className="p-4 font-medium border-b">Campaign Name</th>
-                <th className="p-4 font-medium border-b">Status</th>
-                <th className="p-4 font-medium border-b">Progress</th>
-                <th className="p-4 font-medium border-b text-right">Actions</th>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Campaign</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Progress</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Answered</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Failed</th>
               </tr>
             </thead>
-            <tbody className="text-sm">
-              {campaigns.map((campaign) => (
-                <tr key={campaign.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900">{campaign.name}</td>
-                  <td className="p-4">{campaign.status}</td>
-                  <td className="p-4 text-gray-600">
-                    {campaign.callsMade} / {campaign.totalContacts || 0}
-                  </td>
-                  <td className="p-4 text-right">
-                    {campaign.status === 'RUNNING' && (
-                      <button
-                        className="text-red-500 hover:text-red-700 font-medium"
-                        onClick={() => handlePause(campaign.id)}
+            <tbody className="divide-y divide-border">
+              {filtered.map((campaign) => {
+                const status = STATUS_STYLES[campaign.status];
+                const StatusIcon = status.icon;
+                return (
+                  <tr key={campaign.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/voice/campaigns/${campaign.id}`}
+                        className="font-medium text-foreground hover:text-[hsl(246,80%,60%)]"
                       >
-                        Pause
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {campaigns.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="p-8 text-center text-gray-500">
-                    No campaigns yet. Create one to get started.
-                  </td>
-                </tr>
-              )}
+                        {campaign.name}
+                      </Link>
+                      <p className="text-xs text-muted-foreground">{campaign.fromNumber}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${status.className}`}
+                      >
+                        <StatusIcon className="h-3.5 w-3.5" />
+                        {status.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {campaign.callsMade} / {campaign.totalContacts || 0}
+                    </td>
+                    <td className="px-4 py-3 text-green-500">{campaign.callsAnswered}</td>
+                    <td className="px-4 py-3 text-red-400">{campaign.callsFailed}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -2,6 +2,16 @@ import api from '../lib/api/client';
 
 export type VoiceCampaignStatus = 'DRAFT' | 'RUNNING' | 'PAUSED' | 'COMPLETED';
 
+export interface VoiceCampaignStats {
+  campaignId: string;
+  status: VoiceCampaignStatus;
+  totalContacts: number;
+  callsMade: number;
+  callsAnswered: number;
+  callsFailed: number;
+  answerRate: number;
+}
+
 export interface VoiceCampaign {
   id: string;
   name: string;
@@ -31,6 +41,6 @@ export const voiceCampaignService = {
   start: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/start`),
   pause: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/pause`),
   resume: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/resume`),
-  getStats: (id: string) =>
-    api.get<{ data: Record<string, unknown> }>(`/voice/campaigns/${id}/stats`),
+  cancel: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/cancel`),
+  getStats: (id: string) => api.get<{ data: VoiceCampaignStats }>(`/voice/campaigns/${id}/stats`),
 };

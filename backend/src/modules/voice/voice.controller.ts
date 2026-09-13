@@ -244,6 +244,12 @@ export class VoiceController {
     return await this.voiceCampaignService.resume(tenantId, id);
   }
 
+  @Post('campaigns/:id/cancel')
+  @ApiOperation({ summary: 'Cancel voice campaign' })
+  async cancelCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
+    return await this.voiceCampaignService.cancel(tenantId, id);
+  }
+
   @Get('campaigns/:id/stats')
   @ApiOperation({ summary: 'Get voice campaign stats' })
   async getCampaignStats(@TenantId() tenantId: string, @Param('id') id: string) {
