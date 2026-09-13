@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { QdrantClient } from '@qdrant/js-client-rest';
-import OpenAI from 'openai';
 
 const mammoth = require('mammoth');
 const pdfParse = require('pdf-parse');
@@ -18,6 +17,7 @@ import { BillingService } from '../billing/billing.service';
 import { resolveUsagePeriodBounds } from '../billing/usage-period.util';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { KnowledgeBaseService } from './knowledge-base.service';
+import { AiProviderService } from './providers/ai-provider.service';
 
 const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
   'gpt-4o': { input: 0.005, output: 0.015 },
@@ -29,43 +29,19 @@ const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
 export class RagService {
   private readonly logger = new Logger(RagService.name);
   private qdrant: QdrantClient;
-  private openaiClients: Map<string, OpenAI> = new Map();
 
   constructor(
     private configService: ConfigService,
     private configOrchestrator: ConfigOrchestratorService,
     private billingService: BillingService,
     private knowledgeBaseService: KnowledgeBaseService,
+    private aiProviderService: AiProviderService,
   ) {
     const qdrantCfg = this.configService.get<QdrantConfig>('qdrant');
     this.qdrant = new QdrantClient({
       url: qdrantCfg?.url || 'http://localhost:6333',
       ...(qdrantCfg?.apiKey ? { apiKey: qdrantCfg.apiKey } : {}),
     });
-  }
-
-  private async getOpenAIClient(tenantId?: string): Promise<OpenAI> {
-    const cacheKey = tenantId || 'platform';
-    if (this.openaiClients.has(cacheKey)) {
-      return this.openaiClients.get(cacheKey)!;
-    }
-
-    const tenantKey = await this.configOrchestrator.get(tenantId || '', 'openai_key');
-    const apiKey =
-      (typeof tenantKey === 'string' && tenantKey.trim()) ||
-      this.configService.get<string>('OPENAI_API_KEY') ||
-      '';
-
-    if (!apiKey || apiKey === 'mock-api-key') {
-      throw new ServiceUnavailableException(
-        'OpenAI API key is not configured for this tenant. Set openai_key or OPENAI_API_KEY.',
-      );
-    }
-
-    const client = new OpenAI({ apiKey });
-
-    this.openaiClients.set(cacheKey, client);
-    return client;
   }
 
   private async getEmbeddingModel(tenantId: string): Promise<string> {
@@ -121,7 +97,6 @@ export class RagService {
       });
     }
 
-    const openai = await this.getOpenAIClient(tenantId);
     const embeddingModel = await this.getEmbeddingModel(tenantId);
     const documentId = crypto.randomUUID();
     const points = [];
@@ -129,16 +104,17 @@ export class RagService {
 
     for (let i = 0; i < chunks.length; i++) {
       try {
-        const embeddingResponse = await openai.embeddings.create({
-          model: embeddingModel,
-          input: chunks[i],
-        });
+        const embeddingResponse = await this.aiProviderService.embed(
+          tenantId,
+          chunks[i],
+          embeddingModel,
+        );
 
-        embeddingTokens += embeddingResponse.usage?.total_tokens ?? 0;
+        embeddingTokens += embeddingResponse.usage.inputTokens;
 
         points.push({
           id: crypto.randomUUID(),
-          vector: embeddingResponse.data[0].embedding,
+          vector: embeddingResponse.embedding,
           payload: {
             tenantId,
             knowledgeBaseId: knowledgeBaseId ?? null,
@@ -179,14 +155,10 @@ export class RagService {
     knowledgeBaseIds?: string[],
   ) {
     const collectionName = this.getCollectionName(tenantId);
-    const openai = await this.getOpenAIClient(tenantId);
     const embeddingModel = await this.getEmbeddingModel(tenantId);
 
     try {
-      const embeddingResponse = await openai.embeddings.create({
-        model: embeddingModel,
-        input: query,
-      });
+      const embeddingResponse = await this.aiProviderService.embed(tenantId, query, embeddingModel);
 
       const filter =
         knowledgeBaseIds && knowledgeBaseIds.length > 0
@@ -201,13 +173,13 @@ export class RagService {
           : undefined;
 
       const results = await this.qdrant.search(collectionName, {
-        vector: embeddingResponse.data[0].embedding,
+        vector: embeddingResponse.embedding,
         limit,
         with_payload: true,
         ...(filter ? { filter } : {}),
       });
 
-      const embeddingTokens = embeddingResponse.usage?.total_tokens ?? 0;
+      const embeddingTokens = embeddingResponse.usage.inputTokens;
       if (embeddingTokens > 0) {
         await this.recordUsage(tenantId, embeddingTokens, embeddingModel, 0);
       }
@@ -248,26 +220,24 @@ export class RagService {
     defaultModel: string,
     options: any,
   ) {
-    const openai = await this.getOpenAIClient(tenantId);
     const model = typeof options.model === 'string' ? options.model : defaultModel;
     const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
-    const response = await openai.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature,
-    });
+    const response = await this.aiProviderService.chatComplete(
+      tenantId,
+      [{ role: 'user', content: prompt }],
+      { model, temperature },
+    );
 
-    const content = response.choices[0].message.content;
     if (tenantId) {
       await this.recordUsage(
         tenantId,
-        response.usage?.prompt_tokens ?? 0,
-        model,
-        response.usage?.completion_tokens ?? 0,
+        response.usage.inputTokens,
+        response.model,
+        response.usage.outputTokens,
       );
     }
 
-    return content;
+    return response.content;
   }
 
   async *streamGenerate(
@@ -275,7 +245,6 @@ export class RagService {
     prompt: string,
     options: Record<string, unknown> = {},
   ): AsyncGenerator<string> {
-    const openai = await this.getOpenAIClient(tenantId);
     const model =
       typeof options.model === 'string'
         ? options.model
@@ -284,25 +253,20 @@ export class RagService {
           : 'gpt-4o';
     const temperature = typeof options.temperature === 'number' ? options.temperature : 0.7;
 
-    const stream = await openai.chat.completions.create({
-      model,
-      messages: [{ role: 'user', content: prompt }],
-      temperature,
-      stream: true,
-      stream_options: { include_usage: true },
-    });
-
     let inputTokens = 0;
     let outputTokens = 0;
 
-    for await (const chunk of stream) {
+    for await (const chunk of this.aiProviderService.chatCompleteStream(
+      tenantId,
+      [{ role: 'user', content: prompt }],
+      { model, temperature },
+    )) {
       if (chunk.usage) {
-        inputTokens = chunk.usage.prompt_tokens ?? inputTokens;
-        outputTokens = chunk.usage.completion_tokens ?? outputTokens;
+        inputTokens = chunk.usage.inputTokens;
+        outputTokens = chunk.usage.outputTokens;
       }
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        yield content;
+      if (chunk.delta) {
+        yield chunk.delta;
       }
     }
 
@@ -313,28 +277,22 @@ export class RagService {
 
   async analyze(tenantId: string | undefined, text: string, task: string) {
     this.logger.log(`Analyzing text for task: ${task}`);
-    const openai = await this.getOpenAIClient(tenantId);
     const model = tenantId ? await this.getDefaultChatModel(tenantId) : 'gpt-4o';
     const prompt = `Task: ${task}\n\nText: ${text}\n\nProvide the analysis in JSON format.`;
-    const response = await openai.chat.completions.create({
-      model,
-      messages: [
+    const response = await this.aiProviderService.chatComplete(
+      tenantId,
+      [
         { role: 'system', content: 'You are an AI data analyst.' },
         { role: 'user', content: prompt },
       ],
-      response_format: { type: 'json_object' },
-    });
+      { model, jsonMode: true },
+    );
 
     if (tenantId) {
-      await this.recordUsage(
-        tenantId,
-        response.usage?.prompt_tokens ?? 0,
-        model,
-        response.usage?.completion_tokens ?? 0,
-      );
+      await this.recordUsage(tenantId, response.usage.inputTokens, response.model, response.usage.outputTokens);
     }
 
-    return JSON.parse(response.choices[0].message.content || '{}');
+    return JSON.parse(response.content || '{}');
   }
 
   async getModels() {
