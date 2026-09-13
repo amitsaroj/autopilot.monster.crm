@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, UseGuards, Param, Delete } from '@nestjs/c
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminUsersService } from './sub-admin-users.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
-import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { Roles, TenantId, ResourcePermissions, CurrentUser } from '../../../common/decorators';
+import type { IRequestContext } from '../../../common/interfaces/request-context.interface';
+import { InviteUserDto } from '../../users/dto/users.dto';
 
 @ApiTags('SubAdmin / Users')
 @ApiBearerAuth()
@@ -21,8 +23,12 @@ export class SubAdminUsersController {
 
   @Post('invite')
   @ApiOperation({ summary: 'Invite a new user to tenant' })
-  async invite(@TenantId() tenantId: string, @Body() dto: any) {
-    return await this.usersService.invite(tenantId, dto);
+  async invite(
+    @TenantId() tenantId: string,
+    @CurrentUser() actor: IRequestContext,
+    @Body() dto: InviteUserDto,
+  ) {
+    return await this.usersService.invite(tenantId, actor.userId, dto);
   }
 
   @Delete(':id')

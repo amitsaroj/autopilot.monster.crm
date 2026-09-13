@@ -8,9 +8,11 @@ export class SubAdminLogsService {
   constructor(@InjectRepository(AuditLog) private readonly logRepo: Repository<AuditLog>) {}
 
   async findAll(tenantId: string, query: any) {
-    const { type, limit = 50 } = query;
+    const { type, action, resource, limit = 50 } = query;
     const where: any = { tenantId };
-    if (type) where.type = type;
+    // `type` is accepted as an alias for `action` (AuditLog has no `type` column).
+    if (action || type) where.action = action || type;
+    if (resource) where.resource = resource;
 
     return this.logRepo.find({
       where,

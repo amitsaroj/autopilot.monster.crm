@@ -39,7 +39,7 @@ export default function LoginPage() {
       if (roles.includes('SUPER_ADMIN')) {
         router.push('/superadmin');
       } else if (roles.includes('ADMIN')) {
-        router.push('/admin');
+        router.push('/sub-admin');
       } else {
         router.push('/dashboard');
       }
