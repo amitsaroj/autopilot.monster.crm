@@ -7,23 +7,48 @@ import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { whatsappBroadcastService } from '@/services/whatsapp-broadcast.service';
 import { whatsappTemplateService, WhatsappTemplate } from '@/services/whatsapp-template.service';
+import { crmMetadataService, type CrmSegment } from '@/services/crm-metadata.service';
+
+type AudienceMode = 'all' | 'segment' | 'tags';
 
 export default function NewWhatsappBroadcastPage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<WhatsappTemplate[]>([]);
+  const [segments, setSegments] = useState<CrmSegment[]>([]);
   const [name, setName] = useState('');
   const [templateId, setTemplateId] = useState('');
+  const [audienceMode, setAudienceMode] = useState<AudienceMode>('all');
+  const [segmentId, setSegmentId] = useState('');
+  const [tagsInput, setTagsInput] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     void whatsappTemplateService.list().then((r) => setTemplates(r.data.data ?? []));
+    void crmMetadataService
+      .getSegments()
+      .then((r) => setSegments(r.data.data ?? []))
+      .catch(() => undefined);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (audienceMode === 'segment' && !segmentId) {
+      toast.error('Select a segment');
+      return;
+    }
+    if (audienceMode === 'tags' && !tagsInput.trim()) {
+      toast.error('Enter at least one tag');
+      return;
+    }
     setSaving(true);
     try {
-      const res = await whatsappBroadcastService.create({ name, templateId });
+      const contactFilter =
+        audienceMode === 'segment'
+          ? { segmentIds: [segmentId] }
+          : audienceMode === 'tags'
+            ? { tags: tagsInput.split(',').map((t) => t.trim()).filter(Boolean) }
+            : undefined;
+      const res = await whatsappBroadcastService.create({ name, templateId, contactFilter });
       await whatsappBroadcastService.send(res.data.data.id);
       toast.success('Broadcast started');
       router.push('/whatsapp/broadcast');
@@ -72,6 +97,55 @@ export default function NewWhatsappBroadcastPage() {
             ))}
           </select>
         </div>
+        <div>
+          <label className="text-sm font-medium">Audience</label>
+          <select
+            value={audienceMode}
+            onChange={(e) => setAudienceMode(e.target.value as AudienceMode)}
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm bg-background"
+          >
+            <option value="all">All contacts</option>
+            <option value="segment">By segment</option>
+            <option value="tags">By tags</option>
+          </select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {audienceMode === 'all'
+              ? 'Every contact with a phone number will receive this broadcast.'
+              : audienceMode === 'segment'
+                ? 'Only contacts in the selected segment will receive this broadcast.'
+                : 'Only contacts matching at least one of the tags below will receive this broadcast.'}
+          </p>
+        </div>
+        {audienceMode === 'segment' && (
+          <div>
+            <label className="text-sm font-medium">Segment</label>
+            <select
+              value={segmentId}
+              onChange={(e) => setSegmentId(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm bg-background"
+              required
+            >
+              <option value="">Select segment…</option>
+              {segments.map((segment) => (
+                <option key={segment.id} value={segment.id}>
+                  {segment.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {audienceMode === 'tags' && (
+          <div>
+            <label className="text-sm font-medium">Tags</label>
+            <input
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="vip, newsletter"
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Comma-separated.</p>
+          </div>
+        )}
         <button
           type="submit"
           disabled={saving}

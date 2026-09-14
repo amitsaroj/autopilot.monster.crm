@@ -18,7 +18,7 @@ export const whatsappBroadcastService = {
   create: (payload: {
     name: string;
     templateId: string;
-    contactFilter?: { tags?: string[]; status?: string[] };
+    contactFilter?: { tags?: string[]; status?: string[]; segmentIds?: string[] };
     templateVariables?: Record<string, string>;
     scheduledAt?: string;
   }) => api.post<{ data: WhatsappBroadcast }>('/whatsapp/broadcasts', payload),
