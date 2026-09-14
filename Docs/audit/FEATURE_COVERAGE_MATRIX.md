@@ -8,6 +8,8 @@ Legend: ✅ Complete · 🟡 Partial · 🔴 Missing · ⚫ Broken · — N/A
 
 **Strict DoD:** Backend + DB + Migration + API + Frontend connected + Validation + Permissions + Audit logging + Error handling + Unit tests + Integration tests + Production ready.
 
+> **2026-09-12 addendum** (not a re-run of this audit's own process — no new wave number assigned): the "Admin / Sub-admin / Developer" and "Frontend QA / Pagination / Dead routes" rows below predate a large fix pass on `feature/admin-panel-navigation` — tenant admin nav (3 → 74 reachable pages), a systemic response double-wrapping bug across ~97 controllers, RBAC page's hardcoded stats, the `ADMIN` sub-admin tier being entirely unreachable (no seeded role/user), and several plan-feature/schema-drift 500s. Details in the root [README](../../README.md#recent-fixes-this-branch). A fresh full audit against this branch would likely move several of these percentages; treat the table below as pre-fix baseline until one is run.
+
 ---
 
 ## Global status (62 features)

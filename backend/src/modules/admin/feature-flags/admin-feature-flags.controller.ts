@@ -16,37 +16,19 @@ export class AdminFeatureFlagsController {
   @Get('global')
   @ApiOperation({ summary: 'Get all global feature flags' })
   async getGlobalFlags() {
-    const data = await this.adminFeatureFlagsService.getGlobalFlags();
-    return {
-      status: 200,
-      message: 'Global feature flags retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminFeatureFlagsService.getGlobalFlags();
   }
 
   @Post('global')
   @ApiOperation({ summary: 'Update/Create a global feature flag' })
   async updateGlobalFlag(@Body() body: { key: string; enabled: boolean }) {
-    const data = await this.adminFeatureFlagsService.updateGlobalFlag(body.key, body.enabled);
-    return {
-      status: 200,
-      message: 'Global feature flag updated',
-      error: false,
-      data,
-    };
+    return await this.adminFeatureFlagsService.updateGlobalFlag(body.key, body.enabled);
   }
 
   @Get('tenant/:tenantId')
   @ApiOperation({ summary: 'Get feature flags for a specific tenant' })
   async getTenantFlags(@Param('tenantId') tenantId: string) {
-    const data = await this.adminFeatureFlagsService.getTenantFlags(tenantId);
-    return {
-      status: 200,
-      message: 'Tenant feature flags retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminFeatureFlagsService.getTenantFlags(tenantId);
   }
 
   @Patch('tenant/:tenantId')
@@ -55,16 +37,6 @@ export class AdminFeatureFlagsController {
     @Param('tenantId') tenantId: string,
     @Body() body: { key: string; enabled: boolean },
   ) {
-    const data = await this.adminFeatureFlagsService.updateTenantFlag(
-      tenantId,
-      body.key,
-      body.enabled,
-    );
-    return {
-      status: 200,
-      message: 'Tenant feature flag updated',
-      error: false,
-      data,
-    };
+    return await this.adminFeatureFlagsService.updateTenantFlag(tenantId, body.key, body.enabled);
   }
 }

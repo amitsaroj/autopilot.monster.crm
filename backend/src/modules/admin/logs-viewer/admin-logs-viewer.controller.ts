@@ -21,7 +21,6 @@ export class AdminLogsViewerController {
     @Query('type') type?: string,
     @Query('search') search?: string,
   ) {
-    const data = await this.logsService.getUnifiedLogs({ page, limit, type, search });
-    return { status: 200, message: 'Unified logs retrieved', error: false, data };
+    return await this.logsService.getUnifiedLogs({ page, limit, type, search });
   }
 }

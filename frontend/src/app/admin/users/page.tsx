@@ -45,16 +45,7 @@ import {
   List as ListIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: 'ACTIVE' | 'PENDING' | 'DEACTIVATED';
-  lastLogin?: string;
-  avatar?: string;
-}
+import { TeamMember, toTeamMember } from '@/lib/users/team-member';
 
 export default function TeamManagementPage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -66,7 +57,7 @@ export default function TeamManagementPage() {
     try {
       const res = await api.get('/users');
       const json = res.data;
-      if (json.data) setMembers(json.data);
+      if (Array.isArray(json.data)) setMembers(json.data.map(toTeamMember));
     } catch (e) {
       toast.error('Failed to synchronize team artifacts');
     } finally {

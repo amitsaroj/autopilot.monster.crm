@@ -16,21 +16,19 @@ export class AdminConfigController {
   @Get()
   @ApiOperation({ summary: 'Get all platform configurations' })
   async findAll() {
-    const data = await this.configService.findAll();
-    return { status: 200, message: 'Configuration retrieved', error: false, data };
+    return await this.configService.findAll();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update or create a platform configuration' })
   async update(@Body() data: { key: string; value: any; group?: string; isPublic?: boolean }) {
-    const result = await this.configService.update(data);
-    return { status: 200, message: 'Configuration updated', error: false, data: result };
+    return await this.configService.update(data);
   }
 
   @Delete(':key')
   @ApiOperation({ summary: 'Delete a platform configuration' })
   async remove(@Param('key') key: string) {
     await this.configService.remove(key);
-    return { status: 200, message: 'Configuration removed', error: false, data: null };
+    return null;
   }
 }

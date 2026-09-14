@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { readChunkedCookie } from './lib/cookie-chunks';
 
 const publicRoutes = [
   '/login',
@@ -37,7 +38,7 @@ const marketingRoutes = [
 ];
 
 export function proxy(request: NextRequest) {
-  const token = request.cookies.get('access_token')?.value;
+  const token = readChunkedCookie((name) => request.cookies.get(name), 'access_token');
   const { pathname } = request.nextUrl;
 
   const isMarketingRoute =

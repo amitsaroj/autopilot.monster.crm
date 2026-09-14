@@ -52,6 +52,15 @@ export class VoiceQueueProcessor {
       campaignId,
     });
 
+    // A provider-side rejection (bad credentials, invalid number, outage)
+    // never gets a status webhook — that only fires for calls the provider
+    // actually placed — so this is the only place campaign stats find out
+    // about it. Anything that did reach the provider updates asynchronously
+    // via TwilioController's webhook -> recordCallOutcome instead.
+    if (campaignId && call.status === 'FAILED') {
+      await this.voiceCampaignService.recordCallOutcome(campaignId, 'FAILED');
+    }
+
     return { callId: call.id };
   }
 }

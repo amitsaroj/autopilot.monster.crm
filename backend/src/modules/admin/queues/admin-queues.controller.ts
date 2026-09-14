@@ -16,24 +16,12 @@ export class AdminQueuesController {
   @Get()
   @ApiOperation({ summary: 'Get status of all system queues' })
   async getQueuesStatus() {
-    const data = await this.queuesService.getQueuesStatus();
-    return {
-      status: 200,
-      message: 'Queues status retrieved',
-      error: false,
-      data,
-    };
+    return await this.queuesService.getQueuesStatus();
   }
 
   @Post(':queueName/clean')
   @ApiOperation({ summary: 'Clean completed/failed jobs from a queue' })
   async cleanQueue(@Param('queueName') queueName: string) {
-    const data = await this.queuesService.cleanQueue(queueName);
-    return {
-      status: 200,
-      message: `Queue ${queueName} cleaned`,
-      error: false,
-      data,
-    };
+    return await this.queuesService.cleanQueue(queueName);
   }
 }

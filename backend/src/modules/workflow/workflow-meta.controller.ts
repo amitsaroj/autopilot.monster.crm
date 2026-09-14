@@ -18,14 +18,12 @@ export class WorkflowMetaController {
   @Get('workflow-triggers')
   @ApiOperation({ summary: 'List available workflow trigger types' })
   getTriggers() {
-    const data = this.workflowService.getTriggerTypes();
-    return { status: 200, message: 'Triggers retrieved', error: false, data };
+    return this.workflowService.getTriggerTypes();
   }
 
   @Get('workflow-actions')
   @ApiOperation({ summary: 'List available workflow action types' })
   getActions() {
-    const data = this.workflowService.getActionTypes();
-    return { status: 200, message: 'Actions retrieved', error: false, data };
+    return this.workflowService.getActionTypes();
   }
 }

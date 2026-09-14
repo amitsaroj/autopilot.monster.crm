@@ -16,22 +16,19 @@ export class NotificationController {
   @Get()
   @ApiOperation({ summary: 'Get all notifications' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.notificationService.findAll(tenantId);
-    return { status: 200, message: 'Notifications retrieved', error: false, data };
+    return await this.notificationService.findAll(tenantId);
   }
 
   @Patch('read-all')
   @ApiOperation({ summary: 'Mark all notifications as read' })
   async readAll(@TenantId() tenantId: string) {
-    const data = await this.notificationService.readAll(tenantId);
-    return { status: 200, message: 'All notifications marked as read', error: false, data };
+    return await this.notificationService.readAll(tenantId);
   }
 
   @Get('preferences')
   @ApiOperation({ summary: 'Get user notification preferences' })
   async getPreferences(@TenantId() tenantId: string) {
-    const data = await this.notificationService.getPreferences(tenantId);
-    return { status: 200, message: 'Preferences retrieved', error: false, data };
+    return await this.notificationService.getPreferences(tenantId);
   }
 
   @Patch('preferences')
@@ -40,14 +37,12 @@ export class NotificationController {
     @TenantId() tenantId: string,
     @Body() dto: UpdateNotificationPreferencesDto,
   ) {
-    const data = await this.notificationService.updatePreferences(tenantId, dto);
-    return { status: 200, message: 'Preferences updated', error: false, data };
+    return await this.notificationService.updatePreferences(tenantId, dto);
   }
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Mark notification as read' })
   async markAsRead(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.notificationService.markAsRead(tenantId, id);
-    return { status: 200, message: 'Notification marked as read', error: false, data };
+    return await this.notificationService.markAsRead(tenantId, id);
   }
 }

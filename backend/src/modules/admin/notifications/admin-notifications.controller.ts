@@ -16,24 +16,12 @@ export class AdminNotificationsController {
   @Post('broadcast')
   @ApiOperation({ summary: 'Send a broadcast notification to all users' })
   async broadcast(@Body() data: { title: string; message: string; type?: string }) {
-    const result = await this.notificationsService.broadcast(data);
-    return {
-      status: 201,
-      message: 'Broadcast notification initiated',
-      error: false,
-      data: result,
-    };
+    return await this.notificationsService.broadcast(data);
   }
 
   @Get('history')
   @ApiOperation({ summary: 'Get global notification history' })
   async getHistory() {
-    const data = await this.notificationsService.getHistory();
-    return {
-      status: 200,
-      message: 'Notification history retrieved',
-      error: false,
-      data,
-    };
+    return await this.notificationsService.getHistory();
   }
 }

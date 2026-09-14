@@ -5,14 +5,27 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
-import { toFile } from 'openai/uploads';
 
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
 import { VoiceCallService } from './voice-call.service';
+import { AiProviderService } from '../ai/providers/ai-provider.service';
 
 export type VoiceSentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+
+const VOICE_ALIASES: Record<string, string> = {
+  alloy: 'alloy',
+  echo: 'echo',
+  fable: 'fable',
+  onyx: 'onyx',
+  nova: 'nova',
+  shimmer: 'shimmer',
+  ash: 'alloy',
+  ballad: 'nova',
+  coral: 'nova',
+  sage: 'onyx',
+  verse: 'fable',
+};
 
 @Injectable()
 export class VoiceAiService {
@@ -23,23 +36,8 @@ export class VoiceAiService {
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly leadIntelligenceService: LeadIntelligenceService,
     private readonly voiceCallService: VoiceCallService,
+    private readonly aiProviderService: AiProviderService,
   ) {}
-
-  private async getOpenAIClient(tenantId: string): Promise<OpenAI> {
-    const tenantKey = await this.configOrchestrator.get(tenantId, 'openai_key');
-    const apiKey =
-      (typeof tenantKey === 'string' && tenantKey.trim()) ||
-      this.configService.get<string>('OPENAI_API_KEY') ||
-      '';
-
-    if (!apiKey || apiKey === 'mock-api-key') {
-      throw new ServiceUnavailableException(
-        'OpenAI API key is not configured for this tenant. Set openai_key or OPENAI_API_KEY.',
-      );
-    }
-
-    return new OpenAI({ apiKey });
-  }
 
   async synthesize(
     tenantId: string,
@@ -50,33 +48,16 @@ export class VoiceAiService {
       throw new BadRequestException('text is required');
     }
 
-    const client = await this.getOpenAIClient(tenantId);
-    const voiceMap: Record<string, 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'> = {
-      alloy: 'alloy',
-      echo: 'echo',
-      fable: 'fable',
-      onyx: 'onyx',
-      nova: 'nova',
-      shimmer: 'shimmer',
-      ash: 'alloy',
-      ballad: 'nova',
-      coral: 'nova',
-      sage: 'onyx',
-      verse: 'fable',
-    };
-    const selectedVoice = voiceMap[voice] ?? 'alloy';
+    const selectedVoice = VOICE_ALIASES[voice] ?? 'alloy';
+    const { audio, contentType } = await this.aiProviderService.synthesizeSpeech(
+      tenantId,
+      text,
+      selectedVoice,
+    );
 
-    const response = await client.audio.speech.create({
-      model: 'tts-1',
-      voice: selectedVoice,
-      input: text,
-      response_format: 'mp3',
-    });
-
-    const buffer = Buffer.from(await response.arrayBuffer());
     return {
-      audioBase64: buffer.toString('base64'),
-      contentType: 'audio/mpeg',
+      audioBase64: audio.toString('base64'),
+      contentType,
       voice: selectedVoice,
     };
   }
@@ -94,7 +75,6 @@ export class VoiceAiService {
       return { text: existing.transcript, audioUrl, source: 'stored' };
     }
 
-    const client = await this.getOpenAIClient(tenantId);
     const audioResponse = await fetch(audioUrl);
     if (!audioResponse.ok) {
       throw new BadRequestException(
@@ -103,16 +83,14 @@ export class VoiceAiService {
     }
 
     const arrayBuffer = await audioResponse.arrayBuffer();
-    const file = await toFile(Buffer.from(arrayBuffer), 'recording.mp3', {
-      type: audioResponse.headers.get('content-type') || 'audio/mpeg',
-    });
+    const { text: transcribed } = await this.aiProviderService.transcribeAudio(
+      tenantId,
+      Buffer.from(arrayBuffer),
+      'recording.mp3',
+      audioResponse.headers.get('content-type') || 'audio/mpeg',
+    );
 
-    const result = await client.audio.transcriptions.create({
-      file,
-      model: 'whisper-1',
-    });
-
-    const text = result.text?.trim() || '';
+    const text = transcribed.trim();
     if (existing && text) {
       await this.voiceCallService.persistTranscriptById(tenantId, existing.id, text);
     }

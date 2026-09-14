@@ -16,14 +16,12 @@ export class AdminRateLimitController {
   @Get()
   @ApiOperation({ summary: 'Get global rate limit settings' })
   async getSettings() {
-    const data = await this.rateLimitService.getSettings();
-    return { status: 200, message: 'Rate limit settings retrieved', error: false, data };
+    return await this.rateLimitService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global rate limit settings' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.rateLimitService.updateSettings(settings);
-    return { status: 200, message: 'Rate limit settings updated', error: false, data };
+    return await this.rateLimitService.updateSettings(settings);
   }
 }

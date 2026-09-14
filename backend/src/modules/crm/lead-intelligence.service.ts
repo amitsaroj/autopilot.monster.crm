@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
 
 import { LeadService } from './lead.service';
 import { NotificationService } from './notification.service';
+import { AiProviderService } from '../ai/providers/ai-provider.service';
 
 @Injectable()
 export class LeadIntelligenceService {
@@ -13,14 +13,11 @@ export class LeadIntelligenceService {
     private configService: ConfigService,
     private leadService: LeadService,
     private notificationService: NotificationService,
+    private aiProviderService: AiProviderService,
   ) {}
 
-  private getOpenAiApiKey(): string {
-    return this.configService.get<string>('OPENAI_API_KEY') || '';
-  }
-
   private isOpenAiAvailable(): boolean {
-    const apiKey = this.getOpenAiApiKey();
+    const apiKey = this.configService.get<string>('OPENAI_API_KEY') || '';
     return !!apiKey && apiKey !== 'mock-api-key';
   }
 
@@ -85,10 +82,9 @@ export class LeadIntelligenceService {
     }
 
     try {
-      const openai = new OpenAI({ apiKey: this.getOpenAiApiKey() });
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
+      const response = await this.aiProviderService.chatComplete(
+        undefined,
+        [
           {
             role: 'system',
             content: `You are an expert sales analyst. Analyze the following call transcript.
@@ -100,15 +96,15 @@ export class LeadIntelligenceService {
             5. A suggested status (e.g., QUALIFIED, FOLLOW_UP, UNQUALIFIED).
             6. Primary Intent (e.g., PRICING, SUPPORT, DEMO).
             7. Sentiment as POSITIVE, NEUTRAL, or NEGATIVE.
-            
+
             Return ONLY a JSON object: { "name": "...", "email": "...", "summary": "...", "score": 85, "status": "QUALIFIED", "intent": "DEMO", "sentiment": "POSITIVE" }`,
           },
           { role: 'user', content: transcript },
         ],
-        response_format: { type: 'json_object' },
-      });
+        { model: 'gpt-4o-mini', jsonMode: true },
+      );
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
+      const result = JSON.parse(response.content || '{}');
       const sentiment = ['POSITIVE', 'NEUTRAL', 'NEGATIVE'].includes(result.sentiment)
         ? result.sentiment
         : 'NEUTRAL';

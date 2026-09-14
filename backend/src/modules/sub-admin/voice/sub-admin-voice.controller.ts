@@ -16,14 +16,12 @@ export class SubAdminVoiceController {
   @Get('numbers')
   @ApiOperation({ summary: 'Get active voice numbers for tenant' })
   async findNumbers(@TenantId() tenantId: string) {
-    const data = await this.voiceService.findNumbers(tenantId);
-    return { status: 200, message: 'Voice manifold synchronized', error: false, data };
+    return await this.voiceService.findNumbers(tenantId);
   }
 
   @Post('numbers')
   @ApiOperation({ summary: 'Provision a new voice number' })
   async provisionNumber(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.voiceService.provisionNumber(tenantId, dto);
-    return { status: 201, message: 'Voice vector established', error: false, data };
+    return await this.voiceService.provisionNumber(tenantId, dto);
   }
 }

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE } from '../constants';
+import { getToken, getRefreshToken, setToken, removeToken } from '../auth';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -10,13 +11,7 @@ const api = axios.create({
 
 // Request interceptor for Auth and Tenant headers
 api.interceptors.request.use((config) => {
-  const extractCookie = (name: string) => {
-    if (typeof window === 'undefined') return null;
-    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-    return match ? match[2] : null;
-  };
-
-  const token = extractCookie('access_token');
+  const token = getToken();
   const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
 
   if (token) {
@@ -42,13 +37,7 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const extractCookie = (name: string) => {
-        if (typeof window === 'undefined') return null;
-        const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-        return match ? match[2] : null;
-      };
-
-      const refreshToken = extractCookie('refresh_token');
+      const refreshToken = getRefreshToken();
 
       if (refreshToken) {
         try {
@@ -61,20 +50,14 @@ api.interceptors.response.use(
           const tokenData = response.data.data ?? response.data;
           const { accessToken, refreshToken: newRefreshToken } = tokenData;
 
-          document.cookie = `access_token=${accessToken}; path=/; max-age=86400; samesite=strict; secure`;
-          if (newRefreshToken) {
-            document.cookie = `refresh_token=${newRefreshToken}; path=/; max-age=604800; samesite=strict; secure`;
-          }
+          setToken(accessToken, newRefreshToken);
           api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
 
           return api(originalRequest);
         } catch (refreshError) {
           // Refresh failed, logout user
           if (typeof window !== 'undefined') {
-            document.cookie =
-              'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
-            document.cookie =
-              'refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure';
+            removeToken();
             localStorage.removeItem('user');
             window.location.href = '/login';
           }

@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Pause, Phone, Play } from 'lucide-react';
+import { ArrowLeft, Ban, Loader2, Pause, Phone, Play, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { voiceCampaignService, VoiceCampaign } from '@/services/voice-campaign.service';
@@ -29,31 +29,31 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
     void load();
   }, [id]);
 
-  const handleStart = async () => {
+  const runAction = async (
+    action: () => Promise<unknown>,
+    successMessage: string,
+    failureMessage: string,
+  ) => {
     setActing(true);
     try {
-      await voiceCampaignService.start(id);
-      toast.success('Campaign started');
+      await action();
+      toast.success(successMessage);
       await load();
-    } catch {
-      toast.error('Failed to start campaign');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || failureMessage);
     } finally {
       setActing(false);
     }
   };
 
-  const handlePause = async () => {
-    setActing(true);
-    try {
-      await voiceCampaignService.pause(id);
-      toast.success('Campaign paused');
-      await load();
-    } catch {
-      toast.error('Failed to pause campaign');
-    } finally {
-      setActing(false);
-    }
-  };
+  const handleStart = () =>
+    runAction(() => voiceCampaignService.start(id), 'Campaign started', 'Failed to start campaign');
+  const handlePause = () =>
+    runAction(() => voiceCampaignService.pause(id), 'Campaign paused', 'Failed to pause campaign');
+  const handleResume = () =>
+    runAction(() => voiceCampaignService.resume(id), 'Campaign resumed', 'Failed to resume campaign');
+  const handleCancel = () =>
+    runAction(() => voiceCampaignService.cancel(id), 'Campaign cancelled', 'Failed to cancel campaign');
 
   if (loading) {
     return (
@@ -116,7 +116,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="flex gap-3">
-        {campaign.status !== 'RUNNING' && (
+        {campaign.status === 'DRAFT' && (
           <button
             type="button"
             onClick={() => void handleStart()}
@@ -136,6 +136,32 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
           >
             <Pause className="h-4 w-4" />
             Pause
+          </button>
+        )}
+        {campaign.status === 'PAUSED' && (
+          <button
+            type="button"
+            onClick={() => void handleResume()}
+            disabled={acting}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            <RotateCcw className="h-4 w-4" />
+            Resume
+          </button>
+        )}
+        {(campaign.status === 'RUNNING' || campaign.status === 'PAUSED' || campaign.status === 'DRAFT') && (
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm('Cancel this campaign? This cannot be undone.')) {
+                void handleCancel();
+              }
+            }}
+            disabled={acting}
+            className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            <Ban className="h-4 w-4" />
+            Cancel
           </button>
         )}
       </div>

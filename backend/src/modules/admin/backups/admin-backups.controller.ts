@@ -16,14 +16,12 @@ export class AdminBackupsController {
   @Get()
   @ApiOperation({ summary: 'List all platform backups' })
   async findAll() {
-    const data = await this.backupsService.findAll();
-    return { status: 200, message: 'Backups retrieved', error: false, data };
+    return await this.backupsService.findAll();
   }
 
   @Post('trigger')
   @ApiOperation({ summary: 'Trigger a new platform-wide backup' })
   async trigger() {
-    const data = await this.backupsService.trigger();
-    return { status: 201, message: 'Backup initiated', error: false, data };
+    return await this.backupsService.trigger();
   }
 }

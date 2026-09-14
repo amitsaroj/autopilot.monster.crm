@@ -16,21 +16,19 @@ export class SubAdminIntegrationsController {
   @Get()
   @ApiOperation({ summary: 'Get all active integrations for tenant' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.integrationsService.findAll(tenantId);
-    return { status: 200, message: 'Integration catalog synchronized', error: false, data };
+    return await this.integrationsService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Enable a new integration' })
   async create(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.integrationsService.upsert(tenantId, dto);
-    return { status: 201, message: 'Integration vector established', error: false, data };
+    return await this.integrationsService.upsert(tenantId, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Deactivate an integration' })
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.integrationsService.remove(tenantId, id);
-    return { status: 200, message: 'Integration vector severed', error: false };
+    return null;
   }
 }

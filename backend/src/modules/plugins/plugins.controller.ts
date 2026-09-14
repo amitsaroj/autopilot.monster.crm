@@ -16,21 +16,19 @@ export class PluginsController {
   @Get()
   @ApiOperation({ summary: 'Get installed plugins' })
   async getPlugins(@TenantId() tenantId: string) {
-    const data = await this.pluginsService.listInstalled(tenantId);
-    return { status: 200, message: 'Plugins retrieved', error: false, data };
+    return await this.pluginsService.listInstalled(tenantId);
   }
 
   @Post('enable/:id')
   @ApiOperation({ summary: 'Enable a plugin' })
   async enablePlugin(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.pluginsService.enable(tenantId, id);
-    return { status: 200, message: 'Plugin enabled', error: false, data };
+    return await this.pluginsService.enable(tenantId, id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Disable a plugin' })
   async removePlugin(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.pluginsService.disable(tenantId, id);
-    return { status: 200, message: 'Plugin disabled', error: false, data: null };
+    return null;
   }
 }

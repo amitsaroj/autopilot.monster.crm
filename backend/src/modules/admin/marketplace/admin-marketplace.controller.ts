@@ -17,42 +17,37 @@ export class AdminMarketplaceController {
   @Get('plugins')
   @ApiOperation({ summary: 'List all global plugins' })
   async findAll() {
-    const data = await this.marketplaceService.findAll();
-    return { status: 200, message: 'Plugins retrieved', error: false, data };
+    return await this.marketplaceService.findAll();
   }
 
   @Post('plugins')
   @ApiOperation({ summary: 'Create a new global plugin' })
   async create(@Body() dto: CreatePluginDto) {
-    const data = await this.marketplaceService.create(dto);
-    return { status: 201, message: 'Plugin created', error: false, data };
+    return await this.marketplaceService.create(dto);
   }
 
   @Put('plugins/:id')
   @ApiOperation({ summary: 'Update a global plugin' })
   async update(@Param('id') id: string, @Body() dto: UpdatePluginDto) {
-    const data = await this.marketplaceService.update(id, dto);
-    return { status: 200, message: 'Plugin updated', error: false, data };
+    return await this.marketplaceService.update(id, dto);
   }
 
   @Delete('plugins/:id')
   @ApiOperation({ summary: 'Delete a global plugin' })
   async delete(@Param('id') id: string) {
     await this.marketplaceService.delete(id);
-    return { status: 200, message: 'Plugin deleted', error: false, data: null };
+    return null;
   }
 
   @Get('plugins/:id/installations')
   @ApiOperation({ summary: 'Get plugin installations across tenants' })
   async getInstallations(@Param('id') id: string) {
-    const data = await this.marketplaceService.getInstallations(id);
-    return { status: 200, message: 'Installations retrieved', error: false, data };
+    return await this.marketplaceService.getInstallations(id);
   }
 
   @Get('monetization')
   @ApiOperation({ summary: 'Get marketplace monetization stats' })
   async getMonetization() {
-    const data = await this.marketplaceService.getMonetizationStats();
-    return { status: 200, message: 'Monetization stats retrieved', error: false, data };
+    return await this.marketplaceService.getMonetizationStats();
   }
 }

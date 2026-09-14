@@ -16,14 +16,12 @@ export class SubAdminAiController {
   @Get('configs')
   @ApiOperation({ summary: 'Get AI configurations for tenant' })
   async findConfigs(@TenantId() tenantId: string) {
-    const data = await this.aiService.findConfigs(tenantId);
-    return { status: 200, message: 'AI manifold synchronized', error: false, data };
+    return await this.aiService.findConfigs(tenantId);
   }
 
   @Post('configs')
   @ApiOperation({ summary: 'Update AI configurations' })
   async updateConfig(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.aiService.updateConfig(tenantId, dto);
-    return { status: 200, message: 'AI vector recalibrated', error: false, data };
+    return await this.aiService.updateConfig(tenantId, dto);
   }
 }

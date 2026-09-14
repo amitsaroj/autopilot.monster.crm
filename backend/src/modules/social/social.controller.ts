@@ -18,26 +18,14 @@ export class SocialController {
   @ApiOperation({ summary: 'Schedule a new social media post' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async schedulePost(@TenantId() tenantId: string, @Body() body: Partial<SocialPost>) {
-    const post = await this.socialService.schedulePost(tenantId, body);
-    return {
-      status: 201,
-      message: 'Post scheduled successfully',
-      error: false,
-      data: post,
-    };
+    return await this.socialService.schedulePost(tenantId, body);
   }
 
   @Get('posts')
   @ApiOperation({ summary: 'Get all scheduled posts' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getPosts(@TenantId() tenantId: string) {
-    const posts = await this.socialService.getScheduledPosts(tenantId);
-    return {
-      status: 200,
-      message: 'Scheduled posts retrieved',
-      error: false,
-      data: posts,
-    };
+    return await this.socialService.getScheduledPosts(tenantId);
   }
 
   @Delete('posts/:id')
@@ -45,24 +33,13 @@ export class SocialController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async deletePost(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.socialService.deletePost(tenantId, id);
-    return {
-      status: 200,
-      message: 'Post deleted successfully',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   @Get('analytics')
   @ApiOperation({ summary: 'Get social media analytics' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getAnalytics(@TenantId() tenantId: string) {
-    const analytics = await this.socialService.getAnalytics(tenantId);
-    return {
-      status: 200,
-      message: 'Analytics retrieved',
-      error: false,
-      data: analytics,
-    };
+    return await this.socialService.getAnalytics(tenantId);
   }
 }

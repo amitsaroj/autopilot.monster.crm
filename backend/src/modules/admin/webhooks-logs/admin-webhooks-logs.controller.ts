@@ -23,12 +23,6 @@ export class AdminWebhooksLogsController {
     @Query('webhookId') webhookId?: string,
     @Query('status') status?: string,
   ) {
-    const data = await this.adminWebhooksLogsService.findAll({ tenantId, webhookId, status });
-    return {
-      status: 200,
-      message: 'Webhook logs retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminWebhooksLogsService.findAll({ tenantId, webhookId, status });
   }
 }

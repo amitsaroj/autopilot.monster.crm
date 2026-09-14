@@ -32,19 +32,17 @@ export class ConversationsController {
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ) {
-    const data = await this.conversationService.findPaginated(
+    return await this.conversationService.findPaginated(
       tenantId,
       parseInt(page, 10),
       parseInt(limit, 10),
     );
-    return { status: 200, message: 'Conversations retrieved', error: false, data };
   }
 
   @Post()
   @ApiOperation({ summary: 'Create AI conversation' })
   async create(@TenantId() tenantId: string, @Body() dto: CreateConversationDto) {
-    const data = await this.conversationService.create(tenantId, dto);
-    return { status: 201, message: 'Conversation created', error: false, data };
+    return await this.conversationService.create(tenantId, dto);
   }
 
   @Get(':id')
@@ -54,7 +52,7 @@ export class ConversationsController {
     if (!data) {
       throw new NotFoundException('Conversation not found');
     }
-    return { status: 200, message: 'Conversation retrieved', error: false, data };
+    return data;
   }
 
   @Post(':id/messages')
@@ -64,26 +62,24 @@ export class ConversationsController {
     @Param('id') id: string,
     @Body() dto: AddConversationMessageDto,
   ) {
-    const data = await this.conversationService.addMessage(
+    return await this.conversationService.addMessage(
       tenantId,
       id,
       dto.role ?? 'USER',
       dto.content,
     );
-    return { status: 201, message: 'Message added', error: false, data };
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete conversation' })
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.conversationService.remove(tenantId, id);
-    return { status: 200, message: 'Conversation deleted', error: false, data: null };
+    return null;
   }
 
   @Post(':id/handoff')
   @ApiOperation({ summary: 'Hand off conversation to human agent' })
   async handoff(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.conversationService.handoff(tenantId, id);
-    return { status: 200, message: 'Handoff requested', error: false, data };
+    return await this.conversationService.handoff(tenantId, id);
   }
 }

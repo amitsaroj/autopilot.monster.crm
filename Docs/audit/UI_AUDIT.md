@@ -51,10 +51,12 @@
 
 | Page | Status | Evidence |
 |------|--------|----------|
-| `admin/rbac` | 🟡 Misleading | Hardcoded user/role/permission counts |
+| ~~`admin/rbac`~~ | ✅ Fixed 2026-09-12 | Was hardcoded; now live user/role/permission/audit-event counts from `/rbac/*` (fixed a bad `orderBy('permission.module')` — non-existent column — and a missing `@ResourcePermissions` on `/logs/audit`) |
 | `(app)/billing` (tenant) | 🟡 Partial | Usage metric keys may not match backend |
 | `(app)/marketplace/*` | 🟡 Partial | Plugin APIs wired; no templates UI (F-035 BE only) |
 | Developer settings | 🟡 Partial | `developer-settings.service.ts` vs `developer.service.ts` — no dedicated `/developer` route |
+
+**2026-09-12 addendum (not a full re-audit — see `feature/admin-panel-navigation`):** the tenant admin panel's sidebar exposed only 3 links despite 74 `page.tsx` routes already existing under `/admin/*`; it now has a dedicated grouped `AdminSidebar`. Separately, nearly every backend controller double-wrapped its response inside the global interceptor's own envelope, corrupting the payload shape for any page that called it — fixed across ~97 controller files. See the root [README's "Recent fixes" section](../../README.md#recent-fixes-this-branch) for the full list, including local-only schema drift and a previously unreachable `ADMIN` (sub-admin) role tier.
 
 ---
 

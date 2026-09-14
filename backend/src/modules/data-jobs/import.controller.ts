@@ -19,21 +19,18 @@ export class ImportController {
   @Post()
   @ApiOperation({ summary: 'Start import job' })
   async start(@TenantId() tenantId: string, @Body() dto: StartImportDto) {
-    const data = await this.dataJobService.startImport(tenantId, dto);
-    return { status: 202, message: 'Import job started', error: false, data };
+    return await this.dataJobService.startImport(tenantId, dto);
   }
 
   @Get('history')
   @ApiOperation({ summary: 'Import job history' })
   async history(@TenantId() tenantId: string) {
-    const data = await this.dataJobService.getHistory(tenantId, DataJobType.IMPORT);
-    return { status: 200, message: 'Import history retrieved', error: false, data };
+    return await this.dataJobService.getHistory(tenantId, DataJobType.IMPORT);
   }
 
   @Get(':jobId')
   @ApiOperation({ summary: 'Import job status' })
   async status(@TenantId() tenantId: string, @Param('jobId') jobId: string) {
-    const data = await this.dataJobService.getJob(tenantId, jobId);
-    return { status: 200, message: 'Import job retrieved', error: false, data };
+    return await this.dataJobService.getJob(tenantId, jobId);
   }
 }

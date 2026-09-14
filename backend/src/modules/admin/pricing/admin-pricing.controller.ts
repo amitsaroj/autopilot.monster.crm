@@ -16,24 +16,12 @@ export class AdminPricingController {
   @Get()
   @ApiOperation({ summary: 'Get global pricing settings' })
   async getSettings() {
-    const data = await this.adminPricingService.getSettings();
-    return {
-      status: 200,
-      message: 'Pricing settings retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminPricingService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global pricing settings' })
   async updateSettings(@Body() body: any) {
-    const data = await this.adminPricingService.updateSettings(body);
-    return {
-      status: 200,
-      message: 'Pricing settings updated',
-      error: false,
-      data,
-    };
+    return await this.adminPricingService.updateSettings(body);
   }
 }

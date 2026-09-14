@@ -16,48 +16,25 @@ export class AdminLimitsController {
   @Get()
   @ApiOperation({ summary: 'Get all plan limits' })
   async findAll() {
-    const data = await this.adminLimitsService.findAll();
-    return {
-      status: 200,
-      message: 'Limits retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminLimitsService.findAll();
   }
 
   @Post()
   @ApiOperation({ summary: 'Add limit to a plan' })
   async create(@Body() body: any) {
-    const data = await this.adminLimitsService.create(body);
-    return {
-      status: 201,
-      message: 'Limit added',
-      error: false,
-      data,
-    };
+    return await this.adminLimitsService.create(body);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update limit' })
   async update(@Param('id') id: string, @Body() body: any) {
-    const data = await this.adminLimitsService.update(id, body);
-    return {
-      status: 200,
-      message: 'Limit updated',
-      error: false,
-      data,
-    };
+    return await this.adminLimitsService.update(id, body);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove limit from plan' })
   async remove(@Param('id') id: string) {
     await this.adminLimitsService.remove(id);
-    return {
-      status: 200,
-      message: 'Limit removed',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 }

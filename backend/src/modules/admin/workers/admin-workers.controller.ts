@@ -16,12 +16,6 @@ export class AdminWorkersController {
   @Get('status')
   @ApiOperation({ summary: 'Get worker cluster status' })
   async getWorkersStatus() {
-    const data = await this.workersService.getWorkersStatus();
-    return {
-      status: 200,
-      message: 'Workers status retrieved',
-      error: false,
-      data,
-    };
+    return await this.workersService.getWorkersStatus();
   }
 }

@@ -16,14 +16,12 @@ export class AdminAISettingsController {
   @Get()
   @ApiOperation({ summary: 'Get global AI/LLM settings' })
   async getSettings() {
-    const data = await this.aiSettingsService.getSettings();
-    return { status: 200, message: 'AI settings retrieved', error: false, data };
+    return await this.aiSettingsService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global AI/LLM settings' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.aiSettingsService.updateSettings(settings);
-    return { status: 200, message: 'AI settings updated', error: false, data };
+    return await this.aiSettingsService.updateSettings(settings);
   }
 }

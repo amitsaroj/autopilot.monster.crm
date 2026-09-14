@@ -16,14 +16,12 @@ export class AdminInternalController {
   @Get('system-health')
   @ApiOperation({ summary: 'Get comprehensive system health' })
   async getSystemHealth() {
-    const data = await this.internalService.getSystemHealth();
-    return { status: 200, message: 'System vitals synchronized', error: false, data };
+    return await this.internalService.getSystemHealth();
   }
 
   @Get('database/status')
   @ApiOperation({ summary: 'Get database connection and migration status' })
   async getDbStatus() {
-    const data = await this.internalService.getDbStatus();
-    return { status: 200, message: 'Database manifold status retrieved', error: false, data };
+    return await this.internalService.getDbStatus();
   }
 }

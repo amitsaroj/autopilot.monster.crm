@@ -16,12 +16,6 @@ export class AdminEventsController {
   @Get('definitions')
   @ApiOperation({ summary: 'Get all system event definitions' })
   async getEventDefinitions() {
-    const data = await this.eventsService.getEventDefinitions();
-    return {
-      status: 200,
-      message: 'Event definitions retrieved',
-      error: false,
-      data,
-    };
+    return await this.eventsService.getEventDefinitions();
   }
 }

@@ -16,48 +16,25 @@ export class AdminFeaturesController {
   @Get()
   @ApiOperation({ summary: 'Get all plan features' })
   async findAll() {
-    const data = await this.adminFeaturesService.findAll();
-    return {
-      status: 200,
-      message: 'Features retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminFeaturesService.findAll();
   }
 
   @Post()
   @ApiOperation({ summary: 'Add feature to a plan' })
   async create(@Body() body: any) {
-    const data = await this.adminFeaturesService.create(body);
-    return {
-      status: 201,
-      message: 'Feature added',
-      error: false,
-      data,
-    };
+    return await this.adminFeaturesService.create(body);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update feature' })
   async update(@Param('id') id: string, @Body() body: any) {
-    const data = await this.adminFeaturesService.update(id, body);
-    return {
-      status: 200,
-      message: 'Feature updated',
-      error: false,
-      data,
-    };
+    return await this.adminFeaturesService.update(id, body);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove feature from plan' })
   async remove(@Param('id') id: string) {
     await this.adminFeaturesService.remove(id);
-    return {
-      status: 200,
-      message: 'Feature removed',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 }

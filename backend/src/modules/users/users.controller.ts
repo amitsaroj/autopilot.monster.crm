@@ -18,25 +18,13 @@ export class UsersController {
   @ApiOperation({ summary: 'Get all team members' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.usersService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Team members retrieved',
-      error: false,
-      data,
-    };
+    return await this.usersService.findAll(tenantId);
   }
 
   @Get('me')
   @ApiOperation({ summary: 'Get current user profile' })
   async getMe(@TenantId() tenantId: string, @CurrentUser() user: IRequestContext) {
-    const data = await this.usersService.findOne(user.userId, tenantId);
-    return {
-      status: 200,
-      message: 'Profile retrieved',
-      error: false,
-      data,
-    };
+    return await this.usersService.findOne(user.userId, tenantId);
   }
 
   @Post('invite')
@@ -47,13 +35,7 @@ export class UsersController {
     @CurrentUser() actor: IRequestContext,
     @Body() inviteUserDto: InviteUserDto,
   ) {
-    const data = await this.usersService.inviteUser(tenantId, actor.userId, inviteUserDto);
-    return {
-      status: 201,
-      message: 'Invitation sent successfully',
-      error: false,
-      data,
-    };
+    return await this.usersService.inviteUser(tenantId, actor.userId, inviteUserDto);
   }
 
   // --- Team Groups (static paths MUST precede :id) ---
@@ -61,52 +43,28 @@ export class UsersController {
   @ApiOperation({ summary: 'Get all team groups' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getGroups(@TenantId() tenantId: string) {
-    const data = await this.usersService.findAllGroups(tenantId);
-    return {
-      status: 200,
-      message: 'Team groups retrieved',
-      error: false,
-      data,
-    };
+    return await this.usersService.findAllGroups(tenantId);
   }
 
   @Post('groups')
   @ApiOperation({ summary: 'Create team group' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createGroup(@TenantId() tenantId: string, @Body() dto: any) {
-    const data = await this.usersService.createGroup(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Team group created',
-      error: false,
-      data,
-    };
+    return await this.usersService.createGroup(tenantId, dto);
   }
 
   @Get('groups/:id')
   @ApiOperation({ summary: 'Get team group details' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getGroup(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.usersService.findOneGroup(id, tenantId);
-    return {
-      status: 200,
-      message: 'Team group retrieved',
-      error: false,
-      data,
-    };
+    return await this.usersService.findOneGroup(id, tenantId);
   }
 
   @Patch('groups/:id')
   @ApiOperation({ summary: 'Update team group' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async updateGroup(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
-    const data = await this.usersService.updateGroup(id, tenantId, dto);
-    return {
-      status: 200,
-      message: 'Team group updated',
-      error: false,
-      data,
-    };
+    return await this.usersService.updateGroup(id, tenantId, dto);
   }
 
   @Delete('groups/:id')
@@ -114,24 +72,13 @@ export class UsersController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async removeGroup(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.usersService.removeGroup(id, tenantId);
-    return {
-      status: 200,
-      message: 'Team group deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
   async findOne(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.usersService.findOne(id, tenantId);
-    return {
-      status: 200,
-      message: 'User retrieved',
-      error: false,
-      data,
-    };
+    return await this.usersService.findOne(id, tenantId);
   }
 
   @Patch(':id')
@@ -143,12 +90,6 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const data = await this.usersService.update(id, tenantId, updateUserDto, actor.userId);
-    return {
-      status: 200,
-      message: 'User updated successfully',
-      error: false,
-      data,
-    };
+    return await this.usersService.update(id, tenantId, updateUserDto, actor.userId);
   }
 }

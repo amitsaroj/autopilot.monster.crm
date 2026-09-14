@@ -16,8 +16,7 @@ export class MarketplaceController {
   @Public()
   @ApiOperation({ summary: 'Public app directory' })
   async listApps() {
-    const data = await this.marketplaceService.listApps();
-    return { status: 200, message: 'Apps retrieved', error: false, data };
+    return await this.marketplaceService.listApps();
   }
 
   @Get('installed')
@@ -25,8 +24,7 @@ export class MarketplaceController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Installed apps for tenant' })
   async listInstalled(@TenantId() tenantId: string) {
-    const data = await this.marketplaceService.listInstalled(tenantId);
-    return { status: 200, message: 'Installed apps retrieved', error: false, data };
+    return await this.marketplaceService.listInstalled(tenantId);
   }
 
   @Get('apps')
@@ -40,8 +38,7 @@ export class MarketplaceController {
   @Public()
   @ApiOperation({ summary: 'App detail' })
   async getApp(@Param('id') id: string) {
-    const data = await this.marketplaceService.getApp(id);
-    return { status: 200, message: 'App retrieved', error: false, data };
+    return await this.marketplaceService.getApp(id);
   }
 
   @Post(':id/install')
@@ -49,8 +46,7 @@ export class MarketplaceController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Install marketplace app' })
   async installApp(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.marketplaceService.install(tenantId, id);
-    return { status: 201, message: 'App installed', error: false, data };
+    return await this.marketplaceService.install(tenantId, id);
   }
 
   @Post('install/:appId')
@@ -67,7 +63,7 @@ export class MarketplaceController {
   @ApiOperation({ summary: 'Uninstall marketplace app' })
   async uninstallApp(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.marketplaceService.uninstall(tenantId, id);
-    return { status: 200, message: 'App uninstalled', error: false, data: null };
+    return null;
   }
 
   @Post('vendor/onboard')
@@ -77,16 +73,14 @@ export class MarketplaceController {
     @TenantId() tenantId: string,
     @Body() details: { companyName: string; contactEmail: string; stripeAccountId?: string },
   ) {
-    const result = await this.marketplaceService.onboardVendor(tenantId, details);
-    return { status: 200, message: 'Vendor onboarding complete', data: result };
+    return await this.marketplaceService.onboardVendor(tenantId, details);
   }
 
   @Get('vendor/details')
   @ApiOperation({ summary: 'Retrieve vendor details for current workspace' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async getVendorDetails(@TenantId() tenantId: string) {
-    const result = await this.marketplaceService.getVendorDetails(tenantId);
-    return { status: 200, data: result };
+    return await this.marketplaceService.getVendorDetails(tenantId);
   }
 
   @Post('apps/:appId/purchase')
@@ -96,19 +90,13 @@ export class MarketplaceController {
     @Param('appId') appId: string,
     @Body('amount') amount: number,
   ) {
-    const result = await this.marketplaceService.recordPurchase(tenantId, appId, amount);
-    return {
-      status: 200,
-      message: 'Purchase registered and revenue share allocated',
-      data: result,
-    };
+    return await this.marketplaceService.recordPurchase(tenantId, appId, amount);
   }
 
   @Get('vendor/revenue')
   @ApiOperation({ summary: 'Get revenue share and payouts report for vendor' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async getRevenueReport(@TenantId() tenantId: string) {
-    const result = await this.marketplaceService.getRevenueReport(tenantId);
-    return { status: 200, data: result };
+    return await this.marketplaceService.getRevenueReport(tenantId);
   }
 }

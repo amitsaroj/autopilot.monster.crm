@@ -25,24 +25,21 @@ export class DuplicateController {
   @ApiOperation({ summary: 'Scan for duplicate contacts' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async findDuplicates(@TenantId() tenantId: string) {
-    const data = await this.dupeService.findDuplicates(tenantId);
-    return { status: 200, message: 'Duplicates retrieved', error: false, data };
+    return await this.dupeService.findDuplicates(tenantId);
   }
 
   @Get('companies')
   @ApiOperation({ summary: 'Scan for duplicate companies' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async findCompanyDuplicates(@TenantId() tenantId: string) {
-    const data = await this.dupeService.findCompanyDuplicates(tenantId);
-    return { status: 200, message: 'Company duplicates retrieved', error: false, data };
+    return await this.dupeService.findCompanyDuplicates(tenantId);
   }
 
   @Post('check')
   @ApiOperation({ summary: 'Check if a contact is a potential duplicate' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async checkDuplicate(@TenantId() tenantId: string, @Body() data: CheckDuplicateDto) {
-    const matches = await this.dupeService.checkForDuplicate(tenantId, data);
-    return { status: 200, message: 'Duplicate check complete', error: false, data: matches };
+    return await this.dupeService.checkForDuplicate(tenantId, data);
   }
 
   @Post('merge')
@@ -53,13 +50,12 @@ export class DuplicateController {
     @CurrentUser() actor: IRequestContext,
     @Body() body: MergeRecordsDto,
   ) {
-    const data = await this.dupeService.mergeContacts(
+    return await this.dupeService.mergeContacts(
       tenantId,
       body.primaryId,
       body.secondaryId,
       actor.userId,
     );
-    return { status: 200, message: 'Contacts merged', error: false, data };
   }
 
   @Post('companies/merge')
@@ -70,12 +66,11 @@ export class DuplicateController {
     @CurrentUser() actor: IRequestContext,
     @Body() body: MergeRecordsDto,
   ) {
-    const data = await this.dupeService.mergeCompanies(
+    return await this.dupeService.mergeCompanies(
       tenantId,
       body.primaryId,
       body.secondaryId,
       actor.userId,
     );
-    return { status: 200, message: 'Companies merged', error: false, data };
   }
 }

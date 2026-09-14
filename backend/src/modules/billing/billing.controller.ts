@@ -59,8 +59,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Get failed-payment recovery state' })
   async getRecoveryState(@TenantId() tenantId: string) {
-    const data = await this.billingService.getBillingRecovery(tenantId);
-    return { status: 200, message: 'Billing recovery state retrieved', error: false, data };
+    return await this.billingService.getBillingRecovery(tenantId);
   }
 
   @Post('subscription/upgrade')
@@ -76,8 +75,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Downgrade subscription' })
   async downgrade(@TenantId() tenantId: string, @Body() dto: DowngradeSubscriptionDto) {
-    const data = await this.billingService.downgradeSubscription(tenantId, dto.planId);
-    return { status: 200, message: 'Subscription downgraded', error: false, data };
+    return await this.billingService.downgradeSubscription(tenantId, dto.planId);
   }
 
   @Post('subscription/cancel')
@@ -85,8 +83,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Cancel subscription' })
   async cancel(@TenantId() tenantId: string, @Body() dto: CancelSubscriptionDto) {
-    const data = await this.billingService.cancelSubscription(tenantId, dto.atPeriodEnd ?? true);
-    return { status: 200, message: 'Subscription cancelled', error: false, data };
+    return await this.billingService.cancelSubscription(tenantId, dto.atPeriodEnd ?? true);
   }
 
   @Post('subscription/reactivate')
@@ -94,8 +91,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Reactivate cancelled subscription' })
   async reactivate(@TenantId() tenantId: string) {
-    const data = await this.billingService.reactivateSubscription(tenantId);
-    return { status: 200, message: 'Subscription reactivated', error: false, data };
+    return await this.billingService.reactivateSubscription(tenantId);
   }
 
   @Post('subscription/retry-payment')
@@ -103,8 +99,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Create retry payment recovery session' })
   async retryPayment(@TenantId() tenantId: string) {
-    const data = await this.billingService.retryFailedPayment(tenantId);
-    return { status: 200, message: 'Retry payment session created', error: false, data };
+    return await this.billingService.retryFailedPayment(tenantId);
   }
 
   @Get('invoices')
@@ -120,8 +115,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Get invoice by id' })
   async getInvoice(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.billingService.getInvoice(tenantId, id);
-    return { status: 200, message: 'Invoice retrieved', error: false, data };
+    return await this.billingService.getInvoice(tenantId, id);
   }
 
   @Get('usage')
@@ -137,8 +131,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'List payment methods' })
   async listPaymentMethods(@TenantId() tenantId: string) {
-    const data = await this.billingService.listPaymentMethods(tenantId);
-    return { status: 200, message: 'Payment methods retrieved', error: false, data };
+    return await this.billingService.listPaymentMethods(tenantId);
   }
 
   @Post('payment-methods')
@@ -146,8 +139,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Create Stripe setup intent for adding a card' })
   async createSetupIntent(@TenantId() tenantId: string) {
-    const data = await this.billingService.createSetupIntent(tenantId);
-    return { status: 201, message: 'Setup intent created', error: false, data };
+    return await this.billingService.createSetupIntent(tenantId);
   }
 
   @Post('payment-methods/attach')
@@ -155,12 +147,11 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Attach a payment method after setup intent confirmation' })
   async attachPaymentMethod(@TenantId() tenantId: string, @Body() dto: AttachPaymentMethodDto) {
-    const data = await this.billingService.attachPaymentMethod(
+    return await this.billingService.attachPaymentMethod(
       tenantId,
       dto.paymentMethodId,
       dto.setDefault ?? false,
     );
-    return { status: 201, message: 'Payment method attached', error: false, data };
   }
 
   @Delete('payment-methods/:id')
@@ -169,7 +160,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Remove payment method' })
   async removePaymentMethod(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.billingService.removePaymentMethod(tenantId, id);
-    return { status: 200, message: 'Payment method removed', error: false, data: null };
+    return null;
   }
 
   @Patch('payment-methods/:id/default')
@@ -177,8 +168,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Set default payment method' })
   async setDefaultPaymentMethod(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.billingService.setDefaultPaymentMethod(tenantId, id);
-    return { status: 200, message: 'Default payment method updated', error: false, data };
+    return await this.billingService.setDefaultPaymentMethod(tenantId, id);
   }
 
   @Get('wallet')
@@ -186,8 +176,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Get wallet balance' })
   async getWallet(@TenantId() tenantId: string) {
-    const data = await this.walletService.getWallet(tenantId);
-    return { status: 200, message: 'Wallet retrieved', error: false, data };
+    return await this.walletService.getWallet(tenantId);
   }
 
   @Get('wallet/transactions')
@@ -195,8 +184,7 @@ export class BillingController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Get wallet transaction history' })
   async getWalletTransactions(@TenantId() tenantId: string) {
-    const data = await this.walletService.getTransactions(tenantId);
-    return { status: 200, message: 'Wallet transactions retrieved', error: false, data };
+    return await this.walletService.getTransactions(tenantId);
   }
 
   @Post('wallet/credits')
@@ -205,8 +193,7 @@ export class BillingController {
   @Roles('SUPER_ADMIN', 'ADMIN')
   @ApiOperation({ summary: 'Add credits to wallet (admin only)' })
   async addWalletCredits(@TenantId() tenantId: string, @Body() dto: AddWalletCreditsDto) {
-    const data = await this.walletService.addCredits(tenantId, dto);
-    return { status: 201, message: 'Credits added', error: false, data };
+    return await this.walletService.addCredits(tenantId, dto);
   }
 
   @Post('webhook')

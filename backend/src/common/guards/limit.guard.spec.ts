@@ -3,6 +3,8 @@ import { ModuleRef, Reflector } from '@nestjs/core';
 
 import { LimitGuard } from './limit.guard';
 import { METADATA_KEYS } from '../constants/app.constants';
+import { PricingService } from '../../modules/pricing/pricing.service';
+import { BillingService } from '../../modules/billing/billing.service';
 
 describe('LimitGuard', () => {
   const reflector = new Reflector();
@@ -14,9 +16,13 @@ describe('LimitGuard', () => {
     trackUsage: jest.fn(),
   };
   const moduleRef = {
-    get: jest.fn((token: string) => {
-      if (token === 'PricingService') return pricingService;
-      if (token === 'BillingService') return billingService;
+    // Real DI resolves these by their class token (see limit.guard.ts) — keying
+    // the mock on the string 'PricingService'/'BillingService' would silently
+    // return undefined for both and make every test below pass for the wrong
+    // reason (the guard falling through to its default `return true`).
+    get: jest.fn((token: unknown) => {
+      if (token === PricingService) return pricingService;
+      if (token === BillingService) return billingService;
       return undefined;
     }),
   };

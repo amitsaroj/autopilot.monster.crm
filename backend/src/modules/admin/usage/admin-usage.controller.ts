@@ -18,24 +18,12 @@ export class AdminUsageController {
   @ApiQuery({ name: 'tenantId', required: false })
   @ApiQuery({ name: 'metric', required: false })
   async findAll(@Query('tenantId') tenantId?: string, @Query('metric') metric?: string) {
-    const data = await this.adminUsageService.findAll({ tenantId, metric });
-    return {
-      status: 200,
-      message: 'Usage records retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminUsageService.findAll({ tenantId, metric });
   }
 
   @Get('summary')
   @ApiOperation({ summary: 'Get usage summary by metric' })
   async getSummary() {
-    const data = await this.adminUsageService.getSummary();
-    return {
-      status: 200,
-      message: 'Usage summary retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminUsageService.getSummary();
   }
 }

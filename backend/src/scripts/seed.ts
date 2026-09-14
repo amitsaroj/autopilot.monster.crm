@@ -74,6 +74,9 @@ async function seed() {
     const roleMappings = [
       { name: 'SUPER_ADMIN', perms: allPermissions },
       { name: 'TENANT_ADMIN', perms: allPermissions.filter((p) => p.resource !== 'admin') },
+      // Sub-admin tier: a delegated department admin, scoped like TENANT_ADMIN.
+      // Backs the /sub-admin/* controllers (@Roles('ADMIN')).
+      { name: 'ADMIN', perms: allPermissions.filter((p) => p.resource !== 'admin') },
       {
         name: 'MANAGER',
         perms: allPermissions.filter(
@@ -276,6 +279,19 @@ async function seed() {
         } else {
           console.log(`Plan already exists: ${pd.name}`);
         }
+
+        // Backfill any features added to plansData since this plan was first seeded.
+        const existingFeatures = await featureRepo.find({ where: { planId: plan.id } });
+        const existingFeatureKeys = new Set(existingFeatures.map((f) => f.featureKey));
+        const missingFeatures = pd.features.filter((f) => !existingFeatureKeys.has(f));
+        if (missingFeatures.length > 0) {
+          await featureRepo.save(
+            missingFeatures.map((f) =>
+              featureRepo.create({ planId: plan!.id, featureKey: f, enabled: true, config: {} }),
+            ),
+          );
+          console.log(`Backfilled features for plan ${pd.name}: ${missingFeatures.join(', ')}`);
+        }
       }
     }
 
@@ -293,6 +309,13 @@ async function seed() {
         email: 'admin@autopilotmonster.com',
         role: 'TENANT_ADMIN',
         firstName: 'System',
+        lastName: 'Admin',
+      },
+      {
+        key: 'subadmin',
+        email: 'subadmin@autopilotmonster.com',
+        role: 'ADMIN',
+        firstName: 'Delegated',
         lastName: 'Admin',
       },
       {

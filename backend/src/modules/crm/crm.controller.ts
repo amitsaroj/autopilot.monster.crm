@@ -237,26 +237,14 @@ export class CrmController {
     @CurrentUser() actor: IRequestContext,
     @Body() dto: CreateContactDto,
   ) {
-    const data = await this.contactService.create(tenantId, dto, actor.userId);
-    return {
-      status: 201,
-      message: 'Contact created successfully',
-      error: false,
-      data,
-    };
+    return await this.contactService.create(tenantId, dto, actor.userId);
   }
 
   @Get('contacts/:id')
   @ApiOperation({ summary: 'Get contact by ID' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContact(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.contactService.findOne(tenantId, id);
-    return {
-      status: 200,
-      message: 'Contact retrieved',
-      error: false,
-      data,
-    };
+    return await this.contactService.findOne(tenantId, id);
   }
 
   @Put('contacts/:id')
@@ -287,24 +275,21 @@ export class CrmController {
   @ApiOperation({ summary: 'Get contact activity feed' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContactActivities(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.contactService.getActivities(tenantId, id);
-    return { status: 200, message: 'Contact activities retrieved', error: false, data };
+    return await this.contactService.getActivities(tenantId, id);
   }
 
   @Get('contacts/:id/deals')
   @ApiOperation({ summary: 'Get deals linked to contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContactDeals(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.contactService.getDeals(tenantId, id);
-    return { status: 200, message: 'Contact deals retrieved', error: false, data };
+    return await this.contactService.getDeals(tenantId, id);
   }
 
   @Get('contacts/:id/notes')
   @ApiOperation({ summary: 'Get notes for contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContactNotes(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.contactService.getNotes(tenantId, id);
-    return { status: 200, message: 'Contact notes retrieved', error: false, data };
+    return await this.contactService.getNotes(tenantId, id);
   }
 
   @Post('contacts/:id/notes')
@@ -315,32 +300,28 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: CreateContactNoteDto,
   ) {
-    const data = await this.contactService.createNote(tenantId, id, dto);
-    return { status: 201, message: 'Note created', error: false, data };
+    return await this.contactService.createNote(tenantId, id, dto);
   }
 
   @Get('contacts/:id/calls')
   @ApiOperation({ summary: 'Get call history for contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContactCalls(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.contactService.getCalls(tenantId, id);
-    return { status: 200, message: 'Contact calls retrieved', error: false, data };
+    return await this.contactService.getCalls(tenantId, id);
   }
 
   @Get('contacts/:id/emails')
   @ApiOperation({ summary: 'Get email history for contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContactEmails(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.contactService.getEmails(tenantId, id);
-    return { status: 200, message: 'Contact emails retrieved', error: false, data };
+    return await this.contactService.getEmails(tenantId, id);
   }
 
   @Get('contacts/:id/whatsapp')
   @ApiOperation({ summary: 'Get WhatsApp history for contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getContactWhatsapp(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.contactService.getWhatsappMessages(tenantId, id);
-    return { status: 200, message: 'Contact WhatsApp messages retrieved', error: false, data };
+    return await this.contactService.getWhatsappMessages(tenantId, id);
   }
 
   @Post('contacts/merge')
@@ -351,13 +332,12 @@ export class CrmController {
     @CurrentUser() actor: IRequestContext,
     @Body() body: MergeRecordsDto,
   ) {
-    const data = await this.contactService.mergeContacts(
+    return await this.contactService.mergeContacts(
       tenantId,
       body.primaryId,
       body.secondaryId,
       actor.userId,
     );
-    return { status: 200, message: 'Contacts merged', error: false, data };
   }
 
   // --- Companies ---
@@ -394,26 +374,19 @@ export class CrmController {
     @CurrentUser() actor: IRequestContext,
     @Body() body: MergeRecordsDto,
   ) {
-    const data = await this.companyService.mergeCompanies(
+    return await this.companyService.mergeCompanies(
       tenantId,
       body.primaryId,
       body.secondaryId,
       actor.userId,
     );
-    return { status: 200, message: 'Companies merged', error: false, data };
   }
 
   @Get('companies/:id')
   @ApiOperation({ summary: 'Get company by ID' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCompany(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.companyService.findOne(tenantId, id);
-    return {
-      status: 200,
-      message: 'Company retrieved',
-      error: false,
-      data,
-    };
+    return await this.companyService.findOne(tenantId, id);
   }
 
   @Put('companies/:id')
@@ -425,13 +398,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: UpdateCompanyDto,
   ) {
-    const data = await this.companyService.update(tenantId, id, dto, actor.userId);
-    return {
-      status: 200,
-      message: 'Company updated',
-      error: false,
-      data,
-    };
+    return await this.companyService.update(tenantId, id, dto, actor.userId);
   }
 
   @Delete('companies/:id')
@@ -450,24 +417,21 @@ export class CrmController {
   @ApiOperation({ summary: 'Get contacts at company' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCompanyContacts(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.companyService.getContacts(tenantId, id);
-    return { status: 200, message: 'Company contacts retrieved', error: false, data };
+    return await this.companyService.getContacts(tenantId, id);
   }
 
   @Get('companies/:id/deals')
   @ApiOperation({ summary: 'Get deals for company' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCompanyDeals(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.companyService.getDeals(tenantId, id);
-    return { status: 200, message: 'Company deals retrieved', error: false, data };
+    return await this.companyService.getDeals(tenantId, id);
   }
 
   @Get('companies/:id/activities')
   @ApiOperation({ summary: 'Get company activity timeline' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCompanyActivities(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.companyService.getActivities(tenantId, id);
-    return { status: 200, message: 'Company activities retrieved', error: false, data };
+    return await this.companyService.getActivities(tenantId, id);
   }
 
   // --- Deals ---
@@ -508,13 +472,7 @@ export class CrmController {
     @CurrentUser() actor: IRequestContext,
     @Body() dto: CreateDealDto,
   ) {
-    const data = await this.dealService.create(tenantId, dto, actor.userId);
-    return {
-      status: 201,
-      message: 'Deal created successfully',
-      error: false,
-      data,
-    };
+    return await this.dealService.create(tenantId, dto, actor.userId);
   }
 
   @Get('deals/:id')
@@ -557,14 +515,13 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: MoveDealStageDto,
   ) {
-    const data = await this.dealService.moveStage(
+    return await this.dealService.moveStage(
       tenantId,
       id,
       dto.stageId,
       actor.userId,
       dto.reason,
     );
-    return { status: 200, message: 'Deal stage updated', error: false, data };
   }
 
   @Patch('deals/:id/won')
@@ -575,8 +532,7 @@ export class CrmController {
     @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
   ) {
-    const data = await this.dealService.markWon(tenantId, id, actor.userId);
-    return { status: 200, message: 'Deal marked as won', error: false, data };
+    return await this.dealService.markWon(tenantId, id, actor.userId);
   }
 
   @Patch('deals/:id/lost')
@@ -588,24 +544,21 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: MarkDealLostDto,
   ) {
-    const data = await this.dealService.markLost(tenantId, id, dto.lostReason, actor.userId);
-    return { status: 200, message: 'Deal marked as lost', error: false, data };
+    return await this.dealService.markLost(tenantId, id, dto.lostReason, actor.userId);
   }
 
   @Get('deals/:id/products')
   @ApiOperation({ summary: 'Get products linked to deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getDealProducts(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.dealProductService.listProducts(tenantId, id);
-    return { status: 200, message: 'Deal products retrieved', error: false, data };
+    return await this.dealProductService.listProducts(tenantId, id);
   }
 
   @Get('deals/:id/activities')
   @ApiOperation({ summary: 'Get activities linked to deal' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getDealActivities(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.activityService.findByDeal(tenantId, id);
-    return { status: 200, message: 'Deal activities retrieved', error: false, data };
+    return await this.activityService.findByDeal(tenantId, id);
   }
 
   @Post('deals/:id/products')
@@ -616,8 +569,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: AddDealProductDto,
   ) {
-    const data = await this.dealProductService.addProduct(tenantId, id, dto);
-    return { status: 201, message: 'Product added to deal', error: false, data };
+    return await this.dealProductService.addProduct(tenantId, id, dto);
   }
 
   @Delete('deals/:id/products/:productId')
@@ -629,7 +581,7 @@ export class CrmController {
     @Param('productId') productId: string,
   ) {
     await this.dealProductService.removeProduct(tenantId, id, productId);
-    return { status: 200, message: 'Product removed from deal', error: false, data: null };
+    return null;
   }
 
   @Post('campaigns/start')
@@ -697,13 +649,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Create CRM task' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async createTask(@TenantId() tenantId: string, @Body() dto: CreateTaskDto) {
-    const data = await this.taskService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Task created successfully',
-      error: false,
-      data,
-    };
+    return await this.taskService.create(tenantId, dto);
   }
 
   @Get('tasks/:id')
@@ -729,12 +675,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async deleteTask(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.taskService.remove(tenantId, id);
-    return {
-      status: 200,
-      message: 'Task deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   // --- Notes ---
@@ -742,26 +683,14 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all notes' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getNotes(@TenantId() tenantId: string) {
-    const data = await this.noteService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Notes retrieved',
-      error: false,
-      data,
-    };
+    return await this.noteService.findAll(tenantId);
   }
 
   @Post('notes')
   @ApiOperation({ summary: 'Create note' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async createNote(@TenantId() tenantId: string, @Body() dto: CreateNoteDto) {
-    const data = await this.noteService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Note created successfully',
-      error: false,
-      data,
-    };
+    return await this.noteService.create(tenantId, dto);
   }
 
   @Delete('notes/:id')
@@ -889,24 +818,21 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: SendQuoteDto,
   ) {
-    const data = await this.quoteLifecycleService.send(tenantId, id, dto);
-    return { status: 200, message: 'Quote sent', error: false, data };
+    return await this.quoteLifecycleService.send(tenantId, id, dto);
   }
 
   @Post('quotes/:id/accept')
   @ApiOperation({ summary: 'Accept quote' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async acceptQuote(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.quoteLifecycleService.accept(tenantId, id);
-    return { status: 200, message: 'Quote accepted', error: false, data };
+    return await this.quoteLifecycleService.accept(tenantId, id);
   }
 
   @Post('quotes/:id/decline')
   @ApiOperation({ summary: 'Decline quote' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async declineQuote(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.quoteLifecycleService.decline(tenantId, id);
-    return { status: 200, message: 'Quote declined', error: false, data };
+    return await this.quoteLifecycleService.decline(tenantId, id);
   }
 
   @Get('quotes/:id/pdf')
@@ -955,13 +881,7 @@ export class CrmController {
     @CurrentUser() actor: IRequestContext,
     @Body() body: BulkCreateLeadsDto,
   ) {
-    const data = await this.leadService.bulkCreate(tenantId, body.leads, actor.userId);
-    return {
-      status: 201,
-      message: 'Leads bulk created',
-      error: false,
-      data,
-    };
+    return await this.leadService.bulkCreate(tenantId, body.leads, actor.userId);
   }
 
   @Post('leads/upload')
@@ -976,26 +896,14 @@ export class CrmController {
   ) {
     const csvContent = file.buffer.toString('utf-8');
     const leads = await this.csvService.parseLeads(csvContent);
-    const data = await this.leadService.bulkCreate(tenantId, leads, actor.userId);
-    return {
-      status: 201,
-      message: 'CSV leads uploaded',
-      error: false,
-      data,
-    };
+    return await this.leadService.bulkCreate(tenantId, leads, actor.userId);
   }
 
   @Get('leads/:id')
   @ApiOperation({ summary: 'Get lead detail' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getLead(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.leadService.findOne(tenantId, id);
-    return {
-      status: 200,
-      message: 'Lead details retrieved',
-      error: false,
-      data,
-    };
+    return await this.leadService.findOne(tenantId, id);
   }
 
   @Patch('leads/:id')
@@ -1007,13 +915,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: UpdateLeadDto,
   ) {
-    const data = await this.leadService.update(tenantId, id, dto, actor.userId);
-    return {
-      status: 200,
-      message: 'Lead updated',
-      error: false,
-      data,
-    };
+    return await this.leadService.update(tenantId, id, dto, actor.userId);
   }
 
   @Delete('leads/:id')
@@ -1025,12 +927,7 @@ export class CrmController {
     @Param('id') id: string,
   ) {
     await this.leadService.remove(tenantId, id, actor.userId);
-    return {
-      status: 200,
-      message: 'Lead deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   @Post('leads/:id/convert')
@@ -1062,39 +959,21 @@ export class CrmController {
   @ApiOperation({ summary: 'Get all campaigns' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCampaigns(@TenantId() tenantId: string) {
-    const data = await this.campaignCrmService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Campaigns retrieved',
-      error: false,
-      data,
-    };
+    return await this.campaignCrmService.findAll(tenantId);
   }
 
   @Post('campaigns')
   @ApiOperation({ summary: 'Create campaign' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async createCampaign(@TenantId() tenantId: string, @Body() dto: CreateCampaignDto) {
-    const data = await this.campaignCrmService.create(tenantId, dto);
-    return {
-      status: 201,
-      message: 'Campaign created successfully',
-      error: false,
-      data,
-    };
+    return await this.campaignCrmService.create(tenantId, dto);
   }
 
   @Get('campaigns/:id')
   @ApiOperation({ summary: 'Get campaign detail' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.campaignCrmService.findOne(tenantId, id);
-    return {
-      status: 200,
-      message: 'Campaign details retrieved',
-      error: false,
-      data,
-    };
+    return await this.campaignCrmService.findOne(tenantId, id);
   }
 
   @Patch('campaigns/:id')
@@ -1105,13 +984,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: UpdateCampaignDto,
   ) {
-    const data = await this.campaignCrmService.update(tenantId, id, dto);
-    return {
-      status: 200,
-      message: 'Campaign updated',
-      error: false,
-      data,
-    };
+    return await this.campaignCrmService.update(tenantId, id, dto);
   }
 
   @Delete('campaigns/:id')
@@ -1119,12 +992,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async deleteCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.campaignCrmService.remove(tenantId, id);
-    return {
-      status: 200,
-      message: 'Campaign deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   // --- Analytics ---
@@ -1132,39 +1000,21 @@ export class CrmController {
   @ApiOperation({ summary: 'Get CRM summary analytics' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async getSummary(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getSummary(tenantId);
-    return {
-      status: 200,
-      message: 'Summary analytics retrieved',
-      error: false,
-      data,
-    };
+    return await this.analyticsService.getSummary(tenantId);
   }
 
   @Get('analytics/pipeline')
   @ApiOperation({ summary: 'Get deal pipeline analytics' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async getPipelineAnalytics(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getPipelineData(tenantId);
-    return {
-      status: 200,
-      message: 'Pipeline analytics retrieved',
-      error: false,
-      data,
-    };
+    return await this.analyticsService.getPipelineData(tenantId);
   }
 
   @Get('analytics/leads')
   @ApiOperation({ summary: 'Get lead funnel analytics' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
   async getLeadAnalytics(@TenantId() tenantId: string) {
-    const data = await this.analyticsService.getLeadFunnels(tenantId);
-    return {
-      status: 200,
-      message: 'Lead analytics retrieved',
-      error: false,
-      data,
-    };
+    return await this.analyticsService.getLeadFunnels(tenantId);
   }
 
   // --- Emails ---
@@ -1172,13 +1022,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Get CRM email inbox' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getEmails(@TenantId() tenantId: string) {
-    const data = await this.emailService.findAll(tenantId);
-    return {
-      status: 200,
-      message: 'Emails retrieved',
-      error: false,
-      data,
-    };
+    return await this.emailService.findAll(tenantId);
   }
 
   @Get('emails/:id')
@@ -1187,25 +1031,14 @@ export class CrmController {
   async getEmail(@TenantId() tenantId: string, @Param('id') id: string) {
     const data = await this.emailService.findOne(tenantId, id);
     await this.emailService.markAsRead(tenantId, id);
-    return {
-      status: 200,
-      message: 'Email retrieved',
-      error: false,
-      data,
-    };
+    return data;
   }
 
   @Post('emails/send')
   @ApiOperation({ summary: 'Send email to lead/contact' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async sendEmail(@TenantId() tenantId: string, @Body() body: SendCrmEmailDto) {
-    const data = await this.emailService.sendEmail(tenantId, body);
-    return {
-      status: 200,
-      message: 'Email sent',
-      error: false,
-      data,
-    };
+    return await this.emailService.sendEmail(tenantId, body);
   }
 
   @Delete('emails/:id')
@@ -1213,12 +1046,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async removeEmail(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.emailService.remove(tenantId, id);
-    return {
-      status: 200,
-      message: 'Email deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   // --- Bulk Operations ---
@@ -1227,12 +1055,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async bulkUpdateStatus(@TenantId() tenantId: string, @Body() body: BulkStatusDto) {
     await this.bulkService.bulkUpdateStatus(tenantId, body.entityType, body.ids, body.status);
-    return {
-      status: 200,
-      message: `Bulk status updated for ${body.ids.length} ${body.entityType}s`,
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   @Post('bulk/delete')
@@ -1240,12 +1063,7 @@ export class CrmController {
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async bulkDelete(@TenantId() tenantId: string, @Body() body: BulkDeleteDto) {
     await this.bulkService.bulkDelete(tenantId, body.entityType, body.ids);
-    return {
-      status: 200,
-      message: `Bulk deleted ${body.ids.length} ${body.entityType}s`,
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   // --- Import/Export ---
@@ -1270,12 +1088,7 @@ export class CrmController {
         ),
       );
     }
-    return {
-      status: 200,
-      message: `Successfully imported ${body.data.length} ${body.entityType}s`,
-      error: false,
-      data: null,
-    };
+    return null;
   }
 
   @Get('export/:entityType')
@@ -1288,13 +1101,7 @@ export class CrmController {
     const service =
       entityType === 'lead' ? (this.leadService as any) : (this.contactService as any);
     const data = await service.findAll(tenantId);
-    const csv = this.csvService.generateCsv(data);
-    return {
-      status: 200,
-      message: 'CSV Export generated',
-      error: false,
-      data: csv,
-    };
+    return this.csvService.generateCsv(data);
   }
 
   // --- Pipelines ---
@@ -1323,8 +1130,7 @@ export class CrmController {
   @ApiOperation({ summary: 'Get pipeline by id' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getPipeline(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.pipelineService.findOne(tenantId, id);
-    return { status: 200, message: 'Pipeline retrieved', error: false, data };
+    return await this.pipelineService.findOne(tenantId, id);
   }
 
   @Put('pipelines/:id')
@@ -1335,8 +1141,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: UpdatePipelineDto,
   ) {
-    const data = await this.pipelineService.update(tenantId, id, dto as never);
-    return { status: 200, message: 'Pipeline updated', error: false, data };
+    return await this.pipelineService.update(tenantId, id, dto as never);
   }
 
   @Post('pipelines/:id/stages')
@@ -1442,31 +1247,27 @@ export class CrmController {
   @ApiOperation({ summary: 'Weighted pipeline forecast' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getForecast(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
-    const data = await this.forecastService.getForecast(tenantId, pipelineId);
-    return { status: 200, message: 'Forecast retrieved', error: false, data };
+    return await this.forecastService.getForecast(tenantId, pipelineId);
   }
 
   @Get('forecast/by-stage')
   @ApiOperation({ summary: 'Forecast grouped by pipeline stage' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getForecastByStage(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
-    const data = await this.forecastService.getByStage(tenantId, pipelineId);
-    return { status: 200, message: 'Forecast by stage retrieved', error: false, data };
+    return await this.forecastService.getByStage(tenantId, pipelineId);
   }
 
   @Get('forecast/by-owner')
   @ApiOperation({ summary: 'Forecast grouped by deal owner' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getForecastByOwner(@TenantId() tenantId: string, @Query('pipelineId') pipelineId?: string) {
-    const data = await this.forecastService.getByOwner(tenantId, pipelineId);
-    return { status: 200, message: 'Forecast by owner retrieved', error: false, data };
+    return await this.forecastService.getByOwner(tenantId, pipelineId);
   }
 
   @Get('forecast/historical')
   @ApiOperation({ summary: 'Historical forecast accuracy' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
   async getForecastHistorical(@TenantId() tenantId: string) {
-    const data = await this.forecastService.getHistorical(tenantId);
-    return { status: 200, message: 'Historical forecast retrieved', error: false, data };
+    return await this.forecastService.getHistorical(tenantId);
   }
 }

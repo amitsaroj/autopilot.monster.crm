@@ -15,6 +15,14 @@ export class PlanGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(METADATA_KEYS.IS_PUBLIC, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+
     const requiredFeature = this.reflector.getAllAndOverride<string | undefined>(
       METADATA_KEYS.PLAN_FEATURE,
       [context.getHandler(), context.getClass()],
@@ -24,8 +32,8 @@ export class PlanGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
-    const { tenantId, planId } = request.user;
+    const request = context.switchToHttp().getRequest<Request & { user?: IRequestContext }>();
+    const { tenantId, planId } = request.user ?? {};
 
     if (!tenantId || !planId) {
       throw new ForbiddenException({

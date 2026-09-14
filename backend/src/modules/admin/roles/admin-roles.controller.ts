@@ -16,60 +16,31 @@ export class AdminRolesController {
   @Get()
   @ApiOperation({ summary: 'Get all roles' })
   async findAll() {
-    const data = await this.adminRolesService.findAll();
-    return {
-      status: 200,
-      message: 'Roles retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminRolesService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get role details' })
   async findOne(@Param('id') id: string) {
-    const data = await this.adminRolesService.findOne(id);
-    return {
-      status: 200,
-      message: 'Role retrieved',
-      error: false,
-      data,
-    };
+    return await this.adminRolesService.findOne(id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new role' })
   async create(@Body() body: any) {
-    const data = await this.adminRolesService.create(body);
-    return {
-      status: 201,
-      message: 'Role created',
-      error: false,
-      data,
-    };
+    return await this.adminRolesService.create(body);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update role' })
   async update(@Param('id') id: string, @Body() body: any) {
-    const data = await this.adminRolesService.update(id, body);
-    return {
-      status: 200,
-      message: 'Role updated',
-      error: false,
-      data,
-    };
+    return await this.adminRolesService.update(id, body);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete role' })
   async remove(@Param('id') id: string) {
     await this.adminRolesService.remove(id);
-    return {
-      status: 200,
-      message: 'Role deleted',
-      error: false,
-      data: null,
-    };
+    return null;
   }
 }

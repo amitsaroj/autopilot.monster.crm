@@ -54,6 +54,7 @@ import { UsersModule } from './modules/users/users.module';
 import { SocialModule } from './modules/social/social.module';
 import { SubAdminModule } from './modules/sub-admin/sub-admin.module';
 import { TenantSettingsModule } from './modules/tenant-settings/tenant-settings.module';
+import { AiProviderModule } from './modules/ai/providers/ai-provider.module';
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import { SupportModule } from './modules/support/support.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
@@ -123,6 +124,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     SubAdminModule,
     AuthModule,
     TenantSettingsModule,
+    AiProviderModule,
     SchedulerModule,
     SupportModule,
     AnalyticsModule,

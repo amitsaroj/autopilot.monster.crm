@@ -16,14 +16,12 @@ export class SubAdminBillingController {
   @Get('subscription')
   @ApiOperation({ summary: 'Get current tenant subscription' })
   async getSubscription(@TenantId() tenantId: string) {
-    const data = await this.billingService.getSubscription(tenantId);
-    return { status: 200, message: 'Subscription details retrieved', error: false, data };
+    return await this.billingService.getSubscription(tenantId);
   }
 
   @Get('invoices')
   @ApiOperation({ summary: 'Get tenant invoices' })
   async getInvoices(@TenantId() tenantId: string) {
-    const data = await this.billingService.getInvoices(tenantId);
-    return { status: 200, message: 'Invoice history retrieved', error: false, data };
+    return await this.billingService.getInvoices(tenantId);
   }
 }

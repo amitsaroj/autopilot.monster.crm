@@ -78,6 +78,7 @@ prisma/.env
 logs/
 !backend/src/modules/logs/
 !backend/src/modules/sub-admin/logs/
+!frontend/src/app/sub-admin/logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -94,6 +95,7 @@ lerna-debug.log*
 .rts2_cache_es/
 .rts2_cache_umd/
 *.tsbuildinfo
+.playwright-mcp
 
 # ─── Docker ─────────────────────────────────────────────────
 # Ignore local volume data; keep Dockerfiles and compose files

@@ -16,12 +16,6 @@ export class AdminStorageController {
   @Get('stats')
   @ApiOperation({ summary: 'Get global storage statistics' })
   async getStorageStats() {
-    const data = await this.storageService.getStats();
-    return {
-      status: 200,
-      message: 'Storage statistics retrieved',
-      error: false,
-      data,
-    };
+    return await this.storageService.getStats();
   }
 }

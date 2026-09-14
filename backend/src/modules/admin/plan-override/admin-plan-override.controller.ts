@@ -16,14 +16,12 @@ export class AdminPlanOverrideController {
   @Get()
   @ApiOperation({ summary: 'Get global plan-wide overrides' })
   async getSettings() {
-    const data = await this.planOverrideService.getSettings();
-    return { status: 200, message: 'Plan overrides retrieved', error: false, data };
+    return await this.planOverrideService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update global plan-wide overrides' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.planOverrideService.updateSettings(settings);
-    return { status: 200, message: 'Plan overrides updated', error: false, data };
+    return await this.planOverrideService.updateSettings(settings);
   }
 }

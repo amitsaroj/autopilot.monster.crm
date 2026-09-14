@@ -24,22 +24,19 @@ export class AiAgentsController {
   @Get()
   @ApiOperation({ summary: 'List AI agents' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.agentService.findAll(tenantId);
-    return { status: 200, message: 'Agents retrieved', error: false, data };
+    return await this.agentService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create AI agent' })
   async create(@TenantId() tenantId: string, @Body() dto: CreateAiAgentDto) {
-    const data = await this.agentService.create(tenantId, dto);
-    return { status: 201, message: 'Agent created', error: false, data };
+    return await this.agentService.create(tenantId, dto);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get AI agent detail' })
   async findOne(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.agentService.findOne(tenantId, id);
-    return { status: 200, message: 'Agent retrieved', error: false, data };
+    return await this.agentService.findOne(tenantId, id);
   }
 
   @Patch(':id')
@@ -49,29 +46,26 @@ export class AiAgentsController {
     @Param('id') id: string,
     @Body() dto: UpdateAiAgentDto,
   ) {
-    const data = await this.agentService.update(tenantId, id, dto);
-    return { status: 200, message: 'Agent updated', error: false, data };
+    return await this.agentService.update(tenantId, id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete AI agent' })
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.agentService.remove(tenantId, id);
-    return { status: 200, message: 'Agent deleted', error: false, data: null };
+    return null;
   }
 
   @Post(':id/activate')
   @ApiOperation({ summary: 'Activate AI agent' })
   async activate(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.agentService.update(tenantId, id, { isActive: true });
-    return { status: 200, message: 'Agent activated', error: false, data };
+    return await this.agentService.update(tenantId, id, { isActive: true });
   }
 
   @Post(':id/pause')
   @ApiOperation({ summary: 'Pause AI agent' })
   async pause(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.agentService.update(tenantId, id, { isActive: false });
-    return { status: 200, message: 'Agent paused', error: false, data };
+    return await this.agentService.update(tenantId, id, { isActive: false });
   }
 }
 
@@ -87,15 +81,13 @@ export class AiPromptsController {
   @Get()
   @ApiOperation({ summary: 'List saved prompts' })
   async findAll(@TenantId() tenantId: string) {
-    const data = await this.promptService.findAll(tenantId);
-    return { status: 200, message: 'Prompts retrieved', error: false, data };
+    return await this.promptService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create prompt' })
   async create(@TenantId() tenantId: string, @Body() dto: CreateAiPromptDto) {
-    const data = await this.promptService.create(tenantId, dto);
-    return { status: 201, message: 'Prompt created', error: false, data };
+    return await this.promptService.create(tenantId, dto);
   }
 
   @Patch(':id')
@@ -105,14 +97,13 @@ export class AiPromptsController {
     @Param('id') id: string,
     @Body() dto: UpdateAiPromptDto,
   ) {
-    const data = await this.promptService.update(tenantId, id, dto);
-    return { status: 200, message: 'Prompt updated', error: false, data };
+    return await this.promptService.update(tenantId, id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete prompt' })
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.promptService.remove(tenantId, id);
-    return { status: 200, message: 'Prompt deleted', error: false, data: null };
+    return null;
   }
 }

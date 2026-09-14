@@ -16,14 +16,12 @@ export class AdminSystemSettingsController {
   @Get()
   @ApiOperation({ summary: 'Get all system settings' })
   async getSettings() {
-    const data = await this.settingsService.getSettings();
-    return { status: 200, message: 'System settings retrieved', error: false, data };
+    return await this.settingsService.getSettings();
   }
 
   @Post()
   @ApiOperation({ summary: 'Update system settings' })
   async updateSettings(@Body() settings: any) {
-    const data = await this.settingsService.updateSettings(settings);
-    return { status: 200, message: 'System settings updated', error: false, data };
+    return await this.settingsService.updateSettings(settings);
   }
 }

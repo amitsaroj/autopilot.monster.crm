@@ -36,15 +36,13 @@ export class KnowledgeBasesController {
   @Get()
   @ApiOperation({ summary: 'List knowledge bases' })
   async list(@TenantId() tenantId: string) {
-    const data = await this.kbService.findAll(tenantId);
-    return { status: 200, message: 'Knowledge bases retrieved', error: false, data };
+    return await this.kbService.findAll(tenantId);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create knowledge base' })
   async create(@TenantId() tenantId: string, @Body() dto: CreateKnowledgeBaseDto) {
-    const data = await this.kbService.create(tenantId, dto);
-    return { status: 201, message: 'Knowledge base created', error: false, data };
+    return await this.kbService.create(tenantId, dto);
   }
 
   @Get(':id')
@@ -54,7 +52,7 @@ export class KnowledgeBasesController {
     if (!data) {
       throw new NotFoundException('Knowledge base not found');
     }
-    return { status: 200, message: 'Knowledge base retrieved', error: false, data };
+    return data;
   }
 
   @Patch(':id')
@@ -64,22 +62,20 @@ export class KnowledgeBasesController {
     @Param('id') id: string,
     @Body() dto: UpdateKnowledgeBaseDto,
   ) {
-    const data = await this.kbService.update(tenantId, id, dto);
-    return { status: 200, message: 'Knowledge base updated', error: false, data };
+    return await this.kbService.update(tenantId, id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete knowledge base' })
   async remove(@TenantId() tenantId: string, @Param('id') id: string) {
     await this.kbService.remove(tenantId, id);
-    return { status: 200, message: 'Knowledge base deleted', error: false, data: null };
+    return null;
   }
 
   @Post(':id/sync')
   @ApiOperation({ summary: 'Trigger knowledge base re-index' })
   async sync(@TenantId() tenantId: string, @Param('id') id: string) {
-    const data = await this.kbService.sync(tenantId, id);
-    return { status: 200, message: 'Re-index triggered', error: false, data };
+    return await this.kbService.sync(tenantId, id);
   }
 
   @Post(':id/documents')
@@ -120,12 +116,7 @@ export class KnowledgeBasesController {
       status: indexResult.success ? 'READY' : 'FAILED',
       indexMeta,
     });
-    return {
-      status: 201,
-      message: 'Document indexed',
-      error: false,
-      data: { ...indexResult, knowledgeBase: data },
-    };
+    return { ...indexResult, knowledgeBase: data };
   }
 
   @Delete(':id/documents/:docId')
@@ -135,7 +126,6 @@ export class KnowledgeBasesController {
     @Param('id') id: string,
     @Param('docId') docId: string,
   ) {
-    const data = await this.kbService.removeDocument(tenantId, id, docId);
-    return { status: 200, message: 'Document removed', error: false, data };
+    return await this.kbService.removeDocument(tenantId, id, docId);
   }
 }

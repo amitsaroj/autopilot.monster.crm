@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'node:crypto';
 
 import { VoiceCallRepository } from './voice-call.repository';
 import { TwilioService } from './twilio.service';
@@ -81,7 +82,32 @@ export class VoiceCallService {
 
   async initiateOutbound(tenantId: string, input: CreateOutboundCallInput): Promise<VoiceCall> {
     const from = await this.twilioService.getFromNumber(tenantId);
-    const sid = await this.twilioService.initiateOutboundCall(tenantId, input.to, input.wssUrl);
+
+    let sid: string;
+    try {
+      sid = await this.twilioService.initiateOutboundCall(tenantId, input.to, input.wssUrl);
+    } catch {
+      // The provider rejected the call before it ever got a real SID (bad
+      // credentials, invalid number, provider outage, ...). Record it as a
+      // failed attempt anyway — a campaign's `resume()` decides what's
+      // "already attempted" by looking for a VoiceCall row for this number,
+      // and campaign stats only ever move via this row or a later provider
+      // webhook. Without persisting the failure here, a number that can
+      // never be dialed gets silently redialed forever on every resume, and
+      // the campaign's callsFailed count never reflects it (no webhook is
+      // ever coming for a call the provider never started). The error is
+      // already logged by TwilioService; this row just needs a unique,
+      // clearly-synthetic sid so it doesn't collide with real Twilio SIDs.
+      return this.voiceCallRepository.create(tenantId, {
+        sid: `failed-${randomUUID()}`,
+        to: input.to,
+        from,
+        direction: 'OUTBOUND',
+        status: 'FAILED',
+        voiceProfile: input.voiceProfile,
+        campaignId: input.campaignId,
+      });
+    }
 
     const existing = await this.voiceCallRepository.findBySid(tenantId, sid);
     if (existing) {
