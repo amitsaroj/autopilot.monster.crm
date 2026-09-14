@@ -26,8 +26,13 @@ export interface VoiceCallSummary {
 export const voiceCallService = {
   list: () => api.get<{ data: VoiceCall[] }>('/voice/calls'),
   get: (id: string) => api.get<{ data: VoiceCall }>(`/voice/calls/${id}`),
-  initiate: (payload: { to: string; agentId?: string; leadId?: string; voice?: string }) =>
-    api.post<{ data: VoiceCall }>('/voice/calls', payload),
+  initiate: (payload: {
+    to: string;
+    agentId?: string;
+    leadId?: string;
+    contactId?: string;
+    voice?: string;
+  }) => api.post<{ data: VoiceCall }>('/voice/calls', payload),
   hangUp: (id: string) => api.delete(`/voice/calls/${id}/hang-up`),
   transfer: (id: string, to: string) =>
     api.post<{ data: VoiceCall }>(`/voice/calls/${id}/transfer`, { to }),

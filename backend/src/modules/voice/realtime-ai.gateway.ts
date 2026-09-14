@@ -38,6 +38,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
       agentId: string;
       transcript: string;
       leadId?: string;
+      contactId?: string;
       callSid?: string;
       voiceProfile?: string;
     }
@@ -50,6 +51,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     const tenantId = (parsedUrl.query.tenantId as string) || 'default';
     const agentId = (parsedUrl.query.agentId as string) || 'default';
     const leadId = (parsedUrl.query.leadId as string) || undefined;
+    const contactId = (parsedUrl.query.contactId as string) || undefined;
     const voiceProfile = (parsedUrl.query.voice as string) || 'shimmer';
 
     const openAiApiKey = this.configService.get('OPENAI_API_KEY');
@@ -73,6 +75,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
       agentId,
       transcript: '',
       leadId,
+      contactId,
       voiceProfile,
     });
 
@@ -190,6 +193,12 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
         await this.leadIntelligenceService.analyzeCallOutcome(
           session.tenantId,
           session.leadId,
+          session.transcript,
+        );
+      } else if (session.contactId && session.transcript) {
+        await this.leadIntelligenceService.analyzeContactCallOutcome(
+          session.tenantId,
+          session.contactId,
           session.transcript,
         );
       }

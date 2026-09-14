@@ -69,6 +69,7 @@ export class VoiceController {
     const wssUrl = this.voiceCallService.buildStreamUrl(tenantId, {
       agentId: dto.agentId,
       leadId: dto.leadId,
+      contactId: dto.contactId,
       voice: dto.voice ?? defaultVoice,
     });
     return await this.voiceCallService.initiateOutbound(tenantId, {

@@ -40,7 +40,7 @@ export class VoiceCallService {
 
   buildStreamUrl(
     tenantId: string,
-    params: { agentId?: string; leadId?: string; voice?: string } = {},
+    params: { agentId?: string; leadId?: string; contactId?: string; voice?: string } = {},
   ): string {
     const appUrl = this.configService.get<string>('APP_URL') ?? 'http://localhost:8000';
     const wsBase = appUrl.replace(/^http/i, 'ws');
@@ -50,6 +50,9 @@ export class VoiceCallService {
     }
     if (params.leadId) {
       query.set('leadId', params.leadId);
+    }
+    if (params.contactId) {
+      query.set('contactId', params.contactId);
     }
     if (params.voice) {
       query.set('voice', params.voice);

@@ -7,7 +7,7 @@ import { ContactRepository } from './contact.repository';
 import { CreateContactDto, CrmListQueryDto, UpdateContactDto } from './dto/crm.dto';
 import { CreateContactNoteDto } from './dto/deal-lifecycle.dto';
 import { Contact } from '../../database/entities/contact.entity';
-import { Activity } from '../../database/entities/activity.entity';
+import { Activity, ActivityType } from '../../database/entities/activity.entity';
 import { Note } from '../../database/entities/note.entity';
 import { EmailMessage } from '../../database/entities/email-message.entity';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
@@ -114,6 +114,24 @@ export class ContactService {
       where: { tenantId, contactId },
       order: { occurredAt: 'DESC' },
     });
+  }
+
+  async recordCallActivity(
+    tenantId: string,
+    contactId: string,
+    input: { summary: string; sentiment: string; status: string },
+  ): Promise<Activity> {
+    return this.activityRepository.save(
+      this.activityRepository.create({
+        tenantId,
+        contactId,
+        type: ActivityType.CALL,
+        subject: `AI voice call — ${input.status}`,
+        description: input.summary,
+        outcome: input.sentiment,
+        occurredAt: new Date(),
+      }),
+    );
   }
 
   async getDeals(tenantId: string, contactId: string) {

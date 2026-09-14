@@ -16,6 +16,11 @@ export class CallDto {
   @IsOptional()
   leadId?: string;
 
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  contactId?: string;
+
   @ApiPropertyOptional({ description: 'OpenAI realtime voice profile (e.g. shimmer, alloy)' })
   @IsString()
   @IsOptional()

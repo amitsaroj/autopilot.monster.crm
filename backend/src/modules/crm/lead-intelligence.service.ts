@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { LeadService } from './lead.service';
+import { ContactService } from './contact.service';
 import { NotificationService } from './notification.service';
 import { AiProviderService } from '../ai/providers/ai-provider.service';
 
@@ -12,6 +13,7 @@ export class LeadIntelligenceService {
   constructor(
     private configService: ConfigService,
     private leadService: LeadService,
+    private contactService: ContactService,
     private notificationService: NotificationService,
     private aiProviderService: AiProviderService,
   ) {}
@@ -59,6 +61,45 @@ export class LeadIntelligenceService {
       return result;
     } catch (err) {
       this.logger.error(`AI analysis failed for lead ${leadId}`, err);
+      return null;
+    }
+  }
+
+  /**
+   * Same as analyzeCallOutcome, but for calls dialed off a Contact (bulk voice
+   * campaigns) rather than a Lead. Contacts have no aiSummary/score columns, so
+   * the outcome is logged as a CALL activity on the contact's timeline instead,
+   * and the WhatsApp follow-up only fires if the contact has opted in.
+   */
+  async analyzeContactCallOutcome(tenantId: string, contactId: string, transcript: string) {
+    const result = await this.analyzeTranscript(transcript);
+    if (!result) {
+      return null;
+    }
+
+    try {
+      const contact = await this.contactService.findOne(tenantId, contactId);
+      await this.contactService.recordCallActivity(tenantId, contactId, {
+        summary: result.summary,
+        sentiment: result.sentiment,
+        status: result.status,
+      });
+
+      if (result.status === 'QUALIFIED' && contact.whatsappOptIn) {
+        const phone = contact.mobile ?? contact.phone;
+        if (phone) {
+          await this.notificationService.sendPostCallFollowUp(
+            tenantId,
+            phone,
+            result.name || contact.firstName,
+            result.summary,
+          );
+        }
+      }
+
+      return result;
+    } catch (err) {
+      this.logger.error(`AI analysis failed for contact ${contactId}`, err);
       return null;
     }
   }

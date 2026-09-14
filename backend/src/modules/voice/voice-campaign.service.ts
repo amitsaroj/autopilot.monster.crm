@@ -287,7 +287,9 @@ export class VoiceCampaignService {
     }
     const jobs = contacts.map((contact, index) => {
       const to = (contact.mobile ?? contact.phone) as string;
-      const wssUrl = this.voiceCallService.buildStreamUrl(campaign.tenantId, {});
+      const wssUrl = this.voiceCallService.buildStreamUrl(campaign.tenantId, {
+        contactId: contact.id,
+      });
       return {
         name: JOB_NAMES.PROCESS_VOICE,
         data: {

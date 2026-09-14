@@ -22,8 +22,10 @@ import {
   Star,
   RefreshCw,
   UserCheck,
+  PhoneCall,
 } from 'lucide-react';
 import { leadService, Lead, LeadStatus } from '@/services/lead.service';
+import { voiceCallService } from '@/services/voice-call.service';
 import toast from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -36,6 +38,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [isCalling, setIsCalling] = useState(false);
   const [formData, setFormData] = useState<Partial<Lead>>({});
 
   const fetchData = async () => {
@@ -84,6 +87,23 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
     }
   };
 
+  const handleCall = async () => {
+    if (!lead?.phone) {
+      toast.error('Lead has no phone number');
+      return;
+    }
+    setIsCalling(true);
+    try {
+      const res = await voiceCallService.initiate({ to: lead.phone, leadId: id });
+      toast.success('Call initiated');
+      router.push(`/voice/calls/${res.data.data.id}`);
+    } catch {
+      toast.error('Failed to initiate call');
+    } finally {
+      setIsCalling(false);
+    }
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-emerald-500 bg-emerald-50 border-emerald-100';
     if (score >= 50) return 'text-amber-500 bg-amber-50 border-amber-100';
@@ -109,6 +129,18 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           Back to Leads Engine
         </Link>
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => void handleCall()}
+            disabled={isCalling || !formData.phone}
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/20 disabled:opacity-50"
+          >
+            {isCalling ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <PhoneCall className="w-4 h-4" />
+            )}
+            Call Lead
+          </button>
           <button
             onClick={handleConvert}
             disabled={isConverting || formData.status === LeadStatus.CONVERTED}
@@ -209,22 +241,47 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
                   Sentiment Analysis
                 </p>
-                <div className="flex items-end gap-2">
-                  <div
-                    className="h-2 flex-1 rounded-full bg-emerald-500"
-                    style={{ width: '80%' }}
-                  ></div>
-                  <span className="text-xs font-black text-emerald-600">80% Positive</span>
-                </div>
+                {formData.metadata?.sentiment ? (
+                  <div className="flex items-end gap-2">
+                    <div
+                      className={cn(
+                        'h-2 flex-1 rounded-full',
+                        formData.metadata.sentiment === 'POSITIVE'
+                          ? 'bg-emerald-500'
+                          : formData.metadata.sentiment === 'NEGATIVE'
+                            ? 'bg-red-500'
+                            : 'bg-amber-500',
+                      )}
+                    ></div>
+                    <span
+                      className={cn(
+                        'text-xs font-black',
+                        formData.metadata.sentiment === 'POSITIVE'
+                          ? 'text-emerald-600'
+                          : formData.metadata.sentiment === 'NEGATIVE'
+                            ? 'text-red-600'
+                            : 'text-amber-600',
+                      )}
+                    >
+                      {formData.metadata.sentiment}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-xs font-bold text-gray-400">Not yet analyzed — call this lead to generate insights.</p>
+                )}
               </div>
               <div className="p-6 rounded-[32px] bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
-                  Intent Level
+                  Intent
                 </p>
-                <div className="flex items-end gap-2 text-indigo-600">
-                  <BarChart3 className="w-4 h-4" />
-                  <span className="text-xs font-black uppercase">High Purchase Intent</span>
-                </div>
+                {formData.metadata?.intent ? (
+                  <div className="flex items-end gap-2 text-indigo-600">
+                    <BarChart3 className="w-4 h-4" />
+                    <span className="text-xs font-black uppercase">{formData.metadata.intent}</span>
+                  </div>
+                ) : (
+                  <p className="text-xs font-bold text-gray-400">Not yet analyzed — call this lead to generate insights.</p>
+                )}
               </div>
             </div>
 
