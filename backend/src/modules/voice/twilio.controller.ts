@@ -123,7 +123,11 @@ export class TwilioController {
         const isFirstTerminal = !existingCall || !TERMINAL_CALL_STATUSES.has(priorStatus);
 
         if (isFirstTerminal && call.campaignId) {
-          await this.voiceCampaignService.recordCallOutcome(call.campaignId, callStatus);
+          await this.voiceCampaignService.recordCallOutcome(
+            call.campaignId,
+            callStatus,
+            call.recipientId,
+          );
         }
 
         this.eventEmitter.emit(EVENT_NAMES.CALL_ENDED, {

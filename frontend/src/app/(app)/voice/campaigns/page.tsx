@@ -11,6 +11,7 @@ import {
   PauseCircle,
   CheckCircle2,
   FileEdit,
+  Ban,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -21,6 +22,7 @@ const STATUS_STYLES: Record<VoiceCampaign['status'], { label: string; className:
   RUNNING: { label: 'Running', className: 'text-green-500 bg-green-500/10', icon: PlayCircle },
   PAUSED: { label: 'Paused', className: 'text-amber-500 bg-amber-500/10', icon: PauseCircle },
   COMPLETED: { label: 'Completed', className: 'text-blue-400 bg-blue-400/10', icon: CheckCircle2 },
+  STOPPED: { label: 'Stopped', className: 'text-red-400 bg-red-400/10', icon: Ban },
 };
 
 export default function VoiceCampaignsPage() {

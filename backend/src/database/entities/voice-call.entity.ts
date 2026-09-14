@@ -43,6 +43,9 @@ export class VoiceCall extends BaseEntity {
   @Column({ name: 'campaign_id', type: 'uuid', nullable: true })
   campaignId?: string;
 
+  @Column({ name: 'recipient_id', type: 'uuid', nullable: true })
+  recipientId?: string;
+
   @Column({ name: 'cost_amount', type: 'decimal', precision: 10, scale: 4, default: 0 })
   costAmount!: number;
 }

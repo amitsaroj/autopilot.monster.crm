@@ -1,17 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'node:crypto';
 
 import { VoiceCallRepository } from './voice-call.repository';
 import { TwilioService } from './twilio.service';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
+import { PricingService } from '../pricing/pricing.service';
+import { BillingService } from '../billing/billing.service';
 
 export interface CreateOutboundCallInput {
   to: string;
   wssUrl: string;
   voiceProfile?: string;
   campaignId?: string;
+  recipientId?: string;
 }
 
 export interface TwilioStatusUpdate {
@@ -31,16 +35,25 @@ export interface CallAnalysisResult {
 
 @Injectable()
 export class VoiceCallService {
+  private readonly logger = new Logger(VoiceCallService.name);
+
   constructor(
     private readonly voiceCallRepository: VoiceCallRepository,
     private readonly twilioService: TwilioService,
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
     private readonly configService: ConfigService,
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   buildStreamUrl(
     tenantId: string,
-    params: { agentId?: string; leadId?: string; contactId?: string; voice?: string } = {},
+    params: {
+      agentId?: string;
+      leadId?: string;
+      contactId?: string;
+      voice?: string;
+      script?: string;
+    } = {},
   ): string {
     const appUrl = this.configService.get<string>('APP_URL') ?? 'http://localhost:8000';
     const wsBase = appUrl.replace(/^http/i, 'ws');
@@ -56,6 +69,9 @@ export class VoiceCallService {
     }
     if (params.voice) {
       query.set('voice', params.voice);
+    }
+    if (params.script) {
+      query.set('script', params.script);
     }
     return `${wsBase}/voice/stream?${query.toString()}`;
   }
@@ -109,6 +125,7 @@ export class VoiceCallService {
         status: 'FAILED',
         voiceProfile: input.voiceProfile,
         campaignId: input.campaignId,
+        recipientId: input.recipientId,
       });
     }
 
@@ -117,7 +134,7 @@ export class VoiceCallService {
       return existing;
     }
 
-    return this.voiceCallRepository.create(tenantId, {
+    const call = await this.voiceCallRepository.create(tenantId, {
       sid,
       to: input.to,
       from,
@@ -125,7 +142,31 @@ export class VoiceCallService {
       status: 'QUEUED',
       voiceProfile: input.voiceProfile,
       campaignId: input.campaignId,
+      recipientId: input.recipientId,
     });
+
+    // Usage should reflect calls that actually reached the provider, not
+    // requests that merely hit our API — track it here, the one place both
+    // the single-call and bulk-campaign paths funnel through, rather than at
+    // the controller (which would double-count nothing here, but couldn't
+    // see campaign-originated calls at all).
+    await this.trackCallUsage(tenantId);
+
+    return call;
+  }
+
+  private async trackCallUsage(tenantId: string): Promise<void> {
+    try {
+      const billingService = this.moduleRef.get(BillingService, { strict: false });
+      const pricingService = this.moduleRef.get(PricingService, { strict: false });
+      if (!billingService || !pricingService) {
+        return;
+      }
+      const period = await pricingService.getLimitPeriod(tenantId, 'calls');
+      await billingService.trackUsage(tenantId, 'calls', 1, period);
+    } catch (err) {
+      this.logger.warn(`Failed to track call usage for tenant ${tenantId}`, err as Error);
+    }
   }
 
   async updateFromWebhook(update: TwilioStatusUpdate): Promise<VoiceCall | null> {

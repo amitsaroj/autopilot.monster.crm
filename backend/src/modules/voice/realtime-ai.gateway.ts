@@ -12,6 +12,7 @@ import { Server, WebSocket as WsWebSocket } from 'ws';
 
 import { RagService } from '../ai/rag.service';
 import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
+import { AgentService } from '../crm/agent.service';
 import { VoiceCallService } from './voice-call.service';
 
 @WebSocketGateway({ path: '/voice/stream' })
@@ -28,6 +29,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     private ragService: RagService,
     private leadIntelligenceService: LeadIntelligenceService,
     private voiceCallService: VoiceCallService,
+    private agentService: AgentService,
   ) {}
 
   private sessions = new Map<
@@ -52,7 +54,8 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     const agentId = (parsedUrl.query.agentId as string) || 'default';
     const leadId = (parsedUrl.query.leadId as string) || undefined;
     const contactId = (parsedUrl.query.contactId as string) || undefined;
-    const voiceProfile = (parsedUrl.query.voice as string) || 'shimmer';
+    const script = (parsedUrl.query.script as string) || undefined;
+    let voiceProfile = (parsedUrl.query.voice as string) || undefined;
 
     const openAiApiKey = this.configService.get('OPENAI_API_KEY');
 
@@ -98,16 +101,42 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
             3,
           );
 
+          // An agentId names a configured Agent whose systemPrompt/voice drive
+          // the call; a bulk campaign without one falls back to its own
+          // free-text script; otherwise a generic default. Reuses the same
+          // Agent records the CRM's single-call/agent-builder UI manages,
+          // rather than the call flow inventing its own prompt storage.
+          let roleInstructions = script;
+          if (agentId && agentId !== 'default') {
+            try {
+              const agent = await this.agentService.findOne(tenantId, agentId);
+              if (agent) {
+                roleInstructions = agent.systemPrompt || roleInstructions;
+                voiceProfile = voiceProfile || agent.voice;
+              }
+            } catch {
+              this.logger.warn(`Agent ${agentId} not found for tenant ${tenantId}; using fallback`);
+            }
+          }
+          roleInstructions =
+            roleInstructions ||
+            'You are a helpful AI voice agent for AutopilotMonster CRM, representing a company.';
+          voiceProfile = voiceProfile || 'shimmer';
+
           const instructions = `
-            You are a helpful AI voice agent for AutopilotMonster CRM, representing a company.
+            ${roleInstructions}
+            Keep responses under 2 sentences for natural flow.
+
             Use the following context to answer customer questions naturally and concisely.
             If the answer isn't in the context, be honest but helpful.
-            
+
             COMPANY CONTEXT:
             ${kbContext || 'No specific documents uploaded yet.'}
-            
-            IDENTITY: You are Agent ID: ${agentId}. Keep responses under 2 sentences for natural flow.
           `;
+
+          if (session) {
+            session.voiceProfile = voiceProfile;
+          }
 
           openaiWs.send(
             JSON.stringify({

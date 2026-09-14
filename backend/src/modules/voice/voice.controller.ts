@@ -257,6 +257,40 @@ export class VoiceController {
     return await this.voiceCampaignService.getStats(tenantId, id);
   }
 
+  @Get('campaigns/:id/recipients')
+  @ApiOperation({ summary: 'List a campaign\'s recipients' })
+  async listCampaignRecipients(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Query() query: Record<string, string>,
+  ) {
+    return await this.voiceCampaignService.listRecipients(tenantId, id, {
+      status: query.status as never,
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+    });
+  }
+
+  @Post('campaigns/:id/recipients/:recipientId/retry')
+  @ApiOperation({ summary: 'Force-retry a recipient regardless of attempt count' })
+  async retryCampaignRecipient(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Param('recipientId') recipientId: string,
+  ) {
+    return await this.voiceCampaignService.retryRecipient(tenantId, id, recipientId);
+  }
+
+  @Post('campaigns/:id/recipients/:recipientId/skip')
+  @ApiOperation({ summary: 'Skip a recipient — it will not be dialed again' })
+  async skipCampaignRecipient(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Param('recipientId') recipientId: string,
+  ) {
+    return await this.voiceCampaignService.skipRecipient(tenantId, id, recipientId);
+  }
+
   @Get('phone-numbers/available')
   @ApiOperation({ summary: 'Search available phone numbers' })
   async searchAvailableNumbers(
