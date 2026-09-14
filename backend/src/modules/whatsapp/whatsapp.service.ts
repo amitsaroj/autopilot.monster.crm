@@ -35,6 +35,16 @@ export interface WhatsappFlowNodeDefinition {
 
 const DEFAULT_SLA_MS = 15 * 60 * 1000;
 
+/** Meta's Graph API errors come back as `{ error: { message, type, code, ... } }` — pull
+ * that out instead of `String(data)`, which just renders "[object Object]". */
+function describeMetaApiError(error: unknown): string {
+  if (isAxiosError(error)) {
+    const data = error.response?.data as { error?: { message?: string } } | undefined;
+    return data?.error?.message ?? (data ? JSON.stringify(data) : error.message);
+  }
+  return error instanceof Error ? error.message : 'Meta API request failed';
+}
+
 @Injectable()
 export class WhatsappService {
   private readonly logger = new Logger(WhatsappService.name);
@@ -159,11 +169,7 @@ export class WhatsappService {
         },
       );
     } catch (error) {
-      const detail = isAxiosError(error)
-        ? String(error.response?.data ?? error.message)
-        : error instanceof Error
-          ? error.message
-          : 'Meta API request failed';
+      const detail = describeMetaApiError(error);
       this.logger.error(`WhatsApp send failed for tenant ${tenantId}: ${detail}`);
       throw new BadRequestException(`WhatsApp send failed: ${detail}`);
     }
@@ -214,11 +220,7 @@ export class WhatsappService {
         },
       );
     } catch (error) {
-      const detail = isAxiosError(error)
-        ? String(error.response?.data ?? error.message)
-        : error instanceof Error
-          ? error.message
-          : 'Meta API request failed';
+      const detail = describeMetaApiError(error);
       this.logger.error(`WhatsApp template send failed for tenant ${tenantId}: ${detail}`);
       throw new BadRequestException(`WhatsApp template send failed: ${detail}`);
     }
