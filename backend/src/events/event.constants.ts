@@ -66,6 +66,7 @@ export const EVENT_NAMES = {
   // Voice
   CALL_STARTED: 'call.started',
   CALL_ENDED: 'call.ended',
+  CALL_DISPOSITIONED: 'call.dispositioned',
 
   // Messaging
   MESSAGE_SENT: 'message.sent',

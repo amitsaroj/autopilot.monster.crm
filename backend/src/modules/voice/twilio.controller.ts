@@ -145,4 +145,55 @@ export class TwilioController {
 
     res.status(200).send('OK');
   }
+
+  @Post('amd-callback')
+  @Public()
+  async handleAmdCallback(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Headers('host') host: string,
+    @Headers('x-twilio-signature') signature: string,
+  ) {
+    const url = `${req.protocol}://${host}${req.originalUrl}`;
+    if (!this.twilioService.validateWebhookSignature(signature, url, toTwilioParams(req.body))) {
+      throw new ForbiddenException('Invalid Twilio webhook signature');
+    }
+
+    const callSid = String(req.body.CallSid ?? '');
+    const answeredBy = String(req.body.AnsweredBy ?? '');
+
+    if (callSid && answeredBy) {
+      const call = await this.voiceCallService.persistAnsweredBy(callSid, answeredBy);
+      const isMachine = answeredBy.startsWith('machine');
+
+      if (call && isMachine && call.campaignId) {
+        await this.voiceCampaignService.applyVoicemailDetected(call.campaignId, call.id, call.sid);
+      }
+    }
+
+    res.status(200).send('OK');
+  }
+
+  @Post('recording-callback')
+  @Public()
+  async handleRecordingCallback(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Headers('host') host: string,
+    @Headers('x-twilio-signature') signature: string,
+  ) {
+    const url = `${req.protocol}://${host}${req.originalUrl}`;
+    if (!this.twilioService.validateWebhookSignature(signature, url, toTwilioParams(req.body))) {
+      throw new ForbiddenException('Invalid Twilio webhook signature');
+    }
+
+    const callSid = String(req.body.CallSid ?? '');
+    const recordingUrl = String(req.body.RecordingUrl ?? '');
+
+    if (callSid && recordingUrl) {
+      await this.voiceCallService.persistRecording(callSid, recordingUrl);
+    }
+
+    res.status(200).send('OK');
+  }
 }

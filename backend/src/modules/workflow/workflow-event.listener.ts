@@ -78,6 +78,25 @@ export class WorkflowEventListener {
     });
   }
 
+  @OnEvent(EVENT_NAMES.CALL_DISPOSITIONED)
+  async handleCallDispositioned(payload: {
+    tenantId: string;
+    disposition: string;
+    summary: string;
+    leadId?: string;
+    contactId?: string;
+    campaignId?: string;
+    recipientId?: string;
+  }): Promise<void> {
+    // Generic catch-all trigger for anyone who wants every disposition, plus
+    // a disposition-specific one (CALL_QUALIFIED, CALL_DO_NOT_CALL, ...) —
+    // same pattern as DEAL_STAGE_CHANGED firing alongside DEAL_WON/DEAL_LOST.
+    await this.trigger('CALL_DISPOSITIONED', payload.tenantId, payload);
+    if (payload.disposition) {
+      await this.trigger(`CALL_${payload.disposition}`, payload.tenantId, payload);
+    }
+  }
+
   @OnEvent(EVENT_NAMES.MESSAGE_RECEIVED)
   async handleMessageReceived(payload: {
     tenantId: string;

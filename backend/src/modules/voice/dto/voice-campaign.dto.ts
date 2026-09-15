@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -11,6 +12,7 @@ import {
 } from 'class-validator';
 
 const HHMM_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const VOICEMAIL_ACTIONS = ['CONTINUE', 'HANGUP'] as const;
 
 export class CreateVoiceCampaignDto {
   @ApiProperty()
@@ -87,6 +89,16 @@ export class CreateVoiceCampaignDto {
   @IsString()
   @IsOptional()
   objective?: string;
+
+  @ApiPropertyOptional({ enum: VOICEMAIL_ACTIONS, default: 'CONTINUE' })
+  @IsIn(VOICEMAIL_ACTIONS)
+  @IsOptional()
+  voicemailAction?: 'CONTINUE' | 'HANGUP';
+
+  @ApiPropertyOptional({ description: 'Number the AI agent can transfer an interested caller to' })
+  @IsString()
+  @IsOptional()
+  humanTransferNumber?: string;
 }
 
 export class GenerateVoiceCampaignDraftDto {
@@ -190,4 +202,14 @@ export class UpdateVoiceCampaignDto {
   @IsString()
   @IsOptional()
   objective?: string;
+
+  @ApiPropertyOptional({ enum: VOICEMAIL_ACTIONS })
+  @IsIn(VOICEMAIL_ACTIONS)
+  @IsOptional()
+  voicemailAction?: 'CONTINUE' | 'HANGUP';
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  humanTransferNumber?: string;
 }

@@ -98,6 +98,14 @@ export class VoiceCampaignRecipientRepository extends BaseRepository<VoiceCampai
     return this.repository.findOne({ where: { tenantId, callId } });
   }
 
+  /** Unpaginated — for export only. */
+  findAllByCampaign(tenantId: string, campaignId: string): Promise<VoiceCampaignRecipient[]> {
+    return this.repository.find({
+      where: { tenantId, campaignId },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
   save(recipient: VoiceCampaignRecipient): Promise<VoiceCampaignRecipient> {
     return this.repository.save(recipient);
   }

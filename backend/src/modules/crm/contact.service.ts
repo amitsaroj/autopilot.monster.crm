@@ -79,6 +79,21 @@ export class ContactService {
     return contact;
   }
 
+  /** Compliance-critical suppression flag — a dedicated mutator (not routed through the general
+   * update DTO) since it should only ever be set deliberately, e.g. by an explicit opt-out during
+   * a call, never as a side effect of an unrelated field update. */
+  async setDoNotContact(
+    tenantId: string,
+    id: string,
+    doNotContact: boolean,
+    actorId?: string,
+  ): Promise<Contact> {
+    await this.findOne(tenantId, id);
+    const contact = await this.contactRepository.updateWithTenant(tenantId, id, { doNotContact });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId, actorId });
+    return contact;
+  }
+
   async assignOwner(
     tenantId: string,
     id: string,

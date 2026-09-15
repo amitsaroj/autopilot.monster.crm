@@ -48,4 +48,20 @@ export class VoiceCall extends BaseEntity {
 
   @Column({ name: 'cost_amount', type: 'decimal', precision: 10, scale: 4, default: 0 })
   costAmount!: number;
+
+  /** Which VoiceProvider placed this call — 'twilio' today; see providers/voice-provider.interface.ts. */
+  @Column({ length: 30, default: 'twilio' })
+  provider!: string;
+
+  /** Twilio AMD result (human/machine_start/machine_end_beep/machine_end_silence/machine_end_other/fax/unknown), when machine detection was requested. */
+  @Column({ name: 'answered_by', length: 30, nullable: true })
+  answeredBy?: string;
+
+  /** Object key of this call's recording in MinIO, once downloaded from the provider — see recordingUrl for the (presigned, expiring) playback link. */
+  @Column({ name: 'recording_object_key', nullable: true })
+  recordingObjectKey?: string;
+
+  /** True once the AI initiated a live transfer to a human during this call. */
+  @Column({ name: 'transferred_to_human', default: false })
+  transferredToHuman!: boolean;
 }

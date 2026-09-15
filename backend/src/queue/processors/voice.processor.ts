@@ -90,6 +90,7 @@ export class VoiceQueueProcessor {
       contactId: recipient.contactId,
       agentId: campaign.agentId,
       script: campaign.script,
+      humanTransferNumber: campaign.humanTransferNumber,
     });
 
     const call = await this.voiceCallService.initiateOutbound(tenantId, {
@@ -97,6 +98,10 @@ export class VoiceQueueProcessor {
       wssUrl,
       campaignId,
       recipientId: recipient.id,
+      // Bulk campaigns dial contacts who never asked for an AI conversation
+      // with their voicemail — detect it and, per the campaign's configured
+      // voicemailAction, hang up rather than talk to an answering machine.
+      machineDetection: true,
     });
 
     // A provider-side rejection (bad credentials, invalid number, outage)

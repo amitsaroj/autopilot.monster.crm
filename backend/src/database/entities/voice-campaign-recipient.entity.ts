@@ -10,9 +10,22 @@ export enum VoiceCampaignRecipientStatus {
   FAILED = 'FAILED',
   NO_ANSWER = 'NO_ANSWER',
   BUSY = 'BUSY',
+  VOICEMAIL = 'VOICEMAIL',
   RETRY_PENDING = 'RETRY_PENDING',
   SKIPPED = 'SKIPPED',
   CANCELLED = 'CANCELLED',
+}
+
+/** Standardized contact-level outcome, set once the AI's post-call analysis classifies the conversation. */
+export enum VoiceCallDisposition {
+  INTERESTED = 'INTERESTED',
+  NOT_INTERESTED = 'NOT_INTERESTED',
+  CALLBACK_REQUESTED = 'CALLBACK_REQUESTED',
+  QUALIFIED = 'QUALIFIED',
+  NOT_QUALIFIED = 'NOT_QUALIFIED',
+  WRONG_NUMBER = 'WRONG_NUMBER',
+  DO_NOT_CALL = 'DO_NOT_CALL',
+  CONVERTED = 'CONVERTED',
 }
 
 /**
@@ -63,4 +76,12 @@ export class VoiceCampaignRecipient extends BaseEntity {
 
   @Column({ name: 'failure_reason', type: 'text', nullable: true })
   failureReason?: string;
+
+  /** AI-classified conversation outcome — set async by LeadIntelligenceService via the CALL_DISPOSITIONED event, once a transcript is analyzed. */
+  @Column({
+    type: 'enum',
+    enum: VoiceCallDisposition,
+    nullable: true,
+  })
+  disposition?: VoiceCallDisposition;
 }

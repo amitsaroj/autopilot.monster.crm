@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException, BadRequestException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectQueue } from '@nestjs/bull';
 import { ModuleRef } from '@nestjs/core';
+import { OnEvent } from '@nestjs/event-emitter';
 import { Queue } from 'bull';
 import { In, Repository } from 'typeorm';
 
@@ -14,11 +15,14 @@ import { VoiceCampaignRecipientRepository } from './voice-campaign-recipient.rep
 import {
   VoiceCampaignRecipient,
   VoiceCampaignRecipientStatus,
+  VoiceCallDisposition,
 } from '../../database/entities/voice-campaign-recipient.entity';
+import { EVENT_NAMES } from '../../events/event.constants';
 import { JOB_NAMES, QUEUE_NAMES } from '../../queue/queue.constants';
 import { nextWithinCallingHours } from './calling-window.util';
 import { PricingService } from '../pricing/pricing.service';
 import { BillingService } from '../billing/billing.service';
+import { VoiceCallService } from './voice-call.service';
 
 interface VoiceJobPayload {
   tenantId: string;
@@ -64,6 +68,7 @@ export class VoiceCampaignService {
     private readonly voiceQueue: Queue<VoiceJobPayload>,
     private readonly moduleRef: ModuleRef,
     private readonly aiProviderService: AiProviderService,
+    private readonly voiceCallService: VoiceCallService,
   ) {}
 
   findAll(tenantId: string): Promise<VoiceCampaign[]> {
@@ -100,6 +105,8 @@ export class VoiceCampaignService {
         timezone: dto.timezone ?? 'UTC',
         maxCalls: dto.maxCalls,
         objective: dto.objective,
+        voicemailAction: dto.voicemailAction ?? 'CONTINUE',
+        humanTransferNumber: dto.humanTransferNumber,
       }),
     );
   }
@@ -178,6 +185,8 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
     if (dto.timezone !== undefined) campaign.timezone = dto.timezone;
     if (dto.maxCalls !== undefined) campaign.maxCalls = dto.maxCalls;
     if (dto.objective !== undefined) campaign.objective = dto.objective;
+    if (dto.voicemailAction !== undefined) campaign.voicemailAction = dto.voicemailAction;
+    if (dto.humanTransferNumber !== undefined) campaign.humanTransferNumber = dto.humanTransferNumber;
 
     return this.campaignRepository.save(campaign);
   }
@@ -318,6 +327,47 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
       query,
     );
     return { items, total, page: query.page ?? 1, limit: query.limit ?? 50 };
+  }
+
+  /** CSV of every recipient this campaign has ever dialed, for the user to download/analyze offline. */
+  async exportRecipientsCsv(tenantId: string, campaignId: string): Promise<string> {
+    await this.findOne(tenantId, campaignId);
+    const recipients = await this.recipientRepository.findAllByCampaign(tenantId, campaignId);
+
+    const headers = [
+      'contactId',
+      'phone',
+      'status',
+      'disposition',
+      'attempts',
+      'maxAttempts',
+      'outcome',
+      'lastAttemptAt',
+      'nextAttemptAt',
+      'failureReason',
+    ];
+    const escape = (value: unknown) => {
+      const str = value === null || value === undefined ? '' : String(value);
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+    const rows = recipients.map((r) =>
+      [
+        r.contactId,
+        r.phone,
+        r.status,
+        r.disposition ?? '',
+        r.attempts,
+        r.maxAttempts,
+        r.outcome ?? '',
+        r.lastAttemptAt?.toISOString() ?? '',
+        r.nextAttemptAt?.toISOString() ?? '',
+        r.failureReason ?? '',
+      ]
+        .map(escape)
+        .join(','),
+    );
+
+    return [headers.join(','), ...rows].join('\n');
   }
 
   async skipRecipient(
@@ -473,6 +523,68 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
     }
   }
 
+  /**
+   * Called from the AMD callback as soon as Twilio reports a machine picked
+   * up — well before the call's own 'completed' status webhook. Marks the
+   * recipient VOICEMAIL immediately (applyOutcomeToRecipient later refuses
+   * to downgrade this back to a plain COMPLETED) and, if the campaign is
+   * configured to hang up on voicemail, ends the call rather than letting
+   * the AI talk to an answering machine for the rest of its greeting.
+   */
+  /**
+   * LeadIntelligenceService (crm module) emits this once it's classified a
+   * transcript — listened for here instead of injected directly to avoid a
+   * crm<->voice module dependency; decoupled the same way WorkflowEventListener
+   * reacts to CRM events without crm depending on workflow.
+   */
+  @OnEvent(EVENT_NAMES.CALL_DISPOSITIONED)
+  async handleCallDispositioned(payload: {
+    tenantId: string;
+    disposition: string;
+    campaignId?: string;
+    recipientId?: string;
+  }): Promise<void> {
+    if (!payload.campaignId || !payload.recipientId) {
+      return;
+    }
+    if (!(payload.disposition in VoiceCallDisposition)) {
+      return;
+    }
+
+    const recipient = await this.recipientRepository.findById(payload.tenantId, payload.recipientId);
+    if (!recipient || recipient.campaignId !== payload.campaignId) {
+      return;
+    }
+
+    recipient.disposition = payload.disposition as VoiceCallDisposition;
+    await this.recipientRepository.save(recipient);
+  }
+
+  async applyVoicemailDetected(campaignId: string, callId: string, callSid: string): Promise<void> {
+    const campaign = await this.campaignRepository.findOne({ where: { id: campaignId } });
+    if (!campaign) {
+      return;
+    }
+
+    const call = await this.voiceCallService.findOne(campaign.tenantId, callId);
+    if (call.recipientId) {
+      const recipient = await this.recipientRepository.findById(campaign.tenantId, call.recipientId);
+      if (recipient) {
+        recipient.status = VoiceCampaignRecipientStatus.VOICEMAIL;
+        recipient.outcome = 'VOICEMAIL';
+        await this.recipientRepository.save(recipient);
+      }
+    }
+
+    if (campaign.voicemailAction === 'HANGUP') {
+      try {
+        await this.voiceCallService.hangUp(campaign.tenantId, callId);
+      } catch (err) {
+        this.logger.warn(`Failed to hang up voicemail call ${callSid}`, err as Error);
+      }
+    }
+  }
+
   private async applyOutcomeToRecipient(
     campaign: VoiceCampaign,
     recipientId: string,
@@ -480,6 +592,18 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
   ): Promise<void> {
     const recipient = await this.recipientRepository.findById(campaign.tenantId, recipientId);
     if (!recipient) {
+      return;
+    }
+
+    // The AMD callback (fires as soon as Twilio detects a machine, before the
+    // call actually ends) already classified this recipient as VOICEMAIL —
+    // don't let the later 'completed' status webhook downgrade that to a
+    // generic COMPLETED; a call a machine picked up is more useful labeled
+    // as a voicemail than as a normal answered call.
+    if (recipient.status === VoiceCampaignRecipientStatus.VOICEMAIL) {
+      recipient.outcome = normalized;
+      recipient.lastAttemptAt = new Date();
+      await this.recipientRepository.save(recipient);
       return;
     }
 

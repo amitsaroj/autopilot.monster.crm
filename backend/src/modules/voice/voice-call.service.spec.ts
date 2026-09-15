@@ -10,6 +10,8 @@ import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
+import { VoiceProviderRegistry } from './providers/voice-provider.registry';
+import { StorageService } from '../../storage/storage.service';
 
 describe('VoiceCallService', () => {
   let service: VoiceCallService;
@@ -25,15 +27,30 @@ describe('VoiceCallService', () => {
     updateWithTenant: jest.fn(),
   };
 
-  const twilioService = {
+  const twilioProvider = {
+    name: 'twilio',
     getFromNumber: jest.fn(),
     initiateOutboundCall: jest.fn(),
     hangUpCall: jest.fn(),
     transferCall: jest.fn(),
+    validateWebhookSignature: jest.fn(),
+    checkHealth: jest.fn(),
+  };
+
+  const providerRegistry = {
+    getProvider: jest.fn().mockResolvedValue(twilioProvider),
+    resolveProviderName: jest.fn().mockResolvedValue('twilio'),
+    listProviderNames: jest.fn().mockReturnValue(['twilio']),
+    checkHealth: jest.fn(),
+    checkAllHealth: jest.fn(),
   };
 
   const voicePhoneNumberService = {
     findTenantIdByNumber: jest.fn(),
+  };
+
+  const storageService = {
+    putObject: jest.fn(),
   };
 
   const redisStore = new Map<string, string>();
@@ -56,13 +73,14 @@ describe('VoiceCallService', () => {
       providers: [
         VoiceCallService,
         { provide: VoiceCallRepository, useValue: voiceCallRepository },
-        { provide: TwilioService, useValue: twilioService },
+        { provide: VoiceProviderRegistry, useValue: providerRegistry },
         { provide: VoicePhoneNumberService, useValue: voicePhoneNumberService },
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('http://localhost:8000') },
         },
         { provide: getQueueToken(QUEUE_NAMES.VOICE), useValue: voiceQueue },
+        { provide: StorageService, useValue: storageService },
       ],
     }).compile();
 
@@ -111,12 +129,14 @@ describe('VoiceCallService', () => {
       status: 'QUEUED',
       durationSeconds: 0,
       costAmount: 0,
+      provider: 'twilio',
+      transferredToHuman: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    twilioService.getFromNumber.mockResolvedValue('+15550001');
-    twilioService.initiateOutboundCall.mockResolvedValue('CA123');
+    twilioProvider.getFromNumber.mockResolvedValue('+15550001');
+    twilioProvider.initiateOutboundCall.mockResolvedValue('CA123');
     voiceCallRepository.findBySid.mockResolvedValue(null);
     voiceCallRepository.create.mockResolvedValue(persisted);
 
@@ -126,10 +146,14 @@ describe('VoiceCallService', () => {
       voiceProfile: 'shimmer',
     });
 
-    expect(twilioService.initiateOutboundCall).toHaveBeenCalledWith(
+    expect(providerRegistry.getProvider).toHaveBeenCalledWith('tenant-1');
+    expect(twilioProvider.initiateOutboundCall).toHaveBeenCalledWith(
       'tenant-1',
       '+15550002',
       'ws://localhost/voice/stream?tenantId=tenant-1',
+      expect.objectContaining({
+        statusCallbackUrl: 'http://localhost:8000/api/v1/voice/twilio/status-callback',
+      }),
     );
     expect(voiceCallRepository.create).toHaveBeenCalledWith('tenant-1', {
       sid: 'CA123',
@@ -138,6 +162,7 @@ describe('VoiceCallService', () => {
       direction: 'OUTBOUND',
       status: 'QUEUED',
       voiceProfile: 'shimmer',
+      provider: 'twilio',
     });
     expect(result).toEqual(persisted);
   });
@@ -160,6 +185,8 @@ describe('VoiceCallService', () => {
       status: 'RINGING',
       durationSeconds: 0,
       costAmount: 0,
+      provider: 'twilio',
+      transferredToHuman: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

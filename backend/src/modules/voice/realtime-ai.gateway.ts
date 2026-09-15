@@ -50,6 +50,8 @@ export class RealtimeAiGateway implements OnModuleDestroy {
       contactId?: string;
       callSid?: string;
       voiceProfile?: string;
+      humanTransferNumber?: string;
+      transferRequested?: boolean;
     }
   >();
 
@@ -102,6 +104,7 @@ export class RealtimeAiGateway implements OnModuleDestroy {
     const leadId = context.leadId;
     const contactId = context.contactId;
     const script = context.script;
+    const humanTransferNumber = context.humanTransferNumber;
     let voiceProfile = context.voice;
 
     const openAiApiKey = this.configService.get('OPENAI_API_KEY');
@@ -127,6 +130,7 @@ export class RealtimeAiGateway implements OnModuleDestroy {
       leadId,
       contactId,
       voiceProfile,
+      humanTransferNumber,
     });
 
     client.on('close', () => {
@@ -174,9 +178,15 @@ export class RealtimeAiGateway implements OnModuleDestroy {
             'You are a helpful AI voice agent for AutopilotMonster CRM, representing a company.';
           voiceProfile = voiceProfile || 'shimmer';
 
+          const transferInstructions = humanTransferNumber
+            ? `\n\nIf the caller clearly wants to speak with a human, asks for a manager, or the conversation
+               needs a person to close it out, tell them you're connecting them now and call the
+               transfer_to_human tool. Only use it when the caller actually wants a human — not by default.`
+            : '';
+
           const instructions = `
             ${roleInstructions}
-            Keep responses under 2 sentences for natural flow.
+            Keep responses under 2 sentences for natural flow.${transferInstructions}
 
             Use the following context to answer customer questions naturally and concisely.
             If the answer isn't in the context, be honest but helpful.
@@ -199,6 +209,28 @@ export class RealtimeAiGateway implements OnModuleDestroy {
                 input_audio_format: 'g711_ulaw',
                 output_audio_format: 'g711_ulaw',
                 modalities: ['text', 'audio'],
+                ...(humanTransferNumber
+                  ? {
+                      tools: [
+                        {
+                          type: 'function',
+                          name: 'transfer_to_human',
+                          description:
+                            'Transfer the current call to a human agent. Use only when the caller explicitly wants to speak with a person.',
+                          parameters: {
+                            type: 'object',
+                            properties: {
+                              reason: {
+                                type: 'string',
+                                description: 'Brief reason the caller wants a human',
+                              },
+                            },
+                          },
+                        },
+                      ],
+                      tool_choice: 'auto',
+                    }
+                  : {}),
               },
             }),
           );
@@ -237,6 +269,8 @@ export class RealtimeAiGateway implements OnModuleDestroy {
         } else if (response.type === 'conversation.item.input_audio_transcription.completed') {
           const session = this.sessions.get(client);
           if (session) session.transcript += `User: ${response.transcript}\n`;
+        } else if (response.type === 'response.function_call_arguments.done') {
+          void this.handleFunctionCall(client, openaiWs, response);
         }
       } catch (e) {
         this.logger.error('Failed to parse OpenAI message', e);
@@ -248,17 +282,73 @@ export class RealtimeAiGateway implements OnModuleDestroy {
     });
   }
 
+  /**
+   * The only tool exposed to the model today is transfer_to_human (only
+   * offered at all when the campaign/call configured a humanTransferNumber
+   * — see the tools array in session.update above). Handles OpenAI's
+   * realtime function-calling protocol: acknowledge the tool call with a
+   * function_call_output item, then let the model continue the conversation.
+   */
+  private async handleFunctionCall(
+    client: WsWebSocket,
+    openaiWs: WsWebSocket,
+    response: { call_id?: string; name?: string },
+  ): Promise<void> {
+    const session = this.sessions.get(client);
+    if (!session || response.name !== 'transfer_to_human' || session.transferRequested) {
+      return;
+    }
+
+    let outcome = 'Transfer is not available for this call.';
+    if (session.humanTransferNumber && session.callSid) {
+      session.transferRequested = true;
+      try {
+        await this.voiceCallService.transferCall(
+          session.tenantId,
+          session.callSid,
+          session.humanTransferNumber,
+        );
+        outcome = 'Call is being transferred to a human agent now.';
+        this.logger.log(`AI transferred call ${session.callSid} to a human agent`);
+      } catch (err) {
+        this.logger.error(`Failed to transfer call ${session.callSid}`, err);
+        outcome = 'The transfer failed — stay on the line and keep helping the caller yourself.';
+        session.transferRequested = false;
+      }
+    }
+
+    if (openaiWs.readyState !== WsWebSocket.OPEN) {
+      return;
+    }
+    openaiWs.send(
+      JSON.stringify({
+        type: 'conversation.item.create',
+        item: {
+          type: 'function_call_output',
+          call_id: response.call_id,
+          output: JSON.stringify({ result: outcome }),
+        },
+      }),
+    );
+    openaiWs.send(JSON.stringify({ type: 'response.create' }));
+  }
+
   private async handleDisconnect(client: WsWebSocket) {
     const session = this.sessions.get(client);
     if (session) {
       this.logger.log(`Call ended for tenant ${session.tenantId}. Analyzing transcript...`);
 
+      let campaignId: string | undefined;
+      let recipientId: string | undefined;
+
       if (session.callSid && session.transcript.trim()) {
-        await this.voiceCallService.persistCallTranscript(
+        const call = await this.voiceCallService.persistCallTranscript(
           session.tenantId,
           session.callSid,
           session.transcript,
         );
+        campaignId = call?.campaignId;
+        recipientId = call?.recipientId;
 
         const analysis = await this.leadIntelligenceService.analyzeTranscript(session.transcript);
         if (analysis) {
@@ -280,6 +370,7 @@ export class RealtimeAiGateway implements OnModuleDestroy {
           session.tenantId,
           session.contactId,
           session.transcript,
+          { campaignId, recipientId },
         );
       }
 

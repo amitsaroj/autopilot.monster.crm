@@ -1,10 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { LeadService } from './lead.service';
 import { ContactService } from './contact.service';
 import { NotificationService } from './notification.service';
 import { AiProviderService } from '../ai/providers/ai-provider.service';
+import { EVENT_NAMES } from '../../events/event.constants';
+
+/** Standardized contact-level outcome vocabulary — mirrors VoiceCallDisposition in the voice module (kept
+ * independent rather than imported to avoid a crm->voice module dependency; the string values must match). */
+const VALID_DISPOSITIONS = new Set([
+  'INTERESTED',
+  'NOT_INTERESTED',
+  'CALLBACK_REQUESTED',
+  'QUALIFIED',
+  'NOT_QUALIFIED',
+  'WRONG_NUMBER',
+  'DO_NOT_CALL',
+  'CONVERTED',
+]);
 
 @Injectable()
 export class LeadIntelligenceService {
@@ -16,6 +31,7 @@ export class LeadIntelligenceService {
     private contactService: ContactService,
     private notificationService: NotificationService,
     private aiProviderService: AiProviderService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   private isOpenAiAvailable(): boolean {
@@ -42,6 +58,7 @@ export class LeadIntelligenceService {
           extractedName: result.name,
           intent: result.intent,
           sentiment: result.sentiment,
+          disposition: result.disposition,
           analyzedAt: new Date().toISOString(),
         },
       });
@@ -58,6 +75,13 @@ export class LeadIntelligenceService {
         }
       }
 
+      this.emitDisposition({
+        tenantId,
+        leadId,
+        disposition: result.disposition,
+        summary: result.summary,
+      });
+
       return result;
     } catch (err) {
       this.logger.error(`AI analysis failed for lead ${leadId}`, err);
@@ -71,7 +95,12 @@ export class LeadIntelligenceService {
    * the outcome is logged as a CALL activity on the contact's timeline instead,
    * and the WhatsApp follow-up only fires if the contact has opted in.
    */
-  async analyzeContactCallOutcome(tenantId: string, contactId: string, transcript: string) {
+  async analyzeContactCallOutcome(
+    tenantId: string,
+    contactId: string,
+    transcript: string,
+    campaignContext: { campaignId?: string; recipientId?: string } = {},
+  ) {
     const result = await this.analyzeTranscript(transcript);
     if (!result) {
       return null;
@@ -81,9 +110,17 @@ export class LeadIntelligenceService {
       const contact = await this.contactService.findOne(tenantId, contactId);
       await this.contactService.recordCallActivity(tenantId, contactId, {
         summary: result.summary,
-        sentiment: result.sentiment,
+        sentiment: result.disposition || result.sentiment,
         status: result.status,
       });
+
+      // A caller explicitly asking to stop being called is a real compliance
+      // requirement, not just a disposition label — suppress all future
+      // automated outbound to this contact immediately.
+      if (result.doNotCall && !contact.doNotContact) {
+        await this.contactService.setDoNotContact(tenantId, contactId, true);
+        this.logger.log(`Contact ${contactId} opted out during call — marked do-not-contact`);
+      }
 
       if (result.status === 'QUALIFIED' && contact.whatsappOptIn) {
         const phone = contact.mobile ?? contact.phone;
@@ -96,6 +133,15 @@ export class LeadIntelligenceService {
           );
         }
       }
+
+      this.emitDisposition({
+        tenantId,
+        contactId,
+        disposition: result.disposition,
+        summary: result.summary,
+        campaignId: campaignContext.campaignId,
+        recipientId: campaignContext.recipientId,
+      });
 
       return result;
     } catch (err) {
@@ -112,6 +158,8 @@ export class LeadIntelligenceService {
     status: string;
     intent: string;
     sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+    disposition: string;
+    doNotCall: boolean;
   } | null> {
     if (!transcript.trim()) {
       return null;
@@ -137,8 +185,14 @@ export class LeadIntelligenceService {
             5. A suggested status (e.g., QUALIFIED, FOLLOW_UP, UNQUALIFIED).
             6. Primary Intent (e.g., PRICING, SUPPORT, DEMO).
             7. Sentiment as POSITIVE, NEUTRAL, or NEGATIVE.
+            8. A standardized disposition — exactly one of: INTERESTED, NOT_INTERESTED,
+               CALLBACK_REQUESTED, QUALIFIED, NOT_QUALIFIED, WRONG_NUMBER, DO_NOT_CALL, CONVERTED.
+            9. doNotCall: true ONLY if the person explicitly asked to not be called again, to be
+               removed from the list, to stop calling, or said they are not the right person and
+               asked not to be contacted — otherwise false. Be conservative; this suppresses all
+               future automated calls to this person.
 
-            Return ONLY a JSON object: { "name": "...", "email": "...", "summary": "...", "score": 85, "status": "QUALIFIED", "intent": "DEMO", "sentiment": "POSITIVE" }`,
+            Return ONLY a JSON object: { "name": "...", "email": "...", "summary": "...", "score": 85, "status": "QUALIFIED", "intent": "DEMO", "sentiment": "POSITIVE", "disposition": "QUALIFIED", "doNotCall": false }`,
           },
           { role: 'user', content: transcript },
         ],
@@ -149,6 +203,14 @@ export class LeadIntelligenceService {
       const sentiment = ['POSITIVE', 'NEUTRAL', 'NEGATIVE'].includes(result.sentiment)
         ? result.sentiment
         : 'NEUTRAL';
+      const doNotCall = result.doNotCall === true;
+      const disposition = VALID_DISPOSITIONS.has(result.disposition)
+        ? result.disposition
+        : doNotCall
+          ? 'DO_NOT_CALL'
+          : sentiment === 'POSITIVE'
+            ? 'INTERESTED'
+            : 'NOT_INTERESTED';
 
       return {
         name: result.name,
@@ -158,10 +220,25 @@ export class LeadIntelligenceService {
         status: result.status || 'PROCESSED',
         intent: result.intent || 'UNKNOWN',
         sentiment,
+        disposition,
+        doNotCall,
       };
     } catch (err) {
       this.logger.error('AI transcript analysis failed', err);
       return null;
     }
+  }
+
+  /** Notifies the workflow-automation and campaign-recipient listeners of a standardized call outcome. */
+  private emitDisposition(payload: {
+    tenantId: string;
+    disposition: string;
+    summary: string;
+    leadId?: string;
+    contactId?: string;
+    campaignId?: string;
+    recipientId?: string;
+  }): void {
+    this.eventEmitter.emit(EVENT_NAMES.CALL_DISPOSITIONED, payload);
   }
 }
