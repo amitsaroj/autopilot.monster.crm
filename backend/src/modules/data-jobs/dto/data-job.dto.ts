@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsIn, IsOptional, IsString } from 'class-validator';
 
 const ENTITY_TYPES = ['contacts', 'deals', 'companies', 'leads'] as const;
 
@@ -11,6 +11,14 @@ export class StartImportDto {
   @ApiProperty()
   @IsString()
   fileKey!: string;
+
+  @ApiPropertyOptional({
+    description: 'Applied to every imported row that supports tags (e.g. contacts) — lets a segment target exactly this import batch afterward.',
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tags?: string[];
 }
 
 export class StartExportDto {

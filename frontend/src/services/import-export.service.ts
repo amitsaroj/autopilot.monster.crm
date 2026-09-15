@@ -14,8 +14,8 @@ export interface DataJob {
 }
 
 export const importExportService = {
-  startImport: (entityType: string, fileKey: string) =>
-    api.post<{ data: DataJob }>('/import', { entityType, fileKey }),
+  startImport: (entityType: string, fileKey: string, tags?: string[]) =>
+    api.post<{ data: DataJob }>('/import', { entityType, fileKey, tags }),
 
   getImportJob: (jobId: string) => api.get<{ data: DataJob }>(`/import/${jobId}`),
 

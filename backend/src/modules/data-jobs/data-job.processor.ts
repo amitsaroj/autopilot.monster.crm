@@ -31,7 +31,7 @@ export class ImportJobProcessor {
 
   @Process('process-import')
   async handleImport(job: Job<DataJobQueuePayload>): Promise<void> {
-    const { jobId, tenantId, entityType, fileKey } = job.data;
+    const { jobId, tenantId, entityType, fileKey, tags } = job.data;
     await this.dataJobService.markProcessing(jobId);
 
     try {
@@ -45,7 +45,7 @@ export class ImportJobProcessor {
       let imported = 0;
 
       for (const row of rows) {
-        await this.importRow(tenantId, entityType, row);
+        await this.importRow(tenantId, entityType, row, tags);
         imported += 1;
       }
 
@@ -80,7 +80,16 @@ export class ImportJobProcessor {
     tenantId: string,
     entityType: string,
     row: Record<string, string>,
+    batchTags: string[] = [],
   ): Promise<void> {
+    const rowTags = row.tags
+      ? row.tags
+          .split(/[,;]/)
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
+    const tags = Array.from(new Set([...rowTags, ...batchTags]));
+
     switch (entityType) {
       case 'contacts':
         await this.contactRepository.save(
@@ -90,7 +99,7 @@ export class ImportJobProcessor {
             lastName: row.lastName ?? row.last_name ?? '',
             email: row.email ?? `import-${Date.now()}@example.com`,
             phone: row.phone,
-            tags: [],
+            tags,
           }),
         );
         break;
@@ -100,7 +109,7 @@ export class ImportJobProcessor {
             tenantId,
             name: row.name ?? 'Imported Company',
             domain: row.domain,
-            tags: [],
+            tags,
           }),
         );
         break;
@@ -113,7 +122,7 @@ export class ImportJobProcessor {
             currency: row.currency ?? 'USD',
             pipelineId: row.pipelineId,
             stageId: row.stageId,
-            tags: [],
+            tags,
           }),
         );
         break;
