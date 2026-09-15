@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { voiceCampaignService } from '@/services/voice-campaign.service';
 import { crmMetadataService, type CrmSegment } from '@/services/crm-metadata.service';
@@ -27,6 +27,8 @@ export default function NewVoiceCampaignPage() {
   const [saving, setSaving] = useState(false);
   const [segments, setSegments] = useState<CrmSegment[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [objective, setObjective] = useState('');
+  const [generating, setGenerating] = useState(false);
   const [form, setForm] = useState({
     name: '',
     fromNumber: '',
@@ -51,6 +53,23 @@ export default function NewVoiceCampaignPage() {
       .then((res: any) => setAgents(res.data?.data ?? res.data ?? []))
       .catch(() => undefined);
   }, []);
+
+  const handleGenerate = async () => {
+    if (!objective.trim()) {
+      toast.error('Describe what this campaign should achieve first');
+      return;
+    }
+    setGenerating(true);
+    try {
+      const res = await voiceCampaignService.generateDraft({ objective });
+      setForm((f) => ({ ...f, name: res.data.data.name, script: res.data.data.script }));
+      toast.success('Draft generated — review and edit below before creating the campaign');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'AI generation failed');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +114,33 @@ export default function NewVoiceCampaignPage() {
         <ArrowLeft className="h-4 w-4" /> Campaigns
       </Link>
       <h1 className="text-2xl font-bold">New Voice Campaign</h1>
+
+      <section className="space-y-3 rounded-xl border border-[hsl(246,80%,60%)]/30 bg-[hsl(246,80%,60%)]/5 p-6">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Sparkles className="h-4 w-4 text-[hsl(246,80%,60%)]" /> What do you want to achieve?
+        </h2>
+        <p className="text-xs text-muted-foreground">
+          Describe the campaign in plain language and AI will draft a name and call script below —
+          review and edit it before creating the campaign.
+        </p>
+        <textarea
+          value={objective}
+          onChange={(e) => setObjective(e.target.value)}
+          rows={3}
+          className="w-full rounded-lg border border-border px-3 py-2 text-sm bg-background"
+          placeholder="Call all my leads and tell them about our AI CRM annual plan, explain the 30% discount, answer basic questions, qualify interested customers, and arrange a callback with sales."
+        />
+        <button
+          type="button"
+          onClick={() => void handleGenerate()}
+          disabled={generating}
+          className="inline-flex items-center gap-2 rounded-lg bg-[hsl(246,80%,60%)] px-4 py-2 text-sm font-semibold text-white hover:bg-[hsl(246,80%,55%)] disabled:opacity-50"
+        >
+          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          Generate draft
+        </button>
+      </section>
+
       <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
         <section className="space-y-4 rounded-xl border border-border bg-card p-6">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">

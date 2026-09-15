@@ -1,6 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ModuleRef } from '@nestjs/core';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { randomUUID } from 'node:crypto';
 
 import { VoiceCallRepository } from './voice-call.repository';
@@ -9,6 +11,21 @@ import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { PricingService } from '../pricing/pricing.service';
 import { BillingService } from '../billing/billing.service';
+import { QUEUE_NAMES } from '../../queue/queue.constants';
+
+/** Ephemeral context handed to a /voice/stream WebSocket connection via an opaque token — see buildStreamUrl. */
+export interface VoiceStreamContext {
+  tenantId: string;
+  agentId?: string;
+  leadId?: string;
+  contactId?: string;
+  voice?: string;
+  script?: string;
+}
+
+const STREAM_TOKEN_PREFIX = 'voice-stream-token:';
+/** A real call's Media Stream connects within seconds of being placed; this just needs to outlive normal setup/ringing time. */
+const STREAM_TOKEN_TTL_SECONDS = 10 * 60;
 
 export interface CreateOutboundCallInput {
   to: string;
@@ -43,9 +60,23 @@ export class VoiceCallService {
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
     private readonly configService: ConfigService,
     private readonly moduleRef: ModuleRef,
+    @InjectQueue(QUEUE_NAMES.VOICE)
+    private readonly voiceQueue: Queue,
   ) {}
 
-  buildStreamUrl(
+  /**
+   * The /voice/stream WebSocket is only ever meant to be opened by Twilio's
+   * Media Streams feature, fetching the URL we hand it in TwiML — but a raw
+   * `ws` connection has no way to run through JwtAuthGuard/TenantGuard, and
+   * Twilio can't send a custom Authorization header either. So instead of
+   * putting tenantId/contactId/leadId/script directly in the URL (which lets
+   * anyone who can reach the socket supply their own and pull an arbitrary
+   * tenant's data into a live AI session), we mint a random opaque token,
+   * stash the real context server-side in Redis with a short TTL, and hand
+   * out only the token. RealtimeAiGateway resolves it back to this context
+   * and deletes it on first use — the URL itself carries no trust anymore.
+   */
+  async buildStreamUrl(
     tenantId: string,
     params: {
       agentId?: string;
@@ -54,26 +85,35 @@ export class VoiceCallService {
       voice?: string;
       script?: string;
     } = {},
-  ): string {
+  ): Promise<string> {
     const appUrl = this.configService.get<string>('APP_URL') ?? 'http://localhost:8000';
     const wsBase = appUrl.replace(/^http/i, 'ws');
-    const query = new URLSearchParams({ tenantId });
-    if (params.agentId) {
-      query.set('agentId', params.agentId);
+
+    const token = randomUUID();
+    const context: VoiceStreamContext = { tenantId, ...params };
+    await this.voiceQueue.client.set(
+      `${STREAM_TOKEN_PREFIX}${token}`,
+      JSON.stringify(context),
+      'EX',
+      STREAM_TOKEN_TTL_SECONDS,
+    );
+
+    return `${wsBase}/voice/stream?token=${token}`;
+  }
+
+  /** Single-use: resolves a /voice/stream token to its real context and immediately invalidates it. */
+  async resolveStreamToken(token: string): Promise<VoiceStreamContext | null> {
+    const key = `${STREAM_TOKEN_PREFIX}${token}`;
+    const raw = await this.voiceQueue.client.get(key);
+    if (!raw) {
+      return null;
     }
-    if (params.leadId) {
-      query.set('leadId', params.leadId);
+    await this.voiceQueue.client.del(key);
+    try {
+      return JSON.parse(raw) as VoiceStreamContext;
+    } catch {
+      return null;
     }
-    if (params.contactId) {
-      query.set('contactId', params.contactId);
-    }
-    if (params.voice) {
-      query.set('voice', params.voice);
-    }
-    if (params.script) {
-      query.set('script', params.script);
-    }
-    return `${wsBase}/voice/stream?${query.toString()}`;
   }
 
   async findAll(tenantId: string): Promise<VoiceCall[]> {

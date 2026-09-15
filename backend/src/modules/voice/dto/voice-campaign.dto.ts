@@ -76,6 +76,34 @@ export class CreateVoiceCampaignDto {
   @IsString()
   @IsOptional()
   timezone?: string;
+
+  @ApiPropertyOptional({ description: 'Hard cap on total dial attempts; the campaign auto-pauses once reached' })
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  maxCalls?: number;
+
+  @ApiPropertyOptional({ description: 'Free-text objective this campaign was generated from, if any' })
+  @IsString()
+  @IsOptional()
+  objective?: string;
+}
+
+export class GenerateVoiceCampaignDraftDto {
+  @ApiProperty({
+    description: 'What the campaign should achieve, in plain language',
+    example:
+      'Call all my leads and tell them about our AI CRM annual plan, explain the 30% discount, answer basic questions, qualify interested customers, and arrange a callback with sales.',
+  })
+  @IsString()
+  @MaxLength(2000)
+  objective!: string;
+
+  @ApiPropertyOptional({ description: 'Who is being called, if useful context for tone/framing' })
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  audienceDescription?: string;
 }
 
 export class UpdateVoiceCampaignDto {
@@ -151,4 +179,15 @@ export class UpdateVoiceCampaignDto {
   @IsString()
   @IsOptional()
   timezone?: string;
+
+  @ApiPropertyOptional()
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  maxCalls?: number;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  objective?: string;
 }

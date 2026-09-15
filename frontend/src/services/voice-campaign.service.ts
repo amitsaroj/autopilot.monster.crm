@@ -77,9 +77,16 @@ export interface CreateVoiceCampaignPayload {
   callingHoursStart?: string;
   callingHoursEnd?: string;
   timezone?: string;
+  maxCalls?: number;
+  objective?: string;
 }
 
 export const voiceCampaignService = {
+  generateDraft: (payload: { objective: string; audienceDescription?: string }) =>
+    api.post<{ data: { name: string; script: string } }>(
+      '/voice/campaigns/generate-draft',
+      payload,
+    ),
   list: () => api.get<{ data: VoiceCampaign[] }>('/voice/campaigns'),
   get: (id: string) => api.get<{ data: VoiceCampaign }>(`/voice/campaigns/${id}`),
   create: (payload: CreateVoiceCampaignPayload) =>

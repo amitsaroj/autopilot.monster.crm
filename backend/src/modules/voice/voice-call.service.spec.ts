@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { getQueueToken } from '@nestjs/bull';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { VoiceCallService } from './voice-call.service';
@@ -8,6 +9,7 @@ import { TwilioService } from './twilio.service';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import { QUEUE_NAMES } from '../../queue/queue.constants';
 
 describe('VoiceCallService', () => {
   let service: VoiceCallService;
@@ -34,6 +36,21 @@ describe('VoiceCallService', () => {
     findTenantIdByNumber: jest.fn(),
   };
 
+  const redisStore = new Map<string, string>();
+  const voiceQueue = {
+    client: {
+      set: jest.fn((key: string, value: string) => {
+        redisStore.set(key, value);
+        return Promise.resolve('OK');
+      }),
+      get: jest.fn((key: string) => Promise.resolve(redisStore.get(key) ?? null)),
+      del: jest.fn((key: string) => {
+        redisStore.delete(key);
+        return Promise.resolve(1);
+      }),
+    },
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,25 +62,42 @@ describe('VoiceCallService', () => {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('http://localhost:8000') },
         },
+        { provide: getQueueToken(QUEUE_NAMES.VOICE), useValue: voiceQueue },
       ],
     }).compile();
 
     service = module.get(VoiceCallService);
+    redisStore.clear();
     jest.clearAllMocks();
   });
 
-  it('builds websocket stream URL with tenant and agent context', () => {
-    const url = service.buildStreamUrl('tenant-1', {
+  it('builds a token-based websocket stream URL and stashes the real context server-side', async () => {
+    const url = await service.buildStreamUrl('tenant-1', {
       agentId: 'agent-1',
       leadId: 'lead-1',
       voice: 'shimmer',
     });
 
-    expect(url).toContain('ws://localhost:8000/voice/stream?');
-    expect(url).toContain('tenantId=tenant-1');
-    expect(url).toContain('agentId=agent-1');
-    expect(url).toContain('leadId=lead-1');
-    expect(url).toContain('voice=shimmer');
+    expect(url).toMatch(/^ws:\/\/localhost:8000\/voice\/stream\?token=[^&]+$/);
+    // The URL itself must not leak tenantId/leadId — only an opaque token.
+    expect(url).not.toContain('tenant-1');
+    expect(url).not.toContain('lead-1');
+
+    const token = new URL(url.replace('ws://', 'http://')).searchParams.get('token')!;
+    const resolved = await service.resolveStreamToken(token);
+    expect(resolved).toEqual({
+      tenantId: 'tenant-1',
+      agentId: 'agent-1',
+      leadId: 'lead-1',
+      voice: 'shimmer',
+    });
+
+    // Single-use: resolving again must fail.
+    expect(await service.resolveStreamToken(token)).toBeNull();
+  });
+
+  it('rejects an unknown/expired stream token', async () => {
+    expect(await service.resolveStreamToken('does-not-exist')).toBeNull();
   });
 
   it('initiates outbound call and returns persisted record', async () => {

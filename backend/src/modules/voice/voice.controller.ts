@@ -24,7 +24,11 @@ import {
   TransferCallDto,
   UpdateVoiceSettingsDto,
 } from './dto/voice.dto';
-import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
+import {
+  CreateVoiceCampaignDto,
+  UpdateVoiceCampaignDto,
+  GenerateVoiceCampaignDraftDto,
+} from './dto/voice-campaign.dto';
 import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-phone-number.dto';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { TwilioService } from './twilio.service';
@@ -66,7 +70,7 @@ export class VoiceController {
       'voice_default_profile',
       'shimmer',
     );
-    const wssUrl = this.voiceCallService.buildStreamUrl(tenantId, {
+    const wssUrl = await this.voiceCallService.buildStreamUrl(tenantId, {
       agentId: dto.agentId,
       leadId: dto.leadId,
       contactId: dto.contactId,
@@ -196,6 +200,17 @@ export class VoiceController {
   @ApiOperation({ summary: 'List voice campaigns' })
   async listCampaigns(@TenantId() tenantId: string) {
     return await this.voiceCampaignService.findAll(tenantId);
+  }
+
+  @Post('campaigns/generate-draft')
+  @ApiOperation({
+    summary: 'Turn a plain-language campaign objective into a draft name + AI script for review',
+  })
+  async generateCampaignDraft(
+    @TenantId() tenantId: string,
+    @Body() dto: GenerateVoiceCampaignDraftDto,
+  ) {
+    return await this.voiceCampaignService.generateDraft(tenantId, dto);
   }
 
   @Post('campaigns')

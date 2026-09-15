@@ -9,6 +9,7 @@ import { VoiceCampaign, VoiceCampaignStatus } from '../../database/entities/voic
 import { Contact } from '../../database/entities/contact.entity';
 import { Segment } from '../../database/entities/segment.entity';
 import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
+import { AiProviderService } from '../ai/providers/ai-provider.service';
 import { VoiceCampaignRecipientRepository } from './voice-campaign-recipient.repository';
 import {
   VoiceCampaignRecipient,
@@ -62,6 +63,7 @@ export class VoiceCampaignService {
     @InjectQueue(QUEUE_NAMES.VOICE)
     private readonly voiceQueue: Queue<VoiceJobPayload>,
     private readonly moduleRef: ModuleRef,
+    private readonly aiProviderService: AiProviderService,
   ) {}
 
   findAll(tenantId: string): Promise<VoiceCampaign[]> {
@@ -96,8 +98,63 @@ export class VoiceCampaignService {
         callingHoursStart: dto.callingHoursStart,
         callingHoursEnd: dto.callingHoursEnd,
         timezone: dto.timezone ?? 'UTC',
+        maxCalls: dto.maxCalls,
+        objective: dto.objective,
       }),
     );
+  }
+
+  /**
+   * Turns a plain-language objective into a draft campaign name + AI voice
+   * script the user reviews/edits before creating anything — never launches
+   * on its own. Reuses the existing AiProviderService (same seam every other
+   * AI call in the app goes through), not a separate prompt-generation stack.
+   */
+  async generateDraft(
+    tenantId: string,
+    input: { objective: string; audienceDescription?: string },
+  ): Promise<{ name: string; script: string }> {
+    const response = await this.aiProviderService.chatComplete(
+      tenantId,
+      [
+        {
+          role: 'system',
+          content: `You are an expert outbound sales campaign strategist writing instructions for an AI voice agent.
+
+Given a campaign objective, produce:
+1. A short, descriptive campaign name (under 60 characters).
+2. A conversational call script/instructions for the AI agent, covering (in prose, not headings): how to open the call, qualification questions to ask, how to explain the offer, how to handle common objections, and a clear call-to-action / closing (e.g. arranging a callback). Write it as guidance for the agent to speak naturally, not a rigid word-for-word transcript. Keep it concise enough for a phone conversation.
+
+Return ONLY a JSON object: { "name": "...", "script": "..." }`,
+        },
+        {
+          role: 'user',
+          content: [
+            `Objective: ${input.objective}`,
+            input.audienceDescription ? `Audience: ${input.audienceDescription}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n'),
+        },
+      ],
+      { jsonMode: true, model: 'gpt-4o-mini' },
+    );
+
+    let parsed: { name?: string; script?: string };
+    try {
+      parsed = JSON.parse(response.content || '{}');
+    } catch {
+      throw new BadRequestException('AI campaign generation returned an unparseable response — try again.');
+    }
+
+    if (!parsed.script?.trim()) {
+      throw new BadRequestException('AI campaign generation did not produce a script — try rephrasing the objective.');
+    }
+
+    return {
+      name: parsed.name?.trim() || 'New AI Campaign',
+      script: parsed.script.trim(),
+    };
   }
 
   async update(tenantId: string, id: string, dto: UpdateVoiceCampaignDto): Promise<VoiceCampaign> {
@@ -119,6 +176,8 @@ export class VoiceCampaignService {
     if (dto.callingHoursStart !== undefined) campaign.callingHoursStart = dto.callingHoursStart;
     if (dto.callingHoursEnd !== undefined) campaign.callingHoursEnd = dto.callingHoursEnd;
     if (dto.timezone !== undefined) campaign.timezone = dto.timezone;
+    if (dto.maxCalls !== undefined) campaign.maxCalls = dto.maxCalls;
+    if (dto.objective !== undefined) campaign.objective = dto.objective;
 
     return this.campaignRepository.save(campaign);
   }
@@ -383,6 +442,34 @@ export class VoiceCampaignService {
           );
         }
       }
+      return;
+    }
+
+    await this.enforceCallBudget(campaignId);
+  }
+
+  /** Auto-pauses a campaign that has hit its configured maxCalls, same as a manual pause. */
+  private async enforceCallBudget(campaignId: string): Promise<void> {
+    const current = await this.campaignRepository.findOne({ where: { id: campaignId } });
+    if (!current || current.maxCalls == null || current.callsMade < current.maxCalls) {
+      return;
+    }
+
+    const result = await this.campaignRepository
+      .createQueryBuilder()
+      .update(VoiceCampaign)
+      .set({ status: VoiceCampaignStatus.PAUSED })
+      .where('id = :id AND status = :running', {
+        id: campaignId,
+        running: VoiceCampaignStatus.RUNNING,
+      })
+      .execute();
+
+    if ((result.affected ?? 0) > 0) {
+      await this.removeQueuedJobsForCampaign(campaignId);
+      this.logger.log(
+        `Campaign ${campaignId} auto-paused: reached its ${current.maxCalls}-call budget (${current.callsMade} made)`,
+      );
     }
   }
 

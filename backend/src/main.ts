@@ -12,6 +12,7 @@ import { CoreModule } from './app.module';
 import type { AppConfig } from './config/app.config';
 import { env } from './config/env.config';
 import { AppLogger } from './logger/logger.service';
+import { RealtimeAiGateway } from './modules/voice/realtime-ai.gateway';
 
 function buildAllowedCorsOrigins(appUrl: string, frontendUrl: string): Set<string> {
   const origins = new Set<string>([appUrl, frontendUrl]);
@@ -148,6 +149,13 @@ async function bootstrap(): Promise<void> {
 
   // Enable graceful shutdown
   app.enableShutdownHooks();
+
+  // Twilio Media Streams speaks plain WebSocket, not Socket.IO (the default
+  // gateway transport this app uses elsewhere, e.g. NotificationGateway) —
+  // RealtimeAiGateway runs its own raw `ws` server on the same HTTP server,
+  // filtered by path, rather than forcing a global adapter switch that would
+  // break the Socket.IO-dependent gateways. See its class doc comment.
+  app.get(RealtimeAiGateway).attach(app.getHttpServer());
 
   await app.listen(appCfg.port, appCfg.host);
 }

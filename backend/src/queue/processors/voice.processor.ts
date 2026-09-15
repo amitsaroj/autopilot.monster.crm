@@ -86,7 +86,7 @@ export class VoiceQueueProcessor {
     recipient.lastAttemptAt = new Date();
     await this.recipientRepository.save(recipient);
 
-    const wssUrl = this.voiceCallService.buildStreamUrl(tenantId, {
+    const wssUrl = await this.voiceCallService.buildStreamUrl(tenantId, {
       contactId: recipient.contactId,
       agentId: campaign.agentId,
       script: campaign.script,

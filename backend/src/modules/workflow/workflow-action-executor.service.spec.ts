@@ -159,7 +159,7 @@ describe('WorkflowActionExecutorService', () => {
   });
 
   it('initiates outbound voice call for INITIATE_CALL', async () => {
-    mockVoiceCallService.buildStreamUrl.mockReturnValue('wss://example.com/voice/stream');
+    mockVoiceCallService.buildStreamUrl.mockResolvedValue('wss://example.com/voice/stream');
     mockVoiceCallService.initiateOutbound.mockResolvedValue({ id: 'call-1' });
 
     const result = await service.executeAction(

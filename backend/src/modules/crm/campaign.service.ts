@@ -32,7 +32,7 @@ export class CampaignService {
         const lead = await this.leadService.findOne(tenantId, leadId);
         if (!lead || !lead.phone) continue;
 
-        const wssUrl = this.voiceCallService.buildStreamUrl(tenantId, {
+        const wssUrl = await this.voiceCallService.buildStreamUrl(tenantId, {
           agentId,
           leadId,
         });

@@ -1,13 +1,8 @@
+import * as http from 'http';
 import * as url from 'url';
 
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  WebSocketGateway,
-  WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets';
 import { Server, WebSocket as WsWebSocket } from 'ws';
 
 import { RagService } from '../ai/rag.service';
@@ -15,11 +10,23 @@ import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
 import { AgentService } from '../crm/agent.service';
 import { VoiceCallService } from './voice-call.service';
 
-@WebSocketGateway({ path: '/voice/stream' })
-export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server!: Server;
+const STREAM_PATH = '/voice/stream';
 
+/**
+ * Twilio Media Streams speaks plain WebSocket, not Socket.IO — the transport
+ * every other gateway in this app uses via Nest's default `IoAdapter`
+ * (`NotificationGateway` depends on Socket.IO-specific rooms/namespaces, so
+ * globally switching the adapter to `WsAdapter` would break it). Rather than
+ * a Nest `@WebSocketGateway`, this class runs its own raw `ws.Server`
+ * attached directly to the underlying HTTP server's `upgrade` event, filtered
+ * to its own path so it coexists with Socket.IO's upgrade handling on the
+ * same server (Socket.IO only intercepts requests matching its own
+ * configured path, `/socket.io/` by default, and leaves everything else for
+ * other `upgrade` listeners). `main.ts` calls `attach()` once at bootstrap.
+ */
+@Injectable()
+export class RealtimeAiGateway implements OnModuleDestroy {
+  private wsServer?: Server;
   private readonly logger = new Logger(RealtimeAiGateway.name);
   private readonly openAiWsUrl =
     'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
@@ -46,16 +53,56 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     }
   >();
 
-  async handleConnection(client: WsWebSocket, request: { url?: string }) {
+  attach(httpServer: http.Server): void {
+    this.wsServer = new Server({ noServer: true });
+
+    httpServer.on('upgrade', (request: http.IncomingMessage, socket, head) => {
+      const pathname = url.parse(request.url ?? '').pathname;
+      if (pathname !== STREAM_PATH) {
+        return;
+      }
+      this.wsServer!.handleUpgrade(request, socket, head, (client) => {
+        this.wsServer!.emit('connection', client, request);
+      });
+    });
+
+    this.wsServer.on('connection', (client: WsWebSocket, request: http.IncomingMessage) => {
+      void this.handleConnection(client, request);
+    });
+
+    this.logger.log(`Voice realtime WebSocket server attached at ${STREAM_PATH}`);
+  }
+
+  onModuleDestroy(): void {
+    this.wsServer?.close();
+  }
+
+  private async handleConnection(client: WsWebSocket, request: { url?: string }) {
+    const parsedUrl = url.parse(request.url ?? '', true);
+    const token = parsedUrl.query.token as string | undefined;
+
+    // The URL carries no trustworthy data on its own — token is a one-time,
+    // server-minted opaque id (see VoiceCallService.buildStreamUrl); anyone
+    // who connects without a valid, unexpired token gets nothing. This is
+    // what keeps a raw `ws` connection (which never runs through
+    // JwtAuthGuard/TenantGuard) from letting a caller name their own
+    // tenantId/contactId/leadId and pull another tenant's data into a live
+    // AI session.
+    const context = token ? await this.voiceCallService.resolveStreamToken(token) : null;
+    if (!context) {
+      this.logger.warn('Rejected /voice/stream connection: missing or invalid/expired token');
+      client.close();
+      return;
+    }
+
     this.logger.log('Twilio Voice Client Connected to Gateway');
 
-    const parsedUrl = url.parse(request.url ?? '', true);
-    const tenantId = (parsedUrl.query.tenantId as string) || 'default';
-    const agentId = (parsedUrl.query.agentId as string) || 'default';
-    const leadId = (parsedUrl.query.leadId as string) || undefined;
-    const contactId = (parsedUrl.query.contactId as string) || undefined;
-    const script = (parsedUrl.query.script as string) || undefined;
-    let voiceProfile = (parsedUrl.query.voice as string) || undefined;
+    const { tenantId } = context;
+    const agentId = context.agentId || 'default';
+    const leadId = context.leadId;
+    const contactId = context.contactId;
+    const script = context.script;
+    let voiceProfile = context.voice;
 
     const openAiApiKey = this.configService.get('OPENAI_API_KEY');
 
@@ -80,6 +127,10 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
       leadId,
       contactId,
       voiceProfile,
+    });
+
+    client.on('close', () => {
+      void this.handleDisconnect(client);
     });
 
     let streamSid: string | null = null;
@@ -197,7 +248,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     });
   }
 
-  async handleDisconnect(client: WsWebSocket) {
+  private async handleDisconnect(client: WsWebSocket) {
     const session = this.sessions.get(client);
     if (session) {
       this.logger.log(`Call ended for tenant ${session.tenantId}. Analyzing transcript...`);

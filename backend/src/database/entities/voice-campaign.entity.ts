@@ -80,4 +80,12 @@ export class VoiceCampaign extends BaseEntity {
 
   @Column({ name: 'stopped_at', type: 'timestamptz', nullable: true })
   stoppedAt?: Date;
+
+  /** Hard cap on total dial attempts; null = no cap. Reaching it auto-pauses the campaign. */
+  @Column({ name: 'max_calls', type: 'integer', nullable: true })
+  maxCalls?: number;
+
+  /** Free-text objective this campaign was generated from, if any (kept for reference/regeneration). */
+  @Column({ type: 'text', nullable: true })
+  objective?: string;
 }
