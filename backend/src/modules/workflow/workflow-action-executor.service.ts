@@ -581,7 +581,7 @@ export class WorkflowActionExecutorService {
       throw new Error('INITIATE_CALL requires to phone number');
     }
 
-    const wssUrl = this.voiceCallService.buildStreamUrl(context.tenantId, {
+    const wssUrl = await this.voiceCallService.buildStreamUrl(context.tenantId, {
       agentId: typeof config.agentId === 'string' ? config.agentId : undefined,
       leadId: typeof config.leadId === 'string' ? config.leadId : undefined,
       voice: typeof config.voice === 'string' ? config.voice : undefined,

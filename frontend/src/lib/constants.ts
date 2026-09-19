@@ -39,7 +39,6 @@ export const ROUTES = {
 
   // WhatsApp
   WHATSAPP: '/whatsapp',
-  WHATSAPP_INBOX: '/whatsapp/inbox',
 
   // Inbox
   INBOX: '/inbox',

@@ -9,14 +9,18 @@ import { VoiceController } from './voice.controller';
 import { VoiceCallRepository } from './voice-call.repository';
 import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
+import { VoiceCampaignRecipientRepository } from './voice-campaign-recipient.repository';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { VoiceAiService } from './voice-ai.service';
+import { VoiceProviderRegistry } from './providers/voice-provider.registry';
 import { AiModule } from '../ai/ai.module';
 import { CrmModule } from '../crm/crm.module';
 import { TwilioModule } from './twilio.module';
 import { TenantSettingsModule } from '../tenant-settings/tenant-settings.module';
+import { StorageModule } from '../../storage/storage.module';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
 import { VoiceCampaign } from '../../database/entities/voice-campaign.entity';
+import { VoiceCampaignRecipient } from '../../database/entities/voice-campaign-recipient.entity';
 import { VoicePhoneNumber } from '../../database/entities/voice-phone-number.entity';
 import { Contact } from '../../database/entities/contact.entity';
 import { Segment } from '../../database/entities/segment.entity';
@@ -26,11 +30,19 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
   imports: [
     ConfigModule,
     TwilioModule,
+    StorageModule,
     BullModule.registerQueue({ name: QUEUE_NAMES.VOICE }),
     TenantSettingsModule,
     forwardRef(() => AiModule),
     forwardRef(() => CrmModule),
-    TypeOrmModule.forFeature([VoiceCall, VoiceCampaign, VoicePhoneNumber, Contact, Segment]),
+    TypeOrmModule.forFeature([
+      VoiceCall,
+      VoiceCampaign,
+      VoiceCampaignRecipient,
+      VoicePhoneNumber,
+      Contact,
+      Segment,
+    ]),
   ],
   controllers: [TwilioController, VoiceController],
   providers: [
@@ -38,16 +50,20 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     VoiceCallRepository,
     VoiceCallService,
     VoiceCampaignService,
+    VoiceCampaignRecipientRepository,
     VoicePhoneNumberService,
     VoiceAiService,
+    VoiceProviderRegistry,
   ],
   exports: [
     TwilioModule,
     VoiceCallService,
     VoiceCallRepository,
     VoiceCampaignService,
+    VoiceCampaignRecipientRepository,
     VoicePhoneNumberService,
     VoiceAiService,
+    VoiceProviderRegistry,
   ],
 })
 export class VoiceModule {}

@@ -7,6 +7,7 @@ export enum VoiceCampaignStatus {
   RUNNING = 'RUNNING',
   PAUSED = 'PAUSED',
   COMPLETED = 'COMPLETED',
+  STOPPED = 'STOPPED',
 }
 
 @Entity('voice_campaigns')
@@ -51,4 +52,52 @@ export class VoiceCampaign extends BaseEntity {
 
   @Column({ name: 'calls_failed', type: 'integer', default: 0 })
   callsFailed!: number;
+
+  /** Max simultaneous active calls this campaign is allowed to run. */
+  @Column({ type: 'integer', default: 3 })
+  concurrency!: number;
+
+  /** 1 = no retry. A BUSY/NO-ANSWER/FAILED outcome retries up to this many total attempts. */
+  @Column({ name: 'max_attempts', type: 'integer', default: 1 })
+  maxAttempts!: number;
+
+  @Column({ name: 'retry_delay_minutes', type: 'integer', default: 30 })
+  retryDelayMinutes!: number;
+
+  /** "HH:mm" in the campaign's timezone. Null on either means "no calling-hours restriction". */
+  @Column({ name: 'calling_hours_start', length: 5, nullable: true })
+  callingHoursStart?: string;
+
+  @Column({ name: 'calling_hours_end', length: 5, nullable: true })
+  callingHoursEnd?: string;
+
+  @Column({ length: 64, default: 'UTC' })
+  timezone!: string;
+
+  /** Optional AI agent whose prompt drives the conversation instead of the free-text script. */
+  @Column({ name: 'agent_id', type: 'uuid', nullable: true })
+  agentId?: string;
+
+  @Column({ name: 'stopped_at', type: 'timestamptz', nullable: true })
+  stoppedAt?: Date;
+
+  /** Hard cap on total dial attempts; null = no cap. Reaching it auto-pauses the campaign. */
+  @Column({ name: 'max_calls', type: 'integer', nullable: true })
+  maxCalls?: number;
+
+  /** Free-text objective this campaign was generated from, if any (kept for reference/regeneration). */
+  @Column({ type: 'text', nullable: true })
+  objective?: string;
+
+  /** Which VoiceProvider this campaign dials through; see providers/voice-provider.interface.ts. */
+  @Column({ length: 30, default: 'twilio' })
+  provider!: string;
+
+  /** What to do when Twilio's Answering Machine Detection reports a machine picked up. */
+  @Column({ name: 'voicemail_action', length: 20, default: 'CONTINUE' })
+  voicemailAction!: 'CONTINUE' | 'HANGUP';
+
+  /** Number the AI agent can transfer an interested caller to; unset = transfer tool disabled. */
+  @Column({ name: 'human_transfer_number', length: 20, nullable: true })
+  humanTransferNumber?: string;
 }

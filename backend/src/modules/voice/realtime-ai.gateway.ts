@@ -1,24 +1,32 @@
+import * as http from 'http';
 import * as url from 'url';
 
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  WebSocketGateway,
-  WebSocketServer,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-} from '@nestjs/websockets';
 import { Server, WebSocket as WsWebSocket } from 'ws';
 
 import { RagService } from '../ai/rag.service';
 import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
+import { AgentService } from '../crm/agent.service';
 import { VoiceCallService } from './voice-call.service';
 
-@WebSocketGateway({ path: '/voice/stream' })
-export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server!: Server;
+const STREAM_PATH = '/voice/stream';
 
+/**
+ * Twilio Media Streams speaks plain WebSocket, not Socket.IO — the transport
+ * every other gateway in this app uses via Nest's default `IoAdapter`
+ * (`NotificationGateway` depends on Socket.IO-specific rooms/namespaces, so
+ * globally switching the adapter to `WsAdapter` would break it). Rather than
+ * a Nest `@WebSocketGateway`, this class runs its own raw `ws.Server`
+ * attached directly to the underlying HTTP server's `upgrade` event, filtered
+ * to its own path so it coexists with Socket.IO's upgrade handling on the
+ * same server (Socket.IO only intercepts requests matching its own
+ * configured path, `/socket.io/` by default, and leaves everything else for
+ * other `upgrade` listeners). `main.ts` calls `attach()` once at bootstrap.
+ */
+@Injectable()
+export class RealtimeAiGateway implements OnModuleDestroy {
+  private wsServer?: Server;
   private readonly logger = new Logger(RealtimeAiGateway.name);
   private readonly openAiWsUrl =
     'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01';
@@ -28,6 +36,7 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     private ragService: RagService,
     private leadIntelligenceService: LeadIntelligenceService,
     private voiceCallService: VoiceCallService,
+    private agentService: AgentService,
   ) {}
 
   private sessions = new Map<
@@ -38,19 +47,65 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
       agentId: string;
       transcript: string;
       leadId?: string;
+      contactId?: string;
       callSid?: string;
       voiceProfile?: string;
+      humanTransferNumber?: string;
+      transferRequested?: boolean;
     }
   >();
 
-  async handleConnection(client: WsWebSocket, request: { url?: string }) {
+  attach(httpServer: http.Server): void {
+    this.wsServer = new Server({ noServer: true });
+
+    httpServer.on('upgrade', (request: http.IncomingMessage, socket, head) => {
+      const pathname = url.parse(request.url ?? '').pathname;
+      if (pathname !== STREAM_PATH) {
+        return;
+      }
+      this.wsServer!.handleUpgrade(request, socket, head, (client) => {
+        this.wsServer!.emit('connection', client, request);
+      });
+    });
+
+    this.wsServer.on('connection', (client: WsWebSocket, request: http.IncomingMessage) => {
+      void this.handleConnection(client, request);
+    });
+
+    this.logger.log(`Voice realtime WebSocket server attached at ${STREAM_PATH}`);
+  }
+
+  onModuleDestroy(): void {
+    this.wsServer?.close();
+  }
+
+  private async handleConnection(client: WsWebSocket, request: { url?: string }) {
+    const parsedUrl = url.parse(request.url ?? '', true);
+    const token = parsedUrl.query.token as string | undefined;
+
+    // The URL carries no trustworthy data on its own — token is a one-time,
+    // server-minted opaque id (see VoiceCallService.buildStreamUrl); anyone
+    // who connects without a valid, unexpired token gets nothing. This is
+    // what keeps a raw `ws` connection (which never runs through
+    // JwtAuthGuard/TenantGuard) from letting a caller name their own
+    // tenantId/contactId/leadId and pull another tenant's data into a live
+    // AI session.
+    const context = token ? await this.voiceCallService.resolveStreamToken(token) : null;
+    if (!context) {
+      this.logger.warn('Rejected /voice/stream connection: missing or invalid/expired token');
+      client.close();
+      return;
+    }
+
     this.logger.log('Twilio Voice Client Connected to Gateway');
 
-    const parsedUrl = url.parse(request.url ?? '', true);
-    const tenantId = (parsedUrl.query.tenantId as string) || 'default';
-    const agentId = (parsedUrl.query.agentId as string) || 'default';
-    const leadId = (parsedUrl.query.leadId as string) || undefined;
-    const voiceProfile = (parsedUrl.query.voice as string) || 'shimmer';
+    const { tenantId } = context;
+    const agentId = context.agentId || 'default';
+    const leadId = context.leadId;
+    const contactId = context.contactId;
+    const script = context.script;
+    const humanTransferNumber = context.humanTransferNumber;
+    let voiceProfile = context.voice;
 
     const openAiApiKey = this.configService.get('OPENAI_API_KEY');
 
@@ -73,7 +128,13 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
       agentId,
       transcript: '',
       leadId,
+      contactId,
       voiceProfile,
+      humanTransferNumber,
+    });
+
+    client.on('close', () => {
+      void this.handleDisconnect(client);
     });
 
     let streamSid: string | null = null;
@@ -95,16 +156,48 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
             3,
           );
 
+          // An agentId names a configured Agent whose systemPrompt/voice drive
+          // the call; a bulk campaign without one falls back to its own
+          // free-text script; otherwise a generic default. Reuses the same
+          // Agent records the CRM's single-call/agent-builder UI manages,
+          // rather than the call flow inventing its own prompt storage.
+          let roleInstructions = script;
+          if (agentId && agentId !== 'default') {
+            try {
+              const agent = await this.agentService.findOne(tenantId, agentId);
+              if (agent) {
+                roleInstructions = agent.systemPrompt || roleInstructions;
+                voiceProfile = voiceProfile || agent.voice;
+              }
+            } catch {
+              this.logger.warn(`Agent ${agentId} not found for tenant ${tenantId}; using fallback`);
+            }
+          }
+          roleInstructions =
+            roleInstructions ||
+            'You are a helpful AI voice agent for AutopilotMonster CRM, representing a company.';
+          voiceProfile = voiceProfile || 'shimmer';
+
+          const transferInstructions = humanTransferNumber
+            ? `\n\nIf the caller clearly wants to speak with a human, asks for a manager, or the conversation
+               needs a person to close it out, tell them you're connecting them now and call the
+               transfer_to_human tool. Only use it when the caller actually wants a human — not by default.`
+            : '';
+
           const instructions = `
-            You are a helpful AI voice agent for AutopilotMonster CRM, representing a company.
+            ${roleInstructions}
+            Keep responses under 2 sentences for natural flow.${transferInstructions}
+
             Use the following context to answer customer questions naturally and concisely.
             If the answer isn't in the context, be honest but helpful.
-            
+
             COMPANY CONTEXT:
             ${kbContext || 'No specific documents uploaded yet.'}
-            
-            IDENTITY: You are Agent ID: ${agentId}. Keep responses under 2 sentences for natural flow.
           `;
+
+          if (session) {
+            session.voiceProfile = voiceProfile;
+          }
 
           openaiWs.send(
             JSON.stringify({
@@ -116,6 +209,28 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
                 input_audio_format: 'g711_ulaw',
                 output_audio_format: 'g711_ulaw',
                 modalities: ['text', 'audio'],
+                ...(humanTransferNumber
+                  ? {
+                      tools: [
+                        {
+                          type: 'function',
+                          name: 'transfer_to_human',
+                          description:
+                            'Transfer the current call to a human agent. Use only when the caller explicitly wants to speak with a person.',
+                          parameters: {
+                            type: 'object',
+                            properties: {
+                              reason: {
+                                type: 'string',
+                                description: 'Brief reason the caller wants a human',
+                              },
+                            },
+                          },
+                        },
+                      ],
+                      tool_choice: 'auto',
+                    }
+                  : {}),
               },
             }),
           );
@@ -154,6 +269,8 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
         } else if (response.type === 'conversation.item.input_audio_transcription.completed') {
           const session = this.sessions.get(client);
           if (session) session.transcript += `User: ${response.transcript}\n`;
+        } else if (response.type === 'response.function_call_arguments.done') {
+          void this.handleFunctionCall(client, openaiWs, response);
         }
       } catch (e) {
         this.logger.error('Failed to parse OpenAI message', e);
@@ -165,17 +282,73 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
     });
   }
 
-  async handleDisconnect(client: WsWebSocket) {
+  /**
+   * The only tool exposed to the model today is transfer_to_human (only
+   * offered at all when the campaign/call configured a humanTransferNumber
+   * — see the tools array in session.update above). Handles OpenAI's
+   * realtime function-calling protocol: acknowledge the tool call with a
+   * function_call_output item, then let the model continue the conversation.
+   */
+  private async handleFunctionCall(
+    client: WsWebSocket,
+    openaiWs: WsWebSocket,
+    response: { call_id?: string; name?: string },
+  ): Promise<void> {
+    const session = this.sessions.get(client);
+    if (!session || response.name !== 'transfer_to_human' || session.transferRequested) {
+      return;
+    }
+
+    let outcome = 'Transfer is not available for this call.';
+    if (session.humanTransferNumber && session.callSid) {
+      session.transferRequested = true;
+      try {
+        await this.voiceCallService.transferCall(
+          session.tenantId,
+          session.callSid,
+          session.humanTransferNumber,
+        );
+        outcome = 'Call is being transferred to a human agent now.';
+        this.logger.log(`AI transferred call ${session.callSid} to a human agent`);
+      } catch (err) {
+        this.logger.error(`Failed to transfer call ${session.callSid}`, err);
+        outcome = 'The transfer failed — stay on the line and keep helping the caller yourself.';
+        session.transferRequested = false;
+      }
+    }
+
+    if (openaiWs.readyState !== WsWebSocket.OPEN) {
+      return;
+    }
+    openaiWs.send(
+      JSON.stringify({
+        type: 'conversation.item.create',
+        item: {
+          type: 'function_call_output',
+          call_id: response.call_id,
+          output: JSON.stringify({ result: outcome }),
+        },
+      }),
+    );
+    openaiWs.send(JSON.stringify({ type: 'response.create' }));
+  }
+
+  private async handleDisconnect(client: WsWebSocket) {
     const session = this.sessions.get(client);
     if (session) {
       this.logger.log(`Call ended for tenant ${session.tenantId}. Analyzing transcript...`);
 
+      let campaignId: string | undefined;
+      let recipientId: string | undefined;
+
       if (session.callSid && session.transcript.trim()) {
-        await this.voiceCallService.persistCallTranscript(
+        const call = await this.voiceCallService.persistCallTranscript(
           session.tenantId,
           session.callSid,
           session.transcript,
         );
+        campaignId = call?.campaignId;
+        recipientId = call?.recipientId;
 
         const analysis = await this.leadIntelligenceService.analyzeTranscript(session.transcript);
         if (analysis) {
@@ -191,6 +364,13 @@ export class RealtimeAiGateway implements OnGatewayConnection, OnGatewayDisconne
           session.tenantId,
           session.leadId,
           session.transcript,
+        );
+      } else if (session.contactId && session.transcript) {
+        await this.leadIntelligenceService.analyzeContactCallOutcome(
+          session.tenantId,
+          session.contactId,
+          session.transcript,
+          { campaignId, recipientId },
         );
       }
 

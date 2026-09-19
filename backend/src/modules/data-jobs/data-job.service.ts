@@ -14,6 +14,7 @@ export interface DataJobQueuePayload {
   entityType: string;
   fileKey?: string;
   format?: string;
+  tags?: string[];
 }
 
 @Injectable()
@@ -35,7 +36,7 @@ export class DataJobService {
         status: DataJobStatus.PENDING,
         entityType: dto.entityType,
         fileKey: dto.fileKey,
-        metadata: { entityType: dto.entityType },
+        metadata: { entityType: dto.entityType, tags: dto.tags },
       }),
     );
 
@@ -44,6 +45,7 @@ export class DataJobService {
       tenantId,
       entityType: dto.entityType,
       fileKey: dto.fileKey,
+      tags: dto.tags,
     });
 
     return job;

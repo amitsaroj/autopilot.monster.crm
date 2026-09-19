@@ -4,9 +4,15 @@ import twilio from 'twilio';
 
 import { env } from '../../config/env.config';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import type {
+  InitiateCallOptions,
+  VoiceProvider,
+  VoiceProviderHealth,
+} from './providers/voice-provider.interface';
 
 @Injectable()
-export class TwilioService {
+export class TwilioService implements VoiceProvider {
+  readonly name = 'twilio';
   private readonly logger = new Logger(TwilioService.name);
   private clients: Map<string, twilio.Twilio> = new Map();
 
@@ -89,7 +95,12 @@ export class TwilioService {
     }
   }
 
-  async initiateOutboundCall(tenantId: string, to: string, wssUrl: string) {
+  async initiateOutboundCall(
+    tenantId: string,
+    to: string,
+    wssUrl: string,
+    options?: InitiateCallOptions,
+  ) {
     this.logger.log(`Initiating stream call to ${to} for tenant ${tenantId}`);
 
     const { client, from } = await this.getClient(tenantId);
@@ -103,12 +114,87 @@ export class TwilioService {
         to,
         from,
         record: true,
+        ...(options?.machineDetection
+          ? {
+              machineDetection: 'DetectMessageEnd' as const,
+              asyncAmd: 'true',
+              asyncAmdStatusCallback: options.amdCallbackUrl,
+              asyncAmdStatusCallbackMethod: 'POST' as const,
+            }
+          : {}),
+        ...(options?.statusCallbackUrl
+          ? {
+              statusCallback: options.statusCallbackUrl,
+              statusCallbackEvent: ['initiated', 'ringing', 'answered', 'completed'],
+              statusCallbackMethod: 'POST' as const,
+            }
+          : {}),
+        ...(options?.recordingCallbackUrl
+          ? {
+              recordingStatusCallback: options.recordingCallbackUrl,
+              recordingStatusCallbackEvent: ['completed'],
+              recordingStatusCallbackMethod: 'POST' as const,
+            }
+          : {}),
       });
 
       return call.sid;
     } catch (err) {
       this.logger.error('Failed to initiate outbound call', err);
       throw err;
+    }
+  }
+
+  /** Downloads a recording's raw audio bytes using this tenant's Twilio credentials for Basic Auth. */
+  async downloadRecording(tenantId: string, recordingUrl: string): Promise<Buffer> {
+    const { client } = await this.getClient(tenantId);
+    const url = recordingUrl.endsWith('.mp3') ? recordingUrl : `${recordingUrl}.mp3`;
+    const auth = Buffer.from(`${client.username}:${client.password}`).toString('base64');
+
+    const response = await fetch(url, { headers: { Authorization: `Basic ${auth}` } });
+    if (!response.ok) {
+      throw new Error(`Failed to download Twilio recording (${response.status})`);
+    }
+    return Buffer.from(await response.arrayBuffer());
+  }
+
+  /** Live check — actually asks Twilio to confirm these credentials resolve to a real account. */
+  async checkHealth(tenantId: string): Promise<VoiceProviderHealth> {
+    const accountSid =
+      (await this.configOrchestrator.get(tenantId, 'twilio_account_sid')) ||
+      this.configService.get<string>('TWILIO_ACCOUNT_SID') ||
+      '';
+    const authToken =
+      (await this.configOrchestrator.get(tenantId, 'twilio_auth_token')) ||
+      this.configService.get<string>('TWILIO_AUTH_TOKEN') ||
+      '';
+    const fromNumber =
+      (await this.configOrchestrator.get(tenantId, 'twilio_phone_number')) ||
+      this.configService.get<string>('TWILIO_PHONE_NUMBER') ||
+      '';
+
+    if (!accountSid || !authToken || !accountSid.startsWith('AC') || accountSid.length !== 34) {
+      return {
+        provider: this.name,
+        status: 'NOT_CONFIGURED',
+        detail: 'Twilio account SID / auth token is not set for this tenant.',
+      };
+    }
+
+    try {
+      const client = twilio(accountSid, authToken);
+      await client.api.v2010.accounts(accountSid).fetch();
+      return {
+        provider: this.name,
+        status: 'CONNECTED',
+        fromNumber: typeof fromNumber === 'string' ? fromNumber : undefined,
+      };
+    } catch (err) {
+      return {
+        provider: this.name,
+        status: 'INVALID_CREDENTIALS',
+        detail: err instanceof Error ? err.message : 'Twilio rejected these credentials.',
+      };
     }
   }
 

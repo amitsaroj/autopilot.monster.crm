@@ -11,6 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Response } from 'express';
 
 import { VoiceCallService } from './voice-call.service';
@@ -24,14 +25,21 @@ import {
   TransferCallDto,
   UpdateVoiceSettingsDto,
 } from './dto/voice.dto';
-import { CreateVoiceCampaignDto, UpdateVoiceCampaignDto } from './dto/voice-campaign.dto';
+import {
+  CreateVoiceCampaignDto,
+  UpdateVoiceCampaignDto,
+  GenerateVoiceCampaignDraftDto,
+} from './dto/voice-campaign.dto';
 import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-phone-number.dto';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { TwilioService } from './twilio.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, PlanFeature, ResourcePermissions, Public } from '../../common/decorators';
+import { TenantId, PlanFeature, ResourcePermissions, Public, CurrentUser } from '../../common/decorators';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { TenantSettingsService } from '../tenant-settings/tenant-settings.service';
+import { VoiceProviderRegistry } from './providers/voice-provider.registry';
+import { EVENT_NAMES } from '../../events/event.constants';
+import type { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 const VOICE_PROFILES = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse'];
 
@@ -50,7 +58,37 @@ export class VoiceController {
     private readonly configOrchestrator: ConfigOrchestratorService,
     private readonly tenantSettingsService: TenantSettingsService,
     private readonly twilioService: TwilioService,
+    private readonly providerRegistry: VoiceProviderRegistry,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  private logAudit(
+    user: IRequestContext,
+    action: string,
+    resourceId: string,
+    changes: Record<string, unknown> = {},
+  ): void {
+    this.eventEmitter.emit(EVENT_NAMES.AUDIT_LOG, {
+      tenantId: user.tenantId,
+      userId: user.userId,
+      action,
+      resource: 'voice_campaign',
+      resourceId,
+      changes,
+      ipAddress: user.ipAddress,
+      userAgent: user.userAgent,
+    });
+  }
+
+  @Get('providers')
+  @ApiOperation({ summary: 'List configured voice providers and their live connection health' })
+  async listProviders(@TenantId() tenantId: string) {
+    const [health, activeName] = await Promise.all([
+      this.providerRegistry.checkAllHealth(tenantId),
+      this.providerRegistry.resolveProviderName(tenantId),
+    ]);
+    return health.map((h) => ({ ...h, active: h.provider === activeName }));
+  }
 
   @Get('calls')
   @ApiOperation({ summary: 'List voice calls' })
@@ -66,9 +104,10 @@ export class VoiceController {
       'voice_default_profile',
       'shimmer',
     );
-    const wssUrl = this.voiceCallService.buildStreamUrl(tenantId, {
+    const wssUrl = await this.voiceCallService.buildStreamUrl(tenantId, {
       agentId: dto.agentId,
       leadId: dto.leadId,
+      contactId: dto.contactId,
       voice: dto.voice ?? defaultVoice,
     });
     return await this.voiceCallService.initiateOutbound(tenantId, {
@@ -197,10 +236,27 @@ export class VoiceController {
     return await this.voiceCampaignService.findAll(tenantId);
   }
 
+  @Post('campaigns/generate-draft')
+  @ApiOperation({
+    summary: 'Turn a plain-language campaign objective into a draft name + AI script for review',
+  })
+  async generateCampaignDraft(
+    @TenantId() tenantId: string,
+    @Body() dto: GenerateVoiceCampaignDraftDto,
+  ) {
+    return await this.voiceCampaignService.generateDraft(tenantId, dto);
+  }
+
   @Post('campaigns')
   @ApiOperation({ summary: 'Create voice campaign' })
-  async createCampaign(@TenantId() tenantId: string, @Body() dto: CreateVoiceCampaignDto) {
-    return await this.voiceCampaignService.create(tenantId, dto);
+  async createCampaign(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: IRequestContext,
+    @Body() dto: CreateVoiceCampaignDto,
+  ) {
+    const campaign = await this.voiceCampaignService.create(tenantId, dto);
+    this.logAudit(user, 'campaign.created', campaign.id, { name: campaign.name });
+    return campaign;
   }
 
   @Get('campaigns/:id')
@@ -213,47 +269,126 @@ export class VoiceController {
   @ApiOperation({ summary: 'Update voice campaign' })
   async updateCampaign(
     @TenantId() tenantId: string,
+    @CurrentUser() user: IRequestContext,
     @Param('id') id: string,
     @Body() dto: UpdateVoiceCampaignDto,
   ) {
-    return await this.voiceCampaignService.update(tenantId, id, dto);
+    const campaign = await this.voiceCampaignService.update(tenantId, id, dto);
+    this.logAudit(user, 'campaign.updated', id, dto as Record<string, unknown>);
+    return campaign;
   }
 
   @Delete('campaigns/:id')
   @ApiOperation({ summary: 'Delete voice campaign' })
-  async deleteCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
+  async deleteCampaign(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: IRequestContext,
+    @Param('id') id: string,
+  ) {
     await this.voiceCampaignService.remove(tenantId, id);
+    this.logAudit(user, 'campaign.deleted', id);
     return null;
   }
 
   @Post('campaigns/:id/start')
   @ApiOperation({ summary: 'Start voice campaign' })
-  async startCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    return await this.voiceCampaignService.start(tenantId, id);
+  async startCampaign(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    const campaign = await this.voiceCampaignService.start(tenantId, id);
+    this.logAudit(user, 'campaign.started', id, { totalContacts: campaign.totalContacts });
+    return campaign;
   }
 
   @Post('campaigns/:id/pause')
   @ApiOperation({ summary: 'Pause voice campaign' })
-  async pauseCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    return await this.voiceCampaignService.pause(tenantId, id);
+  async pauseCampaign(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    const campaign = await this.voiceCampaignService.pause(tenantId, id);
+    this.logAudit(user, 'campaign.paused', id);
+    return campaign;
   }
 
   @Post('campaigns/:id/resume')
   @ApiOperation({ summary: 'Resume voice campaign' })
-  async resumeCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    return await this.voiceCampaignService.resume(tenantId, id);
+  async resumeCampaign(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    const campaign = await this.voiceCampaignService.resume(tenantId, id);
+    this.logAudit(user, 'campaign.resumed', id);
+    return campaign;
   }
 
   @Post('campaigns/:id/cancel')
   @ApiOperation({ summary: 'Cancel voice campaign' })
-  async cancelCampaign(@TenantId() tenantId: string, @Param('id') id: string) {
-    return await this.voiceCampaignService.cancel(tenantId, id);
+  async cancelCampaign(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: IRequestContext,
+    @Param('id') id: string,
+  ) {
+    const campaign = await this.voiceCampaignService.cancel(tenantId, id);
+    this.logAudit(user, 'campaign.stopped', id);
+    return campaign;
   }
 
   @Get('campaigns/:id/stats')
   @ApiOperation({ summary: 'Get voice campaign stats' })
   async getCampaignStats(@TenantId() tenantId: string, @Param('id') id: string) {
     return await this.voiceCampaignService.getStats(tenantId, id);
+  }
+
+  @Get('campaigns/:id/export')
+  @ApiOperation({ summary: 'Export a campaign\'s recipients as CSV' })
+  async exportCampaign(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const csv = await this.voiceCampaignService.exportRecipientsCsv(tenantId, id);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="campaign-${id}.csv"`);
+    res.send(csv);
+  }
+
+  @Get('campaigns/:id/recipients')
+  @ApiOperation({ summary: 'List a campaign\'s recipients' })
+  async listCampaignRecipients(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Query() query: Record<string, string>,
+  ) {
+    return await this.voiceCampaignService.listRecipients(tenantId, id, {
+      status: query.status as never,
+      page: query.page ? Number(query.page) : undefined,
+      limit: query.limit ? Number(query.limit) : undefined,
+    });
+  }
+
+  @Post('campaigns/:id/recipients/:recipientId/retry')
+  @ApiOperation({ summary: 'Force-retry a recipient regardless of attempt count' })
+  async retryCampaignRecipient(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Param('recipientId') recipientId: string,
+  ) {
+    return await this.voiceCampaignService.retryRecipient(tenantId, id, recipientId);
+  }
+
+  @Post('campaigns/:id/recipients/:recipientId/skip')
+  @ApiOperation({ summary: 'Skip a recipient — it will not be dialed again' })
+  async skipCampaignRecipient(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Param('recipientId') recipientId: string,
+  ) {
+    return await this.voiceCampaignService.skipRecipient(tenantId, id, recipientId);
   }
 
   @Get('phone-numbers/available')

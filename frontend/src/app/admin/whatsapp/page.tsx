@@ -24,7 +24,7 @@ const MODULES = [
   },
   {
     label: 'Inbox',
-    href: '/whatsapp/inbox',
+    href: '/whatsapp',
     icon: MessageSquare,
     desc: 'Unified WhatsApp message inbox',
     color: 'text-indigo-400',

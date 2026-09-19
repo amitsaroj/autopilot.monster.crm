@@ -1,17 +1,43 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ModuleRef } from '@nestjs/core';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 import { randomUUID } from 'node:crypto';
 
 import { VoiceCallRepository } from './voice-call.repository';
-import { TwilioService } from './twilio.service';
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { VoiceCall } from '../../database/entities/voice-call.entity';
+import { PricingService } from '../pricing/pricing.service';
+import { BillingService } from '../billing/billing.service';
+import { QUEUE_NAMES } from '../../queue/queue.constants';
+import { VoiceProviderRegistry } from './providers/voice-provider.registry';
+import { StorageService } from '../../storage/storage.service';
+
+/** Ephemeral context handed to a /voice/stream WebSocket connection via an opaque token — see buildStreamUrl. */
+export interface VoiceStreamContext {
+  tenantId: string;
+  agentId?: string;
+  leadId?: string;
+  contactId?: string;
+  voice?: string;
+  script?: string;
+  /** When set, the AI agent is given a transfer_to_human tool that dials this number. */
+  humanTransferNumber?: string;
+}
+
+const STREAM_TOKEN_PREFIX = 'voice-stream-token:';
+/** A real call's Media Stream connects within seconds of being placed; this just needs to outlive normal setup/ringing time. */
+const STREAM_TOKEN_TTL_SECONDS = 10 * 60;
 
 export interface CreateOutboundCallInput {
   to: string;
   wssUrl: string;
   voiceProfile?: string;
   campaignId?: string;
+  recipientId?: string;
+  /** Ask the provider to run answering-machine detection; reported later via handleAmdCallback. */
+  machineDetection?: boolean;
 }
 
 export interface TwilioStatusUpdate {
@@ -31,30 +57,75 @@ export interface CallAnalysisResult {
 
 @Injectable()
 export class VoiceCallService {
+  private readonly logger = new Logger(VoiceCallService.name);
+
   constructor(
     private readonly voiceCallRepository: VoiceCallRepository,
-    private readonly twilioService: TwilioService,
+    private readonly providerRegistry: VoiceProviderRegistry,
     private readonly voicePhoneNumberService: VoicePhoneNumberService,
     private readonly configService: ConfigService,
+    private readonly moduleRef: ModuleRef,
+    @InjectQueue(QUEUE_NAMES.VOICE)
+    private readonly voiceQueue: Queue,
+    private readonly storageService: StorageService,
   ) {}
 
-  buildStreamUrl(
+  private baseHttpUrl(): string {
+    const appUrl = this.configService.get<string>('APP_URL') ?? 'http://localhost:8000';
+    return appUrl.replace(/\/$/, '');
+  }
+
+  /**
+   * The /voice/stream WebSocket is only ever meant to be opened by Twilio's
+   * Media Streams feature, fetching the URL we hand it in TwiML — but a raw
+   * `ws` connection has no way to run through JwtAuthGuard/TenantGuard, and
+   * Twilio can't send a custom Authorization header either. So instead of
+   * putting tenantId/contactId/leadId/script directly in the URL (which lets
+   * anyone who can reach the socket supply their own and pull an arbitrary
+   * tenant's data into a live AI session), we mint a random opaque token,
+   * stash the real context server-side in Redis with a short TTL, and hand
+   * out only the token. RealtimeAiGateway resolves it back to this context
+   * and deletes it on first use — the URL itself carries no trust anymore.
+   */
+  async buildStreamUrl(
     tenantId: string,
-    params: { agentId?: string; leadId?: string; voice?: string } = {},
-  ): string {
+    params: {
+      agentId?: string;
+      leadId?: string;
+      contactId?: string;
+      voice?: string;
+      script?: string;
+      humanTransferNumber?: string;
+    } = {},
+  ): Promise<string> {
     const appUrl = this.configService.get<string>('APP_URL') ?? 'http://localhost:8000';
     const wsBase = appUrl.replace(/^http/i, 'ws');
-    const query = new URLSearchParams({ tenantId });
-    if (params.agentId) {
-      query.set('agentId', params.agentId);
+
+    const token = randomUUID();
+    const context: VoiceStreamContext = { tenantId, ...params };
+    await this.voiceQueue.client.set(
+      `${STREAM_TOKEN_PREFIX}${token}`,
+      JSON.stringify(context),
+      'EX',
+      STREAM_TOKEN_TTL_SECONDS,
+    );
+
+    return `${wsBase}/voice/stream?token=${token}`;
+  }
+
+  /** Single-use: resolves a /voice/stream token to its real context and immediately invalidates it. */
+  async resolveStreamToken(token: string): Promise<VoiceStreamContext | null> {
+    const key = `${STREAM_TOKEN_PREFIX}${token}`;
+    const raw = await this.voiceQueue.client.get(key);
+    if (!raw) {
+      return null;
     }
-    if (params.leadId) {
-      query.set('leadId', params.leadId);
+    await this.voiceQueue.client.del(key);
+    try {
+      return JSON.parse(raw) as VoiceStreamContext;
+    } catch {
+      return null;
     }
-    if (params.voice) {
-      query.set('voice', params.voice);
-    }
-    return `${wsBase}/voice/stream?${query.toString()}`;
   }
 
   async findAll(tenantId: string): Promise<VoiceCall[]> {
@@ -81,11 +152,26 @@ export class VoiceCallService {
   }
 
   async initiateOutbound(tenantId: string, input: CreateOutboundCallInput): Promise<VoiceCall> {
-    const from = await this.twilioService.getFromNumber(tenantId);
+    const provider = await this.providerRegistry.getProvider(tenantId);
+    const from = await provider.getFromNumber(tenantId);
+
+    // Every outbound call gets a status callback — without this, a call that
+    // the provider actually places has no way to ever tell us it answered,
+    // rang out, or failed. Only the "rejected before dial" path below moves
+    // stats otherwise, which is silently wrong for any call that really
+    // reaches the network.
+    const statusCallbackUrl = `${this.baseHttpUrl()}/api/v1/voice/twilio/status-callback`;
+    const amdCallbackUrl = `${this.baseHttpUrl()}/api/v1/voice/twilio/amd-callback`;
+    const recordingCallbackUrl = `${this.baseHttpUrl()}/api/v1/voice/twilio/recording-callback`;
 
     let sid: string;
     try {
-      sid = await this.twilioService.initiateOutboundCall(tenantId, input.to, input.wssUrl);
+      sid = await provider.initiateOutboundCall(tenantId, input.to, input.wssUrl, {
+        statusCallbackUrl,
+        machineDetection: input.machineDetection,
+        amdCallbackUrl: input.machineDetection ? amdCallbackUrl : undefined,
+        recordingCallbackUrl,
+      });
     } catch {
       // The provider rejected the call before it ever got a real SID (bad
       // credentials, invalid number, provider outage, ...). Record it as a
@@ -96,8 +182,8 @@ export class VoiceCallService {
       // never be dialed gets silently redialed forever on every resume, and
       // the campaign's callsFailed count never reflects it (no webhook is
       // ever coming for a call the provider never started). The error is
-      // already logged by TwilioService; this row just needs a unique,
-      // clearly-synthetic sid so it doesn't collide with real Twilio SIDs.
+      // already logged by the provider; this row just needs a unique,
+      // clearly-synthetic sid so it doesn't collide with real provider SIDs.
       return this.voiceCallRepository.create(tenantId, {
         sid: `failed-${randomUUID()}`,
         to: input.to,
@@ -106,6 +192,8 @@ export class VoiceCallService {
         status: 'FAILED',
         voiceProfile: input.voiceProfile,
         campaignId: input.campaignId,
+        recipientId: input.recipientId,
+        provider: provider.name,
       });
     }
 
@@ -114,7 +202,7 @@ export class VoiceCallService {
       return existing;
     }
 
-    return this.voiceCallRepository.create(tenantId, {
+    const call = await this.voiceCallRepository.create(tenantId, {
       sid,
       to: input.to,
       from,
@@ -122,7 +210,32 @@ export class VoiceCallService {
       status: 'QUEUED',
       voiceProfile: input.voiceProfile,
       campaignId: input.campaignId,
+      recipientId: input.recipientId,
+      provider: provider.name,
     });
+
+    // Usage should reflect calls that actually reached the provider, not
+    // requests that merely hit our API — track it here, the one place both
+    // the single-call and bulk-campaign paths funnel through, rather than at
+    // the controller (which would double-count nothing here, but couldn't
+    // see campaign-originated calls at all).
+    await this.trackCallUsage(tenantId);
+
+    return call;
+  }
+
+  private async trackCallUsage(tenantId: string): Promise<void> {
+    try {
+      const billingService = this.moduleRef.get(BillingService, { strict: false });
+      const pricingService = this.moduleRef.get(PricingService, { strict: false });
+      if (!billingService || !pricingService) {
+        return;
+      }
+      const period = await pricingService.getLimitPeriod(tenantId, 'calls');
+      await billingService.trackUsage(tenantId, 'calls', 1, period);
+    } catch (err) {
+      this.logger.warn(`Failed to track call usage for tenant ${tenantId}`, err as Error);
+    }
   }
 
   async updateFromWebhook(update: TwilioStatusUpdate): Promise<VoiceCall | null> {
@@ -186,7 +299,8 @@ export class VoiceCallService {
 
   async hangUp(tenantId: string, id: string): Promise<VoiceCall> {
     const call = await this.findOne(tenantId, id);
-    await this.twilioService.hangUpCall(tenantId, call.sid);
+    const provider = await this.providerRegistry.getProvider(tenantId);
+    await provider.hangUpCall(tenantId, call.sid);
     return this.voiceCallRepository.updateWithTenant(tenantId, call.id, {
       status: 'COMPLETED',
     });
@@ -194,8 +308,51 @@ export class VoiceCallService {
 
   async transferCall(tenantId: string, id: string, to: string): Promise<VoiceCall> {
     const call = await this.findOne(tenantId, id);
-    await this.twilioService.transferCall(tenantId, call.sid, to);
-    return call;
+    const provider = await this.providerRegistry.getProvider(tenantId);
+    await provider.transferCall(tenantId, call.sid, to);
+    return this.voiceCallRepository.updateWithTenant(tenantId, call.id, {
+      transferredToHuman: true,
+    });
+  }
+
+  /** Persists Twilio's async Answering Machine Detection result for a call. */
+  async persistAnsweredBy(sid: string, answeredBy: string): Promise<VoiceCall | null> {
+    const call = await this.voiceCallRepository.findBySidGlobal(sid);
+    if (!call) {
+      return null;
+    }
+    return this.voiceCallRepository.updateWithTenant(call.tenantId, call.id, { answeredBy });
+  }
+
+  /**
+   * Downloads a call's recording from the provider and re-hosts it in MinIO
+   * instead of leaving the raw provider URL (which requires provider
+   * credentials to fetch and isn't under our access control) as the
+   * playback link.
+   */
+  async persistRecording(sid: string, providerRecordingUrl: string): Promise<VoiceCall | null> {
+    const call = await this.voiceCallRepository.findBySidGlobal(sid);
+    if (!call) {
+      return null;
+    }
+
+    try {
+      const provider = await this.providerRegistry.getProvider(call.tenantId);
+      const buffer = await provider.downloadRecording(call.tenantId, providerRecordingUrl);
+      const stored = await this.storageService.putObject(
+        call.tenantId,
+        `voice-recordings/${call.id}.mp3`,
+        buffer,
+        'audio/mpeg',
+      );
+      return this.voiceCallRepository.updateWithTenant(call.tenantId, call.id, {
+        recordingUrl: stored.downloadUrl,
+        recordingObjectKey: stored.objectKey,
+      });
+    } catch (err) {
+      this.logger.warn(`Failed to re-host recording for call ${call.id}`, err as Error);
+      return null;
+    }
   }
 
   getRecordingUrl(call: VoiceCall): { url: string | null } {
