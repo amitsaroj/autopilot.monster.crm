@@ -1,5 +1,7 @@
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
+import { decodeToken } from '@/lib/auth';
+import { canAccessRoleRoute } from '@/lib/role-access';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { readChunkedCookie } from '@/lib/cookie-chunks';
@@ -12,19 +14,9 @@ export default async function SuperAdminLayout({ children }: { children: React.R
     redirect('/login');
   }
 
-  // Basic role check on the edge/server
-  try {
-    const payloadBase64 = token.split('.')[1];
-    const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
-    const payload = JSON.parse(decodedJson);
-
-    const roles: string[] = payload.roles || [];
-    if (!roles.includes('SUPER_ADMIN')) {
-      redirect('/403');
-    }
-  } catch (e) {
-    redirect('/login');
-  }
+  const payload = decodeToken(token);
+  if (!payload || !Array.isArray(payload.roles)) redirect('/login');
+  if (!canAccessRoleRoute('/superadmin', payload.roles)) redirect('/403');
 
   return (
     <div className="flex h-screen overflow-hidden">

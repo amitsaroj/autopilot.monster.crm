@@ -1,5 +1,7 @@
 import { SubAdminSidebar } from '@/components/layout/sub-admin-sidebar';
 import { Header } from '@/components/layout/header';
+import { decodeToken } from '@/lib/auth';
+import { canAccessRoleRoute } from '@/lib/role-access';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { readChunkedCookie } from '@/lib/cookie-chunks';
@@ -12,21 +14,9 @@ export default async function SubAdminLayout({ children }: { children: React.Rea
     redirect('/login');
   }
 
-  // Sub-admin routes require the literal ADMIN role — RolesGuard on the
-  // backend does an exact string match, no hierarchy, so SUPER_ADMIN and
-  // TENANT_ADMIN do not implicitly get in here either.
-  try {
-    const payloadBase64 = token.split('.')[1];
-    const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
-    const payload = JSON.parse(decodedJson);
-
-    const roles: string[] = payload.roles || [];
-    if (!roles.includes('ADMIN')) {
-      redirect('/403');
-    }
-  } catch (e) {
-    redirect('/login');
-  }
+  const payload = decodeToken(token);
+  if (!payload || !Array.isArray(payload.roles)) redirect('/login');
+  if (!canAccessRoleRoute('/sub-admin', payload.roles)) redirect('/403');
 
   return (
     <div className="flex h-screen overflow-hidden">

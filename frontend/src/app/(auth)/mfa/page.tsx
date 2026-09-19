@@ -1,5 +1,7 @@
 'use client';
 
+import { roleHome } from '@/lib/role-access';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Loader2, Zap } from 'lucide-react';
@@ -36,14 +38,8 @@ export default function MfaPage() {
       });
       toast.success('MFA Verified!');
 
-      const roles = user?.roles || [];
-      if (roles.includes('SUPER_ADMIN')) {
-        router.push('/superadmin');
-      } else if (roles.includes('ADMIN')) {
-        router.push('/admin');
-      } else {
-        router.push('/dashboard');
-      }
+      if (!user) return;
+      router.push(roleHome(user.roles));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Invalid MFA code');
     } finally {

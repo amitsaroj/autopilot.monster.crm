@@ -3,7 +3,8 @@
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { setToken } from '@/lib/auth';
+import { roleHome } from '@/lib/role-access';
+import { setToken, decodeToken, removeToken } from '@/lib/auth';
 import api from '@/lib/api/client';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -32,7 +33,7 @@ function CallbackContent() {
       const handleAuth = async () => {
         let tenantId: string | undefined;
         try {
-          const payload = JSON.parse(atob(accessToken.split('.')[1]));
+          const payload = decodeToken(accessToken);
           tenantId = payload.tenantId;
         } catch {
           tenantId = undefined;
@@ -55,15 +56,9 @@ function CallbackContent() {
 
           toast.success('Successfully logged in!');
 
-          const roles = userData?.roles || [];
-          if (roles.includes('SUPER_ADMIN')) {
-            router.push('/superadmin');
-          } else if (roles.includes('ADMIN')) {
-            router.push('/admin');
-          } else {
-            router.push('/dashboard');
-          }
+          router.push(roleHome(decodeToken(accessToken)?.roles));
         } catch (error) {
+          removeToken();
           console.error('OAuth Callback Error:', error);
           toast.error('Authentication failed. Please try again.');
           router.push('/login');

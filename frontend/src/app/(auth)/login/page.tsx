@@ -1,5 +1,7 @@
 'use client';
 
+import { roleHome } from '@/lib/role-access';
+
 import Link from 'next/link';
 import { ArrowRight, Zap, Loader2, Github } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -35,14 +37,12 @@ export default function LoginPage() {
       const user = await login(data);
       toast.success('Welcome back!');
 
-      const roles = user?.roles || [];
-      if (roles.includes('SUPER_ADMIN')) {
-        router.push('/superadmin');
-      } else if (roles.includes('ADMIN')) {
-        router.push('/sub-admin');
-      } else {
-        router.push('/dashboard');
+      if (user?.mfaRequired) {
+        router.push('/mfa');
+        return;
       }
+      if (!user) return;
+      router.push(roleHome(user.roles));
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Invalid email or password');
     }

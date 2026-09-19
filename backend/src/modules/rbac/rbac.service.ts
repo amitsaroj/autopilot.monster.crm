@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { assertCustomRoleName, assertMutableRole } from '../../common/utils/role-policy';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { v4 as uuidv4 } from 'uuid';
 import { RbacRepository } from './rbac.repository';
@@ -20,6 +21,7 @@ export class RbacService {
     createRoleDto: CreateRoleDto,
     actorId?: string,
   ): Promise<Role> {
+    assertCustomRoleName(createRoleDto.name);
     const permissions = await this.rbacRepository.findPermissionsByIds(createRoleDto.permissionIds);
     const role = await this.rbacRepository.create(tenantId, {
       name: createRoleDto.name,
@@ -90,6 +92,8 @@ export class RbacService {
     actorId?: string,
   ): Promise<Role> {
     const role = await this.findRole(tenantId, id);
+    assertMutableRole(role);
+    if (updateRoleDto.name) assertCustomRoleName(updateRoleDto.name);
     if (updateRoleDto.permissionIds) {
       role.permissions = await this.rbacRepository.findPermissionsByIds(
         updateRoleDto.permissionIds,
@@ -111,7 +115,7 @@ export class RbacService {
   }
 
   async removeRole(tenantId: string, id: string): Promise<void> {
-    await this.findRole(tenantId, id);
+    assertMutableRole(await this.findRole(tenantId, id));
     await this.rbacRepository.delete(tenantId, id);
   }
 
@@ -121,7 +125,11 @@ export class RbacService {
     roleId: string,
     actorId?: string,
   ): Promise<void> {
-    await this.findRole(tenantId, roleId);
+    const role = await this.findRole(tenantId, roleId);
+    if (role.name === 'SUPER_ADMIN')
+      throw new ForbiddenException(
+        'Platform roles cannot be assigned or revoked through tenant role management',
+      );
     if (!(await this.rbacRepository.userExistsInTenant(tenantId, userId))) {
       throw new NotFoundException('User not found');
     }
@@ -145,7 +153,11 @@ export class RbacService {
     if (!(await this.rbacRepository.userExistsInTenant(tenantId, userId))) {
       throw new NotFoundException('User not found');
     }
-    await this.findRole(tenantId, roleId);
+    const role = await this.findRole(tenantId, roleId);
+    if (role.name === 'SUPER_ADMIN')
+      throw new ForbiddenException(
+        'Platform roles cannot be assigned or revoked through tenant role management',
+      );
     await this.rbacRepository.revokeRole(tenantId, userId, roleId);
     this.eventEmitter.emit(EVENT_NAMES.ROLE_REVOKED, {
       name: EVENT_NAMES.ROLE_REVOKED,

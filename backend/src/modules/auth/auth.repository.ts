@@ -67,10 +67,17 @@ export class AuthRepository {
   }
 
   async findUserById(id: string, tenantId: string): Promise<UserEntity | null> {
-    return this.userRepo.findOne({ where: { id, tenantId } });
+    return this.userRepo
+      .createQueryBuilder('user')
+      .addSelect(['user.passwordHash', 'user.mfaSecret'])
+      .where('user.id = :id AND user.tenantId = :tenantId', { id, tenantId })
+      .getOne();
   }
 
   async createUser(data: Partial<UserEntity>): Promise<UserEntity> {
+    if (data.passwordHash !== undefined) {
+      data = { ...data, passwordHash: await bcrypt.hash(data.passwordHash, 12) };
+    }
     const user = this.userRepo.create(data);
     return this.userRepo.save(user);
   }
@@ -85,6 +92,9 @@ export class AuthRepository {
   }
 
   async updateUser(id: string, tenantId: string, data: Partial<UserEntity>): Promise<UserEntity> {
+    if (data.passwordHash !== undefined) {
+      data = { ...data, passwordHash: await bcrypt.hash(data.passwordHash, 12) };
+    }
     // Cast required: TypeORM's _QueryDeepPartialEntity struggles with jsonb Record<string, unknown>
     await this.userRepo.update(
       { id, tenantId },
@@ -104,7 +114,7 @@ export class AuthRepository {
       { id, tenantId },
       {
         failedLoginAttempts: 0,
-        lockedUntil: undefined,
+        lockedUntil: null,
         lastLoginAt: new Date(),
       },
     );
@@ -122,12 +132,14 @@ export class AuthRepository {
     rawToken: string,
     expiresAt: Date,
     ipAddress?: string,
+    sessionId?: string,
   ): Promise<void> {
-    const tokenHash = await bcrypt.hash(rawToken, 10);
+    const tokenHash = `sha256:${this.hashOpaqueToken(rawToken)}`;
     const token = this.tokenRepo.create({
       userId,
       tenantId,
       tokenHash,
+      sessionId,
       expiresAt,
       ipAddress,
       isRevoked: false,
@@ -153,8 +165,12 @@ export class AuthRepository {
   ): Promise<boolean> {
     const validTokens = await this.findValidRefreshToken(userId, tenantId);
     for (const valid of validTokens) {
-      if (await bcrypt.compare(rawToken, valid.tokenHash)) {
-        await this.revokeRefreshToken(valid.id, tenantId);
+      if (valid.tokenHash === `sha256:${this.hashOpaqueToken(rawToken)}`) {
+        const result = await this.tokenRepo.update(
+          { id: valid.id, tenantId, isRevoked: false },
+          { isRevoked: true },
+        );
+        if (!result.affected) continue;
         if (valid.sessionId) {
           await this.deactivateSession(valid.sessionId, userId, tenantId);
         }
@@ -181,6 +197,9 @@ export class AuthRepository {
 
   async deactivateSession(id: string, userId: string, tenantId: string): Promise<boolean> {
     const result = await this.sessionRepo.update({ id, userId, tenantId }, { isActive: false });
+    if (result.affected) {
+      await this.tokenRepo.update({ sessionId: id, userId, tenantId }, { isRevoked: true });
+    }
     return (result.affected ?? 0) > 0;
   }
 
@@ -259,6 +278,7 @@ export class AuthRepository {
       .createQueryBuilder('role')
       .leftJoinAndSelect('role.permissions', 'permission')
       .where('role.id IN (:...roleIds)', { roleIds })
+      .andWhere('role.tenantId = :tenantId', { tenantId })
       .getMany();
   }
 }

@@ -1,3 +1,4 @@
+import { assertCustomRoleName, assertMutableRole } from '../../../common/utils/role-policy';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,13 +16,20 @@ export class SubAdminRolesService {
   }
 
   async create(tenantId: string, dto: any) {
-    const role = this.roleRepo.create({ ...dto, tenantId });
+    assertCustomRoleName(dto.name);
+    const role = this.roleRepo.create({
+      name: dto.name,
+      description: dto.description,
+      tenantId,
+      isSystem: false,
+    });
     return this.roleRepo.save(role);
   }
 
   async remove(tenantId: string, roleId: string) {
     const role = await this.roleRepo.findOne({ where: { id: roleId, tenantId } });
     if (!role) throw new NotFoundException('Role not found in this tenant context');
-    return this.roleRepo.delete(roleId);
+    assertMutableRole(role);
+    return this.roleRepo.delete({ id: roleId, tenantId });
   }
 }

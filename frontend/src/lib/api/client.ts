@@ -25,6 +25,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let refreshInFlight: Promise<void> | null = null;
+
 // Response interceptor for handling errors and refreshing tokens
 api.interceptors.response.use(
   (response) => {
@@ -35,23 +37,37 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !/\/auth\/(login|register|refresh|forgot-password|reset-password|verify-email)(?:$|\?)/.test(
+        originalRequest.url ?? '',
+      )
+    ) {
       originalRequest._retry = true;
       const refreshToken = getRefreshToken();
 
       if (refreshToken) {
         try {
-          const tenantId = typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
-          const response = await axios.post(
-            `${api.defaults.baseURL}/auth/refresh`,
-            { refreshToken },
-            tenantId ? { headers: { 'x-tenant-id': tenantId } } : undefined,
-          );
-          const tokenData = response.data.data ?? response.data;
-          const { accessToken, refreshToken: newRefreshToken } = tokenData;
-
-          setToken(accessToken, newRefreshToken);
-          api.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+          if (!refreshInFlight) {
+            refreshInFlight = (async () => {
+              const tenantId =
+                typeof window !== 'undefined' ? localStorage.getItem('tenant_id') : null;
+              const response = await axios.post(
+                `${api.defaults.baseURL}/auth/refresh`,
+                { refreshToken },
+                tenantId ? { headers: { 'x-tenant-id': tenantId } } : undefined,
+              );
+              const tokenData = response.data.data ?? response.data;
+              if (!tokenData.accessToken || !tokenData.refreshToken)
+                throw new Error('Invalid refresh response');
+              setToken(tokenData.accessToken, tokenData.refreshToken);
+            })().finally(() => {
+              refreshInFlight = null;
+            });
+          }
+          await refreshInFlight;
 
           return api(originalRequest);
         } catch (refreshError) {

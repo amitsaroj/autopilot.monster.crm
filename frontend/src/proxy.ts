@@ -1,8 +1,11 @@
+import { decodeToken } from './lib/auth';
+import { roleHome, canAccessRoleRoute } from './lib/role-access';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { readChunkedCookie } from './lib/cookie-chunks';
 
 const publicRoutes = [
+  '/auth/callback',
   '/login',
   '/register',
   '/forgot-password',
@@ -38,8 +41,10 @@ const marketingRoutes = [
 ];
 
 export function proxy(request: NextRequest) {
-  const token = readChunkedCookie((name) => request.cookies.get(name), 'access_token');
+  const rawToken = readChunkedCookie((name) => request.cookies.get(name), 'access_token');
   const { pathname } = request.nextUrl;
+  const payload = rawToken ? decodeToken(rawToken) : null;
+  const token = payload && Array.isArray(payload.roles) ? rawToken : null;
 
   const isMarketingRoute =
     pathname === '/' || marketingRoutes.some((route) => pathname.startsWith(route));
@@ -60,34 +65,12 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/register') ||
     pathname.startsWith('/mfa');
   // Prevent authenticated users from accessing auth pages
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  if (isAuthRoute && token && typeof payload.exp === 'number' && payload.exp * 1000 > Date.now()) {
+    return NextResponse.redirect(new URL(roleHome(payload.roles), request.url));
   }
 
-  // Next.js Edge Runtime JWT decoding for rapid role assessment
-  if (token) {
-    try {
-      const payloadBase64 = token.split('.')[1];
-      const decodedJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-      const payload = JSON.parse(decodedJson);
-
-      const roles: string[] = payload.roles || [];
-      const isAdminRoute = pathname.startsWith('/admin');
-      const isSuperAdminRoute = pathname.startsWith('/superadmin');
-
-      if (isSuperAdminRoute && !roles.includes('SUPER_ADMIN')) {
-        return NextResponse.redirect(new URL('/403', request.url));
-      }
-
-      if (
-        isAdminRoute &&
-        !roles.some((r) => ['SUPER_ADMIN', 'TENANT_ADMIN', 'ADMIN'].includes(r))
-      ) {
-        return NextResponse.redirect(new URL('/403', request.url));
-      }
-    } catch (e) {
-      // Allow API 401 block to catch malformed tampered cookies seamlessly
-    }
+  if (token && !canAccessRoleRoute(pathname, payload.roles)) {
+    return NextResponse.redirect(new URL('/403', request.url));
   }
 
   return NextResponse.next();

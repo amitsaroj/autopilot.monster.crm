@@ -32,6 +32,16 @@ describe('PermissionGuard', () => {
     jest.resetAllMocks();
   });
 
+  it('allows an explicit self-profile exemption despite controller resource metadata', () => {
+    mockReflector({
+      [METADATA_KEYS.SKIP_PERMISSION_CHECK]: true,
+      [METADATA_KEYS.PERMISSION_RESOURCE]: 'users',
+    });
+    expect(guard.canActivate(createContext('GET', { roles: ['AGENT'], permissions: [] }))).toBe(
+      true,
+    );
+  });
+
   it('allows public routes without permission metadata', () => {
     mockReflector({ [METADATA_KEYS.IS_PUBLIC]: true });
 

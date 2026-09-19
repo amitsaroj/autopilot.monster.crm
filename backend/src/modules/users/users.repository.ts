@@ -1,7 +1,9 @@
+import { Role } from '../../database/entities/role.entity';
+import { UserRole } from '../../database/entities/user-role.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserEntity } from '@autopilot/core/modules/auth/entities/user.entity';
+import { UserEntity } from '../auth/entities/user.entity';
 import { Invitation } from '../../database/entities/invitation.entity';
 
 @Injectable()
@@ -12,6 +14,24 @@ export class UsersRepository {
     @InjectRepository(Invitation)
     private readonly invitationRepo: Repository<Invitation>,
   ) {}
+
+  async findInvitationRole(tenantId: string, roleId: string): Promise<Role | null> {
+    return this.userRepo.manager.getRepository(Role).findOne({ where: { id: roleId, tenantId } });
+  }
+
+  async findActorRoles(tenantId: string, userId: string): Promise<string[]> {
+    const roles = await this.userRepo.manager
+      .getRepository(Role)
+      .createQueryBuilder('role')
+      .innerJoin(
+        UserRole,
+        'assignment',
+        'assignment.roleId = role.id AND assignment.tenantId = role.tenantId',
+      )
+      .where('assignment.userId = :userId AND role.tenantId = :tenantId', { userId, tenantId })
+      .getMany();
+    return roles.map((role) => role.name);
+  }
 
   async findAll(tenantId: string): Promise<UserEntity[]> {
     return this.userRepo.find({ where: { tenantId } });

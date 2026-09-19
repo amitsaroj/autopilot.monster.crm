@@ -93,7 +93,7 @@ export class UserEntity {
   isMfaEnabled!: boolean;
 
   @Column({ name: 'mfa_secret', type: 'varchar', length: 64, nullable: true, select: false })
-  mfaSecret?: string;
+  mfaSecret?: string | null;
 
   @Column({ name: 'last_login_at', type: 'timestamptz', nullable: true })
   lastLoginAt?: Date;
@@ -102,7 +102,7 @@ export class UserEntity {
   failedLoginAttempts!: number;
 
   @Column({ name: 'locked_until', type: 'timestamptz', nullable: true })
-  lockedUntil?: Date;
+  lockedUntil?: Date | null;
 
   @Column({ name: 'email_verified_at', type: 'timestamptz', nullable: true })
   emailVerifiedAt?: Date;
@@ -117,13 +117,13 @@ export class UserEntity {
     nullable: true,
     select: false,
   })
-  verificationToken?: string;
+  verificationToken?: string | null;
 
   @Column({ name: 'reset_token', type: 'varchar', length: 128, nullable: true, select: false })
-  resetToken?: string;
+  resetToken?: string | null;
 
   @Column({ name: 'reset_token_expires_at', type: 'timestamptz', nullable: true })
-  resetTokenExpiresAt?: Date;
+  resetTokenExpiresAt?: Date | null;
 
   @Column({ type: 'jsonb', nullable: true })
   metadata?: Record<string, unknown>;
@@ -150,6 +150,6 @@ export class UserEntity {
   }
 
   get isLocked(): boolean {
-    return this.lockedUntil !== undefined && this.lockedUntil > new Date();
+    return this.lockedUntil != null && this.lockedUntil > new Date();
   }
 }

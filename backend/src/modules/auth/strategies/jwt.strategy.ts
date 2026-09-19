@@ -7,6 +7,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import jsonwebtoken from 'jsonwebtoken';
 
+import { AuthRepository } from '../auth.repository';
 import type { JwtPayload } from '../interfaces/jwt-payload.interface';
 import {
   assertAccessJwtConfigured,
@@ -15,7 +16,10 @@ import {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly authRepo: AuthRepository,
+  ) {
     const jwt = configService.get<JwtConfig>('jwt');
     if (jwt === undefined) {
       throw new Error('JWT config missing');
@@ -48,16 +52,21 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  validate(payload: JwtPayload): IRequestContext {
+  async validate(payload: JwtPayload): Promise<IRequestContext> {
     if (payload.sub === undefined || payload.tenantId === undefined) {
       throw new UnauthorizedException('Invalid token payload');
     }
+    const user = await this.authRepo.findUserById(payload.sub, payload.tenantId);
+    if (!user?.isActive || user.isLocked) {
+      throw new UnauthorizedException('Account is not active or is locked');
+    }
+    const roles = await this.authRepo.fetchUserRolesWithPermissions(user.id, user.tenantId);
     return {
       userId: payload.sub,
       email: payload.email,
       tenantId: payload.tenantId,
-      roles: payload.roles,
-      permissions: payload.permissions,
+      roles: roles.map((role) => role.name),
+      permissions: [...new Set(roles.flatMap((role) => role.permissions.map((p) => p.name)))],
       planId: payload.planId,
       correlationId: '',
       ipAddress: '',
