@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   backend:
@@ -33,19 +35,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      minio:
-        image: minio/minio:latest
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        command: server /data
+      # Storage is mocked in the unit suite; MinIO is only needed by integration tests.
 
     env:
       NODE_ENV: test
