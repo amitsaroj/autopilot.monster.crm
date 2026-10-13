@@ -180,7 +180,17 @@ export class AuthService {
     await this.emailService.sendVerificationEmail(user.email, user.firstName || 'User', token);
     await this.authRepo.bootstrapTenantAdminRole(tenant.id, user.id);
 
-    return { user, tenant };
+    return {
+      user: {
+        id: user.id,
+        tenantId: user.tenantId,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        status: user.status,
+      },
+      tenant,
+    };
   }
 
   async refreshTokens(
@@ -279,7 +289,7 @@ export class AuthService {
 
     const token = this.createOpaqueToken();
     const expiresAt = new Date(Date.now() + 3600000); // 1 hour
-    await this.authRepo.updateUser(user.id, tenantId, {
+    await this.authRepo.updateUser(user.id, user.tenantId, {
       resetToken: this.hashOpaqueToken(token),
       resetTokenExpiresAt: expiresAt,
     });
@@ -298,14 +308,14 @@ export class AuthService {
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const user = await this.authRepo.findUserByResetToken(token);
-    if (!user || (user.resetTokenExpiresAt && user.resetTokenExpiresAt < new Date())) {
+    if (!user || !user.resetTokenExpiresAt || user.resetTokenExpiresAt <= new Date()) {
       throw new BadRequestException('Invalid or expired reset token');
     }
 
     await this.authRepo.updateUser(user.id, user.tenantId, {
       passwordHash: newPassword,
-      resetToken: undefined,
-      resetTokenExpiresAt: undefined,
+      resetToken: null,
+      resetTokenExpiresAt: null,
     });
     await this.authRepo.revokeAllUserTokens(user.id, user.tenantId);
     await this.authRepo.deactivateAllUserSessions(user.id, user.tenantId);
@@ -317,7 +327,7 @@ export class AuthService {
 
     await this.authRepo.updateUser(user.id, user.tenantId, {
       status: UserStatus.ACTIVE,
-      verificationToken: undefined,
+      verificationToken: null,
       emailVerifiedAt: new Date(),
     });
 
@@ -369,7 +379,7 @@ export class AuthService {
   async disableMfa(userId: string, tenantId: string): Promise<void> {
     await this.authRepo.updateUser(userId, tenantId, {
       isMfaEnabled: false,
-      mfaSecret: undefined,
+      mfaSecret: null,
     });
 
     this.eventEmitter.emit(EVENT_NAMES.USER_MFA_DISABLED, {
@@ -396,15 +406,18 @@ export class AuthService {
   async validateOAuthUser(profile: any): Promise<UserEntity> {
     const { email, firstName, lastName, provider, providerId, avatarUrl } = profile;
 
+    if (!providerId || !provider) throw new UnauthorizedException('Invalid OAuth identity');
+
     // 1. Try to find user by providerId
     let user = await this.authRepo.findUserByProvider(provider, providerId);
     if (user) return user;
 
+    if (!email) throw new UnauthorizedException('OAuth email is required');
+
     // 2. Try to find user by email
     user = await this.authRepo.findUserByEmail(email, undefined);
     if (user) {
-      // Link the provider info to existing user
-      return this.authRepo.updateUser(user.id, user.tenantId, { provider, providerId });
+      throw new UnauthorizedException('Sign in with the existing account login method');
     }
 
     // 3. Create a new user and tenant
@@ -448,6 +461,9 @@ export class AuthService {
   }
 
   async oauthLogin(user: UserEntity, ipAddress: string): Promise<AuthTokens> {
+    if (user.isMfaEnabled) {
+      throw new UnauthorizedException('Use password login to complete MFA');
+    }
     const tokens = await this.generateTokens(user, ipAddress);
     this.eventEmitter.emit(EVENT_NAMES.USER_LOGIN, {
       name: EVENT_NAMES.USER_LOGIN,
@@ -461,6 +477,13 @@ export class AuthService {
   }
 
   private async generateTokens(user: UserEntity, _ipAddress: string): Promise<AuthTokens> {
+    if (!user.isActive || user.isLocked) {
+      throw new UnauthorizedException('Account is not active or is locked');
+    }
+    const tenant = await this.authRepo.findTenantById(user.tenantId);
+    if (!tenant || ['SUSPENDED', 'DELETED'].includes(tenant.status)) {
+      throw new UnauthorizedException('Workspace is not available');
+    }
     const rolesWithPermissions = await this.authRepo.fetchUserRolesWithPermissions(
       user.id,
       user.tenantId,
@@ -485,29 +508,11 @@ export class AuthService {
     const accessToken = signJwtToken(this.jwtConfig, 'access', payload);
     const refreshToken = signJwtToken(this.jwtConfig, 'refresh', payload);
 
-    // Calculate generic valid expiry for the token (assumes refreshExpiresIn is in seconds if number, or ms if string, 7 days default)
-    let expiryTime = 7 * 24 * 3600 * 1000;
-    if (typeof this.jwtConfig.refreshExpiresIn === 'number') {
-      expiryTime = this.jwtConfig.refreshExpiresIn * 1000;
-    } else if (
-      typeof this.jwtConfig.refreshExpiresIn === 'string' &&
-      this.jwtConfig.refreshExpiresIn.endsWith('d')
-    ) {
-      expiryTime = parseInt(this.jwtConfig.refreshExpiresIn) * 24 * 3600 * 1000;
-    }
-    const refreshExpiresAt = new Date(Date.now() + expiryTime);
-
-    // Persist refresh token securely
-    await this.authRepo.saveRefreshToken(
-      user.id,
-      user.tenantId,
-      refreshToken,
-      refreshExpiresAt,
-      _ipAddress,
-    );
+    const refreshPayload = this.jwtService.decode(refreshToken) as { exp: number };
+    const refreshExpiresAt = new Date(refreshPayload.exp * 1000);
 
     // Create accompanying session
-    await this.authRepo.createSession({
+    const session = await this.authRepo.createSession({
       userId: user.id,
       tenantId: user.tenantId,
       ipAddress: _ipAddress,
@@ -517,7 +522,21 @@ export class AuthService {
       lastActivityAt: new Date(),
     });
 
-    return { accessToken, refreshToken, expiresIn: 900, tokenType: 'Bearer' };
+    await this.authRepo.saveRefreshToken(
+      user.id,
+      user.tenantId,
+      refreshToken,
+      refreshExpiresAt,
+      _ipAddress,
+      session.id,
+    );
+    const accessPayload = this.jwtService.decode(accessToken) as { exp: number; iat: number };
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: accessPayload.exp - accessPayload.iat,
+      tokenType: 'Bearer',
+    };
   }
 
   /**

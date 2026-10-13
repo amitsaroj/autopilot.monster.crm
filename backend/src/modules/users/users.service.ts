@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
@@ -49,6 +54,16 @@ export class UsersService {
   }
 
   async inviteUser(tenantId: string, invitedBy: string, dto: InviteUserDto): Promise<Invitation> {
+    const role = await this.usersRepo.findInvitationRole(tenantId, dto.roleId);
+    if (!role) throw new NotFoundException('Role not found in this tenant');
+    const actorRoles = await this.usersRepo.findActorRoles(tenantId, invitedBy);
+    if (
+      role.name === 'SUPER_ADMIN' ||
+      (!actorRoles.some((name) => ['SUPER_ADMIN', 'TENANT_ADMIN'].includes(name)) &&
+        ['TENANT_ADMIN', 'ADMIN'].includes(role.name))
+    ) {
+      throw new ForbiddenException('Cannot invite a user with this role');
+    }
     const existing = await this.usersRepo.findByEmail(dto.email, tenantId);
     if (existing) throw new ConflictException('User already exists in this tenant');
 

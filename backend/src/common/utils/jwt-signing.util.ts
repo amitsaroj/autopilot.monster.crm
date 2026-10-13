@@ -1,6 +1,6 @@
 import type { JwtSignOptions, JwtVerifyOptions } from '@nestjs/jwt';
 import jwt, { type Algorithm, type SignOptions } from 'jsonwebtoken';
-import { createPrivateKey, createPublicKey } from 'node:crypto';
+import { createPrivateKey, createPublicKey, randomUUID } from 'node:crypto';
 
 import { env } from '../../config/env.config';
 import type { JwtConfig } from '../../config/jwt.config';
@@ -40,6 +40,7 @@ export function buildJwtSignOptions(config: JwtConfig, kind: JwtTokenKind): JwtS
 export function signJwtToken(config: JwtConfig, kind: JwtTokenKind, payload: object): string {
   const expiresIn = kind === 'access' ? config.expiresIn : config.refreshExpiresIn;
   const signOptions: SignOptions = {
+    jwtid: randomUUID(),
     expiresIn: expiresIn as SignOptions['expiresIn'],
     issuer: ISSUER,
     audience: AUDIENCE,

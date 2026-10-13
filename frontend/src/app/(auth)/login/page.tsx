@@ -1,5 +1,7 @@
 'use client';
 
+import { roleHome } from '@/lib/role-access';
+
 import Link from 'next/link';
 import axios from 'axios';
 import { useState } from 'react';
@@ -40,13 +42,9 @@ export default function LoginPage() {
       const user = await login(data);
       toast.success('Welcome back!');
 
-      const roles = user?.roles || [];
-      if (roles.includes('SUPER_ADMIN')) {
-        router.push('/superadmin');
-      } else if (roles.includes('ADMIN')) {
-        router.push('/sub-admin');
-      } else {
-        router.push('/dashboard');
+      if (user?.mfaRequired) {
+        router.push('/mfa');
+        return;
       }
     } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: unknown }>(error)) {

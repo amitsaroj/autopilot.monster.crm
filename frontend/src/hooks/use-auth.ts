@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authService, AuthResponse } from '../services/auth.service';
-import { setToken, removeToken } from '../lib/auth';
+import { setToken, removeToken, decodeToken } from '../lib/auth';
 import api from '../lib/api/client';
 
 interface AuthState {
@@ -36,6 +36,12 @@ export const useAuth = create<AuthState>()(
       mfaPendingPassword: null,
 
       setAuth: (response: AuthResponse) => {
+        const payload = decodeToken(response.accessToken);
+        response.user = {
+          ...response.user,
+          roles: payload?.roles ?? [],
+          permissions: payload?.permissions ?? [],
+        };
         set({
           user: response.user,
           tenant: response.tenant || null,
@@ -58,7 +64,7 @@ export const useAuth = create<AuthState>()(
           let tenantId = authData.tenant?.id;
           if (!tenantId && authData.accessToken) {
             try {
-              const payload = JSON.parse(atob(authData.accessToken.split('.')[1]));
+              const payload = decodeToken(authData.accessToken);
               tenantId = payload.tenantId;
             } catch {
               tenantId = undefined;
@@ -84,7 +90,7 @@ export const useAuth = create<AuthState>()(
           }
 
           try {
-            const payload = JSON.parse(atob(authData.accessToken.split('.')[1]));
+            const payload = decodeToken(authData.accessToken);
             userData.roles = payload.roles || [];
             userData.permissions = payload.permissions || [];
           } catch (e) {
@@ -112,10 +118,15 @@ export const useAuth = create<AuthState>()(
               mfaPendingPassword: data.password,
               isLoading: false,
             });
-            window.location.href = '/mfa';
-            return;
+            return { mfaRequired: true };
           }
+          removeToken();
           set({
+            user: null,
+            tenant: null,
+            isAuthenticated: false,
+            accessToken: null,
+            refreshToken: null,
             error: message || 'Login failed',
             isLoading: false,
           });
@@ -171,8 +182,6 @@ export const useAuth = create<AuthState>()(
         user: state.user,
         tenant: state.tenant,
         isAuthenticated: state.isAuthenticated,
-        mfaPendingEmail: state.mfaPendingEmail,
-        mfaPendingPassword: state.mfaPendingPassword,
       }),
     },
   ),

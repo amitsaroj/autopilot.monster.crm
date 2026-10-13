@@ -35,6 +35,12 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
 
+    const skipPermissionCheck = this.reflector.getAllAndOverride<boolean>(
+      METADATA_KEYS.SKIP_PERMISSION_CHECK,
+      [context.getHandler(), context.getClass()],
+    );
+    if (skipPermissionCheck === true) return true;
+
     let requiredPermissions = this.reflector.getAllAndOverride<string[] | undefined>(
       METADATA_KEYS.PERMISSIONS,
       [context.getHandler(), context.getClass()],
@@ -53,14 +59,6 @@ export class PermissionGuard implements CanActivate {
     }
 
     if (!requiredPermissions || requiredPermissions.length === 0) {
-      const skipPermissionCheck = this.reflector.getAllAndOverride<boolean>(
-        METADATA_KEYS.SKIP_PERMISSION_CHECK,
-        [context.getHandler(), context.getClass()],
-      );
-      if (skipPermissionCheck === true) {
-        return true;
-      }
-
       throw new ForbiddenException({
         message: 'Insufficient permissions to access this resource',
         code: ERROR_CODES.FORBIDDEN,

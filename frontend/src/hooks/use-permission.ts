@@ -1,3 +1,4 @@
+import { hasUserPermission } from '../lib/role-access';
 import { useAuth } from './use-auth';
 
 export function usePermission() {
@@ -9,13 +10,11 @@ export function usePermission() {
   };
 
   const hasPermission = (permission: string) => {
-    if (!isAuthenticated || !user?.permissions) return false;
-    return user.permissions.includes(permission);
+    return isAuthenticated && hasUserPermission(user, permission);
   };
 
   const hasAnyPermission = (permissions: string[]) => {
-    if (!isAuthenticated || !user?.permissions) return false;
-    return permissions.some((p) => user.permissions.includes(p));
+    return isAuthenticated && permissions.some((p) => hasUserPermission(user, p));
   };
 
   return {

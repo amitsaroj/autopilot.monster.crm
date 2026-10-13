@@ -3,7 +3,13 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateUserDto, InviteUserDto } from './dto/users.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
-import { Roles, TenantId, CurrentUser, ResourcePermissions } from '../../common/decorators';
+import {
+  Roles,
+  TenantId,
+  CurrentUser,
+  ResourcePermissions,
+  SkipPermissionCheck,
+} from '../../common/decorators';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('Users')
@@ -22,6 +28,7 @@ export class UsersController {
   }
 
   @Get('me')
+  @SkipPermissionCheck()
   @ApiOperation({ summary: 'Get current user profile' })
   async getMe(@TenantId() tenantId: string, @CurrentUser() user: IRequestContext) {
     return await this.usersService.findOne(user.userId, tenantId);

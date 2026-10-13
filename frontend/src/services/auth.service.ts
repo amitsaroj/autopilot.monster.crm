@@ -1,3 +1,4 @@
+import { getRefreshToken } from '../lib/auth';
 import api from '../lib/api/client';
 
 export interface AuthResponse {
@@ -19,12 +20,7 @@ export const authService = {
   },
 
   async logout(allSessions = false): Promise<void> {
-    const extractCookie = (name: string) => {
-      if (typeof window === 'undefined') return null;
-      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-      return match ? match[2] : null;
-    };
-    const refreshToken = extractCookie('refresh_token');
+    const refreshToken = getRefreshToken();
     await api.post('/auth/logout', { allSessions, refreshToken: refreshToken ?? undefined });
   },
 
@@ -47,7 +43,7 @@ export const authService = {
 
   async enableMfa(): Promise<{ secret: string; qrCodeUrl: string }> {
     const response = await api.post('/auth/mfa/enable');
-    return response.data;
+    return response.data.data ?? response.data;
   },
 
   async verifyMfa(totpCode: string): Promise<void> {
