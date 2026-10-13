@@ -98,7 +98,7 @@ export default function WhatsAppPage() {
             <h1 className="font-semibold text-foreground">WhatsApp</h1>
             <Link
               href="/whatsapp/broadcast"
-              className="flex items-center gap-1.5 text-xs text-[hsl(246,80%,60%)] hover:underline"
+              className="flex items-center gap-1.5 text-xs text-[hsl(var(--brand))] hover:underline"
             >
               <Send className="h-3 w-3" /> Broadcast
             </Link>
@@ -109,7 +109,7 @@ export default function WhatsAppPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search chats..."
-              className="w-full pl-8 pr-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full pl-8 pr-3 py-2 text-sm bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function WhatsAppPage() {
                   activePhone === conversation.phone ? 'bg-muted' : 'hover:bg-muted/50'
                 }`}
               >
-                <div className="w-10 h-10 rounded-full bg-[hsl(246,80%,60%)]/20 flex items-center justify-center text-xs font-bold text-[hsl(246,80%,60%)] shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[hsl(var(--brand))]/20 flex items-center justify-center text-xs font-bold text-[hsl(var(--brand))] shrink-0">
                   {(conversation.contactName ?? conversation.phone).slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -150,7 +150,7 @@ export default function WhatsAppPage() {
                   </p>
                 </div>
                 {conversation.unreadCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-[hsl(246,80%,60%)] text-white text-xs flex items-center justify-center shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-[hsl(var(--brand))] text-white text-xs flex items-center justify-center shrink-0">
                     {conversation.unreadCount}
                   </span>
                 )}
@@ -201,17 +201,17 @@ export default function WhatsAppPage() {
                     <div
                       className={`rounded-lg px-4 py-2 max-w-md shadow-sm text-sm ${
                         msg.direction === 'OUTBOUND'
-                          ? 'bg-[hsl(246,80%,60%)] text-white'
+                          ? 'bg-[hsl(var(--brand))] text-foreground'
                           : 'bg-card border border-border text-foreground'
                       }`}
                     >
                       {msg.body}
                       {msg.mediaUrls && msg.mediaUrls.length > 0 && (
-                        <p className="mt-1 text-[10px] opacity-70">
+                        <p className="mt-1 text-xs opacity-70">
                           Media: {msg.mediaUrls.join(', ')}
                         </p>
                       )}
-                      <div className="text-[10px] opacity-70 text-right mt-1">
+                      <div className="text-xs opacity-70 text-right mt-1">
                         {new Date(msg.createdAt).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -230,13 +230,13 @@ export default function WhatsAppPage() {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && void handleSend()}
                 placeholder="Type a message..."
-                className="flex-1 px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)] text-sm"
+                className="flex-1 px-4 py-3 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))] text-sm"
               />
               <button
                 type="button"
                 onClick={() => void handleSend()}
                 disabled={!draft.trim() || sending}
-                className="w-12 h-12 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] disabled:opacity-50 rounded-full flex items-center justify-center text-white transition-colors shrink-0"
+                className="w-12 h-12 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] disabled:opacity-50 rounded-full flex items-center justify-center text-white transition-colors shrink-0"
               >
                 {sending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -115,9 +115,9 @@ export default function NewVoiceCampaignPage() {
       </Link>
       <h1 className="text-2xl font-bold">New Voice Campaign</h1>
 
-      <section className="space-y-3 rounded-xl border border-[hsl(246,80%,60%)]/30 bg-[hsl(246,80%,60%)]/5 p-6">
+      <section className="space-y-3 rounded-xl border border-[hsl(var(--brand))]/30 bg-[hsl(var(--brand))]/5 p-6">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Sparkles className="h-4 w-4 text-[hsl(246,80%,60%)]" /> What do you want to achieve?
+          <Sparkles className="h-4 w-4 text-[hsl(var(--brand))]" /> What do you want to achieve?
         </h2>
         <p className="text-xs text-muted-foreground">
           Describe the campaign in plain language and AI will draft a name and call script below —
@@ -134,7 +134,7 @@ export default function NewVoiceCampaignPage() {
           type="button"
           onClick={() => void handleGenerate()}
           disabled={generating}
-          className="inline-flex items-center gap-2 rounded-lg bg-[hsl(246,80%,60%)] px-4 py-2 text-sm font-semibold text-white hover:bg-[hsl(246,80%,55%)] disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-[hsl(var(--brand))] px-4 py-2 text-sm font-semibold text-white hover:bg-[hsl(220,87%,45%)] disabled:opacity-50"
         >
           {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           Generate draft

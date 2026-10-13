@@ -76,7 +76,7 @@ export default function ExportGlobalPage() {
         <p className="page-description">Download workspace data for backup or analysis</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           {
             label: 'CSV Export',
@@ -105,10 +105,10 @@ export default function ExportGlobalPage() {
             type="button"
             disabled={starting}
             onClick={e.action}
-            className="rounded-xl border border-border bg-card p-5 hover:border-[hsl(246,80%,60%)]/40 transition-colors text-left disabled:opacity-50"
+            className="rounded-xl border border-border bg-card p-5 hover:border-[hsl(var(--brand))]/40 transition-colors text-left disabled:opacity-50"
           >
-            <div className="p-3 rounded-xl bg-[hsl(246,80%,60%)]/10 w-fit mb-3">
-              <e.icon className="h-6 w-6 text-[hsl(246,80%,60%)]" />
+            <div className="p-3 rounded-xl bg-[hsl(var(--brand))]/10 w-fit mb-3">
+              <e.icon className="h-6 w-6 text-[hsl(var(--brand))]" />
             </div>
             <p className="font-semibold text-foreground">{e.label}</p>
             <p className="text-xs text-muted-foreground mt-1 mb-4">{e.desc}</p>
@@ -129,7 +129,7 @@ export default function ExportGlobalPage() {
             <select
               value={entityType}
               onChange={(e) => setEntityType(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             >
               {ENTITY_OPTIONS.map((o) => (
                 <option key={o} value={o}>
@@ -143,7 +143,7 @@ export default function ExportGlobalPage() {
             <select
               value={format}
               onChange={(e) => setFormat(e.target.value as 'csv' | 'json')}
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             >
               <option value="csv">CSV</option>
               <option value="json">JSON</option>
@@ -154,7 +154,7 @@ export default function ExportGlobalPage() {
           type="button"
           disabled={starting}
           onClick={() => void startExport(entityType, format)}
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
         >
           {starting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -205,7 +205,7 @@ export default function ExportGlobalPage() {
                   </p>
                 </div>
                 {(e.status === 'COMPLETED' || e.status === 'SUCCESS') && (
-                  <span className="flex items-center gap-1 text-xs text-green-500">
+                  <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400">
                     <CheckCircle className="h-3 w-3" />
                     Ready
                   </span>

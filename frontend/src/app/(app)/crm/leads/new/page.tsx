@@ -68,7 +68,7 @@ export default function NewLeadPage() {
         className="rounded-xl border border-border bg-card p-6 space-y-4"
       >
         <h2 className="text-sm font-semibold flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+          <TrendingUp className="h-4 w-4 text-[hsl(var(--brand))]" />
           Lead Details
         </h2>
         <div className="grid grid-cols-2 gap-4">
@@ -80,7 +80,7 @@ export default function NewLeadPage() {
               required
               value={form.firstName}
               onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
           <div>
@@ -90,7 +90,7 @@ export default function NewLeadPage() {
             <input
               value={form.lastName}
               onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
           <div>
@@ -99,7 +99,7 @@ export default function NewLeadPage() {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
           <div>
@@ -108,7 +108,7 @@ export default function NewLeadPage() {
               type="tel"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
           <div>
@@ -118,7 +118,7 @@ export default function NewLeadPage() {
               onChange={(e) =>
                 setForm({ ...form, metadata: { ...form.metadata, company_name: e.target.value } })
               }
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
           <div>
@@ -130,7 +130,7 @@ export default function NewLeadPage() {
               onChange={(e) =>
                 setForm({ ...form, metadata: { ...form.metadata, job_title: e.target.value } })
               }
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
           <div>
@@ -142,7 +142,7 @@ export default function NewLeadPage() {
               onChange={(e) =>
                 setForm({ ...form, metadata: { ...form.metadata, source: e.target.value } })
               }
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             >
               {['Website', 'LinkedIn', 'Referral', 'Cold Outreach', 'Event', 'Partner'].map((o) => (
                 <option key={o} value={o}>
@@ -156,7 +156,7 @@ export default function NewLeadPage() {
             <select
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value as LeadStatus })}
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             >
               {Object.values(LeadStatus).map((s) => (
                 <option key={s} value={s}>
@@ -173,7 +173,7 @@ export default function NewLeadPage() {
               onChange={(e) =>
                 setForm({ ...form, metadata: { ...form.metadata, notes: e.target.value } })
               }
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)] resize-none"
+              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))] resize-none"
             />
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function NewLeadPage() {
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             Create Lead

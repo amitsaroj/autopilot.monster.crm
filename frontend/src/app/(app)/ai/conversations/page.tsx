@@ -28,7 +28,7 @@ export default function AIConversationsPage() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default function AIConversationsPage() {
         </div>
         <Link
           href="/ai/chat"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
         >
           New chat
         </Link>
@@ -60,7 +60,7 @@ export default function AIConversationsPage() {
             href={`/ai/chat?conversationId=${item.id}`}
             className="flex items-center gap-3 p-4 hover:bg-muted/50"
           >
-            <MessageSquare className="h-5 w-5 text-indigo-600" />
+            <MessageSquare className="h-5 w-5 text-blue-600" />
             <div>
               <p className="font-medium">{item.title ?? `Conversation ${item.id.slice(0, 8)}`}</p>
               <p className="text-xs text-muted-foreground">

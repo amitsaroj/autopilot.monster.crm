@@ -47,7 +47,7 @@ export default function AiPromptsPage() {
         </div>
         <Link
           href="/ai/prompts/new"
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] text-white rounded-lg text-sm"
         >
           <Plus className="h-4 w-4" /> New Prompt
         </Link>

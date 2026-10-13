@@ -121,23 +121,23 @@ export default function SecurityPasswordPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-3xl pb-20">
       <div>
-        <h1 className="text-3xl font-black tracking-tight text-white uppercase">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground uppercase">
           Vault Security Rotation
         </h1>
-        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mt-1">
+        <p className="text-sm font-bold text-muted-foreground uppercase tracking-wide mt-1">
           Manage infrastructure access keys and authentication primitives
         </p>
       </div>
 
-      <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] p-8 md:p-10 shadow-2xl flex flex-col md:flex-row items-center gap-8 group">
-        <div className="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-4xl font-black text-emerald-400 shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500">
+      <div className="rounded-xl border border-border bg-card p-8 md:p-10 shadow-2xl flex flex-col md:flex-row items-center gap-8 group">
+        <div className="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-4xl font-semibold text-emerald-700 dark:text-emerald-400 shadow-xl group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500">
           <ShieldCheck className="w-10 h-10" />
         </div>
         <div className="text-center md:text-left">
-          <p className="text-2xl font-black text-white uppercase tracking-tighter">
+          <p className="text-2xl font-semibold text-foreground uppercase tracking-tighter">
             Zero Trust Enabled
           </p>
-          <p className="text-xs text-gray-500 font-medium leading-relaxed mt-2 max-w-lg">
+          <p className="text-xs text-muted-foreground font-medium leading-relaxed mt-2 max-w-lg">
             Your identity artifacts are protected by AES-256 encryption. We recommend rotating your
             Vault keys every 90 days to maintain maximum tenant compliance.
           </p>
@@ -146,20 +146,20 @@ export default function SecurityPasswordPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] p-8 md:p-10 shadow-2xl space-y-8"
+        className="rounded-xl border border-border bg-card p-8 md:p-10 shadow-2xl space-y-8"
       >
-        <div className="flex items-center gap-3 border-b border-white/5 pb-6">
-          <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400">
+        <div className="flex items-center gap-3 border-b border-border pb-6">
+          <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-700 dark:text-emerald-400">
             <KeyRound className="w-5 h-5" />
           </div>
-          <h2 className="text-lg font-black text-white uppercase tracking-tighter">
+          <h2 className="text-lg font-semibold text-foreground uppercase tracking-tighter">
             Phrase Rotation
           </h2>
         </div>
 
         <div className="space-y-6">
           <div className="space-y-3">
-            <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-2">
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide ml-2">
               Current Identity Phrase
             </label>
             <input
@@ -167,12 +167,12 @@ export default function SecurityPasswordPage() {
               required
               value={formData.currentPassword}
               onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-              className="w-full bg-white/[0.02] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-widest"
+              className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-wide"
             />
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-2">
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide ml-2">
               New Identity Phrase
             </label>
             <input
@@ -181,15 +181,15 @@ export default function SecurityPasswordPage() {
               minLength={8}
               value={formData.newPassword}
               onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-              className="w-full bg-white/[0.02] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-widest"
+              className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-wide"
             />
-            <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-2">
               Require: 8+ Chars, 1 Target Int, 1 Special Glyph
             </p>
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-2">
+            <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide ml-2">
               Confirm Identity Phrase
             </label>
             <input
@@ -198,16 +198,16 @@ export default function SecurityPasswordPage() {
               minLength={8}
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="w-full bg-white/[0.02] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-widest"
+              className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/50 focus:bg-emerald-500/5 transition-all font-mono placeholder:font-sans tracking-wide"
             />
           </div>
         </div>
 
-        <div className="pt-6 border-t border-white/5">
+        <div className="pt-6 border-t border-border">
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center justify-center gap-3 w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50"
+            className="flex items-center justify-center gap-3 w-full py-5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
             Compile Rotation Schema
@@ -215,16 +215,16 @@ export default function SecurityPasswordPage() {
         </div>
       </form>
 
-      <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] p-8 md:p-10 shadow-2xl space-y-8">
-        <div className="flex items-center gap-3 border-b border-white/5 pb-6">
-          <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
+      <div className="rounded-xl border border-border bg-card p-8 md:p-10 shadow-2xl space-y-8">
+        <div className="flex items-center gap-3 border-b border-border pb-6">
+          <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-700 dark:text-blue-400">
             <Smartphone className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-white uppercase tracking-tighter">
+            <h2 className="text-lg font-semibold text-foreground uppercase tracking-tighter">
               Two-Factor Authentication
             </h2>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mt-1">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mt-1">
               {mfaEnabled ? 'Enabled on your account' : 'Add an authenticator app for sign-in'}
             </p>
           </div>
@@ -233,7 +233,7 @@ export default function SecurityPasswordPage() {
         {mfaEnabled && !mfaSetup && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+              <ShieldCheck className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" />
               <p className="text-sm text-emerald-300">
                 MFA is active. You will be prompted for a code when signing in.
               </p>
@@ -242,7 +242,7 @@ export default function SecurityPasswordPage() {
               type="button"
               disabled={mfaLoading}
               onClick={() => void handleDisableMfa()}
-              className="flex items-center justify-center gap-2 w-full py-4 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+              className="flex items-center justify-center gap-2 w-full py-4 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all disabled:opacity-50"
             >
               {mfaLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -259,7 +259,7 @@ export default function SecurityPasswordPage() {
             type="button"
             disabled={mfaLoading}
             onClick={() => void handleEnableMfa()}
-            className="flex items-center justify-center gap-3 w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 disabled:opacity-50"
+            className="flex items-center justify-center gap-3 w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50"
           >
             {mfaLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -273,7 +273,7 @@ export default function SecurityPasswordPage() {
         {!mfaEnabled && mfaSetup && (
           <form onSubmit={handleVerifyMfa} className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-6 items-start">
-              <div className="shrink-0 p-4 rounded-2xl bg-white border border-white/10">
+              <div className="shrink-0 p-4 rounded-2xl bg-white border border-border">
                 <img
                   src={mfaSetup.qrCodeUrl}
                   alt="MFA QR code"
@@ -281,16 +281,16 @@ export default function SecurityPasswordPage() {
                 />
               </div>
               <div className="space-y-3 flex-1">
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   Scan the QR code with your authenticator app, or enter this secret manually:
                 </p>
-                <code className="block text-xs font-mono text-indigo-300 bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 break-all">
+                <code className="block text-xs font-mono text-blue-300 bg-card border border-border rounded-xl px-4 py-3 break-all">
                   {mfaSetup.secret}
                 </code>
               </div>
             </div>
             <div className="space-y-3">
-              <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest ml-2">
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide ml-2">
                 Verification Code
               </label>
               <input
@@ -302,13 +302,13 @@ export default function SecurityPasswordPage() {
                 value={verifyCode}
                 onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                className="w-full bg-white/[0.02] border border-white/10 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/50 transition-all font-mono tracking-[0.5em] text-center"
+                className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-blue-500/50 transition-all font-mono tracking-[0.5em] text-center"
               />
             </div>
             <button
               type="submit"
               disabled={mfaLoading || verifyCode.length < 6}
-              className="flex items-center justify-center gap-3 w-full py-5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+              className="flex items-center justify-center gap-3 w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all disabled:opacity-50"
             >
               {mfaLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
               Verify and Activate

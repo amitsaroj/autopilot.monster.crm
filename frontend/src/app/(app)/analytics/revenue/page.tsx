@@ -55,9 +55,9 @@ export default function RevenueInsightsPage() {
           <p className="text-slate-400 text-sm font-semibold tracking-wider">
             ANNUAL RECURRING REVENUE (ARR)
           </p>
-          <h2 className="text-4xl font-black mt-2 mb-4">{formatCurrency(data.arr)}</h2>
+          <h2 className="text-4xl font-semibold mt-2 mb-4">{formatCurrency(data.arr)}</h2>
           <div className="flex items-center gap-2 text-slate-400 text-xs">
-            <ArrowUpRight className="w-3 h-3 text-green-400" />
+            <ArrowUpRight className="w-3 h-3 text-green-700 dark:text-green-400" />
             Based on won deal value × 12
           </div>
         </div>
@@ -71,18 +71,18 @@ export default function RevenueInsightsPage() {
               <TrendingUp className="w-4 h-4 text-blue-600" />
             </div>
           </div>
-          <h2 className="text-3xl font-black text-foreground mb-4">{formatCurrency(data.mrr)}</h2>
+          <h2 className="text-3xl font-semibold text-foreground mb-4">{formatCurrency(data.mrr)}</h2>
           <p className="text-muted-foreground text-sm">{data.wonDealCount} won deals</p>
         </div>
 
         <div className="bg-card border border-border p-6 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between mb-2">
             <p className="text-muted-foreground text-sm font-semibold tracking-wider">WON DEALS</p>
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Activity className="w-4 h-4 text-purple-600" />
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Activity className="w-4 h-4 text-blue-600" />
             </div>
           </div>
-          <h2 className="text-3xl font-black text-foreground mb-4">{data.wonDealCount}</h2>
+          <h2 className="text-3xl font-semibold text-foreground mb-4">{data.wonDealCount}</h2>
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-muted-foreground" />
             <span className="text-muted-foreground text-sm">Closed-won revenue source</span>

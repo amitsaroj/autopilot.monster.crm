@@ -25,10 +25,10 @@ type InboxItem = {
 function channelIcon(ch: string) {
   const normalized = ch.toLowerCase();
   if (normalized.includes('whatsapp'))
-    return <MessageSquare className="h-3.5 w-3.5 text-green-500" />;
-  if (normalized.includes('email')) return <Mail className="h-3.5 w-3.5 text-blue-400" />;
+    return <MessageSquare className="h-3.5 w-3.5 text-green-700 dark:text-green-400" />;
+  if (normalized.includes('email')) return <Mail className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />;
   if (normalized.includes('phone') || normalized.includes('voice')) {
-    return <Phone className="h-3.5 w-3.5 text-purple-400" />;
+    return <Phone className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />;
   }
   return <Twitter className="h-3.5 w-3.5 text-sky-400" />;
 }
@@ -157,7 +157,7 @@ export default function InboxPage() {
             </button>
           </div>
           {source && (
-            <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">
               Source: {source}
             </p>
           )}
@@ -167,7 +167,7 @@ export default function InboxPage() {
                 key={item.label}
                 className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
                   item.active
-                    ? 'bg-[hsl(246,80%,60%)]/10 text-[hsl(246,80%,60%)]'
+                    ? 'bg-[hsl(var(--brand))]/10 text-[hsl(var(--brand))]'
                     : 'text-muted-foreground'
                 }`}
               >
@@ -175,7 +175,7 @@ export default function InboxPage() {
                 <span
                   className={`text-xs px-1.5 py-0.5 rounded-full ${
                     item.active
-                      ? 'bg-[hsl(246,80%,60%)] text-white'
+                      ? 'bg-[hsl(var(--brand))] text-foreground'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >
@@ -209,7 +209,7 @@ export default function InboxPage() {
                 href={c.href}
                 className="flex items-start gap-3 px-4 py-3 hover:bg-muted/40 transition-colors"
               >
-                <div className="w-9 h-9 rounded-full bg-[hsl(246,80%,60%)]/20 flex items-center justify-center text-xs font-bold text-[hsl(246,80%,60%)] shrink-0">
+                <div className="w-9 h-9 rounded-full bg-[hsl(var(--brand))]/20 flex items-center justify-center text-xs font-bold text-[hsl(var(--brand))] shrink-0">
                   {c.contact
                     .split(' ')
                     .map((n) => n[0])
@@ -230,7 +230,7 @@ export default function InboxPage() {
                   <p className="text-xs text-muted-foreground truncate">{c.preview}</p>
                 </div>
                 {c.unread > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-[hsl(246,80%,60%)] text-white text-xs flex items-center justify-center shrink-0">
+                  <span className="w-4 h-4 rounded-full bg-[hsl(var(--brand))] text-white text-xs flex items-center justify-center shrink-0">
                     {c.unread}
                   </span>
                 )}

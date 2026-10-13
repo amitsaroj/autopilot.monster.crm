@@ -105,15 +105,15 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-500 bg-emerald-50 border-emerald-100';
-    if (score >= 50) return 'text-amber-500 bg-amber-50 border-amber-100';
+    if (score >= 80) return 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 border-emerald-100';
+    if (score >= 50) return 'text-amber-700 dark:text-amber-400 bg-amber-50 border-amber-100';
     return 'text-red-500 bg-red-50 border-red-100';
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -123,7 +123,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       <div className="mb-8 flex items-center justify-between">
         <Link
           href="/crm/leads"
-          className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
+          className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-blue-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Leads Engine
@@ -156,7 +156,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-indigo-500/20"
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/20"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Changes
@@ -167,10 +167,10 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Header Profile */}
-          <div className="bg-white dark:bg-card rounded-[40px] border border-gray-100 dark:border-border shadow-soft p-10 lg:p-14">
+          <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-soft p-10 lg:p-14">
             <div className="flex flex-col md:flex-row gap-10">
               <div className="relative group">
-                <div className="w-32 h-32 rounded-[32px] bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-500/30">
+                <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-2xl shadow-blue-500/30">
                   <User className="w-16 h-16" />
                 </div>
                 <div
@@ -179,13 +179,13 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     getScoreColor(lead?.score || 0),
                   )}
                 >
-                  <span className="text-xs font-black">{lead?.score}</span>
-                  <span className="text-[7px] font-black uppercase opacity-60">AI Score</span>
+                  <span className="text-xs font-semibold">{lead?.score}</span>
+                  <span className="text-[7px] font-semibold uppercase opacity-60">AI Score</span>
                 </div>
               </div>
               <div className="flex-1 pt-2">
                 <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">
+                  <h1 className="text-4xl font-semibold text-gray-900 dark:text-white tracking-tight">
                     {formData.firstName} {formData.lastName}
                   </h1>
                   <span
@@ -193,21 +193,21 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                       'px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest',
                       formData.status === LeadStatus.QUALIFIED
                         ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                        : 'bg-gray-50 text-gray-400 border-gray-100',
+                        : 'bg-gray-50 text-muted-foreground border-gray-100',
                     )}
                   >
                     {formData.status}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3 text-sm font-bold text-gray-500">
-                    <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400">
+                  <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
+                    <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-muted-foreground">
                       <Mail className="w-4 h-4" />
                     </div>
                     {formData.email || 'Add email address'}
                   </div>
-                  <div className="flex items-center gap-3 text-sm font-bold text-gray-500">
-                    <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-400">
+                  <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
+                    <div className="p-2 rounded-xl bg-gray-50 dark:bg-gray-800 text-muted-foreground">
                       <Phone className="w-4 h-4" />
                     </div>
                     {formData.phone || 'Add phone number'}
@@ -218,27 +218,27 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           </div>
 
           {/* Lead Intelligence Section */}
-          <div className="bg-white dark:bg-card rounded-[40px] border border-gray-100 dark:border-border shadow-soft p-10 lg:p-14 overflow-hidden relative">
+          <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-soft p-10 lg:p-14 overflow-hidden relative">
             <div className="absolute top-0 right-0 p-8">
-              <Zap className="w-16 h-16 text-indigo-50 opacity-5 dark:opacity-10 scale-150 rotate-12" />
+              <Zap className="w-16 h-16 text-blue-50 opacity-5 dark:opacity-10 scale-150 rotate-12" />
             </div>
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-900/50">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-900/50">
                 <Zap className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white tracking-tight">
                   Lead Intelligence
                 </h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
                   AI-Generated Insights & Prioritization
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-              <div className="p-6 rounded-[32px] bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+              <div className="p-6 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">
                   Sentiment Analysis
                 </p>
                 {formData.metadata?.sentiment ? (
@@ -267,30 +267,30 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     </span>
                   </div>
                 ) : (
-                  <p className="text-xs font-bold text-gray-400">Not yet analyzed — call this lead to generate insights.</p>
+                  <p className="text-xs font-bold text-muted-foreground">Not yet analyzed — call this lead to generate insights.</p>
                 )}
               </div>
-              <div className="p-6 rounded-[32px] bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+              <div className="p-6 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">
                   Intent
                 </p>
                 {formData.metadata?.intent ? (
-                  <div className="flex items-end gap-2 text-indigo-600">
+                  <div className="flex items-end gap-2 text-blue-600">
                     <BarChart3 className="w-4 h-4" />
-                    <span className="text-xs font-black uppercase">{formData.metadata.intent}</span>
+                    <span className="text-xs font-semibold uppercase">{formData.metadata.intent}</span>
                   </div>
                 ) : (
-                  <p className="text-xs font-bold text-gray-400">Not yet analyzed — call this lead to generate insights.</p>
+                  <p className="text-xs font-bold text-muted-foreground">Not yet analyzed — call this lead to generate insights.</p>
                 )}
               </div>
             </div>
 
             <div className="relative">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 block mb-3">
+              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-3">
                 AI Executive Summary
               </label>
-              <div className="bg-gray-50/30 dark:bg-gray-900/30 rounded-[32px] p-8 border border-gray-100 dark:border-border">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-relaxed italic">
+              <div className="bg-gray-50/30 dark:bg-gray-900/30 rounded-xl p-8 border border-gray-100 dark:border-border">
+                <p className="text-sm font-medium text-muted-foreground dark:text-gray-400 leading-relaxed italic">
                   "{formData.aiSummary || 'Waiting for AI processing...'}"
                 </p>
               </div>
@@ -299,8 +299,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
         </div>
 
         <div className="space-y-8">
-          <div className="bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-border shadow-soft p-8">
-            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-soft p-8">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-white mb-6">
               Pipeline Status
             </h3>
             <div className="space-y-4">
@@ -311,38 +311,38 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   className={cn(
                     'w-full px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition flex items-center justify-between',
                     formData.status === status
-                      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-                      : 'bg-gray-50 dark:bg-gray-800 text-gray-400 hover:bg-gray-100 border border-transparent hover:border-gray-100 dark:hover:border-border',
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                      : 'bg-gray-50 dark:bg-gray-800 text-muted-foreground hover:bg-gray-100 border border-transparent hover:border-gray-100 dark:hover:border-border',
                   )}
                 >
                   {status}
-                  {formData.status === status && <CheckCircle2 className="w-3 h-3 text-white" />}
+                  {formData.status === status && <CheckCircle2 className="w-3 h-3 text-foreground" />}
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-border shadow-soft p-8">
-            <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-soft p-8">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-900 dark:text-white mb-6">
               Metadata
             </h3>
             <div className="space-y-6">
               <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-border">
-                <Globe className="w-5 h-5 text-gray-400 shrink-0" />
+                <Globe className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tighter mb-0.5">
                     Source Channel
                   </p>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">Direct Website</p>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-white">Direct Website</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-border">
-                <Calendar className="w-5 h-5 text-gray-400 shrink-0" />
+                <Calendar className="w-5 h-5 text-muted-foreground shrink-0" />
                 <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-tighter mb-0.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tighter mb-0.5">
                     Capture Date
                   </p>
-                  <p className="text-xs font-black text-gray-900 dark:text-white">
+                  <p className="text-xs font-semibold text-gray-900 dark:text-white">
                     {new Date(lead!.createdAt).toLocaleDateString()}
                   </p>
                 </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BrandLogo } from '@/components/brand-logo';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -52,7 +53,7 @@ const subAdminNavItems: SubAdminNavLink[] = [
 export function SubAdminSidebar() {
   const pathname = usePathname();
   const { logout } = useAuth();
-  const { isOpen, close } = useSidebar();
+  const { isOpen, close, collapsed, toggleCollapsed } = useSidebar();
 
   return (
     <>
@@ -65,21 +66,19 @@ export function SubAdminSidebar() {
       )}
 
       <aside
+        id="workspace-navigation"
+        data-collapsed={collapsed}
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border transition-transform duration-300 md:relative md:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex flex-col w-64 shrink-0 min-h-screen bg-sidebar border-r border-sidebar-border transition-transform duration-300 md:relative md:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
+          collapsed && 'md:w-20',
         )}
       >
         <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-          <div className="w-8 h-8 rounded-lg bg-[hsl(var(--brand))] flex items-center justify-center">
-            <span className="text-white text-sm font-black">AM</span>
-          </div>
-          <span className="text-sidebar-foreground font-bold text-sm tracking-tight">
-            Sub-Admin
-          </span>
+          <Link href="/" aria-label="Autopilot Monster home"><BrandLogo /></Link>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-4 scrollbar-hide">
+        <nav aria-label="Workspace navigation" className="flex-1 overflow-y-auto py-4 scrollbar-hide">
           <ul className="space-y-0.5 px-3">
             {subAdminNavItems.map((item) => {
               const isActive =
@@ -88,6 +87,10 @@ export function SubAdminSidebar() {
                 <li key={item.label}>
                   <Link
                     href={item.href}
+                    onClick={close}
+                    title={item.label}
+                    aria-label={item.label}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                       isActive
@@ -107,17 +110,21 @@ export function SubAdminSidebar() {
         <div className="px-3 py-3 border-t border-sidebar-border space-y-0.5">
           <Link
             href="/settings/profile"
+            aria-label="My account"
+            title="My account"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors"
           >
             <Settings className="h-4 w-4" />
             My Account
           </Link>
           <button
+            aria-label="Sign out"
+            title="Sign out"
             onClick={() => logout()}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500/70 hover:bg-red-500/5 hover:text-red-500 transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            Terminate Session
+            Sign out
           </button>
         </div>
       </aside>

@@ -70,14 +70,14 @@ export default function WorkflowsPage() {
           </Link>
           <Link
             href="/workflows/builder"
-            className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
           >
             <Plus className="h-4 w-4" /> New Workflow
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         {[
           { label: 'Active Workflows', value: String(activeCount) },
           { label: 'Runs Today', value: String(runsToday) },
@@ -95,7 +95,7 @@ export default function WorkflowsPage() {
           No workflows yet. Create one to get started.
         </p>
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="rounded-xl border border-border bg-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
@@ -114,12 +114,12 @@ export default function WorkflowsPage() {
                   <tr key={w.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="p-1.5 rounded-lg bg-[hsl(246,80%,60%)]/10">
-                          <Zap className="h-3.5 w-3.5 text-[hsl(246,80%,60%)]" />
+                        <div className="p-1.5 rounded-lg bg-[hsl(var(--brand))]/10">
+                          <Zap className="h-3.5 w-3.5 text-[hsl(var(--brand))]" />
                         </div>
                         <Link
                           href={`/workflows/${w.id}`}
-                          className="font-medium hover:text-[hsl(246,80%,60%)]"
+                          className="font-medium hover:text-[hsl(var(--brand))]"
                         >
                           {w.name}
                         </Link>
@@ -128,7 +128,7 @@ export default function WorkflowsPage() {
                     <td className="px-4 py-3 text-muted-foreground text-xs">{w.type}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${w.isPublished ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${w.isPublished ? 'bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-muted text-muted-foreground'}`}
                       >
                         {w.isPublished ? (
                           <CheckCircle className="h-3 w-3" />
@@ -146,7 +146,7 @@ export default function WorkflowsPage() {
                           {stats.errors}
                         </span>
                       ) : (
-                        <span className="text-green-500 text-xs">0</span>
+                        <span className="text-green-700 dark:text-green-400 text-xs">0</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">

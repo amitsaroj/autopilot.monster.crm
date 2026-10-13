@@ -79,15 +79,15 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
           {/* Stage Header */}
           <div className="flex items-center justify-between mb-6 px-4">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.6)] animate-pulse" />
-              <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest italic">
+              <div className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_12px_rgba(99,102,241,0.6)] animate-pulse" />
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wide italic">
                 {stage.name}
               </h3>
-              <span className="px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-white/5 text-[10px] font-black text-gray-500 border border-transparent group-hover/column:border-indigo-500/20 transition-all">
+              <span className="px-2.5 py-0.5 rounded-full bg-gray-100 dark:bg-white/5 text-xs font-semibold text-muted-foreground border border-transparent group-hover/column:border-blue-500/20 transition-all">
                 {stage.deals?.length || 0}
               </span>
             </div>
-            <div className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 opacity-50">
+            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 opacity-50">
               {stage.probability}%
             </div>
           </div>
@@ -95,21 +95,21 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
           {/* Value Summary */}
           <div className="mx-4 mb-6 p-5 rounded-[28px] bg-white dark:bg-card border border-gray-100 dark:border-white/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-none flex items-center justify-between group-hover/column:translate-y-[-2px] transition-transform">
             <div className="flex flex-col">
-              <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                 Volume
               </span>
-              <span className="text-lg font-black text-gray-900 dark:text-white tracking-tighter">
+              <span className="text-lg font-semibold text-gray-900 dark:text-white tracking-tighter">
                 $
                 {(
                   stage.deals?.reduce((sum: number, d: any) => sum + (Number(d.value) || 0), 0) || 0
                 ).toLocaleString()}
               </span>
             </div>
-            <TrendingUp className="w-4 h-4 text-emerald-500/40" />
+            <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400/40" />
           </div>
 
           {/* Deal Cards Container */}
-          <div className="flex flex-col gap-5 px-1 min-h-[600px] transition-colors rounded-[40px] pb-20">
+          <div className="flex flex-col gap-5 px-1 min-h-[600px] transition-colors rounded-xl pb-20">
             <AnimatePresence mode="popLayout">
               {stage.deals
                 ?.filter((d: any) => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -146,38 +146,38 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
                       zIndex: 100,
                       border: '1px solid rgba(99,102,241,0.5)',
                     }}
-                    className="group relative p-8 bg-white dark:bg-card rounded-[36px] border border-gray-100 dark:border-white/5 shadow-soft hover:shadow-2xl hover:shadow-indigo-500/10 transition-all cursor-grab active:cursor-grabbing overflow-hidden isolate"
+                    className="group relative p-8 bg-white dark:bg-card rounded-[36px] border border-gray-100 dark:border-white/5 shadow-soft hover:shadow-2xl hover:shadow-blue-500/10 transition-all cursor-grab active:cursor-grabbing overflow-hidden isolate"
                   >
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/5 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-indigo-500/15 transition-colors -z-10" />
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-blue-500/15 transition-colors -z-10" />
 
                     <div className="relative">
                       <div className="flex justify-between items-start mb-5">
-                        <h4 className="text-sm font-black text-gray-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight group-hover:text-blue-600 transition-colors uppercase tracking-tight">
                           {deal.name}
                         </h4>
-                        <button className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition opacity-0 group-hover:opacity-100">
+                        <button className="p-2 -mr-2 text-muted-foreground hover:text-gray-600 dark:hover:text-white transition opacity-0 group-hover:opacity-100">
                           <MoreHorizontal className="w-5 h-5 transition-transform group-hover:rotate-90" />
                         </button>
                       </div>
 
                       <div className="space-y-4 mb-8">
                         {deal.company && (
-                          <div className="flex items-center gap-3 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                            <Building2 className="w-4 h-4 text-indigo-400/60" />
+                          <div className="flex items-center gap-3 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                            <Building2 className="w-4 h-4 text-blue-400/60" />
                             <span className="truncate">{deal.company.name}</span>
                           </div>
                         )}
-                        <div className="flex items-center gap-3 text-sm font-black text-emerald-500">
+                        <div className="flex items-center gap-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                           <DollarSign className="w-4 h-4" />
                           <span>
                             {(Number(deal.value) || 0).toLocaleString()}{' '}
-                            <span className="text-[10px] text-gray-400 uppercase tracking-widest ml-1 font-bold">
+                            <span className="text-xs text-muted-foreground uppercase tracking-wide ml-1 font-bold">
                               {deal.currency ?? 'USD'}
                             </span>
                           </span>
                         </div>
                         {deal.expectedCloseDate && (
-                          <div className="flex items-center gap-3 text-[11px] font-black text-amber-500 uppercase tracking-widest">
+                          <div className="flex items-center gap-3 text-[11px] font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wide">
                             <Clock className="w-4 h-4 opacity-70" />
                             <span>
                               Close Date: {new Date(deal.expectedCloseDate).toLocaleDateString()}
@@ -189,15 +189,15 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
                       <div className="flex items-center justify-between pt-6 border-t border-gray-100 dark:border-white/5">
                         <div className="flex items-center gap-2">
                           <div className="flex -space-x-2">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white dark:border-gray-900 flex items-center justify-center">
-                              <User className="w-3.5 h-3.5 text-indigo-400" />
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-500/20 border border-white dark:border-gray-900 flex items-center justify-center">
+                              <User className="w-3.5 h-3.5 text-blue-400" />
                             </div>
                           </div>
-                          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">
+                          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                             Owner: {deal.ownerName ?? 'Unassigned'}
                           </span>
                         </div>
-                        <div className="px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest border border-indigo-500/10">
+                        <div className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide border border-blue-500/10">
                           {deal.status}
                         </div>
                       </div>
@@ -208,14 +208,14 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
 
             {/* Empty State / Drop Target */}
             {(!stage.deals || stage.deals.length === 0) && (
-              <div className="flex flex-col items-center justify-center py-20 px-8 border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[40px] opacity-30 group-hover/column:opacity-60 transition-opacity">
+              <div className="flex flex-col items-center justify-center py-20 px-8 border-2 border-dashed border-gray-100 dark:border-white/5 rounded-xl opacity-30 group-hover/column:opacity-60 transition-opacity">
                 <div className="w-16 h-16 rounded-[24px] bg-gray-50 dark:bg-white/5 flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-indigo-500/40" />
+                  <Sparkles className="w-8 h-8 text-blue-500/40" />
                 </div>
-                <h5 className="text-[11px] font-black text-gray-400 uppercase tracking-widest text-center mb-1 italic">
+                <h5 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide text-center mb-1 italic">
                   Vacuum Phase
                 </h5>
-                <p className="text-[9px] font-bold text-gray-600 uppercase tracking-tighter text-center">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter text-center">
                   Inject deal vectors into this matrix segment
                 </p>
               </div>
@@ -226,15 +226,15 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
 
       {/* Add Stage Column */}
       <div className="flex-shrink-0 w-[350px]">
-        <button className="w-full h-[180px] border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[40px] flex flex-col items-center justify-center gap-4 group hover:border-indigo-500/30 hover:bg-indigo-50/10 transition-all shadow-hover">
-          <div className="w-14 h-14 rounded-[20px] bg-gray-50 dark:bg-white/5 flex items-center justify-center group-hover:scale-110 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-xl">
+        <button className="w-full h-[180px] border-2 border-dashed border-gray-100 dark:border-white/5 rounded-xl flex flex-col items-center justify-center gap-4 group hover:border-blue-500/30 hover:bg-blue-50/10 transition-all shadow-hover">
+          <div className="w-14 h-14 rounded-[20px] bg-gray-50 dark:bg-white/5 flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-xl">
             <Plus className="w-6 h-6" />
           </div>
           <div className="text-center">
-            <span className="block text-[11px] font-black text-gray-400 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">
+            <span className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide group-hover:text-blue-600 transition-colors">
               Append Pipeline Phase
             </span>
-            <span className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
               Extend conversion logic
             </span>
           </div>

@@ -47,7 +47,7 @@ export default function ProductVoicePage() {
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange-500/20 bg-orange-500/5 text-sm font-medium text-orange-400 mb-6">
             <Phone className="w-4 h-4" /> Voice AI
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             AI calling that
             <br />
             sounds human
@@ -58,7 +58,7 @@ export default function ProductVoicePage() {
           </p>
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-2xl shadow-orange-500/20 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl shadow-2xl shadow-orange-500/20 hover:scale-[1.02] transition-all"
           >
             Try Voice Free <ArrowRight className="w-4 h-4" />
           </Link>

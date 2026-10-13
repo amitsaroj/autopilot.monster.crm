@@ -86,7 +86,7 @@ export default function PipelinesManagementPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -97,22 +97,22 @@ export default function PipelinesManagementPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide border border-blue-500/20">
               Topology Active
             </span>
-            <span className="text-[10px] text-gray-600 font-mono tracking-tighter uppercase shrink-0 overflow-hidden text-ellipsis max-w-[200px]">
+            <span className="text-xs text-muted-foreground font-mono tracking-tighter uppercase shrink-0 overflow-hidden text-ellipsis max-w-[200px]">
               Node: Pipeline-Orchestrator
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight text-sans">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight text-sans">
             Sales Lifecycles
           </h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Pipelines, Conversion Stages & Lifecycle Probability
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+          <button className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
             <Plus className="w-4 h-4" /> Provision Pipeline
           </button>
         </div>
@@ -123,29 +123,29 @@ export default function PipelinesManagementPage() {
         {pipelines.map((pipeline) => (
           <div
             key={pipeline.id}
-            className="p-10 rounded-[40px] bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all group flex flex-col justify-between relative overflow-hidden"
+            className="p-10 rounded-xl bg-card border border-border hover:border-blue-500/20 transition-all group flex flex-col justify-between relative overflow-hidden"
           >
-            <div className="absolute -right-10 -top-10 w-48 h-48 bg-white/[0.01] rounded-full blur-3xl group-hover:bg-indigo-500/5 transition-colors" />
+            <div className="absolute -right-10 -top-10 w-48 h-48 bg-card rounded-full blur-3xl group-hover:bg-blue-500/5 transition-colors" />
 
             <div>
               <div className="flex justify-between items-start mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-400 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                  <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center text-muted-foreground group-hover:bg-blue-500 group-hover:text-white transition-all">
                     <GitBranch className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight">
+                    <h3 className="text-xl font-semibold text-foreground group-hover:text-blue-400 transition-colors uppercase tracking-tight">
                       {pipeline.name}
                     </h3>
                     {pipeline.isDefault && (
-                      <span className="text-[9px] text-indigo-400 font-black uppercase tracking-widest">
+                      <span className="text-xs text-blue-700 dark:text-blue-400 font-semibold uppercase tracking-wide">
                         Master Workflow
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-gray-600 hover:text-white transition-all">
+                  <button className="p-2.5 rounded-xl bg-card border border-border text-muted-foreground hover:text-foreground dark:hover:text-white transition-all">
                     <Settings className="w-4 h-4" />
                   </button>
                 </div>
@@ -154,10 +154,10 @@ export default function PipelinesManagementPage() {
               {/* Stage Visualizer */}
               <div className="space-y-4 mb-10">
                 <div className="flex justify-between items-center px-1">
-                  <span className="text-[10px] text-gray-600 font-black uppercase tracking-widest">
+                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                     Lifecycle Stages
                   </span>
-                  <span className="text-[10px] text-indigo-400 font-black uppercase tracking-widest">
+                  <span className="text-xs text-blue-700 dark:text-blue-400 font-semibold uppercase tracking-wide">
                     Topology: {pipeline.stages?.length || 0} States
                   </span>
                 </div>
@@ -167,40 +167,40 @@ export default function PipelinesManagementPage() {
                     .map((stage) => (
                       <div
                         key={stage.id}
-                        className="p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center justify-between group/stage cursor-pointer hover:border-white/10 transition-all translate-x-0"
+                        className="p-4 rounded-2xl bg-black/40 border border-border flex items-center justify-between group/stage cursor-pointer hover:border-white/10 transition-all translate-x-0"
                       >
                         <div className="flex items-center gap-4">
                           <GripVertical className="w-4 h-4 text-gray-800 group-stage-hover:text-gray-600" />
-                          <span className="text-xs font-black text-white uppercase tracking-tighter">
+                          <span className="text-xs font-semibold text-foreground uppercase tracking-tighter">
                             {stage.name}
                           </span>
                         </div>
                         <div className="flex items-center gap-4">
-                          <span className="text-[9px] text-emerald-500 font-black tracking-widest">
+                          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold tracking-wide">
                             PRB: {stage.probability}%
                           </span>
-                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-20 group-stage-hover:opacity-100 shadow-[0_0_8px_rgba(99,102,241,0.5)] transition-all" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-600 opacity-20 group-stage-hover:opacity-100 shadow-[0_0_8px_rgba(99,102,241,0.5)] transition-all" />
                         </div>
                       </div>
                     ))}
-                  <button className="w-full py-3 border border-dashed border-white/10 rounded-2xl text-[9px] font-black text-gray-600 uppercase tracking-widest hover:border-white/20 transition-all flex items-center justify-center gap-2">
+                  <button className="w-full py-3 border border-dashed border-border rounded-2xl text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:border-white/20 transition-all flex items-center justify-center gap-2">
                     <Plus className="w-3 h-3" /> Append Lifecycle Stage
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="pt-8 border-t border-white/5 flex items-center justify-between">
+            <div className="pt-8 border-t border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
-                <span className="text-sm font-black text-white">
+                <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                <span className="text-sm font-semibold text-foreground">
                   {pipeline._count?.deals || 0}{' '}
-                  <span className="text-[10px] text-gray-600 uppercase tracking-widest ml-1">
+                  <span className="text-xs text-muted-foreground uppercase tracking-wide ml-1">
                     Active Deal Vectors
                   </span>
                 </span>
               </div>
-              <button className="px-6 py-2.5 rounded-xl bg-white text-[#0b0f19] text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
+              <button className="px-6 py-2.5 rounded-xl bg-white text-[#0b0f19] text-xs font-semibold uppercase tracking-wide hover:scale-105 active:scale-95 transition-all shadow-xl">
                 Edit Topology
               </button>
             </div>
@@ -209,19 +209,19 @@ export default function PipelinesManagementPage() {
 
         {/* Provision Placeholder */}
         {pipelines.length < 2 && (
-          <div className="p-10 rounded-[40px] border border-dashed border-white/10 bg-indigo-500/[0.01] flex flex-col items-center justify-center text-center space-y-6 group cursor-pointer hover:border-indigo-500/30 transition-all">
-            <div className="w-16 h-16 rounded-full bg-white/[0.03] border border-white/5 flex items-center justify-center text-gray-700 group-hover:bg-indigo-500/10 group-hover:text-indigo-400 transition-all shrink-0">
+          <div className="p-10 rounded-xl border border-dashed border-border bg-blue-500/[0.01] flex flex-col items-center justify-center text-center space-y-6 group cursor-pointer hover:border-blue-500/30 transition-all">
+            <div className="w-16 h-16 rounded-full bg-card border border-border flex items-center justify-center text-gray-700 group-hover:bg-blue-500/10 group-hover:text-blue-400 transition-all shrink-0">
               <GitPullRequest className="w-8 h-8" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-white uppercase tracking-tighter leading-tight">
+              <h3 className="text-lg font-semibold text-foreground uppercase tracking-tighter leading-tight">
                 Advanced Lifecycle Architect
               </h3>
-              <p className="text-xs text-gray-500 max-w-[240px] mx-auto leading-relaxed mt-2 uppercase tracking-widest font-black opacity-30">
+              <p className="text-xs text-muted-foreground max-w-[240px] mx-auto leading-relaxed mt-2 uppercase tracking-wide font-semibold opacity-30">
                 Persistence Topology: Inactive
               </p>
             </div>
-            <button className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2 hover:underline transition-all group-hover:translate-x-1">
+            <button className="text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2 hover:underline transition-all group-hover:translate-x-1">
               Provision Workflow Archetype <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -229,22 +229,22 @@ export default function PipelinesManagementPage() {
       </div>
 
       {/* Global Intelligence Cluster */}
-      <div className="p-10 rounded-[40px] bg-white/[0.02] border border-white/[0.05] flex flex-col md:flex-row items-center justify-between gap-10 group">
+      <div className="p-10 rounded-xl bg-card border border-border flex flex-col md:flex-row items-center justify-between gap-10 group">
         <div className="flex items-center gap-8">
-          <div className="p-6 rounded-3xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+          <div className="p-6 rounded-3xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all">
             <BarChart3 className="w-10 h-10" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-2xl font-black text-white uppercase tracking-tighter">
+            <h3 className="text-2xl font-semibold text-foreground uppercase tracking-tighter">
               Conversion Logistics Forensics
             </h3>
-            <p className="text-sm text-gray-500 max-w-xl font-medium">
+            <p className="text-sm text-muted-foreground max-w-xl font-medium">
               Analyze how deal artifacts transition through your workspace lattice. Define automated
               movement triggers and SLA persistence artifacts for every lifecycle junction.
             </p>
           </div>
         </div>
-        <button className="px-8 py-4 bg-white/[0.05] border border-white/10 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-white/[0.1] shrink-0">
+        <button className="px-8 py-4 bg-card border border-border text-foreground rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all hover:bg-white/[0.1] shrink-0">
           Review Predictive Outcomes
         </button>
       </div>

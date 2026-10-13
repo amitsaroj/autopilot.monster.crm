@@ -47,7 +47,7 @@ export default function ProductIntegrationsPage() {
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-sm font-medium text-cyan-400 mb-6">
             <Globe className="w-4 h-4" /> Integrations
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Connect
             <br />
             everything
@@ -57,7 +57,7 @@ export default function ProductIntegrationsPage() {
           </p>
           <Link
             href="/docs"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-2xl shadow-cyan-500/20 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl shadow-2xl shadow-cyan-500/20 hover:scale-[1.02] transition-all"
           >
             View API Docs <ArrowRight className="w-4 h-4" />
           </Link>

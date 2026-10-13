@@ -32,7 +32,7 @@ export default function VoiceTranscriptsPage() {
           <h1 className="page-title">Transcripts</h1>
           <p className="page-description">AI call transcriptions</p>
         </div>
-        <Link href="/voice" className="text-sm text-[hsl(246,80%,60%)] hover:underline">
+        <Link href="/voice" className="text-sm text-[hsl(var(--brand))] hover:underline">
           Back to Voice
         </Link>
       </div>

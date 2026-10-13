@@ -77,26 +77,26 @@ export default function LeadConversionModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/70 backdrop-blur-md animate-in fade-in duration-500">
-      <div className="w-full max-w-2xl p-12 rounded-[50px] bg-white/[0.02] border border-white/[0.05] shadow-2xl relative overflow-hidden backdrop-blur-2xl">
-        <div className="absolute -left-24 -top-24 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl opacity-50" />
+      <div className="w-full max-w-2xl p-12 rounded-[50px] bg-card border border-border shadow-2xl relative overflow-hidden backdrop-blur-2xl">
+        <div className="absolute -left-24 -top-24 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl opacity-50" />
 
         <div className="relative z-10 space-y-10">
           <div className="flex justify-between items-center mb-8">
-            <div className="w-20 h-20 rounded-[32px] bg-indigo-600 flex items-center justify-center text-white shadow-2xl shadow-indigo-600/40">
+            <div className="w-20 h-20 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-2xl shadow-blue-600/40">
               <Rocket className="w-10 h-10" />
             </div>
             <div className="flex items-center gap-3">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+              <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wide border border-emerald-500/20">
                 Lead-to-Contact Flow Active
               </span>
             </div>
           </div>
 
           <div>
-            <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2 leading-none italic">
+            <h1 className="text-4xl font-semibold text-foreground tracking-tighter uppercase mb-2 leading-none italic">
               Acquisition Conversion
             </h1>
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+            <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide leading-relaxed">
               Transition high-velocity lead vector into the core CRM relational lattice.
             </p>
           </div>
@@ -104,22 +104,22 @@ export default function LeadConversionModal({
           <div className="space-y-6">
             <div
               className={cn(
-                'p-8 rounded-[40px] border transition-all cursor-pointer group',
+                'p-8 rounded-xl border transition-all cursor-pointer group',
                 formData.createCompany
-                  ? 'bg-indigo-500/5 border-indigo-500/40 shadow-inner'
-                  : 'bg-white/[0.02] border-white/5 opacity-50',
+                  ? 'bg-blue-500/5 border-blue-500/40 shadow-inner'
+                  : 'bg-card border-border opacity-50',
               )}
               onClick={() => setFormData({ ...formData, createCompany: !formData.createCompany })}
             >
               <div className="flex items-center gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-indigo-400">
+                <div className="w-14 h-14 rounded-2xl bg-card flex items-center justify-center text-muted-foreground group-hover:text-blue-400">
                   <Building2 className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-black text-white uppercase tracking-widest">
+                  <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide">
                     Provision Organization Entity
                   </h4>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter mt-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter mt-1">
                     Extract company intelligence from lead metadata and materialize.
                   </p>
                 </div>
@@ -127,8 +127,8 @@ export default function LeadConversionModal({
                   className={cn(
                     'w-6 h-6 rounded-full border-2 transition-all',
                     formData.createCompany
-                      ? 'bg-indigo-500 border-indigo-400 shadow-lg'
-                      : 'border-white/10',
+                      ? 'bg-blue-600 border-blue-400 shadow-lg'
+                      : 'border-border',
                   )}
                 />
               </div>
@@ -136,22 +136,22 @@ export default function LeadConversionModal({
 
             <div
               className={cn(
-                'p-8 rounded-[40px] border transition-all cursor-pointer group',
+                'p-8 rounded-xl border transition-all cursor-pointer group',
                 formData.createDeal
                   ? 'bg-emerald-500/5 border-emerald-500/40 shadow-inner'
-                  : 'bg-white/[0.02] border-white/5 opacity-50',
+                  : 'bg-card border-border opacity-50',
               )}
               onClick={() => setFormData({ ...formData, createDeal: !formData.createDeal })}
             >
               <div className="flex items-center gap-6">
-                <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-emerald-400">
+                <div className="w-14 h-14 rounded-2xl bg-card flex items-center justify-center text-muted-foreground group-hover:text-emerald-400">
                   <Zap className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-black text-white uppercase tracking-widest">
+                  <h4 className="text-sm font-semibold text-foreground uppercase tracking-wide">
                     Initialize Strategic Deal Vector
                   </h4>
-                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tighter mt-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter mt-1">
                     Open a new revenue opportunity and inject into the pipeline matrix.
                   </p>
                 </div>
@@ -160,7 +160,7 @@ export default function LeadConversionModal({
                     'w-6 h-6 rounded-full border-2 transition-all',
                     formData.createDeal
                       ? 'bg-emerald-500 border-emerald-400 shadow-lg'
-                      : 'border-white/10',
+                      : 'border-border',
                   )}
                 />
               </div>
@@ -170,27 +170,27 @@ export default function LeadConversionModal({
               <div className="space-y-4 pt-6 animate-in slide-in-from-top-4 duration-500">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-2 italic">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-2 italic">
                       Designation (Deal Name)
                     </label>
                     <input
                       type="text"
                       value={formData.dealName}
                       onChange={(e) => setFormData({ ...formData, dealName: e.target.value })}
-                      className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-6 py-4 text-xs text-white outline-none focus:border-indigo-500/30 font-bold"
+                      className="w-full bg-card border border-border rounded-2xl px-6 py-4 text-xs text-foreground outline-none focus:border-blue-500/30 font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[9px] font-black text-gray-600 uppercase tracking-widest ml-2 italic">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-2 italic">
                       Pipeline Lattice
                     </label>
                     <select
                       value={formData.pipelineId}
                       onChange={(e) => setFormData({ ...formData, pipelineId: e.target.value })}
-                      className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-6 py-4 text-xs text-indigo-400 outline-none focus:border-indigo-500/30 appearance-none font-bold"
+                      className="w-full bg-card border border-border rounded-2xl px-6 py-4 text-xs text-blue-400 outline-none focus:border-blue-500/30 appearance-none font-bold"
                     >
                       {pipelines.map((p) => (
-                        <option key={p.id} value={p.id} className="bg-[#0b0f19]">
+                        <option key={p.id} value={p.id} className="bg-card">
                           {p.name}
                         </option>
                       ))}
@@ -204,14 +204,14 @@ export default function LeadConversionModal({
           <div className="pt-10 flex gap-6">
             <button
               onClick={onClose}
-              className="flex-1 py-5 rounded-[24px] bg-white/[0.03] border border-white/10 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:bg-white/10 transition-all"
+              className="flex-1 py-5 rounded-[24px] bg-card border border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:bg-white/10 transition-all"
             >
               Abort Handshake
             </button>
             <button
               onClick={handleConvert}
               disabled={loading}
-              className="flex-[2] py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[32px] text-xs font-black uppercase tracking-widest shadow-2xl shadow-indigo-600/40 flex items-center justify-center gap-3 group transition-all"
+              className="flex-[2] py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold uppercase tracking-wide shadow-2xl shadow-blue-600/40 flex items-center justify-center gap-3 group transition-all"
             >
               {loading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

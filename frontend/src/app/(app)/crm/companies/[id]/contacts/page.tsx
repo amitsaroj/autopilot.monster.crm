@@ -46,7 +46,7 @@ export default function CompanyContactsPage({ params }: { params: Promise<{ id: 
       ) : contacts.length === 0 ? (
         <p className="text-sm text-muted-foreground">No contacts for this company.</p>
       ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left text-muted-foreground">

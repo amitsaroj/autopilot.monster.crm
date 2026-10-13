@@ -80,15 +80,15 @@ const models: AIModel[] = [
 ];
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  INACTIVE: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  TESTING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  ACTIVE: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+  INACTIVE: 'bg-gray-500/10 text-muted-foreground border-gray-500/20',
+  TESTING: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
 };
 
 const PROVIDER_COLORS: Record<string, string> = {
-  OpenAI: 'text-emerald-400',
+  OpenAI: 'text-emerald-700 dark:text-emerald-400',
   Anthropic: 'text-orange-400',
-  Google: 'text-blue-400',
+  Google: 'text-blue-700 dark:text-blue-400',
 };
 
 export default function AdminAIModelsPage() {
@@ -98,12 +98,12 @@ export default function AdminAIModelsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">AI Models</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">AI Models</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Configure & Manage LLM Integrations
           </p>
         </div>
-        <button className="px-5 py-3 bg-purple-500 hover:bg-purple-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-purple-500/20 flex items-center gap-2">
+        <button className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Model
         </button>
       </div>
@@ -113,47 +113,47 @@ export default function AdminAIModelsPage() {
           <div
             key={model.id}
             onClick={() => setActiveModel(model.id)}
-            className={`p-6 rounded-2xl border transition-all cursor-pointer group ${activeModel === model.id ? 'bg-indigo-500/10 border-indigo-500/30' : 'bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.04] hover:border-white/10'}`}
+            className={`p-6 rounded-2xl border transition-all cursor-pointer group ${activeModel === model.id ? 'bg-blue-500/10 border-blue-500/30' : 'bg-card border-border hover:bg-white/[0.04] hover:border-white/10'}`}
           >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span
-                    className={`text-[10px] font-black uppercase tracking-widest ${PROVIDER_COLORS[model.provider] || 'text-gray-400'}`}
+                    className={`text-xs font-semibold uppercase tracking-wide ${PROVIDER_COLORS[model.provider] || 'text-muted-foreground'}`}
                   >
                     {model.provider}
                   </span>
-                  <span className="text-gray-600">·</span>
-                  <span className="text-[10px] font-mono text-gray-600">{model.version}</span>
+                  <span className="text-muted-foreground">·</span>
+                  <span className="text-xs font-mono text-muted-foreground">{model.version}</span>
                 </div>
-                <h3 className="text-lg font-black text-white">{model.name}</h3>
+                <h3 className="text-lg font-semibold text-foreground">{model.name}</h3>
               </div>
               <div className="flex items-center gap-2">
                 <span
-                  className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[model.status]}`}
+                  className={`px-2.5 py-1 rounded-full border text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[model.status]}`}
                 >
                   {model.status}
                 </span>
                 {activeModel === model.id && (
-                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-white/[0.03]">
-                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Context</p>
-                <p className="text-sm font-black text-white">{model.contextWindow}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div className="p-3 rounded-xl bg-card">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Context</p>
+                <p className="text-sm font-semibold text-foreground">{model.contextWindow}</p>
               </div>
-              <div className="p-3 rounded-xl bg-white/[0.03]">
-                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">
+              <div className="p-3 rounded-xl bg-card">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                   $/1K Tokens
                 </p>
-                <p className="text-sm font-black text-white">${model.costPer1kTokens}</p>
+                <p className="text-sm font-semibold text-foreground">${model.costPer1kTokens}</p>
               </div>
-              <div className="p-3 rounded-xl bg-white/[0.03]">
-                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Latency</p>
-                <p className="text-sm font-black text-white">{model.latency}</p>
+              <div className="p-3 rounded-xl bg-card">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Latency</p>
+                <p className="text-sm font-semibold text-foreground">{model.latency}</p>
               </div>
             </div>
 
@@ -161,7 +161,7 @@ export default function AdminAIModelsPage() {
               {model.capabilities.map((cap) => (
                 <span
                   key={cap}
-                  className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-[10px] text-gray-400 font-black uppercase tracking-widest"
+                  className="px-2 py-0.5 rounded-md bg-card border border-border text-xs text-muted-foreground font-semibold uppercase tracking-wide"
                 >
                   {cap}
                 </span>
@@ -169,10 +169,10 @@ export default function AdminAIModelsPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-gray-600">
+              <span className="text-xs text-muted-foreground">
                 Used by {model.usedBy} agent{model.usedBy !== 1 ? 's' : ''}
               </span>
-              <button className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-gray-600 hover:text-white hover:bg-indigo-500/20 hover:border-indigo-500/30 transition-all">
+              <button className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-blue-500/20 hover:border-blue-500/30 transition-all">
                 <Settings className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -180,9 +180,9 @@ export default function AdminAIModelsPage() {
         ))}
       </div>
 
-      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-        <h2 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-          <Lock className="w-4 h-4 text-amber-400" /> API Key Configuration
+      <div className="p-6 rounded-2xl bg-card border border-border">
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+          <Lock className="w-4 h-4 text-amber-700 dark:text-amber-400" /> API Key Configuration
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
@@ -192,18 +192,18 @@ export default function AdminAIModelsPage() {
           ].map((api) => (
             <div
               key={api.provider}
-              className={`p-4 rounded-xl border ${api.status === 'Configured' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-white/[0.02] border-white/[0.05]'}`}
+              className={`p-4 rounded-xl border ${api.status === 'Configured' ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-card border-border'}`}
             >
               <div className="flex justify-between items-center mb-2">
-                <p className="text-xs font-black text-white">{api.provider}</p>
+                <p className="text-xs font-semibold text-foreground">{api.provider}</p>
                 <span
-                  className={`text-[10px] font-black uppercase ${api.status === 'Configured' ? 'text-emerald-400' : 'text-gray-600'}`}
+                  className={`text-xs font-semibold uppercase ${api.status === 'Configured' ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground'}`}
                 >
                   {api.status}
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-gray-600">{api.key}</p>
-              <button className="mt-3 text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest">
+              <p className="text-xs font-mono text-muted-foreground">{api.key}</p>
+              <button className="mt-3 text-xs font-semibold text-blue-700 dark:text-blue-400 hover:text-blue-300 uppercase tracking-wide">
                 {api.status === 'Configured' ? 'Rotate Key' : 'Add Key'}
               </button>
             </div>

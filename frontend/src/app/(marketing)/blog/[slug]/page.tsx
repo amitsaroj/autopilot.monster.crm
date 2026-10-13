@@ -41,15 +41,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <div className="max-w-3xl mx-auto px-6">
         <Link
           href="/blog"
-          className="inline-flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-blue-700 dark:text-blue-400 hover:text-blue-300 mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Back to Blog
         </Link>
         <header className="mb-10">
-          <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <span className="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
             {post.tag}
           </span>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mt-4 mb-4">
+          <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white mt-4 mb-4">
             {post.title}
           </h1>
           <p className="text-sm text-gray-500">

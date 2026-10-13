@@ -25,8 +25,8 @@ const dirIcon = {
 } as const;
 
 const dirColor = {
-  OUTBOUND: 'text-blue-400',
-  INBOUND: 'text-green-400',
+  OUTBOUND: 'text-blue-700 dark:text-blue-400',
+  INBOUND: 'text-green-700 dark:text-green-400',
 } as const;
 
 function formatDuration(seconds: number): string {
@@ -85,7 +85,7 @@ export default function AllCallsPage() {
           </button>
           <Link
             href="/voice/calls/new"
-            className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
           >
             <Phone className="h-4 w-4" />
             New Call
@@ -99,19 +99,19 @@ export default function AllCallsPage() {
             label: 'Total Calls',
             value: String(calls.length),
             icon: Phone,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
           },
           {
             label: 'Inbound',
             value: String(inbound),
             icon: PhoneIncoming,
-            color: 'text-green-400',
+            color: 'text-green-700 dark:text-green-400',
           },
           {
             label: 'Outbound',
             value: String(outbound),
             icon: PhoneOutgoing,
-            color: 'text-[hsl(246,80%,60%)]',
+            color: 'text-[hsl(var(--brand))]',
           },
           { label: 'Missed', value: String(missed), icon: PhoneMissed, color: 'text-red-400' },
         ].map((s) => (
@@ -134,7 +134,7 @@ export default function AllCallsPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search calls..."
-            className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
           />
         </div>
         <button
@@ -174,7 +174,7 @@ export default function AllCallsPage() {
                         <div>
                           <Link
                             href={`/voice/calls/${call.id}`}
-                            className="font-medium text-foreground hover:text-[hsl(246,80%,60%)]"
+                            className="font-medium text-foreground hover:text-[hsl(var(--brand))]"
                           >
                             {call.direction === 'OUTBOUND' ? call.to : call.from}
                           </Link>
@@ -205,7 +205,7 @@ export default function AllCallsPage() {
                     <td className="px-4 py-3">
                       {call.recordingUrl && (
                         <span className="flex items-center gap-1 px-2 py-1 text-xs border border-border rounded-lg">
-                          <Mic className="h-3 w-3 text-[hsl(246,80%,60%)]" />
+                          <Mic className="h-3 w-3 text-[hsl(var(--brand))]" />
                           Recording
                         </span>
                       )}

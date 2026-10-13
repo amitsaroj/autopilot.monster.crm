@@ -7,11 +7,11 @@ import { forecastService, ForecastSummary } from '@/services/forecast.service';
 
 const stageColor: Record<string, string> = {
   Prospecting: 'bg-muted text-muted-foreground',
-  Qualification: 'bg-blue-500/10 text-blue-400',
-  Proposal: 'bg-yellow-500/10 text-yellow-500',
+  Qualification: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+  Proposal: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400',
   Negotiation: 'bg-orange-500/10 text-orange-400',
-  Closing: 'bg-green-500/10 text-green-500',
-  Won: 'bg-green-500/10 text-green-500',
+  Closing: 'bg-green-500/10 text-green-700 dark:text-green-400',
+  Won: 'bg-green-500/10 text-green-700 dark:text-green-400',
 };
 
 export default function CrmForecastPage() {
@@ -60,28 +60,28 @@ export default function CrmForecastPage() {
             value: `$${(forecast.totalPipeline / 1000).toFixed(1)}k`,
             sub: `${forecast.dealCount} deals`,
             icon: DollarSign,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
           },
           {
             label: 'Forecasted (Weighted)',
             value: `$${(forecast.totalForecast / 1000).toFixed(1)}k`,
             sub: 'Expected close',
             icon: TrendingUp,
-            color: 'text-[hsl(246,80%,60%)]',
+            color: 'text-[hsl(var(--brand))]',
           },
           {
             label: 'On Track',
             value: String(forecast.onTrackCount),
             sub: '≥ 50% probability',
             icon: Target,
-            color: 'text-green-400',
+            color: 'text-green-700 dark:text-green-400',
           },
           {
             label: 'At Risk',
             value: String(forecast.atRiskCount),
             sub: '< 30% probability',
             icon: AlertCircle,
-            color: 'text-yellow-400',
+            color: 'text-yellow-700 dark:text-yellow-400',
           },
         ].map((stat) => (
           <div key={stat.label} className="stat-card">
@@ -105,13 +105,13 @@ export default function CrmForecastPage() {
             className="h-full rounded-full"
             style={{
               width: `${Math.min((forecast.totalForecast / quota) * 100, 100)}%`,
-              background: 'hsl(246,80%,60%)',
+              background: 'hsl(var(--brand))',
             }}
           />
         </div>
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>$0</span>
-          <span className="font-semibold text-[hsl(246,80%,60%)]">
+          <span className="font-semibold text-[hsl(var(--brand))]">
             ${(forecast.totalForecast / 1000).toFixed(1)}k forecasted (
             {((forecast.totalForecast / quota) * 100).toFixed(0)}%)
           </span>
@@ -155,11 +155,11 @@ export default function CrmForecastPage() {
                   ${deal.value.toLocaleString()}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <span className={deal.probability >= 50 ? 'text-green-500' : 'text-yellow-500'}>
+                  <span className={deal.probability >= 50 ? 'text-green-700 dark:text-green-400' : 'text-yellow-700 dark:text-yellow-400'}>
                     {deal.probability}%
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-[hsl(246,80%,60%)]">
+                <td className="px-4 py-3 text-right font-bold text-[hsl(var(--brand))]">
                   ${deal.forecastedValue.toLocaleString()}
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">

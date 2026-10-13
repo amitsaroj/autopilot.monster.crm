@@ -54,7 +54,7 @@ export default function AIAgentsPage() {
         </div>
         <Link
           href="/ai/agents/new"
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] text-white rounded-lg text-sm"
         >
           <Plus className="h-4 w-4" /> New Agent
         </Link>
@@ -68,11 +68,11 @@ export default function AIAgentsPage() {
             <div key={agent.id} className="rounded-xl border border-border bg-card p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <Bot className="h-5 w-5 text-[hsl(246,80%,60%)]" />
+                  <Bot className="h-5 w-5 text-[hsl(var(--brand))]" />
                   <div>
                     <Link
                       href={`/ai/agents/${agent.id}`}
-                      className="font-medium hover:text-[hsl(246,80%,60%)]"
+                      className="font-medium hover:text-[hsl(var(--brand))]"
                     >
                       {agent.name}
                     </Link>

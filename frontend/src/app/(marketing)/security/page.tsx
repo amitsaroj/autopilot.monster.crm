@@ -47,7 +47,7 @@ export default function SecurityPage() {
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-red-500/20 bg-red-500/5 text-sm font-medium text-red-400 mb-6">
             <Shield className="w-4 h-4" /> Security
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Enterprise-grade
             <br />
             security
@@ -58,7 +58,7 @@ export default function SecurityPage() {
           </p>
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-2xl shadow-red-500/20 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl shadow-2xl shadow-red-500/20 hover:scale-[1.02] transition-all"
           >
             Request Security Review <ArrowRight className="w-4 h-4" />
           </Link>

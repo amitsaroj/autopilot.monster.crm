@@ -86,7 +86,7 @@ export default function QuoteSendPage({ params }: { params: Promise<{ id: string
         className="rounded-xl border border-border bg-card p-6 space-y-4"
       >
         <h2 className="text-sm font-semibold flex items-center gap-2">
-          <Mail className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+          <Mail className="h-4 w-4 text-[hsl(var(--brand))]" />
           Send by Email
         </h2>
         <div>
@@ -96,7 +96,7 @@ export default function QuoteSendPage({ params }: { params: Promise<{ id: string
             type="email"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
           />
         </div>
         <div>
@@ -105,13 +105,13 @@ export default function QuoteSendPage({ params }: { params: Promise<{ id: string
             rows={5}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)] resize-none"
+            className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))] resize-none"
           />
         </div>
         <button
           type="submit"
           disabled={sending}
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           Send Quote

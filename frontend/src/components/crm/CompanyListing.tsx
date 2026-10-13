@@ -31,10 +31,10 @@ interface CompanyListingProps {
 export function CompanyListing({ companies, onDelete }: CompanyListingProps) {
   if (companies.length === 0) {
     return (
-      <div className="py-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-[40px] bg-gray-50/50">
-        <Building2 className="w-16 h-16 mb-6 text-gray-200" />
-        <h3 className="text-xl font-black text-gray-400 mb-2">No Companies Found</h3>
-        <p className="text-sm text-gray-400 max-w-xs text-center">
+      <div className="py-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-white/5 rounded-xl bg-gray-50/50">
+        <Building2 className="w-16 h-16 mb-6 text-foreground" />
+        <h3 className="text-xl font-semibold text-muted-foreground mb-2">No Companies Found</h3>
+        <p className="text-sm text-muted-foreground max-w-xs text-center">
           Start building your B2B network by adding your first organizational account.
         </p>
       </div>
@@ -49,10 +49,10 @@ export function CompanyListing({ companies, onDelete }: CompanyListingProps) {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: idx * 0.05 }}
-          className="group relative bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-white/5 p-8 shadow-soft hover:shadow-2xl transition-all duration-500"
+          className="group relative bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-white/5 p-8 shadow-soft hover:shadow-2xl transition-all duration-500"
         >
           <div className="flex items-start justify-between mb-6">
-            <div className="w-16 h-16 rounded-[22px] bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800/30 overflow-hidden group-hover:scale-110 transition-transform">
+            <div className="w-16 h-16 rounded-[22px] bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center border border-blue-100 dark:border-blue-800/30 overflow-hidden group-hover:scale-110 transition-transform">
               {company.logoUrl ? (
                 <img
                   src={company.logoUrl}
@@ -60,7 +60,7 @@ export function CompanyListing({ companies, onDelete }: CompanyListingProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Building2 className="w-8 h-8 text-indigo-600" />
+                <Building2 className="w-8 h-8 text-blue-600" />
               )}
             </div>
 
@@ -73,11 +73,11 @@ export function CompanyListing({ companies, onDelete }: CompanyListingProps) {
           </div>
 
           <div className="mb-8">
-            <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2 line-clamp-1 tracking-tight">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-1 tracking-tight">
               {company.name}
             </h3>
             <div className="flex items-center gap-2 mb-4">
-              <span className="px-3 py-1 bg-gray-50 dark:bg-white/5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
+              <span className="px-3 py-1 bg-gray-50 dark:bg-white/5 rounded-full text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
                 <Briefcase className="w-3 h-3" />
                 {company.industry || 'General Business'}
               </span>
@@ -89,14 +89,14 @@ export function CompanyListing({ companies, onDelete }: CompanyListingProps) {
                   href={`https://${company.website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-xs font-bold text-gray-400 hover:text-indigo-600 transition truncate"
+                  className="flex items-center gap-3 text-xs font-bold text-muted-foreground hover:text-blue-600 transition truncate"
                 >
                   <Globe className="w-3.5 h-3.5" />
                   {company.website}
                 </a>
               )}
               {company.phone && (
-                <div className="flex items-center gap-3 text-xs font-bold text-gray-400">
+                <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
                   <Phone className="w-3.5 h-3.5" />
                   {company.phone}
                 </div>
@@ -111,14 +111,14 @@ export function CompanyListing({ companies, onDelete }: CompanyListingProps) {
                   key={i}
                   className="w-6 h-6 rounded-full border-2 border-white dark:border-card bg-gray-100 flex items-center justify-center overflow-hidden"
                 >
-                  <Users2 className="w-3 h-3 text-gray-400" />
+                  <Users2 className="w-3 h-3 text-muted-foreground" />
                 </div>
               ))}
-              <div className="w-6 h-6 rounded-full border-2 border-white dark:border-card bg-indigo-600 flex items-center justify-center text-[8px] font-black text-white">
+              <div className="w-6 h-6 rounded-full border-2 border-white dark:border-card bg-blue-600 flex items-center justify-center text-[8px] font-semibold text-white">
                 +5
               </div>
             </div>
-            <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-indigo-600 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+            <button className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-blue-600 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
               View Account
               <ArrowUpRight className="w-3 h-3" />
             </button>

@@ -93,7 +93,7 @@ const integrations: Integration[] = [
 
 const categoryColors: Record<string, string> = {
   Communication: 'bg-blue-100 text-blue-700',
-  AI: 'bg-purple-100 text-purple-700',
+  AI: 'bg-blue-100 text-blue-700',
   Payment: 'bg-emerald-100 text-emerald-700',
   CRM: 'bg-orange-100 text-orange-700',
   'E-commerce': 'bg-pink-100 text-pink-700',
@@ -179,7 +179,7 @@ export default function IntegrationsPage() {
                 {app.iconStr}
               </div>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${categoryColors[app.category]}`}
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${categoryColors[app.category]}`}
               >
                 {app.category}
               </span>
@@ -197,7 +197,7 @@ export default function IntegrationsPage() {
               <div className="flex items-center gap-1.5">
                 {app.status === 'Connected' && (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <CheckCircle2 className="w-4 h-4 text-green-700 dark:text-green-400" />
                     <span className="text-xs font-semibold text-green-700">Connected</span>
                   </>
                 )}
@@ -243,15 +243,15 @@ export default function IntegrationsPage() {
         ))}
 
         {/* Custom App CTA */}
-        <div className="bg-gradient-to-br from-[hsl(246,80%,60%)]/5 to-[hsl(280,80%,60%)]/10 border border-[hsl(246,80%,60%)]/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-center items-center text-center h-full group cursor-pointer border-dashed">
-          <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center text-[hsl(246,80%,60%)] shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-border">
+        <div className="bg-gradient-to-br from-[hsl(var(--brand))]/5 to-[hsl(280,80%,60%)]/10 border border-[hsl(var(--brand))]/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-center items-center text-center h-full group cursor-pointer border-dashed">
+          <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center text-[hsl(var(--brand))] shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-border">
             <LinkIcon className="w-5 h-5" />
           </div>
           <h3 className="font-bold text-foreground mb-2">Build Custom App</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-[200px]">
             Use AutopilotMonster open developer APIs to build internal connections.
           </p>
-          <span className="text-sm font-bold text-[hsl(246,80%,60%)] group-hover:underline">
+          <span className="text-sm font-bold text-[hsl(var(--brand))] group-hover:underline">
             View API Docs &rarr;
           </span>
         </div>

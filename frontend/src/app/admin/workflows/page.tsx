@@ -24,15 +24,15 @@ const MODULES = [
     href: '/workflows',
     icon: WorkflowIcon,
     desc: 'View and manage workspace automations',
-    color: 'text-indigo-400',
-    bg: 'bg-indigo-500/10',
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   {
     label: 'Executions',
     href: '/admin/workflows/executions',
     icon: Play,
     desc: 'Monitor live and historical runs',
-    color: 'text-emerald-400',
+    color: 'text-emerald-700 dark:text-emerald-400',
     bg: 'bg-emerald-500/10',
   },
   {
@@ -40,7 +40,7 @@ const MODULES = [
     href: '/admin/workflows/triggers',
     icon: Zap,
     desc: 'Configure event triggers and webhooks',
-    color: 'text-amber-400',
+    color: 'text-amber-700 dark:text-amber-400',
     bg: 'bg-amber-500/10',
   },
 ];
@@ -80,7 +80,7 @@ export default function AdminWorkflowsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-700 dark:text-blue-400" />
       </div>
     );
   }
@@ -88,25 +88,25 @@ export default function AdminWorkflowsPage() {
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Workflows Admin</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Workflows Admin</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Automation Engine Management
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           {
             label: 'Active Workflows',
             value: String(activeCount),
-            color: 'text-indigo-400',
-            bg: 'bg-indigo-500/10',
+            color: 'text-blue-700 dark:text-blue-400',
+            bg: 'bg-blue-500/10',
             icon: WorkflowIcon,
           },
           {
             label: 'Runs Today',
             value: String(todayCount),
-            color: 'text-emerald-400',
+            color: 'text-emerald-700 dark:text-emerald-400',
             bg: 'bg-emerald-500/10',
             icon: Play,
           },
@@ -120,16 +120,16 @@ export default function AdminWorkflowsPage() {
         ].map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4"
+            className="p-5 rounded-2xl bg-card border border-border flex items-center gap-4"
           >
             <div className={`p-3 rounded-xl ${s.bg}`}>
               <s.icon className={`w-5 h-5 ${s.color}`} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {s.label}
               </p>
-              <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+              <p className={`text-2xl font-semibold ${s.color}`}>{s.value}</p>
             </div>
           </div>
         ))}
@@ -140,7 +140,7 @@ export default function AdminWorkflowsPage() {
           <Link
             key={mod.href}
             href={mod.href}
-            className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group"
+            className="p-6 rounded-2xl bg-card border border-border hover:bg-white/[0.04] hover:border-blue-500/20 transition-all group"
           >
             <div className="flex justify-between items-start mb-4">
               <div
@@ -149,11 +149,11 @@ export default function AdminWorkflowsPage() {
                 <mod.icon className={`w-6 h-6 ${mod.color}`} />
               </div>
             </div>
-            <h3 className="text-base font-black text-white group-hover:text-indigo-400 transition-colors mb-1">
+            <h3 className="text-base font-semibold text-foreground group-hover:text-blue-400 transition-colors mb-1">
               {mod.label}
             </h3>
-            <p className="text-xs text-gray-500 mb-4">{mod.desc}</p>
-            <div className="flex items-center gap-1 text-[10px] font-black text-gray-600 group-hover:text-indigo-400 transition-colors uppercase tracking-widest">
+            <p className="text-xs text-muted-foreground mb-4">{mod.desc}</p>
+            <div className="flex items-center gap-1 text-xs font-semibold text-muted-foreground group-hover:text-blue-400 transition-colors uppercase tracking-wide">
               Open <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
@@ -161,17 +161,17 @@ export default function AdminWorkflowsPage() {
       </div>
 
       <div>
-        <h2 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-gray-400" /> Recent Execution Log
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-muted-foreground" /> Recent Execution Log
         </h2>
-        <div className="rounded-3xl border border-white/[0.05] bg-white/[0.01] overflow-hidden">
+        <div className="rounded-3xl border border-border bg-card overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-white/[0.05] bg-white/[0.02]">
+              <tr className="border-b border-border bg-card">
                 {['Workflow', 'Status', 'Started', 'Completed'].map((h) => (
                   <th
                     key={h}
-                    className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest"
+                    className="px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
                   >
                     {h}
                   </th>
@@ -181,31 +181,31 @@ export default function AdminWorkflowsPage() {
             <tbody className="divide-y divide-white/[0.03]">
               {executions.slice(0, 8).map((run) => (
                 <tr key={run.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-5 py-4 text-sm font-bold text-white">
+                  <td className="px-5 py-4 text-sm font-bold text-foreground">
                     {workflowNameById.get(run.flowId) ?? run.flowId.slice(0, 8)}
                   </td>
                   <td className="px-5 py-4">
                     <span
-                      className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${
+                      className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${
                         run.status === 'FAILED'
                           ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
                       }`}
                     >
                       {run.status}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-xs text-gray-400">
+                  <td className="px-5 py-4 text-xs text-muted-foreground">
                     {new Date(run.startedAt).toLocaleString()}
                   </td>
-                  <td className="px-5 py-4 text-xs text-gray-400">
+                  <td className="px-5 py-4 text-xs text-muted-foreground">
                     {run.completedAt ? new Date(run.completedAt).toLocaleString() : '—'}
                   </td>
                 </tr>
               ))}
               {executions.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-5 py-10 text-center text-gray-500 text-sm">
+                  <td colSpan={4} className="px-5 py-10 text-center text-muted-foreground text-sm">
                     No executions yet.
                   </td>
                 </tr>

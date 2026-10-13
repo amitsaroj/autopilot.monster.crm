@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CheckCircle2, XCircle, Loader2, Zap } from 'lucide-react';
 import { authService } from '@/services/auth.service';
 import Link from 'next/link';
+import { BrandLogo } from '@/components/brand-logo';
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ function VerifyEmailContent() {
   if (status === 'loading') {
     return (
       <div className="text-center py-8">
-        <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
         <p className="text-gray-600 dark:text-muted-foreground transition">
           Verifying your email...
         </p>
@@ -61,7 +62,7 @@ function VerifyEmailContent() {
         </p>
         <Link
           href="/login"
-          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+          className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
         >
           Go to login now
         </Link>
@@ -80,7 +81,7 @@ function VerifyEmailContent() {
       <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">{message}</p>
       <Link
         href="/login"
-        className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+        className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
       >
         Back to login
       </Link>
@@ -92,18 +93,13 @@ export default function VerifyEmailPage() {
   return (
     <div className="w-full max-w-md px-8 py-10 my-24 rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-card shadow-2xl">
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-          <Zap className="w-5 h-5 text-white" />
-        </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
-          AutopilotMonster
-        </span>
+        <BrandLogo />
       </div>
 
       <Suspense
         fallback={
           <div className="flex justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
           </div>
         }
       >

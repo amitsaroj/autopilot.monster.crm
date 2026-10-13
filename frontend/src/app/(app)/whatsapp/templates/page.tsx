@@ -64,7 +64,7 @@ export default function WhatsAppTemplatesPage() {
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <div className="bg-card border rounded-xl overflow-hidden">
+      <div className="bg-card border rounded-xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/40 text-muted-foreground">
             <tr>

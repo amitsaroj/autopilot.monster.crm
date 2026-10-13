@@ -72,7 +72,7 @@ export default function LocalizationPage() {
 
   if (initialLoading) {
     return (
-      <div className="max-w-5xl mx-auto py-10 px-6 text-gray-500 text-sm font-bold uppercase tracking-widest">
+      <div className="max-w-5xl mx-auto py-10 px-6 text-muted-foreground text-sm font-bold uppercase tracking-wide">
         Loading localization settings...
       </div>
     );
@@ -80,24 +80,24 @@ export default function LocalizationPage() {
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-6 space-y-12 animate-in fade-in duration-700">
-      <div className="flex justify-between items-center bg-white/[0.02] p-8 rounded-[40px] border border-white/[0.05] backdrop-blur-md">
+      <div className="flex justify-between items-center bg-card p-8 rounded-xl border border-border backdrop-blur-md">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 text-[10px] font-black uppercase tracking-widest border border-violet-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide border border-blue-500/20">
               Locale Layer Active
             </span>
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter uppercase">
+          <h1 className="text-4xl font-semibold text-foreground tracking-tighter uppercase">
             Locale Orchestration
           </h1>
-          <p className="text-gray-500 text-sm mt-1 font-bold uppercase tracking-widest">
+          <p className="text-muted-foreground text-sm mt-1 font-bold uppercase tracking-wide">
             Configure global system language, temporal zones, and fiscal currency
           </p>
         </div>
         <button
           onClick={handleSave}
           disabled={loading}
-          className="px-10 py-4 bg-violet-600 hover:bg-violet-500 disabled:bg-gray-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-2xl shadow-violet-500/20 flex items-center gap-2 group"
+          className="px-10 py-4 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 text-white rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all shadow-2xl shadow-blue-500/20 flex items-center gap-2 group"
         >
           {loading ? (
             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -109,57 +109,57 @@ export default function LocalizationPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden group">
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-10 flex items-center gap-4">
-            <Languages className="w-7 h-7 text-violet-500" /> Dialect & Time
+        <div className="p-10 rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group">
+          <h2 className="text-2xl font-semibold text-foreground uppercase tracking-tighter mb-10 flex items-center gap-4">
+            <Languages className="w-7 h-7 text-blue-500" /> Dialect & Time
           </h2>
 
           <div className="space-y-8">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-2">
                 System Primary Language
               </label>
               <select
                 value={settings.language}
                 onChange={(e) => setSettings({ ...settings, language: e.target.value })}
-                className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-violet-400 font-bold outline-none focus:border-violet-500/40 appearance-none cursor-pointer"
+                className="w-full bg-card border border-border rounded-[24px] px-8 py-5 text-sm text-blue-700 dark:text-blue-400 font-bold outline-none focus:border-blue-500/40 appearance-none cursor-pointer"
               >
-                <option value="en" className="bg-[#0b0f19]">
+                <option value="en" className="bg-card">
                   English (Global Standard)
                 </option>
-                <option value="es" className="bg-[#0b0f19]">
+                <option value="es" className="bg-card">
                   Español (Standard)
                 </option>
-                <option value="fr" className="bg-[#0b0f19]">
+                <option value="fr" className="bg-card">
                   Français (European)
                 </option>
-                <option value="de" className="bg-[#0b0f19]">
+                <option value="de" className="bg-card">
                   Deutsch (DACH)
                 </option>
               </select>
             </div>
 
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-2">
                 Temporal Zone (Timezone)
               </label>
               <div className="relative">
-                <Clock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-500" />
+                <Clock className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-500" />
                 <select
                   value={settings.timezone}
                   onChange={(e) => setSettings({ ...settings, timezone: e.target.value })}
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] pl-16 pr-8 py-5 text-sm text-violet-400 font-bold outline-none focus:border-violet-500/40 appearance-none cursor-pointer"
+                  className="w-full bg-card border border-border rounded-[24px] pl-16 pr-8 py-5 text-sm text-blue-700 dark:text-blue-400 font-bold outline-none focus:border-blue-500/40 appearance-none cursor-pointer"
                 >
-                  <option value="UTC" className="bg-[#0b0f19]">
+                  <option value="UTC" className="bg-card">
                     Coordinated Universal Time (UTC)
                   </option>
-                  <option value="EST" className="bg-[#0b0f19]">
+                  <option value="EST" className="bg-card">
                     Eastern Standard Time (EST)
                   </option>
-                  <option value="PST" className="bg-[#0b0f19]">
+                  <option value="PST" className="bg-card">
                     Pacific Standard Time (PST)
                   </option>
-                  <option value="IST" className="bg-[#0b0f19]">
+                  <option value="IST" className="bg-card">
                     Indian Standard Time (IST)
                   </option>
                 </select>
@@ -168,54 +168,54 @@ export default function LocalizationPage() {
           </div>
         </div>
 
-        <div className="p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl relative overflow-hidden group">
-          <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-10 flex items-center gap-4">
-            <DollarSign className="w-7 h-7 text-emerald-500" /> Fiscal & Formats
+        <div className="p-10 rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group">
+          <h2 className="text-2xl font-semibold text-foreground uppercase tracking-tighter mb-10 flex items-center gap-4">
+            <DollarSign className="w-7 h-7 text-emerald-700 dark:text-emerald-400" /> Fiscal & Formats
           </h2>
 
           <div className="space-y-8">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-2">
                 Primary Fiscal Unit (Currency)
               </label>
               <select
                 value={settings.currency}
                 onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] px-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
+                className="w-full bg-card border border-border rounded-[24px] px-8 py-5 text-sm text-emerald-700 dark:text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
               >
-                <option value="USD" className="bg-[#0b0f19]">
+                <option value="USD" className="bg-card">
                   US Dollar ($)
                 </option>
-                <option value="EUR" className="bg-[#0b0f19]">
+                <option value="EUR" className="bg-card">
                   Euro (€)
                 </option>
-                <option value="GBP" className="bg-[#0b0f19]">
+                <option value="GBP" className="bg-card">
                   British Pound (£)
                 </option>
-                <option value="INR" className="bg-[#0b0f19]">
+                <option value="INR" className="bg-card">
                   Indian Rupee (₹)
                 </option>
               </select>
             </div>
 
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-2">
                 Date Notation Format
               </label>
               <div className="relative">
-                <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                 <select
                   value={settings.dateFormat}
                   onChange={(e) => setSettings({ ...settings, dateFormat: e.target.value })}
-                  className="w-full bg-white/[0.02] border border-white/5 rounded-[24px] pl-16 pr-8 py-5 text-sm text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
+                  className="w-full bg-card border border-border rounded-[24px] pl-16 pr-8 py-5 text-sm text-emerald-700 dark:text-emerald-400 font-bold outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
                 >
-                  <option value="MM/DD/YYYY" className="bg-[#0b0f19]">
+                  <option value="MM/DD/YYYY" className="bg-card">
                     MM/DD/YYYY (USA)
                   </option>
-                  <option value="DD/MM/YYYY" className="bg-[#0b0f19]">
+                  <option value="DD/MM/YYYY" className="bg-card">
                     DD/MM/YYYY (Global)
                   </option>
-                  <option value="YYYY-MM-DD" className="bg-[#0b0f19]">
+                  <option value="YYYY-MM-DD" className="bg-card">
                     YYYY-MM-DD (ISO)
                   </option>
                 </select>
@@ -224,22 +224,22 @@ export default function LocalizationPage() {
           </div>
         </div>
 
-        <div className="md:col-span-2 p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] flex items-center gap-10">
-          <div className="w-20 h-20 rounded-[32px] bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400">
+        <div className="md:col-span-2 p-10 rounded-xl bg-card border border-border flex items-center gap-10">
+          <div className="w-20 h-20 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-700 dark:text-blue-400">
             <MapPin className="w-10 h-10" />
           </div>
           <div>
-            <h4 className="text-xl font-black text-white uppercase tracking-tight mb-1">
+            <h4 className="text-xl font-semibold text-foreground uppercase tracking-tight mb-1">
               Enforce Regional Compliance
             </h4>
-            <p className="text-gray-500 text-xs font-bold uppercase tracking-widest max-w-2xl leading-relaxed">
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-wide max-w-2xl leading-relaxed">
               System-wide enforcement of local tax laws, currency symbols, and data residency
               protocols based on tenant headquarters.
             </p>
           </div>
-          <div className="ml-auto flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+          <div className="ml-auto flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400">
             <Check className="w-4 h-4" />
-            <span className="text-[10px] font-black uppercase tracking-widest">
+            <span className="text-xs font-semibold uppercase tracking-wide">
               Compliance Active
             </span>
           </div>

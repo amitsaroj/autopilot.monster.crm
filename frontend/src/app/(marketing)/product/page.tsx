@@ -24,7 +24,7 @@ const products = [
     icon: Sparkles,
     title: 'AI Agents',
     desc: 'Autonomous GPT copilots that qualify, nurture, and close deals on autopilot.',
-    color: 'from-purple-500 to-pink-400',
+    color: 'from-blue-500 to-pink-400',
     href: '/product/ai',
   },
   {
@@ -45,7 +45,7 @@ const products = [
     icon: GitBranch,
     title: 'Workflow Engine',
     desc: 'Visual drag-and-drop automation with triggers, conditions, and multi-channel actions.',
-    color: 'from-indigo-500 to-violet-400',
+    color: 'from-blue-500 to-blue-400',
     href: '/product/workflow',
   },
   {
@@ -67,10 +67,10 @@ export default function ProductPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Product
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             The Complete
             <br />
             Revenue Platform
@@ -100,7 +100,7 @@ export default function ProductPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">{p.title}</h3>
                 <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-6">{p.desc}</p>
-                <span className="text-indigo-400 text-sm font-medium flex items-center gap-1.5 group-hover:gap-3 transition-all">
+                <span className="text-blue-700 dark:text-blue-400 text-sm font-medium flex items-center gap-1.5 group-hover:gap-3 transition-all">
                   Learn more <ArrowRight className="w-4 h-4" />
                 </span>
               </Link>

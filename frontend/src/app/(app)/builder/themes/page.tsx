@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { tenantSettingsService } from '@/services/tenant-settings.service';
 
 export default function BuilderThemesPage() {
-  const [primary, setPrimary] = useState('#4f46e5');
+  const [primary, setPrimary] = useState('#155eef');
   const [font, setFont] = useState('Inter');
 
   const handleSave = async () => {
@@ -50,7 +50,7 @@ export default function BuilderThemesPage() {
         <button
           type="button"
           onClick={() => void handleSave()}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
         >
           Save Theme
         </button>

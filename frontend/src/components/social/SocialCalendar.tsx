@@ -30,7 +30,7 @@ interface SocialCalendarProps {
 const PLATFORM_ICONS: Record<string, any> = {
   FACEBOOK: { icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
   TWITTER: { icon: Twitter, color: 'text-sky-400', bg: 'bg-sky-50' },
-  LINKEDIN: { icon: Linkedin, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  LINKEDIN: { icon: Linkedin, color: 'text-blue-600', bg: 'bg-blue-50' },
 };
 
 export function SocialCalendar({ posts, onDelete }: SocialCalendarProps) {
@@ -67,7 +67,7 @@ export function SocialCalendar({ posts, onDelete }: SocialCalendarProps) {
               transition={{ delay: idx * 0.1 }}
               className="relative"
             >
-              <div className="absolute -left-[37px] top-1 w-6 h-6 rounded-full bg-white dark:bg-card border-2 border-indigo-600 flex items-center justify-center z-10">
+              <div className="absolute -left-[37px] top-1 w-6 h-6 rounded-full bg-white dark:bg-card border-2 border-blue-600 flex items-center justify-center z-10">
                 <Platform.icon className={cn('w-3 h-3', Platform.color)} />
               </div>
 

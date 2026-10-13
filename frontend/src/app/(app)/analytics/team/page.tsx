@@ -63,25 +63,25 @@ export default function AnalyticsTeamPage() {
             label: 'Team Revenue',
             value: `$${(totalRevenue / 1000).toFixed(1)}k`,
             icon: TrendingUp,
-            color: 'text-green-400',
+            color: 'text-green-700 dark:text-green-400',
           },
           {
             label: 'Total Deals',
             value: String(totalDeals),
             icon: BarChart3,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
           },
           {
             label: 'Team Members',
             value: String(members.length),
             icon: Target,
-            color: 'text-[hsl(246,80%,60%)]',
+            color: 'text-[hsl(var(--brand))]',
           },
           {
             label: 'Avg Win Rate',
             value: `${avgWinRate.toFixed(1)}%`,
             icon: Award,
-            color: 'text-yellow-400',
+            color: 'text-yellow-700 dark:text-yellow-400',
           },
         ].map((s) => (
           <div key={s.label} className="stat-card">
@@ -116,7 +116,7 @@ export default function AnalyticsTeamPage() {
                 <tr key={member.ownerId} className="hover:bg-muted/30 transition-colors">
                   <td className="px-5 py-4 font-medium text-foreground">{member.ownerId}</td>
                   <td className="px-5 py-4 text-muted-foreground">{member.deals}</td>
-                  <td className="px-5 py-4 text-green-500 font-semibold">{member.won}</td>
+                  <td className="px-5 py-4 text-green-700 dark:text-green-400 font-semibold">{member.won}</td>
                   <td className="px-5 py-4 text-muted-foreground">{member.winRate.toFixed(1)}%</td>
                   <td className="px-5 py-4 text-foreground">${member.value.toLocaleString()}</td>
                 </tr>

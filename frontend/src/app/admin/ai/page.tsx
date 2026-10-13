@@ -21,8 +21,8 @@ const AI_MODULES = [
     href: '/admin/ai/agents',
     icon: Bot,
     desc: 'Deploy and manage autonomous AI agents',
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/10',
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
     stat: '3 Active',
   },
   {
@@ -30,7 +30,7 @@ const AI_MODULES = [
     href: '/admin/ai/conversations',
     icon: MessageSquare,
     desc: 'View all AI-handled conversation threads',
-    color: 'text-blue-400',
+    color: 'text-blue-700 dark:text-blue-400',
     bg: 'bg-blue-500/10',
     stat: '1,247 Total',
   },
@@ -39,8 +39,8 @@ const AI_MODULES = [
     href: '/admin/ai/models',
     icon: Cpu,
     desc: 'Configure and fine-tune AI model settings',
-    color: 'text-indigo-400',
-    bg: 'bg-indigo-500/10',
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
     stat: '2 Configured',
   },
   {
@@ -57,7 +57,7 @@ const AI_MODULES = [
     href: '/admin/ai/analytics',
     icon: BarChart3,
     desc: 'AI performance metrics and usage reports',
-    color: 'text-amber-400',
+    color: 'text-amber-700 dark:text-amber-400',
     bg: 'bg-amber-500/10',
     stat: 'Live Data',
   },
@@ -69,12 +69,12 @@ export default function AdminAIPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest border border-purple-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide border border-blue-500/20">
               AI Engine Active
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">AI Suite</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">AI Suite</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Intelligent Automation Command Center
           </p>
         </div>
@@ -86,43 +86,43 @@ export default function AdminAIPage() {
             label: 'AI Conversations',
             value: '1,247',
             icon: MessageSquare,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
             bg: 'bg-blue-500/10',
           },
           {
             label: 'Tokens Used (30d)',
             value: '2.4M',
             icon: Zap,
-            color: 'text-amber-400',
+            color: 'text-amber-700 dark:text-amber-400',
             bg: 'bg-amber-500/10',
           },
           {
             label: 'Avg Resolution',
             value: '94%',
             icon: Star,
-            color: 'text-emerald-400',
+            color: 'text-emerald-700 dark:text-emerald-400',
             bg: 'bg-emerald-500/10',
           },
           {
             label: 'Active Agents',
             value: '3',
             icon: Bot,
-            color: 'text-purple-400',
-            bg: 'bg-purple-500/10',
+            color: 'text-blue-700 dark:text-blue-400',
+            bg: 'bg-blue-500/10',
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4 hover:bg-white/[0.04] transition-all"
+            className="p-5 rounded-2xl bg-card border border-border flex items-center gap-4 hover:bg-white/[0.04] transition-all"
           >
             <div className={`p-3 rounded-xl ${s.bg}`}>
               <s.icon className={`w-5 h-5 ${s.color}`} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {s.label}
               </p>
-              <p className="text-2xl font-black text-white">{s.value}</p>
+              <p className="text-2xl font-semibold text-foreground">{s.value}</p>
             </div>
           </div>
         ))}
@@ -133,7 +133,7 @@ export default function AdminAIPage() {
           <Link
             key={mod.href}
             href={mod.href}
-            className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-purple-500/20 transition-all group"
+            className="p-6 rounded-2xl bg-card border border-border hover:bg-white/[0.04] hover:border-blue-500/20 transition-all group"
           >
             <div className="flex justify-between items-start mb-4">
               <div
@@ -141,15 +141,15 @@ export default function AdminAIPage() {
               >
                 <mod.icon className={`w-6 h-6 ${mod.color}`} />
               </div>
-              <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 {mod.stat}
               </span>
             </div>
-            <h3 className="text-base font-black text-white group-hover:text-purple-400 transition-colors mb-1">
+            <h3 className="text-base font-semibold text-foreground group-hover:text-blue-400 transition-colors mb-1">
               {mod.label}
             </h3>
-            <p className="text-xs text-gray-500 leading-relaxed mb-4">{mod.desc}</p>
-            <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-600 group-hover:text-purple-400 transition-colors uppercase tracking-widest">
+            <p className="text-xs text-muted-foreground leading-relaxed mb-4">{mod.desc}</p>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground group-hover:text-blue-400 transition-colors uppercase tracking-wide">
               Open <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>

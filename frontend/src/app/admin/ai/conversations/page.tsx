@@ -30,8 +30,8 @@ interface Conversation {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  OPEN: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  OPEN: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  RESOLVED: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
   ESCALATED: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
 
@@ -79,7 +79,7 @@ export default function AdminAIConversationsPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -88,27 +88,27 @@ export default function AdminAIConversationsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">AI Conversations</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">AI Conversations</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             All Agent-Handled Conversation Threads
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           {
             label: 'Open',
             value: conversations.filter((c) => c.status === 'OPEN').length,
             icon: MessageSquare,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
             bg: 'bg-blue-500/10',
           },
           {
             label: 'Resolved',
             value: conversations.filter((c) => c.status === 'RESOLVED').length,
             icon: CheckCircle2,
-            color: 'text-emerald-400',
+            color: 'text-emerald-700 dark:text-emerald-400',
             bg: 'bg-emerald-500/10',
           },
           {
@@ -121,36 +121,36 @@ export default function AdminAIConversationsPage() {
         ].map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4"
+            className="p-5 rounded-2xl bg-card border border-border flex items-center gap-4"
           >
             <div className={`p-3 rounded-xl ${s.bg}`}>
               <s.icon className={`w-5 h-5 ${s.color}`} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {s.label}
               </p>
-              <p className="text-2xl font-black text-white">{s.value}</p>
+              <p className="text-2xl font-semibold text-foreground">{s.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="flex gap-3">
-        <div className="flex-1 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 focus-within:border-purple-500/30 transition-all">
-          <Search className="w-4 h-4 text-gray-500" />
+        <div className="flex-1 p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 focus-within:border-blue-500/30 transition-all">
+          <Search className="w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search by contact or agent..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder:text-gray-600"
+            className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-gray-600"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-xs text-gray-300 outline-none font-black uppercase tracking-widest"
+          className="px-4 py-3 rounded-xl bg-card border border-border text-xs text-foreground outline-none font-semibold uppercase tracking-wide"
         >
           {['All', 'OPEN', 'RESOLVED', 'ESCALATED'].map((s) => (
             <option key={s} value={s}>
@@ -160,15 +160,15 @@ export default function AdminAIConversationsPage() {
         </select>
       </div>
 
-      <div className="rounded-3xl border border-white/[0.05] bg-white/[0.01] overflow-hidden">
+      <div className="rounded-3xl border border-border bg-card overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-white/[0.05] bg-white/[0.02]">
+            <tr className="border-b border-border bg-card">
               {['Contact', 'Agent', 'Channel', 'Status', 'Messages', 'Last Activity', ''].map(
                 (h) => (
                   <th
                     key={h}
-                    className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest"
+                    className="px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
                   >
                     {h}
                   </th>
@@ -184,38 +184,38 @@ export default function AdminAIConversationsPage() {
               >
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-xs border border-indigo-500/20">
+                    <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-700 dark:text-blue-400 font-semibold text-xs border border-blue-500/20">
                       {c.contact.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-white">{c.contact}</p>
-                      <p className="text-[10px] text-gray-600 truncate max-w-[160px]">
+                      <p className="text-sm font-bold text-foreground">{c.contact}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[160px]">
                         {c.lastMessage}
                       </p>
                     </div>
                   </div>
                 </td>
                 <td className="px-5 py-4">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                    <Bot className="w-3.5 h-3.5 text-purple-400" /> {c.agent}
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Bot className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" /> {c.agent}
                   </div>
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-400">{c.channel}</td>
+                <td className="px-5 py-4 text-xs text-muted-foreground">{c.channel}</td>
                 <td className="px-5 py-4">
                   <span
-                    className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[c.status]}`}
+                    className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[c.status]}`}
                   >
                     {c.status}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-sm text-gray-400">{c.messages}</td>
+                <td className="px-5 py-4 text-sm text-muted-foreground">{c.messages}</td>
                 <td className="px-5 py-4">
-                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Clock className="w-3 h-3" /> {new Date(c.updatedAt).toLocaleTimeString()}
                   </div>
                 </td>
                 <td className="px-5 py-4">
-                  <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 transition-colors ml-auto" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-blue-400 transition-colors ml-auto" />
                 </td>
               </tr>
             ))}

@@ -71,7 +71,7 @@ function CallsList({ contact }: { contact: Contact }) {
         type="button"
         onClick={() => void handleCall()}
         disabled={calling || !contact.phone}
-        className="inline-flex items-center gap-2 rounded-lg bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-lg bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
       >
         {calling ? <Loader2 className="h-4 w-4 animate-spin" /> : <PhoneCall className="h-4 w-4" />}
         Call Now

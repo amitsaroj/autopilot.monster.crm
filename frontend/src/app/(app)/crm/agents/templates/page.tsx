@@ -57,7 +57,7 @@ export default function AgentTemplatesPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -68,15 +68,15 @@ export default function AgentTemplatesPage() {
         <div>
           <Link
             href="/crm/agents"
-            className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition mb-2"
+            className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-blue-600 transition mb-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Agents
           </Link>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-white tracking-tight">
             AI Personality Gallery
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 italic">
+          <p className="text-muted-foreground dark:text-gray-400 mt-1 italic">
             Deploy pre-configured autonomous agents in seconds.
           </p>
         </div>
@@ -89,13 +89,13 @@ export default function AgentTemplatesPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className="group relative bg-white dark:bg-card rounded-[32px] border border-gray-100 dark:border-border shadow-soft hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden"
+            className="group relative bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-border shadow-soft hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden"
           >
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-blue-500 to-pink-500" />
 
             <div className="p-8 pb-32">
               <div className="flex items-start justify-between mb-6">
-                <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 shadow-inner">
+                <div className="p-4 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 shadow-inner">
                   {template.role === 'SALES' ? (
                     <TrendingUp className="w-8 h-8" />
                   ) : template.role === 'SUPPORT' ? (
@@ -104,20 +104,20 @@ export default function AgentTemplatesPage() {
                     <Sparkles className="w-8 h-8" />
                   )}
                 </div>
-                <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-[10px] font-black uppercase tracking-widest text-gray-500">
+                <span className="px-3 py-1 rounded-full bg-gray-100 dark:bg-white/5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {template.category}
                 </span>
               </div>
 
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-3 group-hover:text-indigo-600 transition-colors">
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 transition-colors">
                 {template.name}
               </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-6 font-medium">
+              <p className="text-sm text-muted-foreground dark:text-gray-400 leading-relaxed mb-6 font-medium">
                 {template.description}
               </p>
 
               <div className="space-y-3">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Core Capabilities
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -142,7 +142,7 @@ export default function AgentTemplatesPage() {
                     className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-900 bg-gray-200"
                   />
                 ))}
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 border-2 border-white dark:border-gray-900 text-[10px] font-bold text-gray-500">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white dark:bg-gray-800 border-2 border-white dark:border-gray-900 text-xs font-bold text-muted-foreground">
                   +12
                 </span>
               </div>
@@ -152,8 +152,8 @@ export default function AgentTemplatesPage() {
                 className={cn(
                   'flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-black transition-all shadow-lg',
                   installingId === template.id
-                    ? 'bg-gray-200 text-gray-500'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-500 shadow-indigo-500/20 active:scale-95',
+                    ? 'bg-gray-200 text-muted-foreground'
+                    : 'bg-blue-600 text-white hover:bg-blue-500 shadow-blue-500/20 active:scale-95',
                 )}
               >
                 {installingId === template.id ? (
@@ -172,13 +172,13 @@ export default function AgentTemplatesPage() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="flex flex-col items-center justify-center p-12 rounded-[32px] border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group"
+          className="flex flex-col items-center justify-center p-12 rounded-xl border-2 border-dashed border-gray-200 dark:border-white/10 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all group"
         >
-          <div className="p-6 rounded-full bg-gray-50 dark:bg-white/5 text-gray-400 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-900/20 group-hover:text-indigo-600 transition-all mb-4">
+          <div className="p-6 rounded-full bg-gray-50 dark:bg-white/5 text-muted-foreground group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 transition-all mb-4">
             <Plus className="w-12 h-12" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">Custom Personality</h3>
-          <p className="text-sm text-gray-500 mt-2 font-medium">Build a unique AI from scratch</p>
+          <p className="text-sm text-muted-foreground mt-2 font-medium">Build a unique AI from scratch</p>
         </motion.button>
       </div>
     </div>

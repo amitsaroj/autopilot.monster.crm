@@ -28,9 +28,9 @@ function unwrap<T>(response: any, fallback: T): T {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  active: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+  ACTIVE: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+  PENDING: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
   SUSPENDED: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
 
@@ -109,7 +109,7 @@ export default function SubAdminUsersPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -118,14 +118,14 @@ export default function SubAdminUsersPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Users</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Users</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Workspace Membership
           </p>
         </div>
         <button
           onClick={() => setShowInvite(true)}
-          className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2"
+          className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" /> Invite User
         </button>
@@ -144,28 +144,28 @@ export default function SubAdminUsersPage() {
             value: users.filter((u) => u.status?.toUpperCase() === 'PENDING').length,
           },
         ].map((s) => (
-          <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+          <div key={s.label} className="p-5 rounded-2xl bg-card border border-border">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {s.label}
             </p>
-            <p className="text-2xl font-black text-white mt-1">{s.value}</p>
+            <p className="text-2xl font-semibold text-foreground mt-1">{s.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 focus-within:border-indigo-500/30 transition-all">
-        <Search className="w-4 h-4 text-gray-500" />
+      <div className="p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 focus-within:border-blue-500/30 transition-all">
+        <Search className="w-4 h-4 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search by name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder:text-gray-600"
+          className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-gray-600"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="p-10 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center text-gray-500 text-sm">
+        <div className="p-10 rounded-2xl bg-card border border-border text-center text-muted-foreground text-sm">
           No users found.
         </div>
       ) : (
@@ -173,40 +173,40 @@ export default function SubAdminUsersPage() {
           {filtered.map((user) => (
             <div
               key={user.id}
-              className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group"
+              className="p-6 rounded-2xl bg-card border border-border hover:bg-white/[0.04] hover:border-blue-500/20 transition-all group"
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-indigo-500/10 group-hover:bg-indigo-500 transition-all">
-                    <Users className="w-5 h-5 text-indigo-400 group-hover:text-white transition-colors" />
+                  <div className="p-3 rounded-xl bg-blue-500/10 group-hover:bg-blue-500 transition-all">
+                    <Users className="w-5 h-5 text-blue-700 dark:text-blue-400 group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <p className="text-base font-black text-white">
+                    <p className="text-base font-semibold text-foreground">
                       {user.firstName || user.lastName
                         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
                         : user.email}
                     </p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
                   </div>
                 </div>
                 <span
-                  className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase ${
+                  className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase ${
                     STATUS_STYLES[user.status] ??
-                    'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                    'bg-gray-500/10 text-muted-foreground border-gray-500/20'
                   }`}
                 >
                   {user.status}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-[11px] text-gray-600">
+                <p className="text-[11px] text-muted-foreground">
                   {user.lastLoginAt
                     ? `Last login ${new Date(user.lastLoginAt).toLocaleDateString()}`
                     : 'Never logged in'}
                 </p>
                 <button
                   onClick={() => handleRemove(user)}
-                  className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-gray-500 hover:text-red-400 hover:border-red-500/20 transition-all"
+                  className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-red-400 hover:border-red-500/20 transition-all"
                   title="Remove user"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -219,48 +219,48 @@ export default function SubAdminUsersPage() {
 
       {showInvite && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl bg-[#0b0f1a] border border-white/[0.08] p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-black text-white">Invite User</h2>
+              <h2 className="text-lg font-semibold text-foreground">Invite User</h2>
               <button
                 onClick={() => setShowInvite(false)}
-                className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500"
+                className="p-1.5 rounded-lg hover:bg-white/[0.05] text-muted-foreground"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
-                <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                   Email
                 </label>
-                <div className="mt-1.5 flex items-center gap-2 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                  <Mail className="w-4 h-4 text-gray-500" />
+                <div className="mt-1.5 flex items-center gap-2 p-3 rounded-xl bg-card border border-border">
+                  <Mail className="w-4 h-4 text-muted-foreground" />
                   <input
                     type="email"
                     required
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                    className="flex-1 bg-transparent outline-none text-sm text-gray-200"
+                    className="flex-1 bg-transparent outline-none text-sm text-foreground"
                     placeholder="teammate@company.com"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                   Role
                 </label>
                 <select
                   required
                   value={inviteForm.roleId}
                   onChange={(e) => setInviteForm({ ...inviteForm, roleId: e.target.value })}
-                  className="mt-1.5 w-full p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] outline-none text-sm text-gray-200"
+                  className="mt-1.5 w-full p-3 rounded-xl bg-card border border-border outline-none text-sm text-foreground"
                 >
                   <option value="" disabled>
                     Select a role...
                   </option>
                   {roles.map((role) => (
-                    <option key={role.id} value={role.id} className="bg-[#0b0f1a]">
+                    <option key={role.id} value={role.id} className="bg-card">
                       {role.name}
                     </option>
                   ))}
@@ -269,7 +269,7 @@ export default function SubAdminUsersPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 Send Invite

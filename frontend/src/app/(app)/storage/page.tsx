@@ -138,7 +138,7 @@ export default function StoragePage() {
               <button
                 type="button"
                 onClick={() => void load()}
-                className="block mt-2 text-[hsl(246,80%,60%)] hover:underline"
+                className="block mt-2 text-[hsl(var(--brand))] hover:underline"
               >
                 Retry
               </button>
@@ -174,7 +174,7 @@ export default function StoragePage() {
                         <File className="h-4 w-4 text-muted-foreground" />
                         <Link
                           href={`/storage/${f.id}`}
-                          className="font-medium text-foreground hover:text-[hsl(246,80%,60%)]"
+                          className="font-medium text-foreground hover:text-[hsl(var(--brand))]"
                         >
                           {f.filename}
                         </Link>

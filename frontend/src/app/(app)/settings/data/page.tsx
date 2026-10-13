@@ -92,7 +92,7 @@ export default function SettingsDataPage() {
           href="/export"
           className="rounded-xl border border-border bg-card p-5 hover:bg-muted/40 transition-colors"
         >
-          <Download className="h-5 w-5 text-[hsl(246,80%,60%)] mb-3" />
+          <Download className="h-5 w-5 text-[hsl(var(--brand))] mb-3" />
           <p className="text-sm font-semibold text-foreground">Export center</p>
           <p className="text-xs text-muted-foreground mt-1">Full export history and formats</p>
         </Link>
@@ -100,7 +100,7 @@ export default function SettingsDataPage() {
           href="/import"
           className="rounded-xl border border-border bg-card p-5 hover:bg-muted/40 transition-colors"
         >
-          <Upload className="h-5 w-5 text-[hsl(246,80%,60%)] mb-3" />
+          <Upload className="h-5 w-5 text-[hsl(var(--brand))] mb-3" />
           <p className="text-sm font-semibold text-foreground">Import data</p>
           <p className="text-xs text-muted-foreground mt-1">Upload contacts, leads, and deals</p>
         </Link>
@@ -108,7 +108,7 @@ export default function SettingsDataPage() {
           href="/backup"
           className="rounded-xl border border-border bg-card p-5 hover:bg-muted/40 transition-colors"
         >
-          <Archive className="h-5 w-5 text-[hsl(246,80%,60%)] mb-3" />
+          <Archive className="h-5 w-5 text-[hsl(var(--brand))] mb-3" />
           <p className="text-sm font-semibold text-foreground">Backups</p>
           <p className="text-xs text-muted-foreground mt-1">Workspace backup and restore</p>
         </Link>
@@ -116,7 +116,7 @@ export default function SettingsDataPage() {
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-5">
         <div className="flex items-center gap-3">
-          <Database className="h-5 w-5 text-[hsl(246,80%,60%)]" />
+          <Database className="h-5 w-5 text-[hsl(var(--brand))]" />
           <div>
             <h2 className="text-sm font-semibold text-foreground">Quick export</h2>
             <p className="text-xs text-muted-foreground">
@@ -148,7 +148,7 @@ export default function SettingsDataPage() {
             type="button"
             disabled={starting}
             onClick={() => void startExport()}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[hsl(246,80%,60%)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[hsl(var(--brand))] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
           >
             {starting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -171,7 +171,7 @@ export default function SettingsDataPage() {
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <Shield className="h-5 w-5 text-[hsl(246,80%,60%)]" />
+          <Shield className="h-5 w-5 text-[hsl(var(--brand))]" />
           <div>
             <h2 className="text-sm font-semibold text-foreground">Privacy controls</h2>
             <p className="text-xs text-muted-foreground">
@@ -182,7 +182,7 @@ export default function SettingsDataPage() {
         </div>
         <Link
           href="/settings/security"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(246,80%,60%)]"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-[hsl(var(--brand))]"
         >
           Review security settings <ArrowRight className="h-4 w-4" />
         </Link>
@@ -212,7 +212,7 @@ export default function SettingsDataPage() {
                     {new Date(job.createdAt).toLocaleString()}
                   </p>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                <span className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   {job.status}
                 </span>
               </li>

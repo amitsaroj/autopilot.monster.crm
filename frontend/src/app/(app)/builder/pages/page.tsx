@@ -29,7 +29,7 @@ export default function BuilderPagesPage() {
         <h1 className="text-2xl font-bold">Builder Pages</h1>
         <Link
           href="/builder/pages/new"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
         >
           New Page
         </Link>

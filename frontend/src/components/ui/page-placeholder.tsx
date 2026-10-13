@@ -26,8 +26,8 @@ export function PagePlaceholder({ title, description, backHref, backLabel }: Pag
         )}
       </div>
       <div className="flex flex-col items-center justify-center py-24 rounded-xl border border-dashed border-border bg-muted/20">
-        <div className="p-4 rounded-2xl bg-[hsl(246,80%,60%)]/10 mb-4">
-          <Construction className="h-8 w-8 text-[hsl(246,80%,60%)]" />
+        <div className="p-4 rounded-2xl bg-[hsl(var(--brand))]/10 mb-4">
+          <Construction className="h-8 w-8 text-[hsl(var(--brand))]" />
         </div>
         <h2 className="text-lg font-semibold text-foreground mb-1">{title}</h2>
         <p className="text-sm text-muted-foreground text-center max-w-sm">

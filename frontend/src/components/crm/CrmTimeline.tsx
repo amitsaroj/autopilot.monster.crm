@@ -68,15 +68,15 @@ export const CrmTimeline: React.FC<{ entityId: string; entityType: 'contact' | '
   const getIcon = (category: string) => {
     switch (category) {
       case 'CALL':
-        return <Phone className="w-4 h-4 text-emerald-400" />;
+        return <Phone className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />;
       case 'EMAIL':
         return <Mail className="w-4 h-4 text-blue-400" />;
       case 'MEETING':
-        return <Calendar className="w-4 h-4 text-violet-400" />;
+        return <Calendar className="w-4 h-4 text-blue-400" />;
       case 'WHATSAPP':
-        return <MessageSquare className="w-4 h-4 text-emerald-500" />;
+        return <MessageSquare className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />;
       default:
-        return <FileText className="w-4 h-4 text-gray-400" />;
+        return <FileText className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -84,7 +84,7 @@ export const CrmTimeline: React.FC<{ entityId: string; entityType: 'contact' | '
     return (
       <div className="flex flex-col gap-6 animate-pulse">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-24 bg-white/5 rounded-3xl border border-white/5" />
+          <div key={i} className="h-24 bg-card rounded-3xl border border-border" />
         ))}
       </div>
     );
@@ -92,9 +92,9 @@ export const CrmTimeline: React.FC<{ entityId: string; entityType: 'contact' | '
   return (
     <div className="relative space-y-8 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/5 before:rounded-full">
       {items.length === 0 && (
-        <div className="p-12 text-center border-2 border-dashed border-white/5 rounded-[40px]">
+        <div className="p-12 text-center border-2 border-dashed border-border rounded-xl">
           <Clock className="w-10 h-10 text-gray-700 mx-auto mb-4 opacity-20" />
-          <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             No historical vectors detected
           </p>
         </div>
@@ -107,51 +107,51 @@ export const CrmTimeline: React.FC<{ entityId: string; entityType: 'contact' | '
           style={{ animationDelay: `${idx * 100}ms` }}
         >
           {/* Timeline Node */}
-          <div className="absolute left-0 top-1 w-10 h-10 rounded-2xl bg-[#0b0f19] border border-white/10 flex items-center justify-center shadow-2xl group-hover:border-indigo-500/30 transition-all z-10">
+          <div className="absolute left-0 top-1 w-10 h-10 rounded-2xl bg-card border border-border flex items-center justify-center shadow-2xl group-hover:border-blue-500/30 transition-all z-10">
             {getIcon(item.category)}
           </div>
 
           {/* Content Card */}
-          <div className="p-8 rounded-[32px] bg-white/[0.02] border border-white/[0.05] hover:border-white/10 transition-all shadow-soft flex flex-col gap-3 group/card relative overflow-hidden backdrop-blur-sm">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.01] rounded-full blur-3xl group-hover/card:bg-indigo-500/5 transition-colors" />
+          <div className="p-8 rounded-xl bg-card border border-border hover:border-white/10 transition-all shadow-soft flex flex-col gap-3 group/card relative overflow-hidden backdrop-blur-sm">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-card rounded-full blur-3xl group-hover/card:bg-blue-500/5 transition-colors" />
 
             <div className="flex justify-between items-start relative z-10">
               <div>
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest px-2 py-0.5 rounded-md bg-indigo-500/5 border border-indigo-500/10">
+                  <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide px-2 py-0.5 rounded-md bg-blue-500/5 border border-blue-500/10">
                     {item.category}
                   </span>
-                  <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide leading-none">
                     {formatDistanceToNow(new Date(item.occurredAt), { addSuffix: true })}
                   </span>
                 </div>
-                <h4 className="text-sm font-black text-white group-hover/card:text-indigo-400 transition-colors uppercase tracking-tight">
+                <h4 className="text-sm font-semibold text-foreground group-hover/card:text-blue-400 transition-colors uppercase tracking-tight">
                   {item.subject}
                 </h4>
               </div>
-              <button className="p-2 text-gray-600 hover:text-white transition opacity-0 group-hover:opacity-100">
+              <button className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-white transition opacity-0 group-hover:opacity-100">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
             </div>
 
             {item.content && (
-              <p className="text-xs text-gray-500 font-bold leading-relaxed max-w-2xl">
+              <p className="text-xs text-muted-foreground font-bold leading-relaxed max-w-2xl">
                 {item.content}
               </p>
             )}
 
-            <div className="flex items-center gap-3 pt-3 mt-1 border-t border-white/5">
+            <div className="flex items-center gap-3 pt-3 mt-1 border-t border-border">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/20">
-                  <User className="w-3 h-3 text-indigo-400" />
+                <div className="w-5 h-5 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/20">
+                  <User className="w-3 h-3 text-blue-400" />
                 </div>
-                <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                   Autonomous Executor
                 </span>
               </div>
               <div className="flex items-center gap-2 ml-auto">
-                <Zap className="w-3.5 h-3.5 text-amber-500/50" />
-                <span className="text-[9px] font-black text-gray-700 uppercase tracking-widest">
+                <Zap className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400/50" />
+                <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                   Real-time Sync
                 </span>
               </div>

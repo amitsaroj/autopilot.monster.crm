@@ -79,8 +79,8 @@ function CallbackContent() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-background">
       <div className="p-8 bg-white dark:bg-card rounded-2xl shadow-xl border border-gray-100 dark:border-border flex flex-col items-center max-w-sm w-full text-center">
-        <div className="w-16 h-16 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-6">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center mb-6">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
         <h2 className="text-xl font-bold text-gray-900 dark:text-foreground mb-2">
           Finalizing Authentication
@@ -98,7 +98,7 @@ export default function CallbackPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
         </div>
       }
     >

@@ -74,8 +74,8 @@ export default function UsagePage() {
           {entries.map(([key, value]) => (
             <div key={key} className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-center gap-4">
-                <div className="p-2.5 rounded-xl bg-[hsl(246,80%,60%)]/10">
-                  <Activity className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+                <div className="p-2.5 rounded-xl bg-[hsl(var(--brand))]/10">
+                  <Activity className="h-4 w-4 text-[hsl(var(--brand))]" />
                 </div>
                 <div className="flex-1 flex justify-between items-baseline">
                   <p className="font-semibold text-foreground">{formatKey(key)}</p>
@@ -87,14 +87,14 @@ export default function UsagePage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-[hsl(246,80%,60%)]/20 bg-[hsl(246,80%,60%)]/5 p-5">
+      <div className="rounded-xl border border-[hsl(var(--brand))]/20 bg-[hsl(var(--brand))]/5 p-5">
         <p className="text-sm font-semibold text-foreground mb-1">Need more capacity?</p>
         <p className="text-sm text-muted-foreground">
           Review your plan and upgrade options on the billing page.
         </p>
         <Link
           href="/billing/upgrade"
-          className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+          className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
         >
           <Zap className="h-4 w-4" /> Upgrade Plan
         </Link>

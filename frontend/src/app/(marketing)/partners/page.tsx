@@ -12,10 +12,10 @@ export default function PartnersPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Partners
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Grow with
             <br />
             AutopilotMonster
@@ -55,7 +55,7 @@ export default function PartnersPage() {
               transition={{ delay: i * 0.1, duration: 0.5 }}
               className="p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-100 dark:bg-white/[0.06] transition-all"
             >
-              <p.icon className="w-8 h-8 text-indigo-400 mb-4" />
+              <p.icon className="w-8 h-8 text-blue-700 dark:text-blue-400 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{p.title}</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{p.desc}</p>
             </motion.div>
@@ -64,7 +64,7 @@ export default function PartnersPage() {
         <div className="text-center">
           <Link
             href="/contact"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-2xl shadow-indigo-500/20 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-700 to-cyan-700 text-white font-semibold rounded-xl shadow-2xl shadow-blue-500/20 hover:scale-[1.02] transition-all"
           >
             Become a Partner <ArrowRight className="w-4 h-4" />
           </Link>

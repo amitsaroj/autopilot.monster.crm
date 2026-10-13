@@ -22,7 +22,7 @@ export default function PrivacyPage() {
   return (
     <div className="relative pt-32 pb-24 overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-indigo-500/5 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
 
       <div className="max-w-4xl mx-auto px-6 relative z-10">
         <motion.div
@@ -32,10 +32,10 @@ export default function PrivacyPage() {
           variants={fadeUp}
           className="mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-bold text-indigo-500 uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-500 uppercase tracking-wider mb-4">
             Legal & Trust
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
             Privacy Policy
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
@@ -53,8 +53,8 @@ export default function PrivacyPage() {
           <div className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06] rounded-2xl p-8 md:p-10 shadow-sm transition-all">
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-indigo-500" />
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-blue-500" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   Introduction
@@ -70,8 +70,8 @@ export default function PrivacyPage() {
 
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                  <Eye className="w-5 h-5 text-purple-500" />
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Eye className="w-5 h-5 text-blue-500" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   Information We Collect
@@ -83,7 +83,7 @@ export default function PrivacyPage() {
               </p>
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 list-none p-0">
                 <li className="flex gap-3 p-4 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04]">
-                  <Users className="w-5 h-5 text-indigo-500 shrink-0" />
+                  <Users className="w-5 h-5 text-blue-500 shrink-0" />
                   <div>
                     <strong className="block text-gray-900 dark:text-white text-sm">
                       Account Data
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
                   </div>
                 </li>
                 <li className="flex gap-3 p-4 rounded-xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04]">
-                  <MessageSquare className="w-5 h-5 text-green-500 shrink-0" />
+                  <MessageSquare className="w-5 h-5 text-green-700 dark:text-green-400 shrink-0" />
                   <div>
                     <strong className="block text-gray-900 dark:text-white text-sm">
                       Communication Data
@@ -144,21 +144,21 @@ export default function PrivacyPage() {
               </p>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 shrink-0" />
                   <p className="text-sm text-gray-600 dark:text-gray-400 m-0">
                     <strong>Encryption at Rest:</strong> All sensitive data is encrypted using
                     AES-256-GCM.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 shrink-0" />
                   <p className="text-sm text-gray-600 dark:text-gray-400 m-0">
                     <strong>Encryption in Transit:</strong> Strict TLS 1.3 encryption for all data
                     moving between your browser and our servers.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-2 shrink-0" />
                   <p className="text-sm text-gray-600 dark:text-gray-400 m-0">
                     <strong>Access Control:</strong> Granular Role-Based Access Control (RBAC)
                     ensures only authorized personnel can access specific data.
@@ -188,7 +188,7 @@ export default function PrivacyPage() {
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-emerald-500" />
+                  <Globe className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">Contact Us</h2>
               </div>
@@ -197,7 +197,7 @@ export default function PrivacyPage() {
                 protection officer at{' '}
                 <a
                   href="mailto:autopilots.monster@gmail.com"
-                  className="text-indigo-500 hover:underline font-semibold"
+                  className="text-blue-500 hover:underline font-semibold"
                 >
                   autopilots.monster@gmail.com
                 </a>

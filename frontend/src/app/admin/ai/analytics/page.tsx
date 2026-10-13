@@ -52,7 +52,7 @@ export default function AdminAIAnalyticsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-700 dark:text-blue-400" />
       </div>
     );
   }
@@ -62,28 +62,28 @@ export default function AdminAIAnalyticsPage() {
       label: 'Messages Sent',
       value: usage.messagesSent.toLocaleString(),
       icon: MessageSquare,
-      color: 'text-blue-400',
+      color: 'text-blue-700 dark:text-blue-400',
       bg: 'bg-blue-500/10',
     },
     {
       label: 'Active Agents',
       value: String(agents.filter((a) => a.isActive).length),
       icon: Bot,
-      color: 'text-emerald-400',
+      color: 'text-emerald-700 dark:text-emerald-400',
       bg: 'bg-emerald-500/10',
     },
     {
       label: 'Total Agents',
       value: String(agents.length),
       icon: Star,
-      color: 'text-indigo-400',
-      bg: 'bg-indigo-500/10',
+      color: 'text-blue-700 dark:text-blue-400',
+      bg: 'bg-blue-500/10',
     },
     {
       label: 'Tokens This Period',
       value: formatTokens(usage.tokensUsed),
       icon: Zap,
-      color: 'text-amber-400',
+      color: 'text-amber-700 dark:text-amber-400',
       bg: 'bg-amber-500/10',
     },
   ];
@@ -98,8 +98,8 @@ export default function AdminAIAnalyticsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">AI Analytics</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">AI Analytics</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Performance Metrics & Usage Intelligence
         </p>
       </div>
@@ -108,26 +108,26 @@ export default function AdminAIAnalyticsPage() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all"
+            className="p-5 rounded-2xl bg-card border border-border hover:bg-white/[0.04] transition-all"
           >
             <div className="flex justify-between items-start mb-3">
               <div className={`p-2.5 rounded-xl ${s.bg}`}>
                 <s.icon className={`w-4 h-4 ${s.color}`} />
               </div>
-              <ArrowUpRight className="w-3 h-3 text-emerald-400" />
+              <ArrowUpRight className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
             </div>
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {s.label}
             </p>
-            <p className="text-2xl font-black text-white mt-1">{s.value}</p>
+            <p className="text-2xl font-semibold text-foreground mt-1">{s.value}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-          <h2 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-blue-400" /> Token Usage
+        <div className="p-6 rounded-2xl bg-card border border-border">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-6 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-blue-700 dark:text-blue-400" /> Token Usage
           </h2>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={tokenChart}>
@@ -151,30 +151,30 @@ export default function AdminAIAnalyticsPage() {
               <Bar dataKey="tokens" fill="#f59e0b" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
-          <p className="text-[10px] text-gray-600 mt-4 uppercase tracking-widest">
+          <p className="text-xs text-muted-foreground mt-4 uppercase tracking-wide">
             Period start:{' '}
             {usage.periodStart ? new Date(usage.periodStart).toLocaleDateString() : '—'}
           </p>
         </div>
 
-        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-          <h2 className="text-sm font-black text-white uppercase tracking-widest mb-6">
+        <div className="p-6 rounded-2xl bg-card border border-border">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-6">
             Cost Summary
           </h2>
           <div className="space-y-4">
-            <div className="flex justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
-              <span className="text-xs text-gray-500 uppercase tracking-widest font-black">
+            <div className="flex justify-between p-4 rounded-xl bg-card border border-border">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
                 Total Cost
               </span>
-              <span className="text-lg font-black text-emerald-400">
+              <span className="text-lg font-semibold text-emerald-700 dark:text-emerald-400">
                 ${usage.totalCost.toFixed(2)}
               </span>
             </div>
-            <div className="flex justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
-              <span className="text-xs text-gray-500 uppercase tracking-widest font-black">
+            <div className="flex justify-between p-4 rounded-xl bg-card border border-border">
+              <span className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
                 Tokens Used
               </span>
-              <span className="text-lg font-black text-amber-400">
+              <span className="text-lg font-semibold text-amber-700 dark:text-amber-400">
                 {usage.tokensUsed.toLocaleString()}
               </span>
             </div>
@@ -182,22 +182,22 @@ export default function AdminAIAnalyticsPage() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-white/[0.05] bg-white/[0.01] overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/[0.05] bg-white/[0.02]">
-          <h2 className="text-sm font-black text-white uppercase tracking-widest">
+      <div className="rounded-3xl border border-border bg-card overflow-hidden">
+        <div className="px-6 py-4 border-b border-border bg-card">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             Agent Registry
           </h2>
         </div>
         {agents.length === 0 ? (
-          <p className="p-8 text-sm text-gray-500 text-center">No AI agents configured</p>
+          <p className="p-8 text-sm text-muted-foreground text-center">No AI agents configured</p>
         ) : (
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-white/[0.05]">
+              <tr className="border-b border-border">
                 {['Agent', 'Voice', 'Status', 'Created'].map((h) => (
                   <th
                     key={h}
-                    className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest"
+                    className="px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
                   >
                     {h}
                   </th>
@@ -207,20 +207,20 @@ export default function AdminAIAnalyticsPage() {
             <tbody className="divide-y divide-white/[0.03]">
               {agents.map((row) => (
                 <tr key={row.id} className="hover:bg-white/[0.02] transition-colors">
-                  <td className="px-5 py-4 text-sm font-bold text-white">{row.name}</td>
-                  <td className="px-5 py-4 text-sm text-gray-300">{row.voice}</td>
+                  <td className="px-5 py-4 text-sm font-bold text-foreground">{row.name}</td>
+                  <td className="px-5 py-4 text-sm text-foreground">{row.voice}</td>
                   <td className="px-5 py-4">
                     <span
-                      className={`text-[10px] font-black px-2 py-0.5 rounded-full border uppercase ${
+                      className={`text-xs font-semibold px-2 py-0.5 rounded-full border uppercase ${
                         row.isActive
-                          ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                          : 'text-gray-400 bg-white/5 border-white/10'
+                          ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                          : 'text-muted-foreground bg-card border-border'
                       }`}
                     >
                       {row.isActive ? 'ACTIVE' : 'PAUSED'}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-sm text-gray-400">
+                  <td className="px-5 py-4 text-sm text-muted-foreground">
                     {new Date(row.createdAt).toLocaleDateString()}
                   </td>
                 </tr>

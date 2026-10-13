@@ -89,7 +89,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -101,7 +101,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
       <div className="mb-8 flex items-center justify-between">
         <Link
           href="/crm/deals"
-          className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
+          className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-blue-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Kanban
@@ -118,7 +118,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             type="submit"
             form="deal-form"
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-indigo-500/20"
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/20"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Changes
@@ -130,11 +130,11 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
         {/* Profile Card */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft p-8 text-center">
-            <div className="w-24 h-24 mx-auto rounded-3xl bg-emerald-600 flex items-center justify-center text-white text-4xl font-black mb-6 shadow-xl shadow-emerald-500/30 font-serif">
+            <div className="w-24 h-24 mx-auto rounded-3xl bg-emerald-600 flex items-center justify-center text-white text-4xl font-semibold mb-6 shadow-xl shadow-emerald-500/30 font-serif">
               $
             </div>
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">{deal?.name}</h2>
-            <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400 mb-6 uppercase tracking-widest text-[10px]">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">{deal?.name}</h2>
+            <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-6 uppercase tracking-wide text-xs">
               {currentStage?.name || 'Unmapped Stage'}
             </p>
 
@@ -142,7 +142,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               {deal?.tags?.map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border"
+                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-bold text-muted-foreground dark:text-gray-400 border border-gray-200 dark:border-border"
                 >
                   {tag}
                 </span>
@@ -163,14 +163,14 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
             <div className="space-y-4 pt-6 border-t border-gray-100 dark:border-border text-left">
               <div className="flex items-center gap-3 text-sm font-bold text-gray-900 dark:text-white">
-                <DollarSign className="w-4 h-4 text-emerald-500" />
+                <DollarSign className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                 {Number(deal?.value).toLocaleString()} {deal?.currency}
               </div>
-              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                <Target className="w-4 h-4 text-indigo-500" />
+              <div className="flex items-center gap-3 text-sm text-muted-foreground dark:text-gray-400">
+                <Target className="w-4 h-4 text-blue-500" />
                 {formData.probability}% Probability
               </div>
-              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground dark:text-gray-400">
                 <Calendar className="w-4 h-4 text-orange-500" />
                 Exp. Close:{' '}
                 {deal?.expectedCloseDate
@@ -182,27 +182,27 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
           <div className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft p-6">
             <h3 className="font-bold text-sm mb-4 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-indigo-500" />
+              <Building2 className="w-4 h-4 text-blue-500" />
               Associations
             </h3>
             <div className="space-y-3">
               <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white dark:bg-card flex items-center justify-center border border-gray-100 dark:border-border">
-                    <Building2 className="w-4 h-4 text-gray-400" />
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
                   </div>
                   <span className="text-xs font-bold truncate max-w-[120px]">Account Entity</span>
                 </div>
-                <ChevronRight className="w-3 h-3 text-gray-400" />
+                <ChevronRight className="w-3 h-3 text-muted-foreground" />
               </div>
               <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-border flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white dark:bg-card flex items-center justify-center border border-gray-100 dark:border-border">
-                    <User className="w-4 h-4 text-gray-400" />
+                    <User className="w-4 h-4 text-muted-foreground" />
                   </div>
                   <span className="text-xs font-bold truncate max-w-[120px]">Primary Contact</span>
                 </div>
-                <ChevronRight className="w-3 h-3 text-gray-400" />
+                <ChevronRight className="w-3 h-3 text-muted-foreground" />
               </div>
             </div>
           </div>
@@ -217,26 +217,26 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
           >
             <div className="p-8 space-y-8">
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                   Deal Name
                 </label>
                 <input
                   required
                   value={formData.name || ''}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Pipeline Stage
                   </label>
                   <select
                     value={formData.stageId}
                     onChange={(e) => setFormData({ ...formData, stageId: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold appearance-none"
                   >
                     {pipeline?.stages.map((stage) => (
                       <option key={stage.id} value={stage.id}>
@@ -246,13 +246,13 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Deal Status
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold appearance-none"
                   >
                     <option value="OPEN">Open</option>
                     <option value="WON">Won</option>
@@ -263,21 +263,21 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Value ({formData.currency})
                   </label>
                   <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <input
                       type="number"
                       value={formData.value || 0}
                       onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
-                      className="w-full pl-10 pr-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                      className="w-full pl-10 pr-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Probability (%)
                   </label>
                   <input
@@ -288,14 +288,14 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     onChange={(e) =>
                       setFormData({ ...formData, probability: Number(e.target.value) })
                     }
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Expected Close Date
                   </label>
                   <input
@@ -308,31 +308,31 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     onChange={(e) =>
                       setFormData({ ...formData, expectedCloseDate: e.target.value })
                     }
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                   />
                 </div>
                 {formData.status === 'LOST' && (
                   <div>
-                    <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                    <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                       Lost Reason
                     </label>
                     <input
                       value={formData.lostReason || ''}
                       onChange={(e) => setFormData({ ...formData, lostReason: e.target.value })}
-                      className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                      className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                       placeholder="e.g. Price too high"
                     />
                   </div>
                 )}
               </div>
 
-              <div className="pt-4 flex items-center gap-6 text-xs font-bold text-gray-400 border-t border-gray-100 dark:border-border">
+              <div className="pt-4 flex items-center gap-6 text-xs font-bold text-muted-foreground border-t border-gray-100 dark:border-border">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   Created {new Date(deal?.createdAt || '').toLocaleDateString()}
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                   In Pipeline for 12 days
                 </div>
               </div>

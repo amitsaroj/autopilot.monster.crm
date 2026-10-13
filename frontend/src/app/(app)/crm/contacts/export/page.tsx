@@ -35,7 +35,7 @@ export default function ContactExportPage() {
         type="button"
         disabled={loading}
         onClick={() => void handleExport()}
-        className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
       >
         Download CSV
       </button>

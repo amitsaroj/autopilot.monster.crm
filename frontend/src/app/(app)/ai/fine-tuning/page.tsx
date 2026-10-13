@@ -63,7 +63,7 @@ export default function AIFineTuningPage() {
           <h1 className="page-title">Fine-Tuning</h1>
           <p className="page-description">Custom model fine-tuning jobs</p>
         </div>
-        <Link href="/ai" className="text-sm text-[hsl(246,80%,60%)] hover:underline">
+        <Link href="/ai" className="text-sm text-[hsl(var(--brand))] hover:underline">
           Back to AI Hub
         </Link>
       </div>
@@ -86,7 +86,7 @@ export default function AIFineTuningPage() {
         <button
           onClick={() => void handleCreate()}
           disabled={creating}
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg text-sm disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] text-white rounded-lg text-sm disabled:opacity-50"
         >
           {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           Start Job
@@ -107,7 +107,7 @@ export default function AIFineTuningPage() {
               className="rounded-xl border border-border bg-card p-4 flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
-                <Brain className="h-5 w-5 text-[hsl(246,80%,60%)]" />
+                <Brain className="h-5 w-5 text-[hsl(var(--brand))]" />
                 <div>
                   <p className="font-medium">{job.name}</p>
                   <p className="text-xs text-muted-foreground">

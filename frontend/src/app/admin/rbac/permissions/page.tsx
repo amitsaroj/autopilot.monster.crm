@@ -40,7 +40,7 @@ export default function AdminRBACPermissionsPage() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -48,8 +48,8 @@ export default function AdminRBACPermissionsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Permissions</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Permissions</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           RBAC Permission Matrix
         </p>
       </div>
@@ -58,37 +58,37 @@ export default function AdminRBACPermissionsPage() {
         {resources.slice(0, 8).map((resource) => (
           <div
             key={resource}
-            className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
+            className="p-4 rounded-2xl bg-card border border-border"
           >
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {resource}
             </p>
-            <p className="text-xl font-black text-white mt-1">
+            <p className="text-xl font-semibold text-foreground mt-1">
               {permissions.filter((p) => p.resource === resource).length}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 focus-within:border-indigo-500/30 transition-all">
-        <Search className="w-4 h-4 text-gray-500" />
+      <div className="p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 focus-within:border-blue-500/30 transition-all">
+        <Search className="w-4 h-4 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search permissions..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder:text-gray-600"
+          className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-gray-600"
         />
       </div>
 
-      <div className="rounded-3xl border border-white/[0.05] bg-white/[0.01] overflow-hidden">
+      <div className="rounded-3xl border border-border bg-card overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-white/[0.05] bg-white/[0.02]">
+            <tr className="border-b border-border bg-card">
               {['Permission', 'Resource', 'Action', 'Description'].map((h) => (
                 <th
                   key={h}
-                  className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest"
+                  className="px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
                 >
                   {h}
                 </th>
@@ -98,12 +98,12 @@ export default function AdminRBACPermissionsPage() {
           <tbody className="divide-y divide-white/[0.03]">
             {filtered.map((perm) => (
               <tr key={perm.id} className="hover:bg-white/[0.02] transition-colors">
-                <td className="px-5 py-4 text-xs font-mono font-bold text-indigo-300 flex items-center gap-2">
+                <td className="px-5 py-4 text-xs font-mono font-bold text-blue-300 flex items-center gap-2">
                   <Lock className="w-3 h-3" /> {perm.name}
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-300">{perm.resource}</td>
-                <td className="px-5 py-4 text-xs text-gray-400">{perm.action}</td>
-                <td className="px-5 py-4 text-xs text-gray-500">{perm.description ?? '—'}</td>
+                <td className="px-5 py-4 text-xs text-foreground">{perm.resource}</td>
+                <td className="px-5 py-4 text-xs text-muted-foreground">{perm.action}</td>
+                <td className="px-5 py-4 text-xs text-muted-foreground">{perm.description ?? '—'}</td>
               </tr>
             ))}
           </tbody>

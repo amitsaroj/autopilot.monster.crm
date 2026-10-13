@@ -64,7 +64,7 @@ export default function CalendarPage() {
 
   // Fill empty days
   for (let i = 0; i < startDay; i++) {
-    days.push(<div key={`empty-${i}`} className="h-40 border border-white/5 bg-white/[0.01]" />);
+    days.push(<div key={`empty-${i}`} className="h-40 border border-border bg-card" />);
   }
 
   // Fill actual days
@@ -77,16 +77,16 @@ export default function CalendarPage() {
     days.push(
       <div
         key={d}
-        className="h-40 border border-white/5 bg-white/[0.02] p-4 flex flex-col gap-2 hover:bg-white/[0.04] transition-all group overflow-hidden"
+        className="h-40 border border-border bg-card p-4 flex flex-col gap-2 hover:bg-white/[0.04] transition-all group overflow-hidden"
       >
-        <span className="text-sm font-black text-gray-500 group-hover:text-indigo-400 transition-colors uppercase tracking-widest">
+        <span className="text-sm font-semibold text-muted-foreground group-hover:text-blue-400 transition-colors uppercase tracking-wide">
           {d}
         </span>
         <div className="flex flex-col gap-1 overflow-y-auto scrollbar-none">
           {dayTasks.map((t, idx) => (
             <div
               key={t.id}
-              className="px-2 py-1 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black text-indigo-400 uppercase tracking-widest truncate group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-indigo-500/10"
+              className="px-2 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide truncate group-hover:bg-blue-500 group-hover:text-white transition-all shadow-blue-500/10"
             >
               {t.title}
             </div>
@@ -102,30 +102,30 @@ export default function CalendarPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide border border-blue-500/20">
               Temporal Orchestration Active
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight text-sans">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight text-sans">
             Scheduler Intelligence
           </h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Monitor temporal engagement vectors and scheduled operational nodes
           </p>
         </div>
-        <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-2 rounded-2xl backdrop-blur-sm shadow-inner">
+        <div className="flex items-center gap-4 bg-card border border-border p-2 rounded-2xl backdrop-blur-sm shadow-inner">
           <button
             onClick={prevMonth}
-            className="p-2.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white transition-all"
+            className="p-2.5 rounded-xl hover:bg-white/5 text-muted-foreground hover:text-foreground dark:hover:text-white transition-all"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <span className="text-sm font-black text-white uppercase tracking-widest min-w-[140px] text-center">
+          <span className="text-sm font-semibold text-foreground uppercase tracking-wide min-w-[140px] text-center">
             {monthName} {year}
           </span>
           <button
             onClick={nextMonth}
-            className="p-2.5 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white transition-all"
+            className="p-2.5 rounded-xl hover:bg-white/5 text-muted-foreground hover:text-foreground dark:hover:text-white transition-all"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -134,15 +134,15 @@ export default function CalendarPage() {
 
       {loading ? (
         <div className="flex h-[40vh] items-center justify-center">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
         </div>
       ) : (
-        <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] shadow-2xl overflow-hidden backdrop-blur-sm">
-          <div className="grid grid-cols-7 text-center border-b border-white/5 bg-white/[0.01]">
+        <div className="rounded-xl border border-border bg-card shadow-2xl overflow-hidden backdrop-blur-sm">
+          <div className="grid grid-cols-7 text-center border-b border-border bg-card">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
               <div
                 key={day}
-                className="py-6 text-[10px] font-black text-gray-500 uppercase tracking-widest border-r border-white/5 last:border-0"
+                className="py-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide border-r border-border last:border-0"
               >
                 {day}
               </div>

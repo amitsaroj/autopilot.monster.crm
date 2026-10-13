@@ -1,6 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import axios from 'axios';
+import { useState } from 'react';
+import { BrandLogo } from '@/components/brand-logo';
 import { ArrowRight, Zap, Loader2, Github } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,6 +24,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
   const router = useRouter();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -31,6 +35,7 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    setSubmitError(null);
     try {
       const user = await login(data);
       toast.success('Welcome back!');
@@ -43,8 +48,21 @@ export default function LoginPage() {
       } else {
         router.push('/dashboard');
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Invalid email or password');
+    } catch (error: unknown) {
+      if (axios.isAxiosError<{ message?: unknown }>(error)) {
+        const message = error.response?.data?.message;
+        const detail =
+          typeof message === 'string'
+            ? message
+            : !error.response
+              ? 'Unable to reach the sign-in service. Check your connection and try again.'
+              : 'Unable to sign in. Check your email and password.';
+        setSubmitError(detail);
+        toast.error(detail);
+      } else {
+        setSubmitError('Unable to sign in. Please try again.');
+        toast.error('Unable to sign in. Please try again.');
+      }
     }
   };
 
@@ -52,12 +70,7 @@ export default function LoginPage() {
     <div className="w-full max-w-md px-8 py-10 my-24 rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-card shadow-2xl">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-          <Zap className="w-5 h-5 text-white" />
-        </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
-          AutopilotMonster
-        </span>
+        <BrandLogo />
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">Welcome back</h1>
@@ -65,18 +78,32 @@ export default function LoginPage() {
         Sign in to your workspace
       </p>
 
+      {submitError && (
+        <p
+          role="alert"
+          className="mb-6 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-200 px-4 py-3 text-sm"
+        >
+          {submitError}
+        </p>
+      )}
+
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+          <label
+            htmlFor="login-email"
+            className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+          >
             Email
           </label>
           <input
+            id="login-email"
+            autoComplete="email"
             {...register('email')}
             type="email"
             placeholder="autopilots.monster@gmail.com"
             disabled={isLoading}
             className={cn(
-              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
               errors.email && 'border-red-500 focus:ring-red-500',
             )}
           />
@@ -84,23 +111,28 @@ export default function LoginPage() {
         </div>
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-sm font-medium text-gray-900 dark:text-foreground">
+            <label
+              htmlFor="login-password"
+              className="text-sm font-medium text-gray-900 dark:text-foreground"
+            >
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
             >
               Forgot password?
             </Link>
           </div>
           <input
+            id="login-password"
+            autoComplete="current-password"
             {...register('password')}
             type="password"
             placeholder="••••••••"
             disabled={isLoading}
             className={cn(
-              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
               errors.password && 'border-red-500 focus:ring-red-500',
             )}
           />
@@ -112,7 +144,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-blue-700 to-cyan-700 hover:from-blue-500 hover:to-blue-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -192,7 +224,7 @@ export default function LoginPage() {
         Don&apos;t have an account?{' '}
         <Link
           href="/register"
-          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+          className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
         >
           Get started
         </Link>

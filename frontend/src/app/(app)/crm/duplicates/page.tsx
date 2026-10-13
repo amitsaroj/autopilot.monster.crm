@@ -94,8 +94,8 @@ export default function DuplicatesPage() {
     <div className="space-y-10 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Duplicate Merge</h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Duplicate Merge</h1>
+          <p className="text-muted-foreground text-sm mt-1">
             Scan and merge duplicate contacts and companies
           </p>
         </div>
@@ -103,7 +103,7 @@ export default function DuplicatesPage() {
           type="button"
           onClick={() => void load()}
           disabled={loading}
-          className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 disabled:opacity-50"
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all flex items-center gap-2 disabled:opacity-50"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           Rescan
@@ -116,8 +116,8 @@ export default function DuplicatesPage() {
           onClick={() => setTab('contacts')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             tab === 'contacts'
-              ? 'bg-indigo-500 text-white'
-              : 'bg-white/[0.04] text-gray-400 hover:text-white'
+              ? 'bg-blue-600 text-white'
+              : 'bg-card text-muted-foreground hover:text-foreground dark:hover:text-white'
           }`}
         >
           <span className="inline-flex items-center gap-2">
@@ -129,8 +129,8 @@ export default function DuplicatesPage() {
           onClick={() => setTab('companies')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             tab === 'companies'
-              ? 'bg-indigo-500 text-white'
-              : 'bg-white/[0.04] text-gray-400 hover:text-white'
+              ? 'bg-blue-600 text-white'
+              : 'bg-card text-muted-foreground hover:text-foreground dark:hover:text-white'
           }`}
         >
           <span className="inline-flex items-center gap-2">
@@ -141,24 +141,24 @@ export default function DuplicatesPage() {
 
       {loading ? (
         <div className="flex h-[40vh] items-center justify-center">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
         </div>
       ) : tab === 'contacts' ? (
         <div className="space-y-6">
           {contactGroups.length === 0 ? (
-            <p className="text-gray-500 text-sm py-16 text-center">No duplicate contacts found</p>
+            <p className="text-muted-foreground text-sm py-16 text-center">No duplicate contacts found</p>
           ) : (
             contactGroups.map((group) => (
               <div
                 key={group.key}
-                className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-6 space-y-4"
+                className="rounded-2xl border border-border bg-card p-6 space-y-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-foreground">
                       Match: {group.matchFields.join(', ')}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Score {group.matchScore} · {group.contacts.length} records
                     </p>
                   </div>
@@ -166,7 +166,7 @@ export default function DuplicatesPage() {
                     type="button"
                     disabled={mergingKey === group.key}
                     onClick={() => void mergeContactGroup(group)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
                   >
                     {mergingKey === group.key ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -180,7 +180,7 @@ export default function DuplicatesPage() {
                   {group.contacts.map((contact) => (
                     <label
                       key={contact.id}
-                      className="flex items-center gap-3 rounded-xl border border-white/[0.05] px-4 py-3 cursor-pointer hover:border-indigo-500/30"
+                      className="flex items-center gap-3 rounded-xl border border-border px-4 py-3 cursor-pointer hover:border-blue-500/30"
                     >
                       <input
                         type="radio"
@@ -191,16 +191,16 @@ export default function DuplicatesPage() {
                         }
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-white truncate">
+                        <p className="text-sm text-foreground truncate">
                           {contact.firstName} {contact.lastName}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {contact.email}
                           {contact.phone ? ` · ${contact.phone}` : ''}
                         </p>
                       </div>
                       {primaryByGroup[group.key] === contact.id && (
-                        <span className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">
+                        <span className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-400 font-bold">
                           Primary
                         </span>
                       )}
@@ -214,19 +214,19 @@ export default function DuplicatesPage() {
       ) : (
         <div className="space-y-6">
           {companyGroups.length === 0 ? (
-            <p className="text-gray-500 text-sm py-16 text-center">No duplicate companies found</p>
+            <p className="text-muted-foreground text-sm py-16 text-center">No duplicate companies found</p>
           ) : (
             companyGroups.map((group) => (
               <div
                 key={group.key}
-                className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-6 space-y-4"
+                className="rounded-2xl border border-border bg-card p-6 space-y-4"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-foreground">
                       Match: {group.matchFields.join(', ')}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Score {group.matchScore} · {group.companies.length} records
                     </p>
                   </div>
@@ -234,7 +234,7 @@ export default function DuplicatesPage() {
                     type="button"
                     disabled={mergingKey === group.key}
                     onClick={() => void mergeCompanyGroup(group)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white disabled:opacity-50"
                   >
                     {mergingKey === group.key ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -248,7 +248,7 @@ export default function DuplicatesPage() {
                   {group.companies.map((company) => (
                     <label
                       key={company.id}
-                      className="flex items-center gap-3 rounded-xl border border-white/[0.05] px-4 py-3 cursor-pointer hover:border-indigo-500/30"
+                      className="flex items-center gap-3 rounded-xl border border-border px-4 py-3 cursor-pointer hover:border-blue-500/30"
                     >
                       <input
                         type="radio"
@@ -259,13 +259,13 @@ export default function DuplicatesPage() {
                         }
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-white truncate">{company.name}</p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-sm text-foreground truncate">{company.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
                           {company.domain || company.website || 'No domain'}
                         </p>
                       </div>
                       {primaryByGroup[group.key] === company.id && (
-                        <span className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold">
+                        <span className="text-xs uppercase tracking-wide text-blue-700 dark:text-blue-400 font-bold">
                           Primary
                         </span>
                       )}
