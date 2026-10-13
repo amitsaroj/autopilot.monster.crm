@@ -8,11 +8,11 @@ import { forecastService, ForecastSummary } from '@/services/forecast.service';
 
 const stageColor: Record<string, string> = {
   Prospecting: 'bg-muted text-muted-foreground',
-  Qualification: 'bg-blue-500/10 text-blue-400',
-  Proposal: 'bg-yellow-500/10 text-yellow-500',
+  Qualification: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+  Proposal: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400',
   Negotiation: 'bg-orange-500/10 text-orange-400',
-  Closing: 'bg-green-500/10 text-green-500',
-  Won: 'bg-green-500/10 text-green-500',
+  Closing: 'bg-green-500/10 text-green-700 dark:text-green-400',
+  Won: 'bg-green-500/10 text-green-700 dark:text-green-400',
 };
 
 export default function DealForecastPage() {
@@ -49,7 +49,7 @@ export default function DealForecastPage() {
           <h1 className="page-title">Deal Revenue Forecast</h1>
           <p className="page-description">Weighted pipeline by deal stage</p>
         </div>
-        <Link href="/crm/deals" className="text-sm text-[hsl(246,80%,60%)] hover:underline">
+        <Link href="/crm/deals" className="text-sm text-[hsl(var(--brand))] hover:underline">
           View deals
         </Link>
       </div>
@@ -77,7 +77,7 @@ export default function DealForecastPage() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="rounded-xl border border-border bg-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr className="text-left text-muted-foreground">

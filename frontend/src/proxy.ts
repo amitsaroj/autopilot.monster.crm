@@ -16,11 +16,14 @@ const publicRoutes = [
   '/401',
   '/403',
   '/openapi.json',
+  '/robots.txt',
+  '/sitemap.xml',
   '/.well-known/',
 ];
 const marketingRoutes = [
   '/pricing',
   '/features',
+  '/integrations',
   '/contact',
   '/about',
   '/services',
@@ -38,6 +41,9 @@ const marketingRoutes = [
   '/sla',
   '/terms',
   '/demo',
+  '/help',
+  '/status',
+  '/testimonials',
 ];
 
 export function proxy(request: NextRequest) {
@@ -49,6 +55,7 @@ export function proxy(request: NextRequest) {
   const isMarketingRoute =
     pathname === '/' || marketingRoutes.some((route) => pathname.startsWith(route));
   const isPublicRoute =
+    pathname === '/brand/autopilot-monster.png' ||
     publicRoutes.some((route) => pathname.startsWith(route)) ||
     isMarketingRoute ||
     pathname.startsWith('/public/');

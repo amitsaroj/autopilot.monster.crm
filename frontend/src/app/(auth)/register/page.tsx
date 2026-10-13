@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BrandLogo } from '@/components/brand-logo';
 import { ArrowRight, Zap, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,12 +47,7 @@ export default function RegisterPage() {
     <div className="w-full max-w-md px-8 py-10 my-24 rounded-2xl border border-gray-200 dark:border-border bg-white dark:bg-card shadow-2xl">
       {/* Logo */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-          <Zap className="w-5 h-5 text-white" />
-        </div>
-        <span className="text-xl font-black text-gray-900 dark:text-foreground tracking-tight">
-          AutopilotMonster
-        </span>
+        <BrandLogo />
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground mb-1">
@@ -62,18 +58,18 @@ export default function RegisterPage() {
       </p>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            <label htmlFor="register-firstName" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
               First name
             </label>
-            <input
+            <input id="register-firstName"
               {...register('firstName')}
               type="text"
               placeholder="John"
               disabled={isLoading}
               className={cn(
-                'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+                'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
                 errors.firstName && 'border-red-500 focus:ring-red-500',
               )}
             />
@@ -82,16 +78,16 @@ export default function RegisterPage() {
             )}
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            <label htmlFor="register-lastName" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
               Last name
             </label>
-            <input
+            <input id="register-lastName"
               {...register('lastName')}
               type="text"
               placeholder="Doe"
               disabled={isLoading}
               className={cn(
-                'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+                'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
                 errors.lastName && 'border-red-500 focus:ring-red-500',
               )}
             />
@@ -102,16 +98,16 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+          <label htmlFor="register-tenantName" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
             Workspace Name
           </label>
-          <input
+          <input id="register-tenantName"
             {...register('tenantName')}
             type="text"
             placeholder="Acme Corp"
             disabled={isLoading}
             className={cn(
-              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
               errors.tenantName && 'border-red-500 focus:ring-red-500',
             )}
           />
@@ -121,16 +117,16 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+          <label htmlFor="register-email" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
             Work email
           </label>
-          <input
+          <input id="register-email"
             {...register('email')}
             type="email"
             placeholder="autopilots.monster@gmail.com"
             disabled={isLoading}
             className={cn(
-              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
               errors.email && 'border-red-500 focus:ring-red-500',
             )}
           />
@@ -138,16 +134,16 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+          <label htmlFor="register-password" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
             Password
           </label>
-          <input
+          <input id="register-password"
             {...register('password')}
             type="password"
             placeholder="Min 8 characters"
             disabled={isLoading}
             className={cn(
-              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition',
+              'w-full px-3.5 py-2.5 rounded-lg border border-gray-300 dark:border-input bg-gray-50 dark:bg-background text-gray-900 dark:text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition',
               errors.password && 'border-red-500 focus:ring-red-500',
             )}
           />
@@ -159,7 +155,7 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-gradient-to-r from-blue-700 to-cyan-700 hover:from-blue-500 hover:to-blue-500 text-white rounded-lg font-semibold text-sm transition-colors shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -176,7 +172,7 @@ export default function RegisterPage() {
         Already have an account?{' '}
         <Link
           href="/login"
-          className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
+          className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
         >
           Sign in
         </Link>

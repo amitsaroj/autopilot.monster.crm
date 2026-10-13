@@ -37,8 +37,8 @@ function unwrapArr<T>(response: any): T[] {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  TRIALING: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  ACTIVE: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+  TRIALING: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
   CANCELLED: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
 
@@ -69,7 +69,7 @@ export default function SubAdminBillingPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -77,62 +77,62 @@ export default function SubAdminBillingPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Billing</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Billing</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Workspace Subscription &amp; Invoices
         </p>
       </div>
 
       {subscription ? (
-        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+        <div className="p-6 rounded-2xl bg-card border border-border">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-indigo-500/10">
-                <CreditCard className="w-5 h-5 text-indigo-400" />
+              <div className="p-3 rounded-xl bg-blue-500/10">
+                <CreditCard className="w-5 h-5 text-blue-700 dark:text-blue-400" />
               </div>
-              <p className="text-base font-black text-white">Current Subscription</p>
+              <p className="text-base font-semibold text-foreground">Current Subscription</p>
             </div>
             <span
-              className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase ${
+              className={`px-2.5 py-1 rounded-full border text-xs font-semibold uppercase ${
                 STATUS_STYLES[subscription.status] ??
-                'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                'bg-gray-500/10 text-muted-foreground border-gray-500/20'
               }`}
             >
               {subscription.status}
             </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-3 rounded-xl bg-white/[0.02]">
-              <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">
+            <div className="p-3 rounded-xl bg-card">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Billing Cycle
               </p>
-              <p className="text-sm font-black text-white">{subscription.billingCycle}</p>
+              <p className="text-sm font-semibold text-foreground">{subscription.billingCycle}</p>
             </div>
-            <div className="p-3 rounded-xl bg-white/[0.02]">
-              <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">
+            <div className="p-3 rounded-xl bg-card">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Started
               </p>
-              <p className="text-sm font-black text-white">
+              <p className="text-sm font-semibold text-foreground">
                 {subscription.startedAt
                   ? new Date(subscription.startedAt).toLocaleDateString()
                   : '—'}
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-white/[0.02]">
-              <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">
+            <div className="p-3 rounded-xl bg-card">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Current Period Ends
               </p>
-              <p className="text-sm font-black text-white">
+              <p className="text-sm font-semibold text-foreground">
                 {subscription.currentPeriodEnd
                   ? new Date(subscription.currentPeriodEnd).toLocaleDateString()
                   : '—'}
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-white/[0.02]">
-              <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">
+            <div className="p-3 rounded-xl bg-card">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Trial Ends
               </p>
-              <p className="text-sm font-black text-white">
+              <p className="text-sm font-semibold text-foreground">
                 {subscription.trialEndsAt
                   ? new Date(subscription.trialEndsAt).toLocaleDateString()
                   : '—'}
@@ -141,17 +141,17 @@ export default function SubAdminBillingPage() {
           </div>
         </div>
       ) : (
-        <div className="p-10 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center text-gray-500 text-sm">
+        <div className="p-10 rounded-2xl bg-card border border-border text-center text-muted-foreground text-sm">
           No active subscription found.
         </div>
       )}
 
       <div>
-        <h2 className="text-sm font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-          <Receipt className="w-4 h-4 text-indigo-400" /> Invoices
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+          <Receipt className="w-4 h-4 text-blue-700 dark:text-blue-400" /> Invoices
         </h2>
         {invoices.length === 0 ? (
-          <div className="p-10 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center text-gray-500 text-sm">
+          <div className="p-10 rounded-2xl bg-card border border-border text-center text-muted-foreground text-sm">
             No invoices yet.
           </div>
         ) : (
@@ -159,17 +159,17 @@ export default function SubAdminBillingPage() {
             {invoices.map((inv) => (
               <div
                 key={inv.id}
-                className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-between"
+                className="p-4 rounded-xl bg-card border border-border flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-4 h-4 text-indigo-400" />
-                  <p className="text-sm font-black text-white">{inv.number ?? inv.id}</p>
+                  <CheckCircle2 className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+                  <p className="text-sm font-semibold text-foreground">{inv.number ?? inv.id}</p>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '—'}
                   </span>
-                  <span className="text-sm font-black text-white">
+                  <span className="text-sm font-semibold text-foreground">
                     {inv.amount != null ? `$${inv.amount}` : '—'}
                   </span>
                 </div>

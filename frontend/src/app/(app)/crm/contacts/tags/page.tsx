@@ -38,7 +38,7 @@ export default function ContactTagsPage() {
         <button
           type="button"
           onClick={() => void handleCreate()}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
         >
           Add
         </button>

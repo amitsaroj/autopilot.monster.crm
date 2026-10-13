@@ -98,7 +98,7 @@ export default function FlowBuilderPage() {
       type.includes('MESSAGE') || type.includes('TEMPLATE')
         ? '#fef3c7'
         : type.includes('CONDITION') || type.includes('AWAIT')
-          ? '#f3e8ff'
+          ? '#e0f2fe'
           : '#d1fae5';
 
     const isTrigger = type.includes('TRIGGER');
@@ -178,7 +178,7 @@ export default function FlowBuilderPage() {
       <div className="h-16 border-b flex items-center justify-between px-6 bg-white z-10">
         <div>
           <h1 className="text-lg font-bold text-gray-900 tracking-tight">WhatsApp Flow Builder</h1>
-          <p className="text-xs text-gray-500">Design automated chat trees.</p>
+          <p className="text-xs text-muted-foreground">Design automated chat trees.</p>
         </div>
         <div className="flex items-center gap-3">
           <button className="px-4 py-2 border rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
@@ -210,7 +210,7 @@ export default function FlowBuilderPage() {
         </ReactFlow>
 
         <div className="absolute top-4 left-4 bg-white border shadow-lg rounded-xl p-3 flex flex-col gap-2 z-10 w-48">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 text-center">
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 text-center">
             Nodes
           </h3>
 
@@ -220,19 +220,19 @@ export default function FlowBuilderPage() {
                 onClick={() => addNode('SEND_MESSAGE', 'Send Message')}
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#fef3c7] transition-colors border border-transparent hover:border-[#f59e0b] text-sm text-gray-700 w-full text-left"
               >
-                <MessageCircle className="w-4 h-4 text-amber-500" /> Send Message
+                <MessageCircle className="w-4 h-4 text-amber-700 dark:text-amber-400" /> Send Message
               </button>
               <button
                 onClick={() => addNode('CONDITION', 'Condition Branch')}
-                className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#f3e8ff] transition-colors border border-transparent hover:border-[#a855f7] text-sm text-gray-700 w-full text-left"
+                className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#e0f2fe] transition-colors border border-transparent hover:border-[#0089a8] text-sm text-gray-700 w-full text-left"
               >
-                <GitBranch className="w-4 h-4 text-purple-500" /> Condition Branch
+                <GitBranch className="w-4 h-4 text-blue-500" /> Condition Branch
               </button>
               <button
                 onClick={() => addNode('ASSIGN_AGENT', 'System Action')}
                 className="flex items-center gap-2 p-2 rounded-lg hover:bg-[#d1fae5] transition-colors border border-transparent hover:border-[#10b981] text-sm text-gray-700 w-full text-left"
               >
-                <Zap className="w-4 h-4 text-green-500" /> System Action
+                <Zap className="w-4 h-4 text-green-700 dark:text-green-400" /> System Action
               </button>
             </>
           ) : (

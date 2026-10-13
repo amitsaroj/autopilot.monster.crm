@@ -120,7 +120,7 @@ export default function BackupPage() {
           type="button"
           disabled={creating}
           onClick={() => void handleCreateBackup()}
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
         >
           {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           Create Backup Now
@@ -129,7 +129,7 @@ export default function BackupPage() {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="stat-card flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-muted text-blue-400">
+          <div className="p-3 rounded-lg bg-muted text-blue-700 dark:text-blue-400">
             <Archive className="h-5 w-5" />
           </div>
           <div>
@@ -138,7 +138,7 @@ export default function BackupPage() {
           </div>
         </div>
         <div className="stat-card flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-muted text-purple-400">
+          <div className="p-3 rounded-lg bg-muted text-blue-700 dark:text-blue-400">
             <HardDrive className="h-5 w-5" />
           </div>
           <div>
@@ -176,7 +176,7 @@ export default function BackupPage() {
               <button
                 type="button"
                 onClick={() => void load()}
-                className="block mt-2 text-[hsl(246,80%,60%)] hover:underline"
+                className="block mt-2 text-[hsl(var(--brand))] hover:underline"
               >
                 Retry
               </button>
@@ -208,7 +208,7 @@ export default function BackupPage() {
                     </p>
                   </div>
                   {isComplete && (
-                    <span className="flex items-center gap-1 text-xs text-green-500 shrink-0">
+                    <span className="flex items-center gap-1 text-xs text-green-700 dark:text-green-400 shrink-0">
                       <CheckCircle className="h-3 w-3" />
                       Complete
                     </span>
@@ -245,7 +245,7 @@ export default function BackupPage() {
       </div>
 
       <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4 flex items-start gap-3">
-        <Shield className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+        <Shield className="h-4 w-4 text-yellow-700 dark:text-yellow-400 shrink-0 mt-0.5" />
         <p className="text-sm text-yellow-600 dark:text-yellow-400">
           Restoring a backup will overwrite your current data. This action cannot be undone.
           Download a fresh backup before restoring.

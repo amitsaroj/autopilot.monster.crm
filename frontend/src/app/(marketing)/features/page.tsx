@@ -30,7 +30,7 @@ const featureSections = [
     title: 'Autonomous AI That Sells',
     desc: 'Deploy GPT-powered agents that qualify leads, handle objections, book meetings, and nurture prospects 24/7.',
     icon: Sparkles,
-    color: 'from-purple-500 to-pink-400',
+    color: 'from-blue-500 to-pink-400',
     href: '/product/ai',
   },
   {
@@ -54,7 +54,7 @@ const featureSections = [
     title: 'Automation Without Code',
     desc: 'Drag-and-drop builder with triggers, conditions, delays, branches, and multi-channel actions.',
     icon: GitBranch,
-    color: 'from-indigo-500 to-violet-400',
+    color: 'from-blue-500 to-blue-400',
     href: '/product/workflow',
   },
   {
@@ -109,10 +109,10 @@ export default function FeaturesPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Features
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Everything in one
             <br />
             revenue platform
@@ -145,7 +145,7 @@ export default function FeaturesPage() {
                     >
                       {section.tag}
                     </span>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-400 transition-colors">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-400 transition-colors">
                       {section.title}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
@@ -153,7 +153,7 @@ export default function FeaturesPage() {
                     </p>
                   </div>
                   <ArrowRight
-                    className="w-5 h-5 text-gray-400 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all shrink-0 hidden sm:block"
+                    className="w-5 h-5 text-gray-400 group-hover:text-blue-400 group-hover:translate-x-1 transition-all shrink-0 hidden sm:block"
                     aria-hidden="true"
                   />
                 </article>

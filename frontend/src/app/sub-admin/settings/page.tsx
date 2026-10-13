@@ -21,9 +21,9 @@ function unwrap<T>(response: any, fallback: T): T {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  ACTIVE: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
   SUSPENDED: 'bg-red-500/10 text-red-400 border-red-500/20',
-  TRIAL: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  TRIAL: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
 };
 
 export default function SubAdminSettingsPage() {
@@ -81,7 +81,7 @@ export default function SubAdminSettingsPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -90,15 +90,15 @@ export default function SubAdminSettingsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Settings</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Settings</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Workspace Configuration
           </p>
         </div>
         {settings?.status && (
           <span
-            className={`px-3 py-1 rounded-full border text-[10px] font-black uppercase ${
-              STATUS_STYLES[settings.status] ?? 'bg-white/[0.04] text-gray-400 border-white/[0.06]'
+            className={`px-3 py-1 rounded-full border text-xs font-semibold uppercase ${
+              STATUS_STYLES[settings.status] ?? 'bg-card text-muted-foreground border-border'
             }`}
           >
             {settings.status}
@@ -106,56 +106,56 @@ export default function SubAdminSettingsPage() {
         )}
       </div>
 
-      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] space-y-5 max-w-2xl">
+      <div className="p-6 rounded-2xl bg-card border border-border space-y-5 max-w-2xl">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-3 rounded-xl bg-indigo-500/10">
-            <Settings className="w-5 h-5 text-indigo-400" />
+          <div className="p-3 rounded-xl bg-blue-500/10">
+            <Settings className="w-5 h-5 text-blue-700 dark:text-blue-400" />
           </div>
           <div>
-            <p className="text-sm font-black text-white">{settings?.slug}</p>
-            <p className="text-xs text-gray-500">Workspace ID: {settings?.id}</p>
+            <p className="text-sm font-semibold text-foreground">{settings?.slug}</p>
+            <p className="text-xs text-muted-foreground">Workspace ID: {settings?.id}</p>
           </div>
         </div>
 
         <div>
-          <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-1.5">
+          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-1.5">
             Workspace Name
           </label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-sm text-gray-200 outline-none focus:border-indigo-500/30"
+            className="w-full p-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/30"
           />
         </div>
 
         <div>
-          <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-1.5">
+          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-1.5">
             Custom Domain
           </label>
           <input
             value={customDomain}
             onChange={(e) => setCustomDomain(e.target.value)}
             placeholder="app.yourcompany.com"
-            className="w-full p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-sm text-gray-200 outline-none focus:border-indigo-500/30"
+            className="w-full p-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/30"
           />
         </div>
 
         <div>
-          <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest block mb-1.5">
+          <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-1.5">
             Branding (JSON)
           </label>
           <textarea
             value={branding}
             onChange={(e) => setBranding(e.target.value)}
             rows={6}
-            className="w-full p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-sm text-gray-200 font-mono outline-none focus:border-indigo-500/30"
+            className="w-full p-3 rounded-xl bg-card border border-border text-sm text-foreground font-mono outline-none focus:border-blue-500/30"
           />
         </div>
 
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 disabled:opacity-50 flex items-center gap-2"
+          className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50 flex items-center gap-2"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Save Settings

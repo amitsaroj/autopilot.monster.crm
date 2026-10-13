@@ -49,7 +49,7 @@ export default function AnalyticsDashboardDetailPage({
     <div className="space-y-6 animate-fade-in">
       <Link
         href="/analytics/dashboards"
-        className="inline-flex items-center gap-2 text-sm text-[hsl(246,80%,60%)]"
+        className="inline-flex items-center gap-2 text-sm text-[hsl(var(--brand))]"
       >
         <ArrowLeft className="h-4 w-4" /> Back to dashboards
       </Link>

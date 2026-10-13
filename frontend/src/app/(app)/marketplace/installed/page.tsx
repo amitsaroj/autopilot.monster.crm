@@ -53,7 +53,7 @@ export default function MarketplaceInstalledPage() {
           <h1 className="page-title">Installed Apps</h1>
           <p className="page-description">Your active integrations</p>
         </div>
-        <Link href="/marketplace" className="text-sm text-[hsl(246,80%,60%)] hover:underline">
+        <Link href="/marketplace" className="text-sm text-[hsl(var(--brand))] hover:underline">
           Browse marketplace
         </Link>
       </div>
@@ -74,7 +74,7 @@ export default function MarketplaceInstalledPage() {
                 <div>
                   <p className="font-medium">{item.plugin?.name ?? item.pluginId}</p>
                   <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3 text-green-500" /> Installed
+                    <CheckCircle className="h-3 w-3 text-green-700 dark:text-green-400" /> Installed
                   </p>
                 </div>
               </div>

@@ -36,7 +36,7 @@ import {
 } from '@/services/analytics.service';
 import toast from 'react-hot-toast';
 
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#ef4444', '#f59e0b'];
+const COLORS = ['#155eef', '#168bff', '#ec4899', '#f43f5e', '#ef4444', '#f59e0b'];
 
 export default function AnalyticsPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
@@ -67,7 +67,7 @@ export default function AnalyticsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -110,16 +110,16 @@ export default function AnalyticsPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
             Executive Intelligence
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 italic">
+          <p className="text-muted-foreground dark:text-gray-400 mt-1 italic">
             Real-time performance metrics across your CRM ecosystem.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-card border border-gray-100 dark:border-border rounded-xl text-sm font-bold text-muted-foreground hover:bg-gray-50 transition shadow-sm">
             <Calendar className="w-4 h-4" />
             Last 30 Days
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 transition">
+          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition">
             <Download className="w-4 h-4" />
             Export Report
           </button>
@@ -130,14 +130,14 @@ export default function AnalyticsPage() {
         {kpis.map((kpi) => (
           <div
             key={kpi.label}
-            className="p-6 rounded-2xl bg-white dark:bg-card border border-gray-100 dark:border-border shadow-sm group hover:border-indigo-500/30 transition-all"
+            className="p-6 rounded-2xl bg-white dark:bg-card border border-gray-100 dark:border-border shadow-sm group hover:border-blue-500/30 transition-all"
           >
             <div className="flex items-start justify-between mb-4">
-              <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600">
+              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600">
                 <kpi.icon className="w-5 h-5" />
               </div>
               <div
-                className={`flex items-center gap-1 text-xs font-bold ${kpi.isUp ? 'text-emerald-500' : 'text-rose-500'}`}
+                className={`flex items-center gap-1 text-xs font-bold ${kpi.isUp ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-500'}`}
               >
                 {kpi.isUp ? (
                   <ArrowUpRight className="w-3 h-3" />
@@ -148,8 +148,8 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500 dark:text-gray-400">{kpi.label}</p>
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white mt-1">
+              <p className="text-sm font-bold text-muted-foreground dark:text-gray-400">{kpi.label}</p>
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
                 {kpi.value}
               </h3>
             </div>
@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
               Deal Pipeline Distribution
             </h3>
             <div className="p-2 bg-gray-50 dark:bg-white/5 rounded-lg">
-              <Activity className="w-4 h-4 text-indigo-600" />
+              <Activity className="w-4 h-4 text-blue-600" />
             </div>
           </div>
           <div className="h-[300px] w-full">
@@ -186,7 +186,7 @@ export default function AnalyticsPage() {
                     boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
                   }}
                 />
-                <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey="value" fill="#155eef" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -197,7 +197,7 @@ export default function AnalyticsPage() {
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               Lead Funnel Analysis
             </h3>
-            <Filter className="w-4 h-4 text-gray-400" />
+            <Filter className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -225,7 +225,7 @@ export default function AnalyticsPage() {
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                  <span className="text-xs font-bold text-muted-foreground dark:text-gray-400">
                     {entry.name} ({entry.count})
                   </span>
                 </div>
@@ -244,8 +244,8 @@ export default function AnalyticsPage() {
             <AreaChart data={pipeline}>
               <defs>
                 <linearGradient id="colorAmt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#155eef" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#155eef" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
@@ -260,7 +260,7 @@ export default function AnalyticsPage() {
               <Area
                 type="monotone"
                 dataKey="amount"
-                stroke="#6366f1"
+                stroke="#155eef"
                 fillOpacity={1}
                 fill="url(#colorAmt)"
                 strokeWidth={3}

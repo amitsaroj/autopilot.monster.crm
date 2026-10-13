@@ -32,10 +32,10 @@ export default function SLAPage() {
           variants={fadeUp}
           className="mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-500 uppercase tracking-wider mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-4">
             Legal & Support
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
             Service Level Agreement (SLA)
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
@@ -54,7 +54,7 @@ export default function SLAPage() {
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-emerald-500" />
+                  <Activity className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   Our Commitment
@@ -70,8 +70,8 @@ export default function SLAPage() {
 
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-indigo-500" />
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-blue-500" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   Uptime Guarantee
@@ -85,7 +85,7 @@ export default function SLAPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04] flex items-center gap-4">
-                  <Clock className="w-8 h-8 text-indigo-500 shrink-0" />
+                  <Clock className="w-8 h-8 text-blue-500 shrink-0" />
                   <div>
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white m-0">
                       24/7 Monitoring
@@ -112,7 +112,7 @@ export default function SLAPage() {
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-amber-500" />
+                  <ShieldCheck className="w-5 h-5 text-amber-700 dark:text-amber-400" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   Support Response Times
@@ -143,7 +143,7 @@ export default function SLAPage() {
                       <td className="py-3 text-gray-600 dark:text-gray-400">&lt; 4 Hours</td>
                     </tr>
                     <tr>
-                      <td className="py-3 text-amber-500 font-bold">P2 - Standard Issue</td>
+                      <td className="py-3 text-amber-700 dark:text-amber-400 font-bold">P2 - Standard Issue</td>
                       <td className="py-3 text-gray-600 dark:text-gray-400">&lt; 12 Hours</td>
                     </tr>
                     <tr>
@@ -157,8 +157,8 @@ export default function SLAPage() {
 
             <section>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <HelpCircle className="w-5 h-5 text-indigo-500" />
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <HelpCircle className="w-5 h-5 text-blue-500" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">Exclusions</h2>
               </div>

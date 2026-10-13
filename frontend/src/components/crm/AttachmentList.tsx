@@ -83,7 +83,7 @@ export function AttachmentList({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-2">
           <Paperclip className="w-4 h-4" /> Documents & Attachments
         </h3>
         <label className="p-2 cursor-pointer bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-100 transition">
@@ -101,7 +101,7 @@ export function AttachmentList({
         {isUploading && (
           <div className="p-4 bg-gray-50/50 dark:bg-card/50 rounded-2xl border border-gray-100 dark:border-border flex items-center gap-4 animate-pulse">
             <div className="w-10 h-10 rounded-xl bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
             <div className="flex-1">
               <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
@@ -112,8 +112,8 @@ export function AttachmentList({
 
         {attachments.length === 0 && !isUploading ? (
           <div className="col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-border rounded-3xl opacity-40">
-            <Paperclip className="w-8 h-8 mb-2 text-gray-300" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+            <Paperclip className="w-8 h-8 mb-2 text-foreground" />
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               No attachments yet
             </span>
           </div>
@@ -125,7 +125,7 @@ export function AttachmentList({
                 key={file.id}
                 className="group flex items-center gap-4 p-4 bg-white dark:bg-card/50 rounded-2xl border border-gray-100 dark:border-border hover:border-emerald-100 dark:hover:border-emerald-900/50 shadow-soft transition"
               >
-                <div className="shrink-0 w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 group-hover:text-emerald-500 transition">
+                <div className="shrink-0 w-12 h-12 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-muted-foreground group-hover:text-emerald-500 transition">
                   <Icon className="w-6 h-6" />
                 </div>
 
@@ -133,7 +133,7 @@ export function AttachmentList({
                   <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
                     {file.name}
                   </h4>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mt-1">
                     {formatFileSize(file.size)} • {new Date(file.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -143,14 +143,14 @@ export function AttachmentList({
                     href={file.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-gray-400 hover:text-indigo-500 transition"
+                    className="p-2 text-muted-foreground hover:text-blue-500 transition"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
                   <button
                     onClick={() => handleDelete(file.id)}
                     disabled={isDeleting === file.id}
-                    className="p-2 text-gray-300 hover:text-red-500 transition disabled:opacity-50"
+                    className="p-2 text-foreground hover:text-red-500 transition disabled:opacity-50"
                   >
                     {isDeleting === file.id ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

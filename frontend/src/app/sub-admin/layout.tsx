@@ -19,11 +19,11 @@ export default async function SubAdminLayout({ children }: { children: React.Rea
   if (!canAccessRoleRoute('/sub-admin', payload.roles)) redirect('/403');
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="app-shell flex h-dvh overflow-hidden">
       <SubAdminSidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex min-w-0 flex-col flex-1 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-y-auto p-8 bg-background custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background custom-scrollbar">
           <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>

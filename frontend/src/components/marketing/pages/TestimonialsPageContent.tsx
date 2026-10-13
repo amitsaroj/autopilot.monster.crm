@@ -25,10 +25,10 @@ export default function TestimonialsPageContent({ testimonials }: TestimonialsPa
           transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-4 block">
             Testimonials
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Loved by revenue teams
           </h1>
           <p className="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
@@ -46,7 +46,7 @@ export default function TestimonialsPageContent({ testimonials }: TestimonialsPa
               transition={{ delay: i * 0.08, duration: 0.5 }}
               className="p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] flex flex-col"
             >
-              <Quote className="w-8 h-8 text-indigo-400 mb-4" aria-hidden="true" />
+              <Quote className="w-8 h-8 text-blue-400 mb-4" aria-hidden="true" />
               <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed flex-1 mb-6">
                 &ldquo;{item.quote}&rdquo;
               </p>
@@ -73,7 +73,7 @@ export default function TestimonialsPageContent({ testimonials }: TestimonialsPa
           </p>
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-2xl shadow-indigo-500/25 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 text-base font-semibold text-white bg-gradient-to-r from-blue-700 to-cyan-700 rounded-xl shadow-2xl shadow-blue-500/25 hover:scale-[1.02] transition-all"
           >
             Start Free Trial <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>

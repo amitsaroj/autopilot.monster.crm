@@ -4,9 +4,9 @@ import { HelpCircle } from 'lucide-react';
 
 export const QuestionNode = memo(({ data }: NodeProps) => {
   return (
-    <div className="px-4 py-3 shadow-xl rounded-xl bg-white dark:bg-[#1f2937] border-2 border-purple-500/50 min-w-[200px]">
+    <div className="px-4 py-3 shadow-xl rounded-xl bg-white dark:bg-[#1f2937] border-2 border-blue-500/50 min-w-[200px]">
       <div className="flex items-center gap-2 mb-2">
-        <div className="w-6 h-6 rounded-md bg-purple-500 flex items-center justify-center shrink-0">
+        <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center shrink-0">
           <HelpCircle className="w-3.5 h-3.5 text-white" />
         </div>
         <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -22,12 +22,12 @@ export const QuestionNode = memo(({ data }: NodeProps) => {
       <Handle
         type="target"
         position={Position.Top}
-        className="w-3 h-3 bg-purple-500 border-2 border-white dark:border-[#1f2937]"
+        className="w-3 h-3 bg-blue-600 border-2 border-white dark:border-[#1f2937]"
       />
       <Handle
         type="source"
         position={Position.Bottom}
-        className="w-3 h-3 bg-purple-500 border-2 border-white dark:border-[#1f2937]"
+        className="w-3 h-3 bg-blue-600 border-2 border-white dark:border-[#1f2937]"
       />
     </div>
   );

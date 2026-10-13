@@ -38,35 +38,35 @@ export default function WhatsAppMetricsPage() {
       value: metrics.total.toLocaleString(),
       change: '',
       trending: 'up' as const,
-      color: 'text-emerald-400',
+      color: 'text-emerald-700 dark:text-emerald-400',
     },
     {
       label: 'Outbound',
       value: metrics.outbound.toLocaleString(),
       change: `${deliveryRate}% of total`,
       trending: 'up' as const,
-      color: 'text-blue-400',
+      color: 'text-blue-700 dark:text-blue-400',
     },
     {
       label: 'Inbound',
       value: metrics.inbound.toLocaleString(),
       change: `${responseRate}% response`,
       trending: metrics.inbound >= metrics.outbound ? ('up' as const) : ('down' as const),
-      color: 'text-amber-400',
+      color: 'text-amber-700 dark:text-amber-400',
     },
     {
       label: 'Active Threads',
       value: metrics.inbound.toLocaleString(),
       change: 'inbound conversations',
       trending: 'up' as const,
-      color: 'text-violet-400',
+      color: 'text-blue-700 dark:text-blue-400',
     },
   ];
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-700 dark:text-emerald-400" />
       </div>
     );
   }
@@ -76,20 +76,20 @@ export default function WhatsAppMetricsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wide border border-emerald-500/20">
               Analytics Layer Active
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight text-sans">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight text-sans">
             Telemetric Intelligence
           </h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             WhatsApp message performance from live tenant data
           </p>
         </div>
         <button
           onClick={() => void load()}
-          className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-2 group"
+          className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-2 group"
         >
           <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-all" /> Refresh
         </button>
@@ -99,9 +99,9 @@ export default function WhatsAppMetricsPage() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-2xl relative overflow-hidden group hover:border-emerald-500/20 transition-all"
+            className="p-8 rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group hover:border-emerald-500/20 transition-all"
           >
-            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-6">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-6">
               {s.label}
             </p>
             <div className="flex items-baseline gap-3">
@@ -110,7 +110,7 @@ export default function WhatsAppMetricsPage() {
                 <span
                   className={cn(
                     'text-[10px] font-black uppercase flex items-center gap-1',
-                    s.trending === 'up' ? 'text-emerald-500' : 'text-red-500',
+                    s.trending === 'up' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-500',
                   )}
                 >
                   <TrendingUp className={cn('w-3 h-3', s.trending === 'down' && 'rotate-180')} />
@@ -123,53 +123,53 @@ export default function WhatsAppMetricsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl min-h-[400px] flex flex-col items-center justify-center">
+        <div className="lg:col-span-2 p-10 rounded-xl bg-card border border-border shadow-2xl min-h-[400px] flex flex-col items-center justify-center">
           {metrics.total === 0 ? (
             <>
               <MessageSquare className="w-20 h-20 text-gray-800 mb-6 opacity-20" />
-              <h3 className="text-sm font-black text-gray-600 uppercase tracking-widest italic">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide italic">
                 No WhatsApp messages yet
               </h3>
-              <p className="text-[10px] text-gray-700 font-bold uppercase mt-2 tracking-tighter">
+              <p className="text-xs text-gray-700 font-bold uppercase mt-2 tracking-tighter">
                 Metrics will populate once messages are sent or received
               </p>
             </>
           ) : (
             <>
-              <BarChart3 className="w-20 h-20 text-emerald-500/30 mb-6" />
-              <h3 className="text-sm font-black text-white uppercase tracking-widest">
+              <BarChart3 className="w-20 h-20 text-emerald-700 dark:text-emerald-400/30 mb-6" />
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
                 {metrics.outbound.toLocaleString()} outbound · {metrics.inbound.toLocaleString()}{' '}
                 inbound
               </h3>
-              <p className="text-[10px] text-gray-500 font-bold uppercase mt-2 tracking-tighter">
+              <p className="text-xs text-muted-foreground font-bold uppercase mt-2 tracking-tighter">
                 Live message counts from analytics API
               </p>
             </>
           )}
         </div>
 
-        <div className="lg:col-span-1 p-10 rounded-[50px] bg-white/[0.01] border border-white/[0.05] shadow-2xl space-y-6">
-          <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+        <div className="lg:col-span-1 p-10 rounded-xl bg-card border border-border shadow-2xl space-y-6">
+          <h2 className="text-xl font-semibold text-foreground uppercase tracking-tighter">
             Channel Summary
           </h2>
           <div className="space-y-4">
-            <div className="flex justify-between items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <div className="flex justify-between items-center p-4 rounded-2xl bg-card border border-border">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Total Volume
               </span>
-              <span className="text-[10px] font-black text-emerald-400">{metrics.total}</span>
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{metrics.total}</span>
             </div>
-            <div className="flex justify-between items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <div className="flex justify-between items-center p-4 rounded-2xl bg-card border border-border">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Outbound Share
               </span>
-              <span className="text-[10px] font-black text-blue-400">{deliveryRate}%</span>
+              <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">{deliveryRate}%</span>
             </div>
-            <div className="flex justify-between items-center p-4 rounded-2xl bg-white/[0.02] border border-white/5">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <div className="flex justify-between items-center p-4 rounded-2xl bg-card border border-border">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Inbound Share
               </span>
-              <span className="text-[10px] font-black text-amber-400">
+              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
                 {metrics.total > 0 ? Math.round((metrics.inbound / metrics.total) * 100) : 0}%
               </span>
             </div>

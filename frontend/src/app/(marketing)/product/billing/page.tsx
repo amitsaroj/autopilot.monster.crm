@@ -47,7 +47,7 @@ export default function ProductBillingPage() {
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-pink-500/20 bg-pink-500/5 text-sm font-medium text-pink-400 mb-6">
             <CreditCard className="w-4 h-4" /> Billing
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Billing that
             <br />
             scales with you
@@ -57,7 +57,7 @@ export default function ProductBillingPage() {
           </p>
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-pink-600 to-rose-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-2xl shadow-pink-500/20 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-semibold rounded-xl shadow-2xl shadow-pink-500/20 hover:scale-[1.02] transition-all"
           >
             Get Started <ArrowRight className="w-4 h-4" />
           </Link>

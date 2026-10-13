@@ -72,22 +72,22 @@ export default function CampaignsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case CampaignStatus.RUNNING:
-        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+        return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20';
       case CampaignStatus.PAUSED:
-        return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+        return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20';
       case CampaignStatus.COMPLETED:
         return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case CampaignStatus.DRAFT:
-        return 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 border-transparent';
+        return 'bg-gray-100 dark:bg-white/10 text-muted-foreground dark:text-gray-400 border-transparent';
       default:
-        return 'bg-gray-100 text-gray-500 border-transparent';
+        return 'bg-gray-100 text-muted-foreground border-transparent';
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -101,8 +101,8 @@ export default function CampaignsPage() {
       label: 'Active Campaigns',
       value: activeCount.toString(),
       icon: Play,
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-500/10',
+      color: 'text-blue-600',
+      bg: 'bg-blue-500/10',
     },
     {
       label: 'Total Leads',
@@ -134,7 +134,7 @@ export default function CampaignsPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
             Marketing Campaigns
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 italic">
+          <p className="text-muted-foreground dark:text-gray-400 mt-1 italic">
             Optimize your outreach across multiple channels.
           </p>
         </div>
@@ -144,7 +144,7 @@ export default function CampaignsPage() {
               setShowUpload(true);
               setStep(1);
             }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-xl shadow-indigo-500/20 hover:scale-[1.02] transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-xl shadow-blue-500/20 hover:scale-[1.02] transition-all"
           >
             <Plus className="w-4 h-4" />
             New Campaign
@@ -162,7 +162,7 @@ export default function CampaignsPage() {
             className="p-6 rounded-2xl bg-white dark:bg-card border border-gray-100 dark:border-border shadow-sm flex items-start justify-between"
           >
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+              <p className="text-sm font-medium text-muted-foreground dark:text-gray-400 mb-1">
                 {stat.label}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
@@ -179,19 +179,19 @@ export default function CampaignsPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50/50 dark:bg-transparent text-left">
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground dark:text-gray-400 uppercase tracking-wider">
                   Campaign Name
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground dark:text-gray-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground dark:text-gray-400 uppercase tracking-wider">
                   Progress
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground dark:text-gray-400 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground dark:text-gray-400 uppercase tracking-wider">
                   Qualified
                 </th>
                 <th className="px-6 py-4 text-right"></th>
@@ -205,7 +205,7 @@ export default function CampaignsPage() {
                 >
                   <td className="px-6 py-4">
                     <Link href={`/crm/campaigns/${c.id}`} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
                         <FileText className="w-5 h-5" />
                       </div>
                       <span className="text-sm font-bold text-gray-900 dark:text-white">
@@ -225,7 +225,7 @@ export default function CampaignsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="space-y-1.5 min-w-[120px]">
-                      <div className="flex items-center justify-between text-[10px] font-bold text-gray-500">
+                      <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
                         <span>
                           {c.totalLeads > 0
                             ? Math.round((c.completedLeads / c.totalLeads) * 100)
@@ -242,12 +242,12 @@ export default function CampaignsPage() {
                           animate={{
                             width: `${c.totalLeads > 0 ? (c.completedLeads / c.totalLeads) * 100 : 0}%`,
                           }}
-                          className="h-full bg-indigo-500"
+                          className="h-full bg-blue-600"
                         />
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 text-sm font-bold text-muted-foreground dark:text-gray-400">
                     {c.type}
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-emerald-600">
@@ -255,7 +255,7 @@ export default function CampaignsPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg">
-                      <MoreVertical className="w-4 h-4 text-gray-400" />
+                      <MoreVertical className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </td>
                 </tr>
@@ -264,7 +264,7 @@ export default function CampaignsPage() {
           </table>
           {campaigns.length === 0 && (
             <div className="py-20 text-center">
-              <p className="text-gray-400 font-bold">
+              <p className="text-muted-foreground font-bold">
                 No campaigns yet. Launch your first outreach!
               </p>
             </div>
@@ -294,7 +294,7 @@ export default function CampaignsPage() {
                   onClick={() => setShowUpload(false)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
 
@@ -309,7 +309,7 @@ export default function CampaignsPage() {
                       value={newCampaign.name}
                       onChange={(e) => setNewCampaign({ ...newCampaign, name: e.target.value })}
                       placeholder="e.g. Q1 Sales Outreach"
-                      className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+                      className="w-full px-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                     />
                   </div>
                   <div className="space-y-2">
@@ -324,8 +324,8 @@ export default function CampaignsPage() {
                           className={cn(
                             'px-4 py-3 rounded-xl border text-xs font-bold transition',
                             newCampaign.type === type
-                              ? 'bg-indigo-600 text-white border-indigo-600'
-                              : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-gray-500',
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-gray-50 dark:bg-white/5 border-gray-200 dark:border-white/10 text-muted-foreground',
                           )}
                         >
                           {type}
@@ -340,7 +340,7 @@ export default function CampaignsPage() {
                 <button
                   onClick={handleCreate}
                   disabled={isCreating || !newCampaign.name}
-                  className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-xl shadow-indigo-500/20 hover:bg-indigo-500 transition-all disabled:opacity-50"
+                  className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-xl shadow-blue-500/20 hover:bg-blue-500 transition-all disabled:opacity-50"
                 >
                   {isCreating ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

@@ -79,7 +79,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -89,7 +89,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
       <div className="mb-8 flex items-center justify-between">
         <Link
           href="/crm/contacts"
-          className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-indigo-600 transition"
+          className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-blue-600 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Contacts
@@ -106,7 +106,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             type="submit"
             form="contact-form"
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-indigo-500/20"
+            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition shadow-lg shadow-blue-500/20"
           >
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Changes
@@ -118,36 +118,36 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
         {/* Profile Card */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft p-8 text-center">
-            <div className="w-24 h-24 mx-auto rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-3xl font-black mb-6 shadow-xl shadow-indigo-500/30">
+            <div className="w-24 h-24 mx-auto rounded-3xl bg-blue-600 flex items-center justify-center text-white text-3xl font-semibold mb-6 shadow-xl shadow-blue-500/30">
               {contact?.firstName[0]}
               {contact?.lastName[0]}
             </div>
-            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-1">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
               {contact?.firstName} {contact?.lastName}
             </h2>
-            <p className="text-sm text-gray-500 mb-6">{contact?.jobTitle || 'No Title'}</p>
+            <p className="text-sm text-muted-foreground mb-6">{contact?.jobTitle || 'No Title'}</p>
 
             <div className="flex flex-wrap justify-center gap-2 mb-8">
               {contact?.tags?.map((tag) => (
                 <span
                   key={tag}
-                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-[10px] font-bold text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-border"
+                  className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-bold text-muted-foreground dark:text-gray-400 border border-gray-200 dark:border-border"
                 >
                   {tag}
                 </span>
               ))}
-              <button className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-full text-[10px] font-bold border border-indigo-100 dark:border-indigo-800/50">
+              <button className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full text-xs font-bold border border-blue-100 dark:border-blue-800/50">
                 + Add Tag
               </button>
             </div>
 
             <div className="space-y-3 pt-6 border-t border-gray-100 dark:border-border">
-              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground dark:text-gray-400">
                 <Mail className="w-4 h-4" />
                 {contact?.email}
               </div>
               {contact?.phone && (
-                <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-3 text-sm text-muted-foreground dark:text-gray-400">
                   <Phone className="w-4 h-4" />
                   {contact?.phone}
                 </div>
@@ -164,34 +164,34 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft overflow-hidden"
           >
             <div className="p-8 space-y-8">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     First Name
                   </label>
                   <input
                     required
                     value={formData.firstName || ''}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Last Name
                   </label>
                   <input
                     required
                     value={formData.lastName || ''}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Email
                   </label>
                   <input
@@ -199,17 +199,17 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                     type="email"
                     value={formData.email || ''}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Phone
                   </label>
                   <input
                     value={formData.phone || ''}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                     placeholder="+1 234 567 890"
                   />
                 </div>
@@ -217,24 +217,24 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Job Title
                   </label>
                   <input
                     value={formData.jobTitle || ''}
                     onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold"
                     placeholder="e.g. CEO"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                  <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                     Status
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-semibold appearance-none"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold appearance-none"
                   >
                     <option value="LEAD">Lead</option>
                     <option value="PROSPECT">Prospect</option>
@@ -245,18 +245,18 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               </div>
 
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-2">
+                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground block mb-2">
                   Internal Notes
                 </label>
                 <textarea
                   value={formData.notes || ''}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-medium h-32 resize-none"
+                  className="w-full px-5 py-4 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-medium h-32 resize-none"
                   placeholder="Add private notes about this contact..."
                 />
               </div>
 
-              <div className="pt-4 flex items-center gap-6 text-xs font-bold text-gray-400 border-t border-gray-100 dark:border-border">
+              <div className="pt-4 flex items-center gap-6 text-xs font-bold text-muted-foreground border-t border-gray-100 dark:border-border">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   Created {new Date(contact?.createdAt || '').toLocaleString()}

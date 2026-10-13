@@ -19,11 +19,11 @@ export default async function SuperAdminLayout({ children }: { children: React.R
   if (!canAccessRoleRoute('/superadmin', payload.roles)) redirect('/403');
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="app-shell flex h-dvh overflow-hidden">
       <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden bg-[#060a14]">
+      <div className="flex min-w-0 flex-col flex-1 overflow-hidden bg-background">
         <Header />
-        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>

@@ -96,7 +96,7 @@ export default function GlobalSecuritySettingsPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -107,24 +107,24 @@ export default function GlobalSecuritySettingsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wide border border-emerald-500/20">
               Identity Shield active
             </span>
-            <span className="text-[10px] text-gray-600 font-mono tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
+            <span className="text-xs text-muted-foreground font-mono tracking-tighter uppercase whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]">
               Node: Security-Core-Alpha
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
             Global Security Policies
           </h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage MFA, Brute-Force & Identity Thresholds
           </p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2"
+          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Commit Security Baseline
@@ -134,20 +134,20 @@ export default function GlobalSecuritySettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Identity Architecture */}
         <div className="lg:col-span-2 space-y-10">
-          <div className="p-10 rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-2xl space-y-10">
+          <div className="p-10 rounded-xl bg-card border border-border shadow-2xl space-y-10">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-                <Smartphone className="w-6 h-6 text-indigo-500" /> MFA Architecture
+              <h3 className="text-xl font-semibold text-foreground flex items-center gap-3 uppercase tracking-tighter">
+                <Smartphone className="w-6 h-6 text-blue-500" /> MFA Architecture
               </h3>
               <button
                 onClick={toggleMFA}
-                className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${settings.mfaRequired ? 'bg-indigo-500 text-white border-indigo-500' : 'bg-white/[0.05] text-gray-500 border-white/10'}`}
+                className={`px-6 py-2 rounded-xl text-xs font-semibold uppercase tracking-wide transition-all border ${settings.mfaRequired ? 'bg-blue-600 text-white border-blue-500' : 'bg-card text-muted-foreground border-border'}`}
               >
                 {settings.mfaRequired ? 'Mandatory Enforced' : 'Optional (Global)'}
               </button>
             </div>
 
-            <p className="text-xs text-gray-500 leading-relaxed max-w-2xl font-medium">
+            <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl font-medium">
               Enforce Multi-Factor Authentication across the entire platform. When active, all
               workspace members must authenticate via an authorized secondary verify method (TOTP,
               SMS, Email Artifact) before cluster access is granted.
@@ -157,32 +157,32 @@ export default function GlobalSecuritySettingsPage() {
               {['TOTP', 'SMS_ARTIFACT', 'EMAIL_OTP'].map((method) => (
                 <div
                   key={method}
-                  className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 flex items-center justify-between group hover:border-indigo-500/40 transition-all cursor-pointer"
+                  className="p-4 rounded-2xl bg-card border border-border flex items-center justify-between group hover:border-blue-500/40 transition-all cursor-pointer"
                 >
-                  <span className="text-[10px] font-black text-gray-400 group-hover:text-white transition-colors">
+                  <span className="text-xs font-semibold text-muted-foreground group-hover:text-white transition-colors">
                     {method}
                   </span>
-                  <div className="w-4 h-4 rounded-full border-2 border-indigo-500 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                  <div className="w-4 h-4 rounded-full border-2 border-blue-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-600" />
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="p-10 rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-2xl space-y-10">
-            <h3 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
-              <Key className="w-6 h-6 text-emerald-500" /> Entropy & Complexity Manifest
+          <div className="p-10 rounded-xl bg-card border border-border shadow-2xl space-y-10">
+            <h3 className="text-xl font-semibold text-foreground flex items-center gap-3 uppercase tracking-tighter">
+              <Key className="w-6 h-6 text-emerald-700 dark:text-emerald-400" /> Entropy & Complexity Manifest
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center px-1">
-                    <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Minimum Length
                     </label>
-                    <span className="text-sm font-black text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       {settings.passwordMinLength} Chars
                     </span>
                   </div>
@@ -194,15 +194,15 @@ export default function GlobalSecuritySettingsPage() {
                     onChange={(e) =>
                       setSettings({ ...settings, passwordMinLength: parseInt(e.target.value) })
                     }
-                    className="w-full accent-indigo-500 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer"
+                    className="w-full accent-blue-500 h-1.5 bg-card rounded-full appearance-none cursor-pointer"
                   />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center px-1">
-                    <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Rotation Cycle (Days)
                     </label>
-                    <span className="text-sm font-black text-white">
+                    <span className="text-sm font-semibold text-foreground">
                       {settings.passwordRotationDays} Days
                     </span>
                   </div>
@@ -215,7 +215,7 @@ export default function GlobalSecuritySettingsPage() {
                     onChange={(e) =>
                       setSettings({ ...settings, passwordRotationDays: parseInt(e.target.value) })
                     }
-                    className="w-full accent-emerald-500 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer"
+                    className="w-full accent-emerald-500 h-1.5 bg-card rounded-full appearance-none cursor-pointer"
                   />
                 </div>
               </div>
@@ -227,16 +227,16 @@ export default function GlobalSecuritySettingsPage() {
                 ].map((item: any) => (
                   <div
                     key={item.key}
-                    className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5"
+                    className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-border"
                   >
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-tighter">
                       {item.label}
                     </span>
                     <button
                       onClick={() =>
                         setSettings({ ...settings, [item.key]: !(settings as any)[item.key] })
                       }
-                      className={`w-10 h-5 rounded-full p-1 transition-all ${(settings as any)[item.key] ? 'bg-indigo-500' : 'bg-white/10'}`}
+                      className={`w-10 h-5 rounded-full p-1 transition-all ${(settings as any)[item.key] ? 'bg-blue-600' : 'bg-card'}`}
                     >
                       <div
                         className={`w-3 h-3 rounded-full bg-white transition-all ${(settings as any)[item.key] ? 'translate-x-5' : 'translate-x-0'}`}
@@ -251,17 +251,17 @@ export default function GlobalSecuritySettingsPage() {
 
         {/* Side: Session & Thresholds */}
         <div className="space-y-10">
-          <div className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-2xl space-y-8">
-            <h3 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-3">
-              <Clock className="w-5 h-5 text-indigo-400" /> Session Persistence
+          <div className="p-8 rounded-xl bg-card border border-border shadow-2xl space-y-8">
+            <h3 className="text-foreground font-semibold text-sm uppercase tracking-wide flex items-center gap-3">
+              <Clock className="w-5 h-5 text-blue-700 dark:text-blue-400" /> Session Persistence
             </h3>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-1 text-center block">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1 text-center block">
                   TTL (Minutes)
                 </label>
-                <p className="text-4xl font-black text-white text-center tracking-tighter">
+                <p className="text-4xl font-semibold text-foreground text-center tracking-tighter">
                   {settings.sessionTimeoutMinutes}
                 </p>
                 <input
@@ -273,27 +273,27 @@ export default function GlobalSecuritySettingsPage() {
                   onChange={(e) =>
                     setSettings({ ...settings, sessionTimeoutMinutes: parseInt(e.target.value) })
                   }
-                  className="w-full accent-indigo-500 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer"
+                  className="w-full accent-blue-500 h-1.5 bg-card rounded-full appearance-none cursor-pointer"
                 />
               </div>
-              <p className="text-[10px] text-gray-600 font-medium text-center leading-relaxed">
+              <p className="text-xs text-muted-foreground font-medium text-center leading-relaxed">
                 Inactive cluster sessions will be pruned and cryptographically invalidated after
                 this threshold.
               </p>
             </div>
           </div>
 
-          <div className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-2xl space-y-8">
-            <h3 className="text-white font-black text-sm uppercase tracking-widest flex items-center gap-3">
+          <div className="p-8 rounded-xl bg-card border border-border shadow-2xl space-y-8">
+            <h3 className="text-foreground font-semibold text-sm uppercase tracking-wide flex items-center gap-3">
               <UserX className="w-5 h-5 text-red-400" /> Violation Thresholds
             </h3>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-600 uppercase tracking-widest ml-1 text-center block">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1 text-center block">
                   Lockout After (Retries)
                 </label>
-                <p className="text-4xl font-black text-white text-center tracking-tighter">
+                <p className="text-4xl font-semibold text-foreground text-center tracking-tighter">
                   {settings.maxFailedLogins}
                 </p>
                 <input
@@ -304,28 +304,28 @@ export default function GlobalSecuritySettingsPage() {
                   onChange={(e) =>
                     setSettings({ ...settings, maxFailedLogins: parseInt(e.target.value) })
                   }
-                  className="w-full accent-red-500 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer"
+                  className="w-full accent-red-500 h-1.5 bg-card rounded-full appearance-none cursor-pointer"
                 />
               </div>
             </div>
           </div>
 
-          <div className="p-8 rounded-[40px] bg-red-500/10 border border-red-500/20 space-y-6 relative overflow-hidden group">
+          <div className="p-8 rounded-xl bg-red-500/10 border border-red-500/20 space-y-6 relative overflow-hidden group">
             <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-red-500/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="flex items-center gap-4">
               <div className="p-3 rounded-2xl bg-red-500 text-white shadow-xl shadow-red-500/20">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-black text-white uppercase tracking-tighter leading-tight">
+                <h4 className="text-sm font-semibold text-foreground uppercase tracking-tighter leading-tight">
                   Critical Isolation
                 </h4>
-                <p className="text-[10px] text-red-400 font-black uppercase tracking-widest">
+                <p className="text-xs text-red-400 font-semibold uppercase tracking-wide">
                   Global IP Whitelist: OFF
                 </p>
               </div>
             </div>
-            <p className="text-xs text-gray-400 leading-relaxed font-medium">
+            <p className="text-xs text-muted-foreground leading-relaxed font-medium">
               Modifying platform identity shields will trigger a global cache invalidation and force
               a re-handshake for all active clusters.
             </p>
@@ -334,21 +334,21 @@ export default function GlobalSecuritySettingsPage() {
       </div>
 
       {/* Security Advisory Ledger */}
-      <div className="p-10 rounded-[40px] border border-dashed border-white/10 bg-white/[0.01] flex items-center gap-8 group">
-        <div className="p-4 rounded-3xl bg-white/[0.03] border border-white/10 text-gray-500 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+      <div className="p-10 rounded-xl border border-dashed border-border bg-card flex items-center gap-8 group">
+        <div className="p-4 rounded-3xl bg-card border border-border text-muted-foreground group-hover:bg-blue-500 group-hover:text-white transition-all">
           <History className="w-10 h-10" />
         </div>
         <div className="space-y-1 flex-1">
-          <h3 className="text-xl font-black text-white uppercase tracking-tighter">
+          <h3 className="text-xl font-semibold text-foreground uppercase tracking-tighter">
             Security Policy Persistence
           </h3>
-          <p className="text-sm text-gray-500 max-w-4xl">
+          <p className="text-sm text-muted-foreground max-w-4xl">
             Platform-wide security artifacts are cryptographically hashed and logged to the systemic
             audit trail. All modifications require 'Platform Controller' role authentication and
             generate an emergency artifact dispatch to the cluster administrators.
           </p>
         </div>
-        <button className="px-6 py-3 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-white text-xs font-black uppercase tracking-widest transition-all">
+        <button className="px-6 py-3 rounded-xl bg-card hover:bg-white/[0.1] border border-border text-foreground text-xs font-semibold uppercase tracking-wide transition-all">
           Security Audit
         </button>
       </div>

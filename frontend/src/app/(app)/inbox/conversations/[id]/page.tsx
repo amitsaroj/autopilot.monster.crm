@@ -50,7 +50,7 @@ export default function InboxConversationPage({ params }: { params: Promise<{ id
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${msg.direction === 'OUTBOUND' ? 'ml-auto bg-indigo-600 text-white' : 'bg-muted'}`}
+            className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${msg.direction === 'OUTBOUND' ? 'ml-auto bg-blue-600 text-white' : 'bg-muted'}`}
           >
             {msg.body}
           </div>
@@ -75,7 +75,7 @@ export default function InboxConversationPage({ params }: { params: Promise<{ id
           className="flex-1 rounded-lg border border-border px-3 py-2 text-sm"
           placeholder="Reply..."
         />
-        <button type="submit" className="rounded-lg bg-indigo-600 px-4 py-2 text-white">
+        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white">
           <Send className="h-4 w-4" />
         </button>
       </form>

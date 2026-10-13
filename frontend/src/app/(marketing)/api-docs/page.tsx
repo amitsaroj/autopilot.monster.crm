@@ -41,10 +41,10 @@ export default function ApiDocsPage() {
 					transition={{ duration: 0.6 }}
 					className="mb-16"
 				>
-					<span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+					<span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
 						API Reference
 					</span>
-					<h1 className="text-5xl md:text-6xl font-black text-gray-900 dark:text-white mb-6">
+					<h1 className="text-3xl sm:text-5xl md:text-6xl font-semibold text-gray-900 dark:text-white mb-6">
 						Developer API
 					</h1>
 					<p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mb-8">
@@ -55,7 +55,7 @@ export default function ApiDocsPage() {
 						href={SWAGGER_UI_URL}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="group inline-flex items-center gap-2 px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition-all"
+						className="group inline-flex items-center gap-2 px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-blue-700 to-cyan-700 rounded-xl hover:from-blue-500 hover:to-blue-500 shadow-lg shadow-blue-500/25 transition-all"
 					>
 						Open interactive API docs (Swagger)
 						<ExternalLink className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -76,7 +76,7 @@ export default function ApiDocsPage() {
 							transition={{ delay: i * 0.06 }}
 							className="p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06]"
 						>
-							<s.icon className="w-7 h-7 text-indigo-400 mb-3" />
+							<s.icon className="w-7 h-7 text-blue-700 dark:text-blue-400 mb-3" />
 							<h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
 								{s.title}
 							</h2>
@@ -86,7 +86,7 @@ export default function ApiDocsPage() {
 							{s.href && (
 								<Link
 									href={s.href}
-									className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-indigo-400 hover:gap-3 transition-all"
+									className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium text-blue-700 dark:text-blue-400 hover:gap-3 transition-all"
 								>
 									Full documentation{' '}
 									<ArrowRight className="w-4 h-4" />

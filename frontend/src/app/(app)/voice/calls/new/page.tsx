@@ -31,7 +31,7 @@ export default function NewVoiceCallPage() {
     <div className="mx-auto max-w-lg space-y-6 py-8">
       <Link
         href="/voice/calls"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-600"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Calls
       </Link>

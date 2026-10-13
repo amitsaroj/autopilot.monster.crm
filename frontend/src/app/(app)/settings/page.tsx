@@ -87,8 +87,8 @@ export default function SettingsPage() {
                 href={item.href}
                 className="flex items-center gap-4 px-5 py-4 hover:bg-muted/40 transition-colors group"
               >
-                <div className="p-2.5 rounded-lg bg-muted group-hover:bg-[hsl(246,80%,60%)]/10 transition-colors">
-                  <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(246,80%,60%)] transition-colors" />
+                <div className="p-2.5 rounded-lg bg-muted group-hover:bg-[hsl(var(--brand))]/10 transition-colors">
+                  <item.icon className="h-4 w-4 text-muted-foreground group-hover:text-[hsl(var(--brand))] transition-colors" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-foreground">{item.label}</p>

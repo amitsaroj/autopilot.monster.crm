@@ -62,7 +62,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -70,10 +70,10 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4">
       <div className="mb-10">
-        <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+        <h1 className="text-4xl font-semibold text-gray-900 dark:text-white mb-2 tracking-tight">
           Account Settings
         </h1>
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-muted-foreground dark:text-gray-400">
           Manage your personal information and account security.
         </p>
       </div>
@@ -83,7 +83,7 @@ export default function ProfilePage() {
         <div className="space-y-6">
           <div className="bg-white dark:bg-card rounded-3xl border border-gray-200 dark:border-border shadow-soft p-8 text-center">
             <div className="relative inline-block mb-6">
-              <div className="w-32 h-32 rounded-3xl bg-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-indigo-500/40 border-4 border-white dark:border-gray-800">
+              <div className="w-32 h-32 rounded-3xl bg-blue-600 flex items-center justify-center text-white text-4xl font-semibold shadow-2xl shadow-blue-500/40 border-4 border-white dark:border-gray-800">
                 {formData.avatarUrl ? (
                   <img
                     src={formData.avatarUrl}
@@ -97,29 +97,29 @@ export default function ProfilePage() {
                   </span>
                 )}
               </div>
-              <button className="absolute -bottom-2 -right-2 p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 text-gray-500 hover:text-indigo-600 transition">
+              <button className="absolute -bottom-2 -right-2 p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 text-muted-foreground hover:text-blue-600 transition">
                 <Camera className="w-5 h-5" />
               </button>
             </div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
               {formData.firstName} {formData.lastName}
             </h2>
-            <p className="text-sm text-gray-500 mb-6">{user?.email}</p>
+            <p className="text-sm text-muted-foreground mb-6">{user?.email}</p>
             <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-full text-xs font-bold border border-green-100 dark:border-green-800/50">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Active Account
             </div>
           </div>
 
-          <div className="bg-indigo-600 rounded-3xl p-8 text-white shadow-2xl shadow-indigo-500/30">
+          <div className="bg-blue-600 rounded-3xl p-8 text-white shadow-2xl shadow-blue-500/30">
             <div className="flex items-center gap-3 mb-4">
-              <Shield className="w-5 h-5 text-indigo-200" />
+              <Shield className="w-5 h-5 text-blue-200" />
               <h3 className="font-bold">Security Status</h3>
             </div>
-            <p className="text-sm text-indigo-100 mb-6">
+            <p className="text-sm text-blue-100 mb-6">
               Your account is secured with dual-factor authentication.
             </p>
-            <button className="w-full py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition border border-white/20">
+            <button className="w-full py-2.5 bg-card hover:bg-white/20 text-foreground rounded-xl text-sm font-bold transition border border-border">
               Update Security
             </button>
           </div>
@@ -141,7 +141,7 @@ export default function ProfilePage() {
                     required
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-medium"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-medium"
                   />
                 </div>
                 <div>
@@ -152,7 +152,7 @@ export default function ProfilePage() {
                     required
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-medium"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-medium"
                   />
                 </div>
               </div>
@@ -162,13 +162,13 @@ export default function ProfilePage() {
                   Email Address
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <input
                     disabled
                     value={user?.email}
-                    className="w-full pl-12 pr-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-100 dark:bg-gray-800/50 text-gray-500 cursor-not-allowed font-medium"
+                    className="w-full pl-12 pr-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-100 dark:bg-gray-800/50 text-muted-foreground cursor-not-allowed font-medium"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-200 px-2 py-0.5 rounded-md">
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold uppercase tracking-wide text-muted-foreground bg-gray-200 px-2 py-0.5 rounded-md">
                     Locked
                   </div>
                 </div>
@@ -181,12 +181,12 @@ export default function ProfilePage() {
                 <input
                   value={formData.avatarUrl}
                   onChange={(e) => setFormData({ ...formData, avatarUrl: e.target.value })}
-                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-indigo-500 outline-none transition font-medium"
+                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 dark:border-input bg-gray-50/50 dark:bg-background/50 focus:ring-2 focus:ring-blue-500 outline-none transition font-medium"
                   placeholder="https://example.com/avatar.jpg"
                 />
               </div>
 
-              <div className="pt-4 flex items-center gap-6 text-sm text-gray-500 pb-2 border-b border-gray-100 dark:border-border">
+              <div className="pt-4 flex items-center gap-6 text-sm text-muted-foreground pb-2 border-b border-gray-100 dark:border-border">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Joined {new Date(user?.createdAt || '').toLocaleDateString()}
@@ -202,7 +202,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex items-center gap-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-400 text-white rounded-2xl font-black text-sm transition shadow-xl shadow-indigo-500/20"
+                className="flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-400 text-white rounded-2xl font-semibold text-sm transition shadow-xl shadow-blue-500/20"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

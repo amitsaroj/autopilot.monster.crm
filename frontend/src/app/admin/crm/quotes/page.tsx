@@ -8,11 +8,11 @@ import { usePaginatedCrmList } from '@/hooks/usePaginatedCrmList';
 import { quoteService, type Quote, QuoteStatus } from '@/services/quote.service';
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  SENT: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  ACCEPTED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  DRAFT: 'bg-gray-500/10 text-muted-foreground border-gray-500/20',
+  SENT: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  ACCEPTED: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
   DECLINED: 'bg-red-500/10 text-red-400 border-red-500/20',
-  EXPIRED: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  EXPIRED: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
 };
 
 export default function AdminCRMQuotesPage() {
@@ -51,12 +51,12 @@ export default function AdminCRMQuotesPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">CRM Quotes</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">CRM Quotes</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Proposals & Quote Management
           </p>
         </div>
-        <button className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+        <button className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Quote
         </button>
       </div>
@@ -66,54 +66,54 @@ export default function AdminCRMQuotesPage() {
           {
             label: 'Page Quotes',
             value: quotes.length,
-            color: 'text-indigo-400',
-            bg: 'bg-indigo-500/10',
+            color: 'text-blue-700 dark:text-blue-400',
+            bg: 'bg-blue-500/10',
           },
           {
             label: 'Accepted (page)',
             value: quotes.filter((q) => q.status === QuoteStatus.ACCEPTED).length,
-            color: 'text-emerald-400',
+            color: 'text-emerald-700 dark:text-emerald-400',
             bg: 'bg-emerald-500/10',
           },
           {
             label: 'Pending (page)',
             value: quotes.filter((q) => q.status === QuoteStatus.SENT).length,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
             bg: 'bg-blue-500/10',
           },
           {
             label: 'Won Value (page)',
             value: `$${(totalValue / 1000).toFixed(1)}K`,
-            color: 'text-amber-400',
+            color: 'text-amber-700 dark:text-amber-400',
             bg: 'bg-amber-500/10',
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4"
+            className="p-5 rounded-2xl bg-card border border-border flex items-center gap-4"
           >
             <div className={`p-3 rounded-xl ${s.bg}`}>
               <DollarSign className={`w-5 h-5 ${s.color}`} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {s.label}
               </p>
-              <p className="text-2xl font-black text-white">{s.value}</p>
+              <p className="text-2xl font-semibold text-foreground">{s.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="flex gap-3">
-        <div className="flex-1 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 focus-within:border-indigo-500/30 transition-all">
-          <Search className="w-4 h-4 text-gray-500" />
+        <div className="flex-1 p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 focus-within:border-blue-500/30 transition-all">
+          <Search className="w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search by quote #..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder:text-gray-600"
+            className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-gray-600"
           />
         </div>
         <select
@@ -122,7 +122,7 @@ export default function AdminCRMQuotesPage() {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className="px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-xs text-gray-300 outline-none font-black uppercase tracking-widest"
+          className="px-4 py-3 rounded-xl bg-card border border-border text-xs text-foreground outline-none font-semibold uppercase tracking-wide"
         >
           {['All', 'DRAFT', 'SENT', 'ACCEPTED', 'DECLINED', 'EXPIRED'].map((s) => (
             <option key={s} value={s}>
@@ -134,30 +134,30 @@ export default function AdminCRMQuotesPage() {
 
       {loading ? (
         <div className="flex h-[40vh] items-center justify-center">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
         </div>
       ) : error ? (
         <div className="py-20 text-center">
-          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{error}</p>
+          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">{error}</p>
           <button
             type="button"
             onClick={() => reload()}
-            className="px-6 py-3 bg-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-semibold uppercase tracking-wide"
           >
             Retry
           </button>
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="rounded-3xl border border-white/[0.05] bg-white/[0.01] overflow-hidden">
+          <div className="rounded-3xl border border-border bg-card overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-b border-white/[0.05] bg-white/[0.02]">
+                <tr className="border-b border-border bg-card">
                   {['Quote #', 'Contact', 'Items', 'Total', 'Valid Until', 'Status', ''].map(
                     (h) => (
                       <th
                         key={h || 'actions'}
-                        className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest"
+                        className="px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
                       >
                         {h}
                       </th>
@@ -169,48 +169,48 @@ export default function AdminCRMQuotesPage() {
                 {quotes.map((q) => (
                   <tr key={q.id} className="group hover:bg-white/[0.02] transition-colors">
                     <td className="px-5 py-4">
-                      <span className="text-sm font-mono font-bold text-indigo-300">
+                      <span className="text-sm font-mono font-bold text-blue-300">
                         {q.number}
                       </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 text-xs font-black border border-indigo-500/20">
+                        <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-700 dark:text-blue-400 text-xs font-semibold border border-blue-500/20">
                           Q
                         </div>
-                        <span className="text-sm text-white">{q.contactId ?? '—'}</span>
+                        <span className="text-sm text-foreground">{q.contactId ?? '—'}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-xs text-gray-400">
+                    <td className="px-5 py-4 text-xs text-muted-foreground">
                       {q.lineItems?.length ?? 0} items
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-sm font-black text-white">
+                      <span className="text-sm font-semibold text-foreground">
                         {q.currency} {Number(q.total || 0).toLocaleString()}
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Clock className="w-3 h-3" />
                         {q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '—'}
                       </div>
                     </td>
                     <td className="px-5 py-4">
                       <span
-                        className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[q.status] ?? STATUS_STYLES.DRAFT}`}
+                        className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[q.status] ?? STATUS_STYLES.DRAFT}`}
                       >
                         {q.status}
                       </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                        <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] transition-all">
                           <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                        <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] transition-all">
                           <Send className="w-3.5 h-3.5" />
                         </button>
-                        <button className="p-1.5 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                        <button className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] transition-all">
                           <Download className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -221,7 +221,7 @@ export default function AdminCRMQuotesPage() {
                   <tr>
                     <td
                       colSpan={7}
-                      className="p-20 text-center text-gray-500 font-black text-xs uppercase tracking-widest"
+                      className="p-20 text-center text-muted-foreground font-semibold text-xs uppercase tracking-wide"
                     >
                       No quotes found.
                     </td>

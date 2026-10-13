@@ -9,14 +9,14 @@ export const FormNode = ({ data, selected }: any) => {
     <div
       className={`px-4 py-3 rounded-xl border-2 transition-all min-w-[200px] ${
         selected
-          ? 'border-indigo-500 shadow-lg shadow-indigo-500/20'
+          ? 'border-blue-500 shadow-lg shadow-blue-500/20'
           : 'border-gray-200 dark:border-white/10'
       } bg-white dark:bg-[#111827] ring-1 ring-black/5`}
     >
-      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-indigo-500" />
+      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-blue-600" />
 
       <div className="flex items-center gap-2 pb-2 mb-2 border-b border-gray-100 dark:border-white/5">
-        <div className="p-1.5 rounded-lg bg-green-500/10 text-green-500">
+        <div className="p-1.5 rounded-lg bg-green-500/10 text-green-700 dark:text-green-400">
           <FileText className="w-4 h-4" />
         </div>
         <span className="text-xs font-bold dark:text-gray-300 uppercase tracking-wider">
@@ -44,7 +44,7 @@ export const FormNode = ({ data, selected }: any) => {
         </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-indigo-500" />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-blue-600" />
     </div>
   );
 };

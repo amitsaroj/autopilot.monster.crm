@@ -66,7 +66,7 @@ export default function IntegrationsPage() {
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-sm font-medium text-cyan-400 mb-6">
             <Globe className="w-4 h-4" aria-hidden="true" /> Integrations
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Connect
             <br />
             everything

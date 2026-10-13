@@ -75,7 +75,7 @@ export default function WhatsAppConversationPage({ params }: { params: Promise<{
       <div className="mb-4 flex items-center justify-between">
         <Link
           href="/whatsapp"
-          className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-green-600"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-green-600"
         >
           <ArrowLeft className="h-4 w-4" /> WhatsApp
         </Link>
@@ -91,7 +91,7 @@ export default function WhatsAppConversationPage({ params }: { params: Promise<{
       <h1 className="mb-4 text-xl font-bold">{decodedPhone}</h1>
 
       <div className="flex-1 space-y-3 overflow-y-auto rounded-xl border border-gray-200 bg-white p-4">
-        {messages.length === 0 && <p className="text-sm text-gray-500">No messages yet.</p>}
+        {messages.length === 0 && <p className="text-sm text-muted-foreground">No messages yet.</p>}
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -103,9 +103,9 @@ export default function WhatsAppConversationPage({ params }: { params: Promise<{
           >
             {msg.body}
             {msg.mediaUrls && msg.mediaUrls.length > 0 && (
-              <p className="mt-1 text-[10px] opacity-70">Media: {msg.mediaUrls.join(', ')}</p>
+              <p className="mt-1 text-xs opacity-70">Media: {msg.mediaUrls.join(', ')}</p>
             )}
-            <p className="mt-1 text-[10px] opacity-70">
+            <p className="mt-1 text-xs opacity-70">
               {new Date(msg.createdAt).toLocaleString()}
             </p>
           </div>

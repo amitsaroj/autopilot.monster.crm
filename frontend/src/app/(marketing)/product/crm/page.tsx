@@ -46,10 +46,10 @@ export default function ProductCRMPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 text-sm font-medium text-blue-400 mb-6">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-blue-500/20 bg-blue-500/5 text-sm font-medium text-blue-700 dark:text-blue-400 mb-6">
             <Users className="w-4 h-4" /> CRM Platform
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             CRM that actually
             <br />
             closes deals
@@ -60,7 +60,7 @@ export default function ProductCRMPage() {
           </p>
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-2xl shadow-blue-500/20 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-700 text-white font-semibold rounded-xl shadow-2xl shadow-blue-500/20 hover:scale-[1.02] transition-all"
           >
             Try CRM Free <ArrowRight className="w-4 h-4" />
           </Link>
@@ -75,7 +75,7 @@ export default function ProductCRMPage() {
               transition={{ delay: i * 0.08, duration: 0.5 }}
               className="p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-100 dark:bg-white/[0.06] transition-all hover:border-gray-300 dark:border-white/[0.12]"
             >
-              <f.icon className="w-8 h-8 text-blue-400 mb-4" />
+              <f.icon className="w-8 h-8 text-blue-700 dark:text-blue-400 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{f.title}</h3>
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{f.desc}</p>
             </motion.div>

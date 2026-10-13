@@ -13,10 +13,10 @@ export default function ContactPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Contact
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Get in touch
           </h1>
           <p className="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
@@ -31,7 +31,12 @@ export default function ContactPage() {
             viewport={{ once: true }}
             className="lg:col-span-3 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-2xl p-8"
           >
-            <form className="space-y-6" aria-label="Contact form">
+            <form className="space-y-6" aria-label="Contact form" onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              const body = `Name: ${String(data.get('firstName') ?? '')} ${String(data.get('lastName') ?? '')}\nEmail: ${String(data.get('email') ?? '')}\nCompany: ${String(data.get('company') ?? '')}\n\n${String(data.get('message') ?? '')}`;
+              window.location.href = `mailto:contact@autopilotmonster.com?subject=${encodeURIComponent('Autopilot Monster inquiry')}&body=${encodeURIComponent(body)}`;
+            }}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label
@@ -46,7 +51,7 @@ export default function ContactPage() {
                     type="text"
                     autoComplete="given-name"
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
                     placeholder="John"
                   />
                 </div>
@@ -63,7 +68,7 @@ export default function ContactPage() {
                     type="text"
                     autoComplete="family-name"
                     required
-                    className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
                     placeholder="Smith"
                   />
                 </div>
@@ -81,7 +86,7 @@ export default function ContactPage() {
                   type="email"
                   autoComplete="email"
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all"
                   placeholder="you@company.com"
                 />
               </div>
@@ -97,15 +102,15 @@ export default function ContactPage() {
                   name="message"
                   rows={4}
                   required
-                  className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-white/[0.04] border border-gray-200 dark:border-white/[0.08] text-gray-900 dark:text-white placeholder:text-gray-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all resize-none"
                   placeholder="Tell us about your use case..."
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 hover:scale-[1.01] transition-all"
+                className="w-full py-3.5 bg-gradient-to-r from-blue-700 to-cyan-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 hover:scale-[1.01] transition-all"
               >
-                Send Message
+                Open email draft
               </button>
             </form>
           </motion.div>
@@ -125,23 +130,23 @@ export default function ContactPage() {
               {
                 icon: MessageCircle,
                 title: 'Live Chat',
-                info: 'Available 24/7',
-                desc: 'Talk to our AI concierge or a human',
+                info: 'Contact our team',
+                desc: 'Ask about support options for your workspace',
               },
               {
                 icon: MapPin,
                 title: 'Office',
-                info: 'San Francisco, CA',
-                desc: 'By appointment only',
+                info: 'Get in touch',
+                desc: 'Contact the team to arrange a conversation',
               },
             ].map((item) => (
               <div
                 key={item.title}
                 className="p-6 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06]"
               >
-                <item.icon className="w-6 h-6 text-indigo-400 mb-3" aria-hidden="true" />
+                <item.icon className="w-6 h-6 text-blue-700 dark:text-blue-400 mb-3" aria-hidden="true" />
                 <h2 className="font-bold text-gray-900 dark:text-white mb-1">{item.title}</h2>
-                <p className="text-indigo-400 text-sm font-medium">{item.info}</p>
+                <p className="text-blue-700 dark:text-blue-400 text-sm font-medium">{item.info}</p>
                 <p className="text-gray-500 text-sm mt-1">{item.desc}</p>
               </div>
             ))}

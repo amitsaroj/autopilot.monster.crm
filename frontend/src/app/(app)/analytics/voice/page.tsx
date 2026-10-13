@@ -86,13 +86,13 @@ export default function VoiceAnalyticsPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">{kpi.label}</p>
-              <p className="text-3xl font-black text-foreground mt-1">{kpi.value}</p>
+              <p className="text-3xl font-semibold text-foreground mt-1">{kpi.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {directionStats.map((stat) => (
           <div key={stat.label} className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-2xl font-bold">{stat.value.toLocaleString()}</p>

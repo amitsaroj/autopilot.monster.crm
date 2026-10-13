@@ -48,8 +48,8 @@ export default function BillingWalletPage() {
 
       <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-[hsl(246,80%,60%)]/10 flex items-center justify-center">
-            <Wallet className="h-6 w-6 text-[hsl(246,80%,60%)]" />
+          <div className="w-12 h-12 rounded-xl bg-[hsl(var(--brand))]/10 flex items-center justify-center">
+            <Wallet className="h-6 w-6 text-[hsl(var(--brand))]" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Available balance</p>
@@ -77,7 +77,7 @@ export default function BillingWalletPage() {
               <div key={tx.id} className="px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {tx.type === 'CREDIT' ? (
-                    <ArrowUpRight className="h-4 w-4 text-green-500" />
+                    <ArrowUpRight className="h-4 w-4 text-green-700 dark:text-green-400" />
                   ) : (
                     <ArrowDownRight className="h-4 w-4 text-red-500" />
                   )}

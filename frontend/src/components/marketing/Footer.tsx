@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BrandLogo } from '@/components/brand-logo';
 
 const socialLinks = [
   { label: 'AutopilotMonster on X', href: 'https://twitter.com/autopilotcrm', abbr: 'X' },
@@ -68,15 +69,7 @@ export default function MarketingFooter() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10">
           <div className="col-span-2 md:col-span-4 lg:col-span-1 mb-8 lg:mb-0">
             <Link href="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <span className="text-white font-black text-sm">A</span>
-              </div>
-              <span className="text-gray-900 dark:text-white font-bold text-lg">
-                Autopilot
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500 dark:from-indigo-400 dark:to-purple-400">
-                  Monster
-                </span>
-              </span>
+              <BrandLogo />
             </Link>
             <p className="text-sm text-gray-500 dark:text-gray-500 leading-relaxed max-w-xs">
               The AI-powered autonomous customer engagement OS for modern revenue teams.
@@ -123,13 +116,7 @@ export default function MarketingFooter() {
             &copy; {new Date().getFullYear()} AutopilotMonster. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <span className="text-xs text-gray-400 dark:text-gray-600 flex items-center gap-1.5">
-              <span
-                className="w-2 h-2 rounded-full bg-green-500 animate-pulse"
-                aria-hidden="true"
-              />{' '}
-              All systems operational
-            </span>
+            <Link href="/status" className="text-xs text-muted-foreground hover:text-primary">Service status</Link>
           </div>
         </div>
       </div>

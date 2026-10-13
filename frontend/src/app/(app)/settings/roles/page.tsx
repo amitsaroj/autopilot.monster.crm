@@ -49,7 +49,7 @@ export default function SettingsRolesPage() {
         </div>
         <Link
           href="/settings/roles/new"
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
         >
           <Plus className="h-4 w-4" /> New Role
         </Link>
@@ -59,7 +59,7 @@ export default function SettingsRolesPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <input
           placeholder="Search roles..."
-          className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
         />
       </div>
 
@@ -67,15 +67,15 @@ export default function SettingsRolesPage() {
         {roles.map((r) => (
           <div
             key={r.name}
-            className="rounded-xl border border-border bg-card p-5 hover:border-[hsl(246,80%,60%)]/30 transition-colors"
+            className="rounded-xl border border-border bg-card p-5 hover:border-[hsl(var(--brand))]/30 transition-colors"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-lg bg-[hsl(246,80%,60%)]/10 shrink-0">
+                <div className="p-2.5 rounded-lg bg-[hsl(var(--brand))]/10 shrink-0">
                   {r.builtin ? (
-                    <Lock className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+                    <Lock className="h-4 w-4 text-[hsl(var(--brand))]" />
                   ) : (
-                    <Shield className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+                    <Shield className="h-4 w-4 text-[hsl(var(--brand))]" />
                   )}
                 </div>
                 <div>
@@ -95,7 +95,7 @@ export default function SettingsRolesPage() {
                     {r.perms.map((p) => (
                       <span
                         key={p}
-                        className="flex items-center gap-1 px-2 py-0.5 bg-green-500/10 text-green-500 text-xs rounded-full"
+                        className="flex items-center gap-1 px-2 py-0.5 bg-green-500/10 text-green-700 dark:text-green-400 text-xs rounded-full"
                       >
                         <Check className="h-2.5 w-2.5" />
                         {p}

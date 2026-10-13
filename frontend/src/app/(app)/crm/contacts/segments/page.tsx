@@ -33,7 +33,7 @@ export default function ContactSegmentsPage() {
               toast.success('Created');
             })
           }
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
         >
           Add
         </button>

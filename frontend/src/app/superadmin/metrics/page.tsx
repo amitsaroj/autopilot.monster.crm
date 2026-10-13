@@ -81,7 +81,7 @@ export default function SystemMetricsPage() {
   if (loading && !health) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -91,20 +91,20 @@ export default function SystemMetricsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide border border-blue-500/20">
               Telemetry Active
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
             Infrastructure Observability
           </h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Node.js Runtime & Hardware Metrics
           </p>
         </div>
         <button
           onClick={() => void fetchHealth()}
-          className="px-6 py-3 bg-white/[0.05] border border-white/10 hover:bg-white/[0.1] text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2"
+          className="px-6 py-3 bg-card border border-border hover:bg-white/[0.1] text-foreground rounded-xl text-xs font-semibold uppercase tracking-wide transition-all flex items-center gap-2"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Force Polling
         </button>
@@ -116,46 +116,46 @@ export default function SystemMetricsPage() {
             label: 'System Uptime',
             value: `${((health?.uptime ?? 0) / 3600).toFixed(1)} Hours`,
             icon: Clock,
-            color: 'text-indigo-400',
+            color: 'text-blue-700 dark:text-blue-400',
             sub: 'Process Persistence',
           },
           {
             label: 'Available RAM',
             value: formatBytes(health?.memory?.free ?? 0),
             icon: Database,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
             sub: `${health?.memory?.total ? Math.round((health.memory.free / health.memory.total) * 100) : 0}% Free`,
           },
           {
             label: 'CPU Load (1m)',
             value: (health?.cpu?.load[0] ?? 0).toFixed(2),
             icon: Cpu,
-            color: 'text-amber-400',
+            color: 'text-amber-700 dark:text-amber-400',
             sub: `${health?.cpu?.count ?? 0} Physical Cores`,
           },
           {
             label: 'Heap Usage',
             value: formatBytes(health?.memory?.usage?.heapUsed ?? 0),
             icon: Gauge,
-            color: 'text-emerald-400',
+            color: 'text-emerald-700 dark:text-emerald-400',
             sub: 'Managed GC Heap',
           },
         ].map((tile) => (
           <div
             key={tile.label}
-            className="p-6 rounded-3xl bg-white/[0.02] border border-white/[0.05] shadow-2xl relative overflow-hidden group"
+            className="p-6 rounded-3xl bg-card border border-border shadow-2xl relative overflow-hidden group"
           >
             <div className="mb-4 flex justify-between">
-              <div className="p-3 rounded-2xl bg-white/[0.05] border border-white/10 group-hover:scale-110 transition-transform">
+              <div className="p-3 rounded-2xl bg-card border border-border group-hover:scale-110 transition-transform">
                 <tile.icon className={`w-5 h-5 ${tile.color}`} />
               </div>
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               {tile.label}
             </p>
-            <h3 className="text-2xl font-black text-white mt-1">{tile.value}</h3>
-            <p className="text-[10px] text-gray-600 mt-2 font-bold uppercase tracking-tighter">
+            <h3 className="text-2xl font-semibold text-foreground mt-1">{tile.value}</h3>
+            <p className="text-xs text-muted-foreground mt-2 font-bold uppercase tracking-tighter">
               {tile.sub}
             </p>
           </div>
@@ -163,20 +163,20 @@ export default function SystemMetricsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 p-10 rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-2xl space-y-8">
-          <h3 className="text-white font-bold flex items-center gap-3">
-            <Gauge className="w-5 h-5 text-indigo-500" /> Live Workload Analysis
+        <div className="lg:col-span-2 p-10 rounded-xl bg-card border border-border shadow-2xl space-y-8">
+          <h3 className="text-foreground font-bold flex items-center gap-3">
+            <Gauge className="w-5 h-5 text-blue-500" /> Live Workload Analysis
           </h3>
           {series.length === 0 ? (
-            <p className="text-sm text-gray-500 py-24 text-center">Collecting telemetry samples…</p>
+            <p className="text-sm text-muted-foreground py-24 text-center">Collecting telemetry samples…</p>
           ) : (
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={series}>
                   <defs>
                     <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#155eef" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#155eef" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -203,7 +203,7 @@ export default function SystemMetricsPage() {
                   <Area
                     type="monotone"
                     dataKey="cpu"
-                    stroke="#6366f1"
+                    stroke="#155eef"
                     strokeWidth={3}
                     fillOpacity={1}
                     fill="url(#colorCpu)"
@@ -224,9 +224,9 @@ export default function SystemMetricsPage() {
           )}
         </div>
 
-        <div className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] shadow-2xl space-y-6">
-          <h3 className="text-white font-bold flex items-center gap-3">
-            <Server className="w-5 h-5 text-gray-500" /> Runtime Manifest
+        <div className="p-8 rounded-xl bg-card border border-border shadow-2xl space-y-6">
+          <h3 className="text-foreground font-bold flex items-center gap-3">
+            <Server className="w-5 h-5 text-muted-foreground" /> Runtime Manifest
           </h3>
           <div className="space-y-4">
             {[
@@ -241,13 +241,13 @@ export default function SystemMetricsPage() {
             ].map((row) => (
               <div
                 key={row.label}
-                className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/[0.05]"
+                className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-border"
               >
                 <div className="flex items-center gap-3">
-                  <row.icon className="w-4 h-4 text-gray-600" />
-                  <span className="text-xs text-gray-500 font-medium">{row.label}</span>
+                  <row.icon className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground font-medium">{row.label}</span>
                 </div>
-                <span className="text-xs font-black text-white">{row.value}</span>
+                <span className="text-xs font-semibold text-foreground">{row.value}</span>
               </div>
             ))}
           </div>

@@ -27,10 +27,10 @@ interface Trigger {
 }
 
 const TYPE_STYLES: Record<string, string> = {
-  EVENT: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  WEBHOOK: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  SCHEDULE: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  MANUAL: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  EVENT: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  WEBHOOK: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  SCHEDULE: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+  MANUAL: 'bg-gray-500/10 text-muted-foreground border-gray-500/20',
 };
 
 const SOURCE_ICONS: Record<string, React.ElementType> = {
@@ -84,7 +84,7 @@ export default function AdminWorkflowTriggersPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -93,12 +93,12 @@ export default function AdminWorkflowTriggersPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Workflow Triggers</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Workflow Triggers</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Event Triggers & Webhook Configuration
           </p>
         </div>
-        <button className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+        <button className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Trigger
         </button>
       </div>
@@ -112,12 +112,12 @@ export default function AdminWorkflowTriggersPage() {
         ].map((s) => (
           <div
             key={s.label}
-            className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center"
+            className="p-4 rounded-2xl bg-card border border-border text-center"
           >
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">
               {s.label}
             </p>
-            <p className="text-2xl font-black text-white">{s.value}</p>
+            <p className="text-2xl font-semibold text-foreground">{s.value}</p>
           </div>
         ))}
       </div>
@@ -128,22 +128,22 @@ export default function AdminWorkflowTriggersPage() {
           return (
             <div
               key={trigger.id}
-              className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group flex items-center gap-5"
+              className="p-5 rounded-2xl bg-card border border-border hover:bg-white/[0.04] hover:border-blue-500/20 transition-all group flex items-center gap-5"
             >
-              <div className="p-3 rounded-xl bg-indigo-500/10 group-hover:bg-indigo-500 transition-all shrink-0">
-                <Zap className="w-5 h-5 text-indigo-400 group-hover:text-white transition-colors" />
+              <div className="p-3 rounded-xl bg-blue-500/10 group-hover:bg-blue-500 transition-all shrink-0">
+                <Zap className="w-5 h-5 text-blue-700 dark:text-blue-400 group-hover:text-white transition-colors" />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h3 className="text-sm font-black text-white">{trigger.name}</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{trigger.name}</h3>
                   <span
-                    className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${TYPE_STYLES[trigger.type]}`}
+                    className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${TYPE_STYLES[trigger.type]}`}
                   >
                     {trigger.type}
                   </span>
                 </div>
-                <div className="flex flex-wrap items-center gap-4 text-[10px] text-gray-600">
+                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <SourceIcon className="w-3 h-3" /> {trigger.source}
                   </span>
@@ -152,12 +152,12 @@ export default function AdminWorkflowTriggersPage() {
               </div>
 
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                <button className="p-2 rounded-lg text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all">
+                <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] transition-all">
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => toast.error('System triggers cannot be deleted')}
-                  className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                  className="p-2 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>

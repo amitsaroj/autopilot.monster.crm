@@ -61,7 +61,7 @@ export default function MarketplaceAppDetailPage({ params }: { params: Promise<{
 
   return (
     <div className="space-y-6 animate-fade-in max-w-2xl">
-      <Link href="/marketplace" className="text-sm text-[hsl(246,80%,60%)] hover:underline">
+      <Link href="/marketplace" className="text-sm text-[hsl(var(--brand))] hover:underline">
         Back to marketplace
       </Link>
 
@@ -92,7 +92,7 @@ export default function MarketplaceAppDetailPage({ params }: { params: Promise<{
           <button
             onClick={() => void handleInstall()}
             disabled={installing}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg text-sm hover:bg-[hsl(246,80%,55%)] disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] text-white rounded-lg text-sm hover:bg-[hsl(220,87%,45%)] disabled:opacity-50"
           >
             {installing ? (
               <Loader2 className="h-4 w-4 animate-spin" />

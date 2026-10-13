@@ -49,7 +49,7 @@ export default function AiSettingsPage() {
         <button
           type="button"
           onClick={() => void handleSave()}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
         >
           Save
         </button>

@@ -70,10 +70,10 @@ export default function PricingPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Pricing
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Simple, transparent pricing
           </h1>
           <p className="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
@@ -91,12 +91,12 @@ export default function PricingPage() {
               transition={{ delay: i * 0.1, duration: 0.5 }}
               className={`relative rounded-2xl p-8 flex flex-col ${
                 plan.highlight
-                  ? 'bg-gradient-to-b from-indigo-500/10 to-purple-500/5 border-2 border-indigo-500/30 shadow-2xl shadow-indigo-500/10'
+                  ? 'bg-gradient-to-b from-blue-500/10 to-blue-500/5 border-2 border-blue-500/30 shadow-2xl shadow-blue-500/10'
                   : 'bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06]'
               }`}
             >
               {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-gray-900 dark:text-white text-xs font-bold rounded-full shadow-lg">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-700 to-cyan-700 text-white text-xs font-bold rounded-full shadow-lg">
                   {plan.badge}
                 </span>
               )}
@@ -105,7 +105,7 @@ export default function PricingPage() {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{plan.desc}</p>
 
               <div className="mb-8">
-                <span className="text-5xl font-black text-gray-900 dark:text-white">
+                <span className="text-3xl sm:text-5xl font-semibold text-gray-900 dark:text-white">
                   {plan.price}
                 </span>
                 <span className="text-gray-500 text-lg">{plan.period}</span>
@@ -115,7 +115,7 @@ export default function PricingPage() {
                 href={plan.name === 'Enterprise' ? '/contact' : '/register'}
                 className={`w-full py-3 rounded-xl text-center font-semibold text-sm transition-all mb-8 block ${
                   plan.highlight
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-gray-900 dark:text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02]'
+                    ? 'bg-gradient-to-r from-blue-700 to-cyan-700 text-gray-900 dark:text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02]'
                     : 'bg-gray-100 dark:bg-white/[0.06] text-gray-900 dark:text-white border border-gray-200 dark:border-white/[0.08] hover:bg-white/[0.1]'
                 }`}
               >
@@ -128,7 +128,7 @@ export default function PricingPage() {
                     key={feature}
                     className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400"
                   >
-                    <Check className="w-4 h-4 text-indigo-400 shrink-0" />
+                    <Check className="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" />
                     {feature}
                   </li>
                 ))}
@@ -150,7 +150,7 @@ export default function PricingPage() {
           </p>
           <Link
             href="/contact"
-            className="text-indigo-400 hover:text-indigo-300 font-medium flex items-center justify-center gap-2 transition-colors"
+            className="text-blue-700 dark:text-blue-400 hover:text-blue-300 font-medium flex items-center justify-center gap-2 transition-colors"
           >
             Contact Sales <ArrowRight className="w-4 h-4" />
           </Link>

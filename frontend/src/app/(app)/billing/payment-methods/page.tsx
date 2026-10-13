@@ -99,7 +99,7 @@ export default function PaymentMethodsPage() {
             methods.map((method) => (
               <div
                 key={method.id}
-                className={`bg-card border rounded-xl p-5 shadow-sm ${method.isDefault ? 'border-[hsl(246,80%,60%)]' : 'border-border'}`}
+                className={`bg-card border rounded-xl p-5 shadow-sm ${method.isDefault ? 'border-[hsl(var(--brand))]' : 'border-border'}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
@@ -112,7 +112,7 @@ export default function PaymentMethodsPage() {
                           {method.brand} ending in {method.lastFour}
                         </h3>
                         {method.isDefault && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold uppercase">
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold uppercase">
                             Default
                           </span>
                         )}
@@ -137,7 +137,7 @@ export default function PaymentMethodsPage() {
                   )}
                   {method.isDefault && (
                     <span className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <CheckCircle2 className="w-4 h-4 text-green-700 dark:text-green-400" />
                       Active subscription billing card
                     </span>
                   )}

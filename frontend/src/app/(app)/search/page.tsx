@@ -13,12 +13,12 @@ const FILTERS = [
 ] as const;
 
 const typeColors: Record<string, string> = {
-  contact: 'bg-blue-500/10 text-blue-400',
-  Contact: 'bg-blue-500/10 text-blue-400',
-  deal: 'bg-green-500/10 text-green-500',
-  Deal: 'bg-green-500/10 text-green-500',
-  company: 'bg-emerald-500/10 text-emerald-400',
-  Company: 'bg-emerald-500/10 text-emerald-400',
+  contact: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+  Contact: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+  deal: 'bg-green-500/10 text-green-700 dark:text-green-400',
+  Deal: 'bg-green-500/10 text-green-700 dark:text-green-400',
+  company: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  Company: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
   lead: 'bg-red-500/10 text-red-500',
   Lead: 'bg-red-500/10 text-red-500',
 };
@@ -72,7 +72,7 @@ export default function SearchPage() {
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-12 pr-24 py-3.5 text-base border border-input rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)] shadow-sm"
+          className="w-full pl-12 pr-24 py-3.5 text-base border border-input rounded-xl bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))] shadow-sm"
         />
         <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded border border-border">
           <Command className="h-3 w-3" /> K
@@ -86,7 +86,7 @@ export default function SearchPage() {
             onClick={() => setTypes(f.types)}
             className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
               types === f.types
-                ? 'bg-[hsl(246,80%,60%)] text-white'
+                ? 'bg-[hsl(var(--brand))] text-foreground'
                 : 'border border-border hover:bg-muted text-muted-foreground'
             }`}
           >
@@ -120,7 +120,7 @@ export default function SearchPage() {
               <Link
                 key={`${r.type}-${r.id}`}
                 href={href}
-                className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-[hsl(246,80%,60%)]/50 hover:shadow-sm transition-all"
+                className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-[hsl(var(--brand))]/50 hover:shadow-sm transition-all"
               >
                 <span
                   className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 capitalize ${color}`}

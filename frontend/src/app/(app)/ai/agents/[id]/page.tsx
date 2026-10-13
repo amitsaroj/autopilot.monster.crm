@@ -58,7 +58,7 @@ export default function AIAgentDetailPage({ params }: { params: Promise<{ id: st
       </div>
       <Link
         href={`/ai/agents/${id}/edit`}
-        className="inline-flex px-4 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg"
+        className="inline-flex px-4 py-2 text-sm bg-[hsl(var(--brand))] text-white rounded-lg"
       >
         Edit Agent
       </Link>
