@@ -128,7 +128,7 @@ export default function SettingsApiPage() {
       </div>
 
       <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4 flex items-start gap-3">
-        <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+        <AlertTriangle className="h-4 w-4 text-yellow-700 dark:text-yellow-400 shrink-0 mt-0.5" />
         <p className="text-sm text-yellow-600 dark:text-yellow-400">
           API keys grant full access. Never share them publicly or commit them to version control.
         </p>
@@ -143,7 +143,7 @@ export default function SettingsApiPage() {
 
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <Key className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+          <Key className="h-4 w-4 text-[hsl(var(--brand))]" />
           <h2 className="text-sm font-semibold">API Keys</h2>
         </div>
         <div className="flex gap-2">
@@ -155,7 +155,7 @@ export default function SettingsApiPage() {
           />
           <button
             onClick={() => void handleCreateKey()}
-            className="flex items-center gap-2 px-3 py-2 text-xs bg-[hsl(246,80%,60%)] text-white rounded-lg"
+            className="flex items-center gap-2 px-3 py-2 text-xs bg-[hsl(var(--brand))] text-white rounded-lg"
           >
             <Plus className="h-3.5 w-3.5" /> Generate
           </button>
@@ -186,7 +186,7 @@ export default function SettingsApiPage() {
 
       <div className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <Webhook className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+          <Webhook className="h-4 w-4 text-[hsl(var(--brand))]" />
           <h2 className="text-sm font-semibold">Webhooks</h2>
         </div>
         <div className="space-y-3">
@@ -252,7 +252,7 @@ export default function SettingsApiPage() {
           />
           <button
             onClick={() => void handleCreateOAuthApp()}
-            className="px-3 py-2 text-xs bg-[hsl(246,80%,60%)] text-white rounded-lg"
+            className="px-3 py-2 text-xs bg-[hsl(var(--brand))] text-white rounded-lg"
           >
             Create
           </button>

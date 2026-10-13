@@ -26,7 +26,7 @@ export default function StatusPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/health`);
+      const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(15000) });
       const json = (await res.json()) as HealthResponse;
       const items: HealthCheck[] = [];
       if (json.info) {
@@ -49,8 +49,8 @@ export default function StatusPage() {
       );
       setLastChecked(new Date().toLocaleString());
     } catch {
-      setOverall('degraded');
-      setChecks([{ name: 'API', status: 'error' }]);
+      setOverall('unknown');
+      setChecks([{ name: 'API', status: 'unknown' }]);
       setLastChecked(new Date().toLocaleString());
     } finally {
       setLoading(false);
@@ -69,11 +69,11 @@ export default function StatusPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4">
+          <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white mb-4">
             Platform Status
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Live health from the public <code className="text-indigo-400">/health</code> endpoint.
+            Live health from the public <code className="text-blue-700 dark:text-blue-400">/health</code> endpoint.
           </p>
         </motion.div>
 
@@ -81,24 +81,26 @@ export default function StatusPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-blue-700 dark:text-blue-400" />
               ) : overall === 'operational' ? (
-                <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                <CheckCircle2 className="w-6 h-6 text-emerald-700 dark:text-emerald-400" />
               ) : (
-                <AlertCircle className="w-6 h-6 text-amber-500" />
+                <AlertCircle className="w-6 h-6 text-amber-700 dark:text-amber-400" />
               )}
               <span className="text-lg font-bold text-gray-900 dark:text-white capitalize">
                 {loading
                   ? 'Checking…'
                   : overall === 'operational'
                     ? 'All systems operational'
-                    : 'Service degraded'}
+                    : overall === 'unknown'
+                      ? 'Status unavailable'
+                      : 'Service degraded'}
               </span>
             </div>
             <button
+              aria-label="Refresh service status"
               onClick={() => void load()}
-              className="p-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-indigo-400 transition-colors"
-              aria-label="Refresh status"
+              className="p-2 rounded-lg border border-gray-200 dark:border-white/10 text-gray-500 hover:text-blue-400 transition-colors"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -121,7 +123,7 @@ export default function StatusPage() {
                 <span
                   className={`text-xs font-bold uppercase tracking-widest ${
                     check.status === 'ok'
-                      ? 'text-emerald-500'
+                      ? 'text-emerald-700 dark:text-emerald-400'
                       : check.status === 'error'
                         ? 'text-red-500'
                         : 'text-gray-500'
@@ -139,7 +141,7 @@ export default function StatusPage() {
 
           <p className="text-sm text-gray-500 pt-4">
             For SLA commitments see{' '}
-            <Link href="/sla" className="text-indigo-400 hover:underline">
+            <Link href="/sla" className="text-blue-700 dark:text-blue-400 hover:underline">
               Service Level Agreement
             </Link>
             .

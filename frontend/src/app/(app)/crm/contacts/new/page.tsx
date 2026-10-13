@@ -1,137 +1,181 @@
-import { Save, ArrowLeft, User, Mail, Phone, Building2, Tag } from 'lucide-react';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { toast } from 'sonner';
+import { contactService } from '@/services/contact.service';
+import { companyService } from '@/services/company.service';
+import { parsePaginatedResponse } from '@/lib/api/pagination';
+import { parseApiData } from '@/lib/api/parse-response';
+
+type CompanyOption = { id: string; name: string };
+const fields = [
+  { key: 'firstName', label: 'First name', required: true, type: 'text' },
+  { key: 'lastName', label: 'Last name', required: true, type: 'text' },
+  { key: 'email', label: 'Email address', required: true, type: 'email' },
+  { key: 'phone', label: 'Phone', required: false, type: 'tel' },
+  { key: 'jobTitle', label: 'Job title', required: false, type: 'text' },
+  { key: 'department', label: 'Department', required: false, type: 'text' },
+] as const;
 
 export default function NewContactPage() {
+  const router = useRouter();
+  const [saving, setSaving] = useState(false);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(true);
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    jobTitle: '',
+    department: '',
+    companyId: '',
+    leadSource: 'Website',
+  });
+  useEffect(() => {
+    void companyService
+      .getCompanies({ page: 1, limit: 100 })
+      .then((response) => setCompanies(parsePaginatedResponse<CompanyOption>(response).data))
+      .catch(() =>
+        toast.error(
+          'Companies could not be loaded. You can still create a contact without a company.',
+        ),
+      )
+      .finally(() => setCompaniesLoading(false));
+  }, []);
+  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      const payload = {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        jobTitle: form.jobTitle,
+        ...(form.companyId ? { companyId: form.companyId } : {}),
+        leadSource: form.leadSource,
+        customFields: { department: form.department },
+      };
+      const response = await contactService.createContact(payload);
+      const result = parseApiData<{ id: string }>(response);
+      toast.success('Contact created');
+      router.push(result?.id ? `/crm/contacts/${result.id}` : '/crm/contacts');
+    } catch {
+      toast.error('Unable to create the contact. Check the details and try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
-    <div className="space-y-6 animate-fade-in max-w-2xl">
-      <div className="flex items-center gap-3">
-        <Link
-          href="/crm/contacts"
-          className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div>
-          <h1 className="page-title mb-0">New Contact</h1>
-          <p className="text-xs text-muted-foreground">Add a new CRM contact</p>
+    <div className="max-w-3xl space-y-6">
+      <Link
+        href="/crm/contacts"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Contacts
+      </Link>
+      <div>
+        <h1 className="page-title">New contact</h1>
+        <p className="page-description">Add contact details and connect them to a company.</p>
+      </div>
+      <form onSubmit={submit} className="product-panel p-5 sm:p-8 space-y-8">
+        <section>
+          <h2 className="font-semibold mb-5">Contact details</h2>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {fields.map((field) => (
+              <div key={field.key}>
+                <label
+                  htmlFor={`new-contact-${field.key}`}
+                  className="block text-sm font-medium mb-2"
+                >
+                  {field.label}
+                  {field.required && <span className="text-muted-foreground"> *</span>}
+                </label>
+                <input
+                  id={`new-contact-${field.key}`}
+                  required={field.required}
+                  type={field.type}
+                  value={form[field.key]}
+                  disabled={saving}
+                  maxLength={field.key === 'phone' ? 30 : field.key === 'jobTitle' ? 200 : 100}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, [field.key]: event.target.value }))
+                  }
+                  className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="border-t border-border pt-6">
+          <h2 className="font-semibold mb-5">Company and source</h2>
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label htmlFor="new-contact-company" className="block text-sm font-medium mb-2">
+                Company
+              </label>
+              <select
+                id="new-contact-company"
+                disabled={saving || companiesLoading}
+                value={form.companyId}
+                onChange={(event) => setForm({ ...form, companyId: event.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm"
+              >
+                <option value="">{companiesLoading ? 'Loading companies…' : 'No company'}</option>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+              <Link href="/crm/companies/new" className="inline-flex text-xs mt-2 text-primary">
+                Create a company
+              </Link>
+            </div>
+            <div>
+              <label htmlFor="new-contact-source" className="block text-sm font-medium mb-2">
+                Lead source
+              </label>
+              <select
+                id="new-contact-source"
+                disabled={saving}
+                value={form.leadSource}
+                onChange={(event) => setForm({ ...form, leadSource: event.target.value })}
+                className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm"
+              >
+                {[
+                  'Website',
+                  'LinkedIn',
+                  'Referral',
+                  'Cold Outreach',
+                  'Event',
+                  'Partner',
+                  'Other',
+                ].map((source) => (
+                  <option key={source}>{source}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </section>
+        <div className="flex flex-wrap gap-3 border-t border-border pt-6">
+          <button
+            disabled={saving}
+            className="product-button product-button-primary disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            Create contact
+          </button>
+          <Link href="/crm/contacts" className="product-button product-button-secondary">
+            Cancel
+          </Link>
         </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h2 className="text-sm font-semibold flex items-center gap-2">
-          <User className="h-4 w-4 text-[hsl(246,80%,60%)]" />
-          Personal Info
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              First Name *
-            </label>
-            <input
-              placeholder="Sarah"
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              Last Name *
-            </label>
-            <input
-              placeholder="Johnson"
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Email *</label>
-            <input
-              type="email"
-              placeholder="autopilots.monster@gmail.com"
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Phone</label>
-            <input
-              type="tel"
-              placeholder="+1 555-234-5678"
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              Job Title
-            </label>
-            <input
-              placeholder="CTO"
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              Department
-            </label>
-            <input
-              placeholder="Engineering"
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-        <h2 className="text-sm font-semibold flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-[hsl(246,80%,60%)]" />
-          Company
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="col-span-2">
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Company</label>
-            <input
-              placeholder="Search or create company..."
-              className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">
-              Lead Source
-            </label>
-            <select className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]">
-              {[
-                'Website',
-                'LinkedIn',
-                'Referral',
-                'Cold Outreach',
-                'Event',
-                'Partner',
-                'Other',
-              ].map((o) => (
-                <option key={o}>{o}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">Owner</label>
-            <select className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]">
-              {['Amit Saroj', 'Priya Sharma', 'Alex Kim', 'Sarah Lee'].map((o) => (
-                <option key={o}>{o}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
-          <Save className="h-4 w-4" />
-          Create Contact
-        </button>
-        <Link
-          href="/crm/contacts"
-          className="px-4 py-2.5 border border-border text-sm rounded-lg hover:bg-muted transition-colors"
-        >
-          Cancel
-        </Link>
-      </div>
+      </form>
     </div>
   );
 }

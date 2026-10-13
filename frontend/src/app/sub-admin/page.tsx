@@ -78,7 +78,7 @@ export default function SubAdminOverviewPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -93,8 +93,8 @@ export default function SubAdminOverviewPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Sub-Admin Overview</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Sub-Admin Overview</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Delegated Workspace Administration
         </p>
       </div>
@@ -103,18 +103,18 @@ export default function SubAdminOverviewPage() {
         {stats.map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
+            className="p-5 rounded-2xl bg-card border border-border"
           >
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {s.label}
             </p>
-            <p className="text-2xl font-black text-white mt-1">{s.value}</p>
+            <p className="text-2xl font-semibold text-foreground mt-1">{s.value}</p>
           </div>
         ))}
       </div>
 
       <div>
-        <h2 className="text-sm font-black text-white uppercase tracking-widest mb-4">
+        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4">
           Quick Navigation
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -122,14 +122,14 @@ export default function SubAdminOverviewPage() {
             <Link
               key={link.href}
               href={link.href}
-              className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all flex flex-col gap-4 group"
+              className="p-5 rounded-2xl bg-card border border-border hover:bg-white/[0.04] hover:border-blue-500/20 transition-all flex flex-col gap-4 group"
             >
-              <div className="p-3 rounded-xl bg-indigo-500/10 w-fit group-hover:bg-indigo-500 transition-all">
-                <link.icon className="h-5 w-5 text-indigo-400 group-hover:text-white transition-colors" />
+              <div className="p-3 rounded-xl bg-blue-500/10 w-fit group-hover:bg-blue-500 transition-all">
+                <link.icon className="h-5 w-5 text-blue-700 dark:text-blue-400 group-hover:text-white transition-colors" />
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-sm font-black text-white">{link.label}</p>
-                <ArrowRight className="h-4 w-4 text-gray-500 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" />
+                <p className="text-sm font-semibold text-foreground">{link.label}</p>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />
               </div>
             </Link>
           ))}

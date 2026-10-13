@@ -35,7 +35,7 @@ export default function CookiesPage() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-500 uppercase tracking-wider mb-4">
             Legal & Cookies
           </div>
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-semibold text-gray-900 dark:text-white mb-4 tracking-tight">
             Cookie Policy
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
@@ -53,8 +53,8 @@ export default function CookiesPage() {
           <div className="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/[0.06] rounded-2xl p-8 md:p-10 shadow-sm transition-all">
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <Cookie className="w-5 h-5 text-indigo-500" />
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Cookie className="w-5 h-5 text-blue-500" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   What are Cookies?
@@ -70,7 +70,7 @@ export default function CookiesPage() {
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  <ShieldCheck className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   How We Use Cookies
@@ -86,7 +86,7 @@ export default function CookiesPage() {
               <div className="space-y-4">
                 <div className="p-5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04] transition-all hover:bg-gray-100 dark:hover:bg-white/[0.04]">
                   <div className="flex items-center gap-2 mb-2">
-                    <Info className="w-4 h-4 text-indigo-500" />
+                    <Info className="w-4 h-4 text-blue-500" />
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white m-0">
                       Essential Cookies
                     </h3>
@@ -99,7 +99,7 @@ export default function CookiesPage() {
                 </div>
                 <div className="p-5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/[0.04] transition-all hover:bg-gray-100 dark:hover:bg-white/[0.04]">
                   <div className="flex items-center gap-2 mb-2">
-                    <Settings className="w-4 h-4 text-emerald-500" />
+                    <Settings className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white m-0">
                       Performance & Functionality
                     </h3>
@@ -116,7 +116,7 @@ export default function CookiesPage() {
             <section className="mb-12">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <HelpCircle className="w-5 h-5 text-amber-500" />
+                  <HelpCircle className="w-5 h-5 text-amber-700 dark:text-amber-400" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   Managing Cookies
@@ -137,7 +137,7 @@ export default function CookiesPage() {
                   <a
                     key={browser}
                     href="#"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-500 hover:text-indigo-600"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:text-blue-600"
                   >
                     {browser} <ExternalLink className="w-3 h-3" />
                   </a>
@@ -147,8 +147,8 @@ export default function CookiesPage() {
 
             <section>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <Info className="w-5 h-5 text-indigo-500" />
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Info className="w-5 h-5 text-blue-500" />
                 </div>
                 <h2 className="text-2xl font-bold m-0 text-gray-900 dark:text-white">
                   More Information
@@ -159,7 +159,7 @@ export default function CookiesPage() {
                 email us at{' '}
                 <a
                   href="mailto:autopilots.monster@gmail.com"
-                  className="text-indigo-500 hover:underline font-semibold"
+                  className="text-blue-500 hover:underline font-semibold"
                 >
                   autopilots.monster@gmail.com
                 </a>

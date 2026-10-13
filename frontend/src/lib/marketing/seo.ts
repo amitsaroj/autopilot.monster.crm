@@ -6,7 +6,7 @@ export const SITE_URL = env.site.url;
 
 export const SITE_NAME = 'AutopilotMonster CRM';
 
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/brand/autopilot-monster.png`;
 
 export type PageSeoConfig = {
   title: string;
@@ -38,7 +38,7 @@ export function buildPageMetadata({
       siteName: SITE_NAME,
       title: `${title} | AutopilotMonster`,
       description,
-      images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: title }],
+      images: [{ url: DEFAULT_OG_IMAGE, width: 1254, height: 1254, alt: title }],
     },
     twitter: {
       card: 'summary_large_image',

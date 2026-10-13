@@ -29,10 +29,10 @@ export default function CareersPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-20"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Careers
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Join the team
             <br />
             building the future
@@ -72,7 +72,7 @@ export default function CareersPage() {
               transition={{ delay: i * 0.08, duration: 0.5 }}
               className="p-6 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06]"
             >
-              <v.icon className="w-6 h-6 text-indigo-400 mb-3" />
+              <v.icon className="w-6 h-6 text-blue-700 dark:text-blue-400 mb-3" />
               <h3 className="font-bold text-gray-900 dark:text-white mb-1">{v.title}</h3>
               <p className="text-gray-500 dark:text-gray-400 text-sm">{v.desc}</p>
             </motion.div>
@@ -93,7 +93,7 @@ export default function CareersPage() {
                 className="group flex items-center justify-between p-6 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-100 dark:bg-white/[0.06] transition-all hover:border-gray-300 dark:border-white/[0.12]"
               >
                 <div>
-                  <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-indigo-300 transition-colors">
+                  <h3 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-300 transition-colors">
                     {job.title}
                   </h3>
                   <p className="text-sm text-gray-500 mt-1">

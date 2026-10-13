@@ -91,16 +91,16 @@ export default function AIChatPage() {
             className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'assistant' ? 'bg-[hsl(246,80%,60%)]' : 'bg-muted'}`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'assistant' ? 'bg-[hsl(var(--brand))]' : 'bg-muted'}`}
             >
               {msg.role === 'assistant' ? (
-                <Bot className="h-4 w-4 text-white" />
+                <Bot className="h-4 w-4 text-foreground" />
               ) : (
                 <User className="h-4 w-4 text-muted-foreground" />
               )}
             </div>
             <div
-              className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm ${msg.role === 'assistant' ? 'bg-card border border-border' : 'bg-[hsl(246,80%,60%)] text-white'}`}
+              className={`max-w-[70%] rounded-2xl px-4 py-3 text-sm ${msg.role === 'assistant' ? 'bg-card border border-border' : 'bg-[hsl(var(--brand))] text-foreground'}`}
             >
               <p className="whitespace-pre-wrap leading-relaxed">
                 {msg.content}
@@ -132,12 +132,12 @@ export default function AIChatPage() {
         <button
           onClick={() => void handleSend()}
           disabled={streaming || !input.trim()}
-          className="p-2 rounded-xl bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] transition-colors disabled:opacity-50"
+          className="p-2 rounded-xl bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] transition-colors disabled:opacity-50"
         >
           {streaming ? (
-            <Loader2 className="h-4 w-4 text-white animate-spin" />
+            <Loader2 className="h-4 w-4 text-foreground animate-spin" />
           ) : (
-            <Send className="h-4 w-4 text-white" />
+            <Send className="h-4 w-4 text-foreground" />
           )}
         </button>
       </div>

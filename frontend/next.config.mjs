@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   poweredByHeader: false,
   compress: true,
   transpilePackages: ['reactflow'],
@@ -15,7 +16,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000'}/api/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_API_URL ?? 'https://api.autopilots.monster/api/v1'}/:path*`,
       },
     ];
   },

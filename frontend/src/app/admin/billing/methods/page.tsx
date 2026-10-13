@@ -60,7 +60,7 @@ export default function AdminBillingMethodsPage() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -69,62 +69,62 @@ export default function AdminBillingMethodsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Payment Methods</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Payment Methods</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Saved Payment Methods
           </p>
         </div>
         <button
           onClick={() => toast.info('Use billing setup intent flow to add a card')}
-          className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2"
+          className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" /> Add Card
         </button>
       </div>
 
       <div className="flex items-center gap-3 p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-        <Shield className="w-5 h-5 text-emerald-400 shrink-0" />
-        <p className="text-xs text-gray-300">
+        <Shield className="w-5 h-5 text-emerald-700 dark:text-emerald-400 shrink-0" />
+        <p className="text-xs text-foreground">
           All payment data is encrypted and stored securely via{' '}
-          <span className="text-emerald-400 font-bold">Stripe</span>. We never store raw card
+          <span className="text-emerald-700 dark:text-emerald-400 font-bold">Stripe</span>. We never store raw card
           details.
         </p>
-        <Lock className="w-4 h-4 text-emerald-400 shrink-0" />
+        <Lock className="w-4 h-4 text-emerald-700 dark:text-emerald-400 shrink-0" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {methods.map((method) => (
           <div
             key={method.id}
-            className={`p-6 rounded-2xl border transition-all ${method.isDefault ? 'bg-indigo-500/5 border-indigo-500/30' : 'bg-white/[0.02] border-white/[0.05]'}`}
+            className={`p-6 rounded-2xl border transition-all ${method.isDefault ? 'bg-blue-500/5 border-blue-500/30' : 'bg-card border-border'}`}
           >
             <div className="flex justify-between items-start mb-5">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center text-2xl">
+                <div className="w-12 h-12 rounded-xl bg-card border border-border flex items-center justify-center text-2xl">
                   {BRAND_EMOJIS[method.brand?.toLowerCase() ?? ''] || '💳'}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-black text-white">{method.brand}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{method.brand}</h3>
                     {method.isDefault && (
-                      <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/30 text-[9px] font-black text-indigo-400 uppercase tracking-widest">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-xs font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide">
                         Default
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">•••• •••• •••• {method.lastFour}</p>
+                  <p className="text-xs text-muted-foreground">•••• •••• •••• {method.lastFour}</p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="p-3 rounded-xl bg-white/[0.02]">
-                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Type</p>
-                <p className="text-xs font-black text-white">{method.type}</p>
+              <div className="p-3 rounded-xl bg-card">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Type</p>
+                <p className="text-xs font-semibold text-foreground">{method.type}</p>
               </div>
-              <div className="p-3 rounded-xl bg-white/[0.02]">
-                <p className="text-[9px] text-gray-600 uppercase tracking-widest mb-1">Expires</p>
-                <p className="text-xs font-black text-white">
+              <div className="p-3 rounded-xl bg-card">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Expires</p>
+                <p className="text-xs font-semibold text-foreground">
                   {method.expMonth}/{method.expYear}
                 </p>
               </div>
@@ -134,14 +134,14 @@ export default function AdminBillingMethodsPage() {
               {!method.isDefault && (
                 <button
                   onClick={() => setDefault(method.id)}
-                  className="flex-1 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[10px] font-black text-white uppercase tracking-widest hover:bg-indigo-500/20 hover:border-indigo-500/30 transition-all flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2.5 rounded-xl bg-card border border-border text-xs font-semibold text-foreground uppercase tracking-wide hover:bg-blue-500/20 hover:border-blue-500/30 transition-all flex items-center justify-center gap-1.5"
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-indigo-400" /> Set as Default
+                  <CheckCircle2 className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" /> Set as Default
                 </button>
               )}
               <button
                 onClick={() => remove(method.id)}
-                className={`p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all ${method.isDefault ? 'opacity-30 cursor-not-allowed' : ''}`}
+                className={`p-2.5 rounded-xl bg-card border border-border text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all ${method.isDefault ? 'opacity-30 cursor-not-allowed' : ''}`}
                 disabled={method.isDefault}
               >
                 <Trash2 className="w-4 h-4" />
@@ -151,7 +151,7 @@ export default function AdminBillingMethodsPage() {
         ))}
 
         {methods.length === 0 && (
-          <div className="col-span-full p-8 text-center text-gray-500 text-sm">
+          <div className="col-span-full p-8 text-center text-muted-foreground text-sm">
             No payment methods on file.
           </div>
         )}

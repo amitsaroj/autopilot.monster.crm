@@ -146,7 +146,7 @@ export default function BillingOverviewPage() {
           <button
             onClick={handleRetryPayment}
             disabled={actionLoading === 'retry'}
-            className="px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 disabled:opacity-60 flex items-center gap-2"
+            className="px-4 py-2 rounded-lg bg-amber-600 text-foreground text-sm font-semibold hover:bg-amber-700 disabled:opacity-60 flex items-center gap-2"
           >
             {actionLoading === 'retry' && <Loader2 className="w-4 h-4 animate-spin" />}
             Retry Payment
@@ -168,7 +168,7 @@ export default function BillingOverviewPage() {
               <CheckCircle2 className="w-3.5 h-3.5" /> {sub?.status || 'Inactive'}
             </span>
           </div>
-          <h2 className="text-3xl font-black text-foreground">
+          <h2 className="text-3xl font-semibold text-foreground">
             {sub?.billingCycle === 'ANNUAL' ? 'Annual Plan' : 'Monthly Plan'}
           </h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -244,7 +244,7 @@ export default function BillingOverviewPage() {
               </span>
             </div>
             <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-2">
-              <div className="h-full bg-blue-500 rounded-full" style={{ width: '60%' }} />
+              <div className="h-full bg-blue-600 rounded-full" style={{ width: '60%' }} />
             </div>
             <p className="text-xs text-muted-foreground">Metered real-time usage (per tenant)</p>
           </div>
@@ -252,7 +252,7 @@ export default function BillingOverviewPage() {
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Zap className="w-4 h-4 text-amber-500" /> AI Task Units
+                <Zap className="w-4 h-4 text-amber-700 dark:text-amber-400" /> AI Task Units
               </span>
               <span className="text-xs font-medium text-muted-foreground">
                 {usage['tasks'] || 0} Units
@@ -269,7 +269,7 @@ export default function BillingOverviewPage() {
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-3">
               <span className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Download className="w-4 h-4 text-green-500" /> Data Storage
+                <Download className="w-4 h-4 text-green-700 dark:text-green-400" /> Data Storage
               </span>
               <span className="text-xs font-medium text-muted-foreground">
                 {usage['storage'] || 0} MB
@@ -307,7 +307,7 @@ export default function BillingOverviewPage() {
           className="group bg-card hover:bg-muted/50 border border-border rounded-xl p-5 flex items-center justify-between transition-colors"
         >
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-purple-100 rounded-lg text-purple-600 group-hover:bg-purple-200 transition-colors">
+            <div className="p-3 bg-blue-100 rounded-lg text-blue-600 group-hover:bg-blue-200 transition-colors">
               <CreditCard className="w-5 h-5" />
             </div>
             <div>

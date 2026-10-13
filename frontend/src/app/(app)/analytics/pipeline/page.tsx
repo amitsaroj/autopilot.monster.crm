@@ -54,20 +54,20 @@ export default function AnalyticsPipelinePage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           {
             label: 'Pipeline Value',
             value: `$${(totalValue / 1000).toFixed(1)}k`,
             icon: BarChart3,
-            color: 'text-[hsl(246,80%,60%)]',
+            color: 'text-[hsl(var(--brand))]',
           },
-          { label: 'Open Deals', value: String(totalDeals), icon: Target, color: 'text-blue-400' },
+          { label: 'Open Deals', value: String(totalDeals), icon: Target, color: 'text-blue-700 dark:text-blue-400' },
           {
             label: 'Stages',
             value: String(stages.length),
             icon: TrendingUp,
-            color: 'text-green-400',
+            color: 'text-green-700 dark:text-green-400',
           },
         ].map((s) => (
           <div key={s.label} className="stat-card">
@@ -96,10 +96,10 @@ export default function AnalyticsPipelinePage() {
                   <div className="flex-1 relative">
                     <div className="h-9 bg-muted rounded-lg overflow-hidden">
                       <div
-                        className="h-full rounded-lg bg-[hsl(246,80%,60%)] opacity-80 flex items-center px-3"
+                        className="h-full rounded-lg bg-[hsl(var(--brand))] opacity-80 flex items-center px-3"
                         style={{ width: `${width}%` }}
                       >
-                        <span className="text-xs text-white font-semibold">
+                        <span className="text-xs text-foreground font-semibold">
                           {stage.count} deals · ${stage.value.toLocaleString()}
                         </span>
                       </div>

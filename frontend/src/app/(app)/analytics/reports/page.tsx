@@ -57,7 +57,7 @@ export default function AnalyticsReportsPage() {
         </div>
         <Link
           href="/analytics/reports/new"
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg"
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-[hsl(var(--brand))] text-white rounded-lg"
         >
           <Plus className="h-4 w-4" /> New Report
         </Link>
@@ -78,7 +78,7 @@ export default function AnalyticsReportsPage() {
             >
               <Link href={`/analytics/reports/${report.id}`} className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <FileText className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+                  <FileText className="h-4 w-4 text-[hsl(var(--brand))]" />
                   <h3 className="font-medium">{report.name}</h3>
                   <span className="text-xs px-2 py-0.5 bg-muted rounded">{report.status}</span>
                 </div>

@@ -54,7 +54,7 @@ export default function BrowsePluginsPage() {
               type="button"
               disabled={installing === p.id}
               onClick={() => void handleInstall(p.id)}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
             >
               <Download className="h-4 w-4" /> Install
             </button>

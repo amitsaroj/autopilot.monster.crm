@@ -103,7 +103,7 @@ export default function GlobalJobSchedulerPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-purple-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -111,23 +111,23 @@ export default function GlobalJobSchedulerPage() {
   return (
     <div className="space-y-10 animate-in fade-in duration-700 pb-20 text-sans">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-10">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest border border-purple-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide border border-blue-500/20">
               Temporal Observer Active
             </span>
-            <span className="text-[10px] text-gray-600 font-mono tracking-tighter uppercase shrink-0 overflow-hidden text-ellipsis max-w-[200px]">
+            <span className="text-xs text-muted-foreground font-mono tracking-tighter uppercase shrink-0 overflow-hidden text-ellipsis max-w-[200px]">
               Node: Scheduler-Orchestrator-Core
             </span>
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tight">Job Scheduler</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Job Scheduler</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate temporal dispatches, frequency forensics & systemic execution Pulse
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <button className="px-8 py-3 bg-white text-[#0b0f19] rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl flex items-center gap-2 group">
+          <button className="px-8 py-3 bg-white text-[#0b0f19] rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl flex items-center gap-2 group">
             <Plus className="w-4 h-4" /> Provision Schedule Node
           </button>
         </div>
@@ -140,14 +140,14 @@ export default function GlobalJobSchedulerPage() {
             label: 'Active Schedules',
             value: jobs.length,
             icon: AlarmClock,
-            color: 'text-purple-500',
-            bg: 'bg-purple-500/10',
+            color: 'text-blue-500',
+            bg: 'bg-blue-500/10',
           },
           {
             label: 'Platform Precision',
             value: '100%',
             icon: Timer,
-            color: 'text-emerald-500',
+            color: 'text-emerald-700 dark:text-emerald-400',
             bg: 'bg-emerald-500/10',
           },
           {
@@ -161,15 +161,15 @@ export default function GlobalJobSchedulerPage() {
             label: 'Engine Integrity',
             value: 'Verified',
             icon: ShieldCheck,
-            color: 'text-amber-500',
+            color: 'text-amber-700 dark:text-amber-400',
             bg: 'bg-amber-500/10',
           },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] group hover:bg-white/[0.03] transition-all relative overflow-hidden"
+            className="p-8 rounded-xl bg-card border border-border group hover:bg-white/[0.03] transition-all relative overflow-hidden"
           >
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-indigo-500/5 transition-colors" />
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-card rounded-full blur-2xl group-hover:bg-blue-500/5 transition-colors" />
             <div className="flex justify-between items-start mb-6">
               <div
                 className={`p-4 rounded-3xl ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform shadow-2xl`}
@@ -177,10 +177,10 @@ export default function GlobalJobSchedulerPage() {
                 <stat.icon className="w-8 h-8" />
               </div>
             </div>
-            <p className="text-[11px] text-gray-500 font-black uppercase tracking-widest mb-1 opacity-60 leading-none">
+            <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wide mb-1 opacity-60 leading-none">
               {stat.label}
             </p>
-            <h3 className="text-3xl font-black text-white uppercase tracking-tighter">
+            <h3 className="text-3xl font-semibold text-foreground uppercase tracking-tighter">
               {stat.value}
             </h3>
           </div>
@@ -188,36 +188,36 @@ export default function GlobalJobSchedulerPage() {
       </div>
 
       {/* Job Feed */}
-      <div className="p-10 rounded-[60px] bg-white/[0.01] border border-white/[0.05] relative overflow-hidden group shadow-inner">
-        <div className="absolute -right-20 -top-20 w-80 h-80 bg-purple-500/5 rounded-full blur-[100px]" />
+      <div className="p-10 rounded-[60px] bg-card border border-border relative overflow-hidden group shadow-inner">
+        <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px]" />
 
         <div className="space-y-4 relative">
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="p-10 rounded-[50px] bg-white/[0.02] border border-white/[0.05] hover:border-purple-500/20 transition-all group flex flex-col lg:flex-row items-center gap-12 relative overflow-hidden"
+              className="p-10 rounded-xl bg-card border border-border hover:border-blue-500/20 transition-all group flex flex-col lg:flex-row items-center gap-12 relative overflow-hidden"
             >
-              <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/[0.01] rounded-full blur-3xl group-hover:bg-purple-500/5 transition-colors" />
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-card rounded-full blur-3xl group-hover:bg-blue-500/5 transition-colors" />
 
-              <div className="w-20 h-20 rounded-[35px] bg-white/[0.03] border border-white/5 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all shrink-0 shadow-2xl">
+              <div className="w-20 h-20 rounded-[35px] bg-card border border-border flex items-center justify-center text-blue-700 dark:text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0 shadow-2xl">
                 <Calendar className="w-10 h-10" />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-4 mb-3 flex-wrap">
-                  <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[9px] font-black text-gray-700 uppercase tracking-widest shrink-0">
+                  <span className="px-2 py-0.5 rounded-md bg-card border border-border text-xs font-semibold text-gray-700 uppercase tracking-wide shrink-0">
                     {job.id}
                   </span>
-                  <h3 className="text-2xl font-black text-white uppercase tracking-tight truncate">
+                  <h3 className="text-2xl font-semibold text-foreground uppercase tracking-tight truncate">
                     {job.name}
                   </h3>
                   <span
-                    className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${job.status === 'RUNNING' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : job.status === 'PAUSED' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}
+                    className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${job.status === 'RUNNING' ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20' : job.status === 'PAUSED' ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20' : 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'}`}
                   >
                     {job.status}
                   </span>
                 </div>
-                <div className="flex items-center gap-6 text-[11px] text-gray-600 font-black uppercase tracking-widest leading-none">
+                <div className="flex items-center gap-6 text-[11px] text-muted-foreground font-semibold uppercase tracking-wide leading-none">
                   <span className="flex items-center gap-2">
                     <Clock className="w-4 h-4 opacity-40 shrink-0" /> Cron: {job.cron} artifact
                   </span>
@@ -232,18 +232,18 @@ export default function GlobalJobSchedulerPage() {
               </div>
 
               <div className="flex items-center gap-10 shrink-0 relative">
-                <div className="text-right pr-6 border-r border-white/5">
-                  <p className="text-[10px] text-gray-700 font-black uppercase tracking-widest mb-1 opacity-60">
+                <div className="text-right pr-6 border-r border-border">
+                  <p className="text-xs text-gray-700 font-semibold uppercase tracking-wide mb-1 opacity-60">
                     Next Pulse
                   </p>
-                  <p className="text-sm font-black text-white uppercase tracking-tighter">
+                  <p className="text-sm font-semibold text-foreground uppercase tracking-tighter">
                     {new Date(job.nextRun).toLocaleTimeString()}
                   </p>
                 </div>
                 <div className="flex gap-4">
                   <button
                     onClick={() => toggleStatus(job.id)}
-                    className="p-5 rounded-[28px] bg-white/[0.03] border border-white/5 text-gray-600 hover:text-white transition-all shadow-xl"
+                    className="p-5 rounded-[28px] bg-card border border-border text-muted-foreground hover:text-foreground dark:hover:text-white transition-all shadow-xl"
                   >
                     {job.status === 'PAUSED' ? (
                       <Play className="w-6 h-6" />
@@ -251,7 +251,7 @@ export default function GlobalJobSchedulerPage() {
                       <Pause className="w-6 h-6" />
                     )}
                   </button>
-                  <button className="p-5 rounded-[28px] bg-white/[0.03] border border-white/5 text-gray-600 hover:text-white transition-all shadow-xl">
+                  <button className="p-5 rounded-[28px] bg-card border border-border text-muted-foreground hover:text-foreground dark:hover:text-white transition-all shadow-xl">
                     <Settings className="w-6 h-6" />
                   </button>
                 </div>
@@ -263,31 +263,31 @@ export default function GlobalJobSchedulerPage() {
 
       {/* Scheduler Strategy Cluster */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10">
-        <div className="p-12 rounded-[60px] bg-[#0b0f19] border border-white/[0.05] flex flex-col md:flex-row items-center gap-10 group relative overflow-hidden shadow-2xl">
-          <div className="absolute -right-20 -top-20 w-80 h-80 bg-purple-500/5 rounded-full blur-[100px]" />
-          <div className="p-8 rounded-[40px] bg-purple-500/10 text-purple-500 border border-purple-500/20 group-hover:bg-purple-500 group-hover:text-white transition-all relative shrink-0 shadow-2xl">
+        <div className="p-12 rounded-[60px] bg-card border border-border flex flex-col md:flex-row items-center gap-10 group relative overflow-hidden shadow-2xl">
+          <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-500/5 rounded-full blur-[100px]" />
+          <div className="p-8 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all relative shrink-0 shadow-2xl">
             <Hourglass className="w-14 h-14" />
           </div>
           <div className="space-y-4 relative">
-            <h3 className="text-3xl font-black text-white uppercase tracking-tighter font-sans leading-none">
+            <h3 className="text-3xl font-semibold text-foreground uppercase tracking-tighter font-sans leading-none">
               Temporal Forensics
             </h3>
-            <p className="text-base text-gray-500 font-medium leading-relaxed max-w-sm uppercase tracking-tight opacity-80">
+            <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-sm uppercase tracking-tight opacity-80">
               Analyze structural temporal dispatches. Maintain absolute temporal integrity across
               every scheduled artifact node.
             </p>
           </div>
         </div>
-        <div className="p-12 rounded-[60px] bg-white/[0.02] border border-white/[0.05] flex flex-col md:flex-row items-center gap-10 group relative overflow-hidden shadow-2xl">
+        <div className="p-12 rounded-[60px] bg-card border border-border flex flex-col md:flex-row items-center gap-10 group relative overflow-hidden shadow-2xl">
           <div className="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500/5 rounded-full blur-[100px]" />
-          <div className="p-8 rounded-[40px] bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all relative shrink-0 shadow-2xl">
+          <div className="p-8 rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all relative shrink-0 shadow-2xl">
             <ListChecks className="w-14 h-14" />
           </div>
           <div className="space-y-4 relative">
-            <h3 className="text-3xl font-black text-white uppercase tracking-tighter font-sans leading-none">
+            <h3 className="text-3xl font-semibold text-foreground uppercase tracking-tighter font-sans leading-none">
               Execution Ledger
             </h3>
-            <p className="text-base text-gray-500 font-medium leading-relaxed max-w-sm uppercase tracking-tight opacity-80">
+            <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-sm uppercase tracking-tight opacity-80">
               Orchestrate global execution cycle forensics. Monitor structural job persistence and
               recovery dispatches in real-time.
             </p>

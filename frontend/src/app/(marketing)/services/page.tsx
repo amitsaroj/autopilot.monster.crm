@@ -31,7 +31,7 @@ const sections = [
     title: 'Autonomous AI That Sells',
     desc: 'Deploy GPT-powered agents that autonomously qualify leads, handle objections, book meetings, and nurture prospects 24/7.',
     icon: Sparkles,
-    color: 'from-purple-500 to-pink-400',
+    color: 'from-blue-500 to-pink-400',
     href: '/product/ai',
   },
   {
@@ -63,7 +63,7 @@ const sections = [
     title: 'Automation Without Code',
     desc: 'Drag-and-drop builder with triggers, conditions, delays, branches, and multi-channel actions that execute autonomously.',
     icon: GitBranch,
-    color: 'from-indigo-500 to-violet-400',
+    color: 'from-blue-500 to-blue-400',
     href: '/product/workflow',
   },
   {
@@ -103,7 +103,7 @@ const sections = [
     title: 'Agentic App Development',
     desc: 'Building autonomous, agent-led applications that handle complex reasoning and multi-step tasks natively.',
     icon: Sparkles,
-    color: 'from-indigo-600 to-blue-500',
+    color: 'from-blue-600 to-blue-500',
     href: '/product/ai',
   },
   {
@@ -119,7 +119,7 @@ const sections = [
     title: 'Premium Web & App Dev',
     desc: 'High-performance, scalable digital products built with modern frameworks and pixel-perfect design.',
     icon: Globe,
-    color: 'from-blue-400 to-indigo-500',
+    color: 'from-blue-400 to-blue-500',
     href: '/contact',
   },
   {
@@ -127,7 +127,7 @@ const sections = [
     title: 'WordPress & E-commerce',
     desc: 'Custom Shopify and WordPress solutions optimized for speed, SEO, and maximum conversion rates.',
     icon: Blocks,
-    color: 'from-purple-600 to-indigo-500',
+    color: 'from-blue-600 to-blue-500',
     href: '/contact',
   },
 ];
@@ -142,10 +142,10 @@ export default function ServicesPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Platform Services
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Every tool your
             <br />
             revenue team needs
@@ -180,7 +180,7 @@ export default function ServicesPage() {
                     >
                       {section.tag}
                     </span>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-indigo-300 transition-colors">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-300 transition-colors">
                       {section.title}
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 leading-relaxed max-w-2xl">

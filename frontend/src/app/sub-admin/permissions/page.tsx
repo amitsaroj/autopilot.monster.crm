@@ -58,7 +58,7 @@ export default function SubAdminPermissionsPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -66,8 +66,8 @@ export default function SubAdminPermissionsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Permissions</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Permissions</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Granular Permission Catalog · Read Only
         </p>
       </div>
@@ -77,28 +77,28 @@ export default function SubAdminPermissionsPage() {
           { label: 'Total Permissions', value: permissions.length },
           { label: 'Resources', value: new Set(permissions.map((p) => p.resource)).size },
         ].map((s) => (
-          <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+          <div key={s.label} className="p-5 rounded-2xl bg-card border border-border">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {s.label}
             </p>
-            <p className="text-2xl font-black text-white mt-1">{s.value}</p>
+            <p className="text-2xl font-semibold text-foreground mt-1">{s.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 focus-within:border-indigo-500/30 transition-all">
-        <Search className="w-4 h-4 text-gray-500" />
+      <div className="p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 focus-within:border-blue-500/30 transition-all">
+        <Search className="w-4 h-4 text-muted-foreground" />
         <input
           type="text"
           placeholder="Search by permission or resource..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder:text-gray-600"
+          className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-gray-600"
         />
       </div>
 
       {grouped.length === 0 ? (
-        <div className="p-10 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center text-gray-500 text-sm">
+        <div className="p-10 rounded-2xl bg-card border border-border text-center text-muted-foreground text-sm">
           No permissions found.
         </div>
       ) : (
@@ -106,13 +106,13 @@ export default function SubAdminPermissionsPage() {
           {grouped.map(([resource, perms]) => (
             <div
               key={resource}
-              className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]"
+              className="p-6 rounded-2xl bg-card border border-border"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="p-2.5 rounded-xl bg-indigo-500/10">
-                  <FileSearch className="w-4 h-4 text-indigo-400" />
+                <div className="p-2.5 rounded-xl bg-blue-500/10">
+                  <FileSearch className="w-4 h-4 text-blue-700 dark:text-blue-400" />
                 </div>
-                <p className="text-sm font-black text-white uppercase tracking-widest">
+                <p className="text-sm font-semibold text-foreground uppercase tracking-wide">
                   {resource}
                 </p>
               </div>
@@ -121,7 +121,7 @@ export default function SubAdminPermissionsPage() {
                   <span
                     key={p.id}
                     title={p.description}
-                    className="text-[10px] px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06] text-gray-400 font-black uppercase tracking-widest"
+                    className="text-xs px-2.5 py-1 rounded-lg bg-card border border-border text-muted-foreground font-semibold uppercase tracking-wide"
                   >
                     {p.action}
                   </span>

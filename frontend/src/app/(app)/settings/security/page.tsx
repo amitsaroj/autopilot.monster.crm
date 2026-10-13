@@ -358,7 +358,7 @@ export default function SecuritySettingsPage() {
                           className="p-4 border border-border rounded-xl bg-muted/5 space-y-2"
                         >
                           <div className="flex items-center justify-between">
-                            <span className="px-2 py-0.5 text-[10px] font-bold font-mono rounded-full bg-primary/10 text-primary uppercase">
+                            <span className="px-2 py-0.5 text-xs font-bold font-mono rounded-full bg-primary/10 text-primary uppercase">
                               {log.consentType}
                             </span>
                             <span
@@ -395,7 +395,7 @@ export default function SecuritySettingsPage() {
                             <div className="flex justify-end pt-2 border-t border-border/40 mt-2">
                               <button
                                 onClick={() => handleRevokeConsent(log.consentType)}
-                                className="flex items-center gap-1 text-[10px] text-red-500 hover:bg-red-500/5 px-2 py-1 rounded border border-red-500/20"
+                                className="flex items-center gap-1 text-xs text-red-500 hover:bg-red-500/5 px-2 py-1 rounded border border-red-500/20"
                               >
                                 <UserX className="h-3 w-3" /> Manual Opt-Out
                               </button>
@@ -544,15 +544,15 @@ export default function SecuritySettingsPage() {
                       <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
                         Contact GDPR Data Package
                       </h4>
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         Exported at: {new Date(exportedData.exportedAt).toLocaleTimeString()}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                       <div className="space-y-1.5">
-                        <p className="font-bold text-muted-foreground text-[10px] uppercase">
-                          Identity Details
+                        <p className="font-bold text-muted-foreground text-xs uppercase">
+                          Account details
                         </p>
                         <div>
                           Full Name:{' '}
@@ -582,7 +582,7 @@ export default function SecuritySettingsPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <p className="font-bold text-muted-foreground text-[10px] uppercase">
+                        <p className="font-bold text-muted-foreground text-xs uppercase">
                           Consent Opt-Ins
                         </p>
                         {exportedData.consents?.map((c: any, idx: number) => (
@@ -590,9 +590,9 @@ export default function SecuritySettingsPage() {
                             key={idx}
                             className="flex justify-between border-b border-border/30 pb-1 last:border-0"
                           >
-                            <span className="font-mono text-[10px]">{c.consentType}</span>
+                            <span className="font-mono text-xs">{c.consentType}</span>
                             <span
-                              className={`font-bold ${c.granted ? 'text-green-500' : 'text-red-500'}`}
+                              className={`font-bold ${c.granted ? 'text-green-700 dark:text-green-400' : 'text-red-500'}`}
                             >
                               {c.granted ? 'Granted' : 'Revoked'}
                             </span>

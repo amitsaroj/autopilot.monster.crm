@@ -29,16 +29,16 @@ interface SocialPost {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  PUBLISHED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  SCHEDULED: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  DRAFT: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  PUBLISHED: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+  SCHEDULED: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  DRAFT: 'bg-gray-500/10 text-muted-foreground border-gray-500/20',
   FAILED: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
-  LinkedIn: 'text-blue-400',
+  LinkedIn: 'text-blue-700 dark:text-blue-400',
   Twitter: 'text-sky-400',
-  Facebook: 'text-indigo-400',
+  Facebook: 'text-blue-700 dark:text-blue-400',
 };
 
 export default function AdminSocialFeedPage() {
@@ -77,7 +77,7 @@ export default function AdminSocialFeedPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -86,12 +86,12 @@ export default function AdminSocialFeedPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Social Feed</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Social Feed</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Post Scheduler & Feed Manager
           </p>
         </div>
-        <button className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+        <button className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Post
         </button>
       </div>
@@ -101,32 +101,32 @@ export default function AdminSocialFeedPage() {
           {
             label: 'Published',
             value: posts.filter((p) => p.status === 'PUBLISHED').length,
-            color: 'text-emerald-400',
+            color: 'text-emerald-700 dark:text-emerald-400',
           },
           {
             label: 'Scheduled',
             value: posts.filter((p) => p.status === 'SCHEDULED').length,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
           },
           {
             label: 'Drafts',
             value: posts.filter((p) => p.status === 'DRAFT').length,
-            color: 'text-gray-400',
+            color: 'text-muted-foreground',
           },
           {
             label: 'Total Engagement',
             value: posts.reduce((s, p) => s + p.likes + p.comments + p.shares, 0),
-            color: 'text-indigo-400',
+            color: 'text-blue-700 dark:text-blue-400',
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center"
+            className="p-4 rounded-2xl bg-card border border-border text-center"
           >
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-1">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">
               {s.label}
             </p>
-            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+            <p className={`text-2xl font-semibold ${s.color}`}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -135,22 +135,22 @@ export default function AdminSocialFeedPage() {
         {posts.map((post) => (
           <div
             key={post.id}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all group"
+            className="p-5 rounded-2xl bg-card border border-border hover:bg-white/[0.04] transition-all group"
           >
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2">
                 <span
-                  className={`text-xs font-black uppercase tracking-widest ${PLATFORM_COLORS[post.platform] || 'text-gray-400'}`}
+                  className={`text-xs font-semibold uppercase tracking-wide ${PLATFORM_COLORS[post.platform] || 'text-muted-foreground'}`}
                 >
                   {post.platform}
                 </span>
                 <span
-                  className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[post.status]}`}
+                  className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[post.status]}`}
                 >
                   {post.status}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-gray-600 font-mono">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
                 {post.status === 'SCHEDULED' && post.scheduledAt ? (
                   <>
                     <Calendar className="w-3 h-3" />
@@ -164,21 +164,21 @@ export default function AdminSocialFeedPage() {
                 )}
               </div>
             </div>
-            <p className="text-sm text-gray-300 leading-relaxed mb-4 line-clamp-2">
+            <p className="text-sm text-foreground leading-relaxed mb-4 line-clamp-2">
               {post.content}
             </p>
             {post.status === 'PUBLISHED' && (
-              <div className="flex items-center gap-5 text-xs text-gray-500">
+              <div className="flex items-center gap-5 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <Heart className="w-3.5 h-3.5 text-red-400" />
                   {post.likes}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
+                  <MessageSquare className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" />
                   {post.comments}
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+                  <Share2 className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400" />
                   {post.shares}
                 </span>
               </div>

@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Plus, Search, Trash2, Edit2, Loader2, User, Mail, Phone, Building2 } from 'lucide-react';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import api from '@/lib/api/client';
+import { DialogShell } from '@/components/ui/dialog-shell';
 import { ListPagination } from '@/components/ui/ListPagination';
 import { usePaginatedCrmList } from '@/hooks/usePaginatedCrmList';
 import { parsePaginatedResponse } from '@/lib/api/pagination';
@@ -76,26 +78,26 @@ export default function ContactsPage() {
     try {
       if (editingId) {
         await api.put(`/crm/contacts/${editingId}`, formData);
-        toast.success('Identity node mutated');
+        toast.success('Contact updated');
       } else {
         await api.post('/crm/contacts', formData);
-        toast.success('Identity node injected');
+        toast.success('Contact created');
       }
       setIsModalOpen(false);
       reload();
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Node injection failed');
+      toast.error(e.response?.data?.message || 'Unable to save contact');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Confirm erasure of identity node?')) return;
+    if (!confirm('Delete this contact? This action cannot be undone.')) return;
     try {
       await api.delete(`/crm/contacts/${id}`);
-      toast.success('Identity erased');
+      toast.success('Contact deleted');
       reload();
     } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Erasure failed');
+      toast.error(e.response?.data?.message || 'Unable to delete contact');
     }
   };
 
@@ -123,221 +125,250 @@ export default function ContactsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-widest border border-indigo-500/20">
-              Identity Observer Active
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide border border-blue-500/20">
+              Customer workspace
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight text-sans">
-            Contact Intelligence
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight text-sans">
+            Contacts
           </h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
-            Manage human identity artifacts and account blocks
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
+            Manage your customer relationships and contact details.
           </p>
         </div>
-        <button
-          onClick={openCreate}
-          className="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" /> Provision Identity Node
+        <button onClick={openCreate} className="product-button product-button-primary">
+          <Plus className="w-4 h-4" /> Add contact
         </button>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="w-full md:max-w-md p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4 group focus-within:border-indigo-500/30 transition-all shadow-inner">
-          <Search className="w-5 h-5 text-gray-500 group-focus-within:text-indigo-400" />
+        <div className="w-full md:max-w-md p-4 rounded-2xl bg-card border border-border flex items-center gap-4 group focus-within:border-blue-500/30 transition-all shadow-inner">
+          <Search className="w-5 h-5 text-muted-foreground group-focus-within:text-blue-400" />
           <input
             type="text"
-            placeholder="Search identity artifact..."
+            aria-label="Search contacts"
+            placeholder="Search contacts…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-600 font-medium"
+            className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-gray-600 font-medium"
           />
         </div>
       </div>
 
       {loading ? (
         <div className="flex h-[40vh] items-center justify-center">
-          <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
         </div>
       ) : error ? (
         <div className="py-20 text-center">
-          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{error}</p>
+          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">
+            {error}
+          </p>
           <button
             type="button"
             onClick={() => reload()}
-            className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide"
           >
             Retry
           </button>
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {contacts.map((contact) => {
-              const thisCompany =
-                companies.find((c) => c.id === contact.companyId) || contact.company;
-              return (
-                <div
-                  key={contact.id}
-                  className="p-8 rounded-[40px] bg-white/[0.02] border border-white/[0.05] hover:border-indigo-500/20 transition-all group flex flex-col justify-between relative overflow-hidden"
-                >
-                  <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/[0.01] rounded-full blur-2xl group-hover:bg-indigo-500/5 transition-colors pointer-events-none" />
-
-                  <div>
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="w-14 h-14 rounded-[20px] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all shadow-2xl text-xl font-black uppercase">
-                        {contact.firstName[0]}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openEdit(contact)}
-                          className="p-2 rounded-xl text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(contact.id)}
-                          className="p-2 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-black text-white group-hover:text-indigo-400 transition-colors uppercase tracking-tight mb-2 leading-none">
-                      {contact.firstName} {contact.lastName}
-                    </h3>
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20 mb-6">
-                      Node Active
-                    </span>
-
-                    <div className="space-y-4 pt-4 border-t border-white/5">
-                      <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                        <Mail className="w-4 h-4 opacity-40 shrink-0" /> {contact.email}
-                      </div>
-                      {contact.phone && (
-                        <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                          <Phone className="w-4 h-4 opacity-40 shrink-0" /> {contact.phone}
+          <div className="product-panel overflow-x-auto">
+            <table className="w-full min-w-[680px] text-sm">
+              <caption className="sr-only">
+                Contacts with company, communication details, and record actions
+              </caption>
+              <thead>
+                <tr className="border-b border-border">
+                  {['Contact', 'Company', 'Phone', 'Status', 'Actions'].map((label) => (
+                    <th key={label} scope="col" className="px-5 py-3 text-left">
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {contacts.map((contact) => {
+                  const company =
+                    companies.find((item) => item.id === contact.companyId) || contact.company;
+                  return (
+                    <tr key={contact.id}>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <span className="w-9 h-9 rounded-full bg-accent text-primary flex items-center justify-center font-semibold shrink-0">
+                            {contact.firstName?.[0]}
+                          </span>
+                          <div>
+                            <Link
+                              href={`/crm/contacts/${contact.id}`}
+                              className="font-semibold hover:text-primary"
+                            >
+                              {contact.firstName} {contact.lastName}
+                            </Link>
+                            <p className="text-xs text-muted-foreground mt-1">{contact.email}</p>
+                          </div>
                         </div>
-                      )}
-                      {thisCompany && (
-                        <div className="flex items-center gap-4 text-[10px] text-gray-500 font-black uppercase tracking-widest">
-                          <Building2 className="w-4 h-4 opacity-40 shrink-0" /> {thisCompany.name}
+                      </td>
+                      <td className="px-5 py-4 text-muted-foreground">{company?.name || '—'}</td>
+                      <td className="px-5 py-4 text-muted-foreground">{contact.phone || '—'}</td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex px-2 py-1 rounded-md bg-muted text-xs font-medium">
+                          {contact.status || '—'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => openEdit(contact)}
+                            aria-label={`Edit ${contact.firstName} ${contact.lastName}`}
+                            className="p-2.5 rounded-lg hover:bg-accent text-muted-foreground"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(contact.id)}
+                            aria-label={`Delete ${contact.firstName} ${contact.lastName}`}
+                            className="p-2.5 rounded-lg hover:bg-red-50 text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {contacts.length === 0 && (
-              <div className="col-span-1 md:col-span-2 lg:col-span-3 py-20 text-center text-sans">
-                <p className="text-gray-500 font-black text-xs uppercase tracking-widest">
-                  No identity artifacts found.
-                </p>
-              </div>
-            )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {contacts.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center px-6 py-16 text-muted-foreground">
+                      No contacts found. Add a contact or adjust your search.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
           <ListPagination meta={meta} page={page} onPageChange={setPage} />
         </div>
       )}
 
       {/* Identity Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-xl p-8 rounded-[40px] bg-[#0b0f19] border border-white/10 shadow-2xl animate-in zoom-in-95">
-            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
-              <User className="w-6 h-6 text-indigo-500" />{' '}
-              {editingId ? 'Reconfigure Identity' : 'Generate Identity'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Given Designation
-                  </label>
-                  <input
-                    required
-                    type="text"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40"
-                  />
-                </div>
-                <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Surname Designation
-                  </label>
-                  <input
-                    required
-                    type="text"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40"
-                  />
-                </div>
-                <div className="col-span-2 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Network Vector (Email)
-                  </label>
-                  <input
-                    required
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40"
-                  />
-                </div>
-                <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Comm Channel
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40 tracking-widest"
-                  />
-                </div>
-                <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Bind to Lattice (Company)
-                  </label>
-                  <select
-                    value={formData.companyId}
-                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-indigo-500/40 appearance-none cursor-pointer"
-                  >
-                    <option value="" className="bg-[#0b0f19]">
-                      Standalone Node
+      <DialogShell
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        title={editingId ? 'Edit contact' : 'Add contact'}
+      >
+        <div className="w-full max-w-xl max-h-[90dvh] overflow-y-auto p-5 sm:p-8 rounded-xl bg-card border border-border shadow-2xl animate-in zoom-in-95">
+          <h2 className="text-2xl font-semibold text-foreground uppercase tracking-tighter mb-8 flex items-center gap-3">
+            <User className="w-6 h-6 text-blue-500" /> {editingId ? 'Edit contact' : 'Add contact'}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-1 space-y-2">
+                <label
+                  htmlFor="contact-firstName"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1"
+                >
+                  First name
+                </label>
+                <input
+                  id="contact-firstName"
+                  required
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-blue-500/40"
+                />
+              </div>
+              <div className="col-span-1 space-y-2">
+                <label
+                  htmlFor="contact-lastName"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1"
+                >
+                  Last name
+                </label>
+                <input
+                  id="contact-lastName"
+                  required
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-blue-500/40"
+                />
+              </div>
+              <div className="sm:col-span-2 space-y-2">
+                <label
+                  htmlFor="contact-email"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1"
+                >
+                  Email
+                </label>
+                <input
+                  id="contact-email"
+                  required
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-blue-500/40"
+                />
+              </div>
+              <div className="col-span-1 space-y-2">
+                <label
+                  htmlFor="contact-phone"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1"
+                >
+                  Phone
+                </label>
+                <input
+                  id="contact-phone"
+                  type="text"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-blue-500/40 tracking-wide"
+                />
+              </div>
+              <div className="col-span-1 space-y-2">
+                <label
+                  htmlFor="contact-companyId"
+                  className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1"
+                >
+                  Company
+                </label>
+                <select
+                  id="contact-companyId"
+                  value={formData.companyId}
+                  onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                  className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-blue-500/40 appearance-none cursor-pointer"
+                >
+                  <option value="" className="bg-card">
+                    No company
+                  </option>
+                  {companies.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-card">
+                      {c.name}
                     </option>
-                    {companies.map((c) => (
-                      <option key={c.id} value={c.id} className="bg-[#0b0f19]">
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  ))}
+                </select>
               </div>
-              <div className="pt-6 border-t border-white/5 flex gap-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 bg-white/[0.02] border-white/5 border hover:bg-white/[0.05] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-                >
-                  Abort
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-4 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20"
-                >
-                  Execute Injection
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div className="pt-6 border-t border-border flex gap-4">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="flex-1 py-4 bg-card border-border border hover:bg-white/[0.05] text-foreground rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20"
+              >
+                Save contact
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </DialogShell>
     </div>
   );
 }

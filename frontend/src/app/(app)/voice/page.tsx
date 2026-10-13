@@ -65,14 +65,14 @@ export default function VoicePage() {
           </Link>
           <Link
             href="/voice/calls/new"
-            className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
           >
             <Phone className="h-4 w-4" /> New Call
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="col-span-1 rounded-xl border border-border bg-card p-6">
           <h2 className="text-sm font-semibold mb-4">Quick Dial</h2>
           <div className="flex items-center gap-2 mb-4">
@@ -80,7 +80,7 @@ export default function VoicePage() {
               value={dialNumber}
               onChange={(e) => setDialNumber(e.target.value)}
               placeholder="+1 (555) 000-0000"
-              className="flex-1 px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+              className="flex-1 px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
             />
           </div>
           <button
@@ -97,7 +97,7 @@ export default function VoicePage() {
         <div className="col-span-2 rounded-xl border border-border bg-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h2 className="text-sm font-semibold">Recent Calls</h2>
-            <Link href="/voice/calls" className="text-xs text-[hsl(246,80%,60%)] hover:underline">
+            <Link href="/voice/calls" className="text-xs text-[hsl(var(--brand))] hover:underline">
               View all
             </Link>
           </div>
@@ -119,10 +119,10 @@ export default function VoicePage() {
                         : PhoneOutgoing;
                   const iconClass =
                     call.direction === 'INBOUND'
-                      ? 'text-green-500'
+                      ? 'text-green-700 dark:text-green-400'
                       : ['NO-ANSWER', 'BUSY', 'FAILED'].includes(call.status)
                         ? 'text-red-500'
-                        : 'text-blue-400';
+                        : 'text-blue-700 dark:text-blue-400';
 
                   return (
                     <tr key={call.id} className="hover:bg-muted/30 transition-colors">
@@ -132,7 +132,7 @@ export default function VoicePage() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/voice/calls/${call.id}`}
-                          className="font-medium text-foreground hover:text-[hsl(246,80%,60%)]"
+                          className="font-medium text-foreground hover:text-[hsl(var(--brand))]"
                         >
                           {call.from} → {call.to}
                         </Link>

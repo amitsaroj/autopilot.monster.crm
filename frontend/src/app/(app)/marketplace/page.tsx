@@ -69,7 +69,7 @@ export default function MarketplacePage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search marketplace..."
-            className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
           />
         </div>
         <button className="flex items-center gap-2 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-colors">
@@ -82,19 +82,19 @@ export default function MarketplacePage() {
           <Link
             key={app.id}
             href={`/marketplace/${app.id}`}
-            className="group rounded-xl border border-border bg-card p-5 hover:border-[hsl(246,80%,60%)]/50 hover:shadow-md transition-all block"
+            className="group rounded-xl border border-border bg-card p-5 hover:border-[hsl(var(--brand))]/50 hover:shadow-md transition-all block"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="w-10 h-10 rounded-xl border border-border bg-muted flex items-center justify-center">
                 <Store className="h-5 w-5 text-muted-foreground" />
               </div>
               {installedIds.has(app.id) && (
-                <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-full text-xs font-medium flex items-center gap-1">
+                <span className="px-2 py-0.5 bg-green-500/10 text-green-700 dark:text-green-400 rounded-full text-xs font-medium flex items-center gap-1">
                   <CheckCircle className="h-3 w-3" /> Installed
                 </span>
               )}
             </div>
-            <h3 className="font-semibold text-foreground group-hover:text-[hsl(246,80%,60%)] transition-colors">
+            <h3 className="font-semibold text-foreground group-hover:text-[hsl(var(--brand))] transition-colors">
               {app.name}
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5 mb-3 line-clamp-2">

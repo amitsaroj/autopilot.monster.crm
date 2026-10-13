@@ -43,7 +43,7 @@ export default function ConvertLeadPage({ params }: { params: Promise<{ id: stri
       <button
         onClick={() => void handleConvert()}
         disabled={converting}
-        className="flex items-center gap-2 px-4 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg disabled:opacity-50"
+        className="flex items-center gap-2 px-4 py-2 text-sm bg-[hsl(var(--brand))] text-white rounded-lg disabled:opacity-50"
       >
         <UserCheck className="h-4 w-4" /> {converting ? 'Converting...' : 'Convert to Contact'}
       </button>

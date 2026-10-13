@@ -122,7 +122,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
 
   if (!campaign) {
     return (
-      <div className="mx-auto max-w-3xl py-8 text-center text-gray-500">Campaign not found.</div>
+      <div className="mx-auto max-w-3xl py-8 text-center text-muted-foreground">Campaign not found.</div>
     );
   }
 
@@ -132,7 +132,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
     <div className="mx-auto max-w-5xl space-y-6 py-8">
       <Link
         href="/voice/campaigns"
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-blue-600"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-blue-600"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Campaigns
@@ -145,7 +145,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{campaign.name}</h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-muted-foreground">
               From {campaign.fromNumber} · concurrency {campaign.concurrency}
               {campaign.callingHoursStart && campaign.callingHoursEnd
                 ? ` · ${campaign.callingHoursStart}–${campaign.callingHoursEnd} ${campaign.timezone}`
@@ -160,7 +160,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
-        <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
+        <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
           <span>Progress</span>
           <span>{campaign.callsMade} / {campaign.totalContacts}</span>
         </div>
@@ -177,12 +177,12 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
           { label: 'Attempts failed', value: campaign.callsFailed },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl border border-gray-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase text-gray-500">{stat.label}</p>
+            <p className="text-xs font-medium uppercase text-muted-foreground">{stat.label}</p>
             <p className="mt-2 text-2xl font-bold text-gray-900">{stat.value}</p>
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-400 -mt-3">
+      <p className="text-xs text-muted-foreground -mt-3">
         Attempt counts include retries — see the recipient breakdown below for unique outcomes per
         contact.
       </p>
@@ -194,7 +194,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
             {Object.entries(RECIPIENT_STATUS_LABELS).map(([key, label]) => (
               <div key={key} className="rounded-lg bg-gray-50 p-3 text-center">
                 <p className="text-lg font-bold text-gray-900">{stats.byStatus[key as never] ?? 0}</p>
-                <p className="text-[11px] text-gray-500">{label}</p>
+                <p className="text-[11px] text-muted-foreground">{label}</p>
               </div>
             ))}
           </div>
@@ -203,7 +203,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
 
       <div className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="text-sm font-semibold text-gray-900">Call script</h2>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
           {campaign.script || '(Using AI agent prompt instead of a script)'}
         </p>
       </div>
@@ -264,17 +264,17 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
           <h2 className="text-sm font-semibold text-gray-900">Recipients</h2>
         </div>
         {recipients.length === 0 ? (
-          <p className="p-6 text-center text-sm text-gray-500">No recipients yet.</p>
+          <p className="p-6 text-center text-sm text-muted-foreground">No recipients yet.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="px-4 py-2 text-left font-medium text-gray-500">Phone</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">Status</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">Attempts</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">Outcome</th>
-                <th className="px-4 py-2 text-left font-medium text-gray-500">Next attempt</th>
-                <th className="px-4 py-2 text-right font-medium text-gray-500">Actions</th>
+                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Phone</th>
+                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Attempts</th>
+                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Outcome</th>
+                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Next attempt</th>
+                <th className="px-4 py-2 text-right font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -284,11 +284,11 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
                   <td className="px-4 py-2 text-gray-700">
                     {RECIPIENT_STATUS_LABELS[r.status] ?? r.status}
                   </td>
-                  <td className="px-4 py-2 text-gray-500">
+                  <td className="px-4 py-2 text-muted-foreground">
                     {r.attempts}/{r.maxAttempts}
                   </td>
-                  <td className="px-4 py-2 text-gray-500">{r.outcome ?? '—'}</td>
-                  <td className="px-4 py-2 text-gray-500">
+                  <td className="px-4 py-2 text-muted-foreground">{r.outcome ?? '—'}</td>
+                  <td className="px-4 py-2 text-muted-foreground">
                     {r.nextAttemptAt ? new Date(r.nextAttemptAt).toLocaleString() : '—'}
                   </td>
                   <td className="px-4 py-2 text-right">
@@ -308,7 +308,7 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
                           type="button"
                           onClick={() => void handleSkipRecipient(r.id)}
                           disabled={acting}
-                          className="text-xs font-medium text-gray-500 hover:underline disabled:opacity-50"
+                          className="text-xs font-medium text-muted-foreground hover:underline disabled:opacity-50"
                         >
                           Skip
                         </button>

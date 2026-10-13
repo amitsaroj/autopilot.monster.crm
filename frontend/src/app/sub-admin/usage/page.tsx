@@ -47,7 +47,7 @@ export default function SubAdminUsagePage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -78,8 +78,8 @@ export default function SubAdminUsagePage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">Usage</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Usage</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Current Billing Period Consumption
         </p>
       </div>
@@ -88,24 +88,24 @@ export default function SubAdminUsagePage() {
         {tiles.map((t) => (
           <div
             key={t.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4"
+            className="p-5 rounded-2xl bg-card border border-border flex items-center gap-4"
           >
-            <div className="p-3 rounded-xl bg-indigo-500/10">
-              <t.icon className="w-5 h-5 text-indigo-400" />
+            <div className="p-3 rounded-xl bg-blue-500/10">
+              <t.icon className="w-5 h-5 text-blue-700 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {t.label}
               </p>
-              <p className="text-2xl font-black text-white">{t.value}</p>
+              <p className="text-2xl font-semibold text-foreground">{t.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3">
-        <BarChart3 className="w-4 h-4 text-indigo-400" />
-        <p className="text-xs text-gray-500">
+      <div className="p-6 rounded-2xl bg-card border border-border flex items-center gap-3">
+        <BarChart3 className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+        <p className="text-xs text-muted-foreground">
           Usage is measured against the plan limits configured for this workspace. Contact your
           tenant admin if you're approaching a limit.
         </p>

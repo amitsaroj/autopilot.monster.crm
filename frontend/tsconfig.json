@@ -26,14 +26,20 @@
         "./src/*"
       ]
     },
-    "target": "ES2017"
+    "target": "ES2017",
+    "types": [
+      "node",
+      "vitest/globals"
+    ]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next-redesign/types/**/*.ts",
+    ".next-redesign/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

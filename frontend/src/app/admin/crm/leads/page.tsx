@@ -118,20 +118,20 @@ export default function AdministrativeLeadIntelligencePage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wide border border-emerald-500/20">
               Acquisition Engine Active
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight text-sans">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight text-sans">
             Lead Intelligence Matrix
           </h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Monitor incoming vectors, acquisition sources, and conversion probabilities
           </p>
         </div>
         <button
           onClick={openCreate}
-          className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-2 group"
+          className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-2 group"
         >
           <Plus className="w-4 h-4" /> Initialize Lead Vector
         </button>
@@ -139,57 +139,57 @@ export default function AdministrativeLeadIntelligencePage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="md:col-span-3">
-          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4 group focus-within:border-emerald-500/30 transition-all shadow-inner">
-            <Search className="w-5 h-5 text-gray-500 group-focus-within:text-emerald-400" />
+          <div className="p-4 rounded-2xl bg-card border border-border flex items-center gap-4 group focus-within:border-emerald-500/30 transition-all shadow-inner">
+            <Search className="w-5 h-5 text-muted-foreground group-focus-within:text-emerald-400" />
             <input
               type="text"
               placeholder="Search vector email or identity artifact..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-sm text-gray-200 placeholder:text-gray-600 font-medium"
+              className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-gray-600 font-medium"
             />
           </div>
         </div>
-        <button className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-gray-400 hover:text-white hover:bg-white/[0.05] text-[10px] font-black uppercase tracking-widest transition-all">
+        <button className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-card border border-border text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] text-xs font-semibold uppercase tracking-wide transition-all">
           <Filter className="w-4 h-4" /> Filter Stack
         </button>
       </div>
 
       {loading ? (
         <div className="flex h-[40vh] items-center justify-center">
-          <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-700 dark:text-emerald-400" />
         </div>
       ) : error ? (
         <div className="py-20 text-center">
-          <p className="text-gray-500 font-black text-xs uppercase tracking-widest mb-4">{error}</p>
+          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">{error}</p>
           <button
             type="button"
             onClick={() => reload()}
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-black uppercase tracking-widest"
+            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-xs font-semibold uppercase tracking-wide"
           >
             Retry
           </button>
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="rounded-[40px] border border-white/[0.05] bg-white/[0.02] shadow-2xl overflow-hidden">
+          <div className="rounded-xl border border-border bg-card shadow-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/5 bg-white/[0.01]">
-                    <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">
-                      Vector Identity
+                  <tr className="border-b border-border bg-card">
+                    <th className="p-6 text-xs font-semibold tracking-wide uppercase text-muted-foreground">
+                      Email address
                     </th>
-                    <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">
-                      Source Artifact
+                    <th className="p-6 text-xs font-semibold tracking-wide uppercase text-muted-foreground">
+                      Lead source
                     </th>
-                    <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">
+                    <th className="p-6 text-xs font-semibold tracking-wide uppercase text-muted-foreground">
                       Current Phase
                     </th>
-                    <th className="p-6 text-[10px] font-black tracking-widest uppercase text-gray-500">
+                    <th className="p-6 text-xs font-semibold tracking-wide uppercase text-muted-foreground">
                       Capture Date
                     </th>
-                    <th className="p-6 text-right text-[10px] font-black tracking-widest uppercase text-gray-500">
+                    <th className="p-6 text-right text-xs font-semibold tracking-wide uppercase text-muted-foreground">
                       Actions
                     </th>
                   </tr>
@@ -199,57 +199,57 @@ export default function AdministrativeLeadIntelligencePage() {
                     <tr key={lead.id} className="hover:bg-white/[0.01] transition-colors group">
                       <td className="p-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-black text-lg uppercase shadow-inner group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-semibold text-lg uppercase shadow-inner group-hover:bg-emerald-500 group-hover:text-white transition-all">
                             {lead.firstName?.[0] || 'L'}
                           </div>
                           <div>
-                            <p className="text-sm font-black text-white uppercase tracking-tight">
+                            <p className="text-sm font-semibold text-foreground uppercase tracking-tight">
                               {lead.firstName} {lead.lastName}
                             </p>
-                            <p className="text-[10px] font-bold text-gray-500">{lead.email}</p>
+                            <p className="text-xs font-bold text-muted-foreground">{lead.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="p-6">
-                        <span className="px-3 py-1 rounded-lg bg-white/[0.03] border border-white/10 text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                        <span className="px-3 py-1 rounded-lg bg-card border border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                           {lead.source}
                         </span>
                       </td>
                       <td className="p-6">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${
                             lead.status === 'NEW'
-                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                              ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'
                               : lead.status === 'QUALIFIED'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+                                : 'bg-gray-500/10 text-muted-foreground border-gray-500/20'
                           }`}
                         >
                           {lead.status}
                         </span>
                       </td>
                       <td className="p-6">
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
                           {new Date(lead.createdAt).toLocaleDateString()}
                         </span>
                       </td>
                       <td className="p-6 text-right space-x-2">
                         <button
                           onClick={() => setConversionLead(lead)}
-                          className="p-2.5 rounded-xl text-emerald-500 hover:text-white hover:bg-emerald-500 transition-all opacity-0 group-hover:opacity-100"
+                          className="p-2.5 rounded-xl text-emerald-700 dark:text-emerald-400 hover:text-foreground dark:hover:text-white hover:bg-emerald-500 transition-all opacity-0 group-hover:opacity-100"
                           title="Convert to Contact"
                         >
                           <Rocket className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => openEdit(lead)}
-                          className="p-2.5 rounded-xl text-gray-600 hover:text-white hover:bg-white/[0.05] transition-all"
+                          className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] transition-all"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(lead.id)}
-                          className="p-2.5 rounded-xl text-gray-600 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          className="p-2.5 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -260,7 +260,7 @@ export default function AdministrativeLeadIntelligencePage() {
                     <tr>
                       <td
                         colSpan={5}
-                        className="p-20 text-center text-gray-500 font-black text-xs uppercase tracking-widest"
+                        className="p-20 text-center text-muted-foreground font-semibold text-xs uppercase tracking-wide"
                       >
                         No lead vectors detected currently.
                       </td>
@@ -277,39 +277,39 @@ export default function AdministrativeLeadIntelligencePage() {
       {/* Lead Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-xl p-8 rounded-[40px] bg-[#0b0f19] border border-white/10 shadow-2xl animate-in zoom-in-95">
-            <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
-              <Target className="w-6 h-6 text-emerald-500" />{' '}
+          <div className="w-full max-w-xl p-8 rounded-xl bg-card border border-border shadow-2xl animate-in zoom-in-95">
+            <h2 className="text-2xl font-semibold text-foreground uppercase tracking-tighter mb-8 flex items-center gap-3">
+              <Target className="w-6 h-6 text-emerald-700 dark:text-emerald-400" />{' '}
               {editingId ? 'Reconfigure Vector' : 'Initialize Vector'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Given Designation
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1">
+                    First name
                   </label>
                   <input
                     required
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40"
+                    className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/40"
                   />
                 </div>
                 <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                    Surname Designation
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1">
+                    Last name
                   </label>
                   <input
                     required
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40"
+                    className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/40"
                   />
                 </div>
                 <div className="col-span-2 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1">
                     Network Vector (Email)
                   </label>
                   <input
@@ -317,77 +317,77 @@ export default function AdministrativeLeadIntelligencePage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40"
+                    className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/40"
                   />
                 </div>
                 <div className="col-span-2 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1">
                     Comm Channel (Phone)
                   </label>
                   <input
                     type="text"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40 tracking-widest"
+                    className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/40 tracking-wide"
                   />
                 </div>
                 <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1">
                     Acquisition Source
                   </label>
                   <select
                     value={formData.source}
                     onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
+                    className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
                   >
-                    <option value="Manual" className="bg-[#0b0f19]">
+                    <option value="Manual" className="bg-card">
                       Manual Pulse
                     </option>
-                    <option value="Webform" className="bg-[#0b0f19]">
+                    <option value="Webform" className="bg-card">
                       Inbound Webform
                     </option>
-                    <option value="API" className="bg-[#0b0f19]">
+                    <option value="API" className="bg-card">
                       Nexus API
                     </option>
-                    <option value="Referral" className="bg-[#0b0f19]">
+                    <option value="Referral" className="bg-card">
                       Network Referral
                     </option>
                   </select>
                 </div>
                 <div className="col-span-1 space-y-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide ml-1">
                     Lifecycle Phase
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 text-sm text-white outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
+                    className="w-full bg-card border border-border rounded-2xl px-5 py-4 text-sm text-foreground outline-none focus:border-emerald-500/40 appearance-none cursor-pointer"
                   >
-                    <option value="NEW" className="bg-[#0b0f19]">
+                    <option value="NEW" className="bg-card">
                       New Vector
                     </option>
-                    <option value="QUALIFIED" className="bg-[#0b0f19]">
+                    <option value="QUALIFIED" className="bg-card">
                       Qualified Sequence
                     </option>
-                    <option value="LOST" className="bg-[#0b0f19]">
+                    <option value="LOST" className="bg-card">
                       Fragmented
                     </option>
                   </select>
                 </div>
               </div>
-              <div className="pt-6 border-t border-white/5 flex gap-4">
+              <div className="pt-6 border-t border-border flex gap-4">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 bg-white/[0.02] border-white/5 border hover:bg-white/[0.05] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  className="flex-1 py-4 bg-card border-border border hover:bg-white/[0.05] text-foreground rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all"
                 >
                   Abort
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/20"
+                  className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-emerald-500/20"
                 >
-                  Execute Provisioning
+                  Save changes
                 </button>
               </div>
             </form>

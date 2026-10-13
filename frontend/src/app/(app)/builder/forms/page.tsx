@@ -29,7 +29,7 @@ export default function BuilderFormsPage() {
         <h1 className="text-2xl font-bold">Forms</h1>
         <Link
           href="/builder/forms/new"
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
         >
           New Form
         </Link>

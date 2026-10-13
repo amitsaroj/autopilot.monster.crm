@@ -76,7 +76,7 @@ export default function SubAdminRolesPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -85,14 +85,14 @@ export default function SubAdminRolesPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Roles</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Roles</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Access Role Definitions
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2"
+          className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
         >
           <Plus className="w-4 h-4" /> New Role
         </button>
@@ -104,17 +104,17 @@ export default function SubAdminRolesPage() {
           { label: 'System Roles', value: roles.filter((r) => r.isSystem).length },
           { label: 'Custom Roles', value: roles.filter((r) => !r.isSystem).length },
         ].map((s) => (
-          <div key={s.label} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+          <div key={s.label} className="p-5 rounded-2xl bg-card border border-border">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {s.label}
             </p>
-            <p className="text-2xl font-black text-white mt-1">{s.value}</p>
+            <p className="text-2xl font-semibold text-foreground mt-1">{s.value}</p>
           </div>
         ))}
       </div>
 
       {roles.length === 0 ? (
-        <div className="p-10 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-center text-gray-500 text-sm">
+        <div className="p-10 rounded-2xl bg-card border border-border text-center text-muted-foreground text-sm">
           No roles found.
         </div>
       ) : (
@@ -122,30 +122,30 @@ export default function SubAdminRolesPage() {
           {roles.map((role) => (
             <div
               key={role.id}
-              className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group"
+              className="p-6 rounded-2xl bg-card border border-border hover:bg-white/[0.04] hover:border-blue-500/20 transition-all group"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 rounded-xl bg-indigo-500/10 group-hover:bg-indigo-500 transition-all">
-                    <ShieldCheck className="w-5 h-5 text-indigo-400 group-hover:text-white transition-colors" />
+                  <div className="p-3 rounded-xl bg-blue-500/10 group-hover:bg-blue-500 transition-all">
+                    <ShieldCheck className="w-5 h-5 text-blue-700 dark:text-blue-400 group-hover:text-white transition-colors" />
                   </div>
-                  <p className="text-base font-black text-white">{role.name}</p>
+                  <p className="text-base font-semibold text-foreground">{role.name}</p>
                 </div>
                 {role.isSystem ? (
-                  <span className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-gray-500" title="System role — cannot be deleted">
+                  <span className="p-2 rounded-lg bg-card border border-border text-muted-foreground" title="System role — cannot be deleted">
                     <Lock className="w-3.5 h-3.5" />
                   </span>
                 ) : (
                   <button
                     onClick={() => handleDelete(role)}
-                    className="p-2 rounded-lg bg-white/[0.03] border border-white/[0.05] text-gray-500 hover:text-red-400 hover:border-red-500/20 transition-all"
+                    className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-red-400 hover:border-red-500/20 transition-all"
                     title="Delete role"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
-              <p className="text-xs text-gray-500">{role.description || 'No description'}</p>
+              <p className="text-xs text-muted-foreground">{role.description || 'No description'}</p>
             </div>
           ))}
         </div>
@@ -153,19 +153,19 @@ export default function SubAdminRolesPage() {
 
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl bg-[#0b0f1a] border border-white/[0.08] p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-black text-white">New Role</h2>
+              <h2 className="text-lg font-semibold text-foreground">New Role</h2>
               <button
                 onClick={() => setShowCreate(false)}
-                className="p-1.5 rounded-lg hover:bg-white/[0.05] text-gray-500"
+                className="p-1.5 rounded-lg hover:bg-white/[0.05] text-muted-foreground"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                   Name
                 </label>
                 <input
@@ -173,25 +173,25 @@ export default function SubAdminRolesPage() {
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="mt-1.5 w-full p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] outline-none text-sm text-gray-200"
+                  className="mt-1.5 w-full p-3 rounded-xl bg-card border border-border outline-none text-sm text-foreground"
                   placeholder="e.g. SALES_LEAD"
                 />
               </div>
               <div>
-                <label className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                   Description
                 </label>
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="mt-1.5 w-full p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] outline-none text-sm text-gray-200"
+                  className="mt-1.5 w-full p-3 rounded-xl bg-card border border-border outline-none text-sm text-foreground"
                   rows={3}
                 />
               </div>
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                 Create Role

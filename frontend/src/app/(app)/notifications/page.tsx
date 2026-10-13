@@ -17,11 +17,11 @@ interface NotificationItem {
 }
 
 const typeColors: Record<string, string> = {
-  EMAIL: 'bg-yellow-500/10 text-yellow-500',
-  SMS: 'bg-blue-500/10 text-blue-400',
-  IN_APP: 'bg-[hsl(246,80%,60%)]/10 text-[hsl(246,80%,60%)]',
-  WHATSAPP: 'bg-green-500/10 text-green-500',
-  VOICE: 'bg-purple-500/10 text-purple-400',
+  EMAIL: 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400',
+  SMS: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
+  IN_APP: 'bg-[hsl(var(--brand))]/10 text-[hsl(var(--brand))]',
+  WHATSAPP: 'bg-green-500/10 text-green-700 dark:text-green-400',
+  VOICE: 'bg-blue-500/10 text-blue-700 dark:text-blue-400',
 };
 
 function formatTime(iso: string): string {
@@ -138,7 +138,7 @@ export default function NotificationsPage() {
             <button
               type="button"
               onClick={() => void load()}
-              className="mt-3 text-sm font-medium text-[hsl(246,80%,60%)] hover:underline"
+              className="mt-3 text-sm font-medium text-[hsl(var(--brand))] hover:underline"
             >
               Retry
             </button>
@@ -165,10 +165,10 @@ export default function NotificationsPage() {
                 key={n.id}
                 type="button"
                 onClick={() => isUnread && void handleMarkAsRead(n.id)}
-                className={`w-full flex items-start gap-4 px-5 py-4 hover:bg-muted/30 transition-colors text-left ${isUnread ? 'bg-[hsl(246,80%,60%)]/5' : ''}`}
+                className={`w-full flex items-start gap-4 px-5 py-4 hover:bg-muted/30 transition-colors text-left ${isUnread ? 'bg-[hsl(var(--brand))]/5' : ''}`}
               >
                 {isUnread ? (
-                  <div className="w-2 h-2 rounded-full bg-[hsl(246,80%,60%)] mt-2 shrink-0" />
+                  <div className="w-2 h-2 rounded-full bg-[hsl(var(--brand))] mt-2 shrink-0" />
                 ) : (
                   <div className="w-2 h-2 mt-2 shrink-0" />
                 )}

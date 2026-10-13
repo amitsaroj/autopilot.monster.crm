@@ -67,7 +67,7 @@ export default function SocialSchedulerPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
       </div>
     );
   }
@@ -77,14 +77,14 @@ export default function SocialSchedulerPage() {
       {/* Header section */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
         <div className="max-w-md">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-semibold uppercase tracking-wide mb-4">
             <Sparkles className="w-3 h-3" />
             Social Automation Active
           </div>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
+          <h1 className="text-4xl font-semibold text-gray-900 dark:text-white mb-2 tracking-tight">
             Social Orchestrator
           </h1>
-          <p className="text-gray-500 font-bold leading-relaxed">
+          <p className="text-muted-foreground font-bold leading-relaxed">
             Broadcast and track your brand across all major networks from a single command center.
           </p>
         </div>
@@ -96,8 +96,8 @@ export default function SocialSchedulerPage() {
             className={cn(
               'px-6 py-2.5 rounded-[14px] text-xs font-black transition flex items-center gap-2',
               activeTab === 'scheduler'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-gray-400 hover:text-gray-600',
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-muted-foreground hover:text-gray-600',
             )}
           >
             <Calendar className="w-4 h-4" />
@@ -108,8 +108,8 @@ export default function SocialSchedulerPage() {
             className={cn(
               'px-6 py-2.5 rounded-[14px] text-xs font-black transition flex items-center gap-2',
               activeTab === 'analytics'
-                ? 'bg-white text-indigo-600 shadow-sm'
-                : 'text-gray-400 hover:text-gray-600',
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-muted-foreground hover:text-gray-600',
             )}
           >
             <LayoutDashboard className="w-4 h-4" />

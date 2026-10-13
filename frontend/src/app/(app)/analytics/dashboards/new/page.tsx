@@ -36,7 +36,7 @@ export default function NewDashboardPage() {
     <div className="space-y-6 animate-fade-in max-w-xl">
       <Link
         href="/analytics/dashboards"
-        className="inline-flex items-center gap-2 text-sm text-[hsl(246,80%,60%)]"
+        className="inline-flex items-center gap-2 text-sm text-[hsl(var(--brand))]"
       >
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>
@@ -59,7 +59,7 @@ export default function NewDashboardPage() {
         <button
           type="submit"
           disabled={saving}
-          className="px-4 py-2 bg-[hsl(246,80%,60%)] text-white rounded-lg disabled:opacity-50"
+          className="px-4 py-2 bg-[hsl(var(--brand))] text-white rounded-lg disabled:opacity-50"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin inline" /> : 'Create Dashboard'}
         </button>

@@ -34,10 +34,10 @@ export default function AboutPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             About Us
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             We're building the future
             <br />
             of revenue automation
@@ -70,7 +70,7 @@ export default function AboutPage() {
               transition={{ delay: i * 0.1, duration: 0.5 }}
               className="p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06]"
             >
-              <v.icon className="w-8 h-8 text-indigo-400 mb-4" />
+              <v.icon className="w-8 h-8 text-blue-700 dark:text-blue-400 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{v.title}</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{v.desc}</p>
             </motion.div>

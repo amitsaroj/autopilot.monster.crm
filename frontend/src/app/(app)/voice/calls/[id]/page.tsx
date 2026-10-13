@@ -55,14 +55,14 @@ export default function VoiceCallDetailPage({ params }: { params: Promise<{ id: 
   }
 
   if (!call) {
-    return <p className="py-8 text-center text-gray-500">Call not found.</p>;
+    return <p className="py-8 text-center text-muted-foreground">Call not found.</p>;
   }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-8">
       <Link
         href="/voice/calls"
-        className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-600"
       >
         <ArrowLeft className="h-4 w-4" /> Back to Calls
       </Link>
@@ -75,7 +75,7 @@ export default function VoiceCallDetailPage({ params }: { params: Promise<{ id: 
               <h1 className="text-xl font-bold">
                 {call.from} → {call.to}
               </h1>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {call.direction} · {call.status}
               </p>
             </div>
@@ -93,27 +93,27 @@ export default function VoiceCallDetailPage({ params }: { params: Promise<{ id: 
 
         <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
           <div>
-            <dt className="text-gray-500">Duration</dt>
+            <dt className="text-muted-foreground">Duration</dt>
             <dd className="font-medium">{call.durationSeconds}s</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Cost</dt>
+            <dt className="text-muted-foreground">Cost</dt>
             <dd className="font-medium">${Number(call.costAmount).toFixed(4)}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Voice profile</dt>
+            <dt className="text-muted-foreground">Voice profile</dt>
             <dd className="font-medium">{call.voiceProfile ?? 'default'}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Sentiment</dt>
+            <dt className="text-muted-foreground">Sentiment</dt>
             <dd className="font-medium">{call.sentiment ?? '—'}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">SID</dt>
+            <dt className="text-muted-foreground">SID</dt>
             <dd className="font-mono text-xs">{call.sid}</dd>
           </div>
           <div>
-            <dt className="text-gray-500">Created</dt>
+            <dt className="text-muted-foreground">Created</dt>
             <dd className="font-medium">{new Date(call.createdAt).toLocaleString()}</dd>
           </div>
         </dl>
@@ -134,14 +134,14 @@ export default function VoiceCallDetailPage({ params }: { params: Promise<{ id: 
             <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
               <Sparkles className="h-4 w-4" /> AI Summary
             </h2>
-            <p className="mt-2 text-sm text-gray-600">{call.aiSummary}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{call.aiSummary}</p>
           </div>
         )}
 
         {call.transcript && (
           <div className="mt-6">
             <h2 className="text-sm font-semibold text-gray-900">Transcript</h2>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-gray-600">{call.transcript}</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{call.transcript}</p>
           </div>
         )}
       </div>

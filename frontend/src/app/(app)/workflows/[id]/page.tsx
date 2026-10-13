@@ -50,8 +50,8 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
 
       <div className="page-header">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-[hsl(246,80%,60%)]/10">
-            <Zap className="h-5 w-5 text-[hsl(246,80%,60%)]" />
+          <div className="p-2 rounded-lg bg-[hsl(var(--brand))]/10">
+            <Zap className="h-5 w-5 text-[hsl(var(--brand))]" />
           </div>
           <div>
             <h1 className="page-title">{workflow.name}</h1>
@@ -67,7 +67,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
           </Link>
           <Link
             href={`/workflows/${id}/edit`}
-            className="px-3 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg"
+            className="px-3 py-2 text-sm bg-[hsl(var(--brand))] text-white rounded-lg"
           >
             Edit
           </Link>

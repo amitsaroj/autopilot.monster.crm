@@ -84,25 +84,25 @@ export default function DashboardPage() {
       label: 'Total Contacts',
       value: formatNumber(overview?.contacts),
       icon: Users,
-      color: 'text-blue-400',
+      color: 'text-blue-700 dark:text-blue-400',
     },
     {
       label: 'Active Leads',
       value: formatNumber(overview?.leads),
       icon: Target,
-      color: 'text-purple-400',
+      color: 'text-blue-700 dark:text-blue-400',
     },
     {
       label: 'Open Deals',
       value: formatNumber(overview?.openDeals),
       icon: TrendingUp,
-      color: 'text-green-400',
+      color: 'text-green-700 dark:text-green-400',
     },
     {
       label: 'Won Revenue',
       value: formatCurrency(overview?.wonValue ?? revenue?.mrr),
       icon: DollarSign,
-      color: 'text-yellow-400',
+      color: 'text-yellow-700 dark:text-yellow-400',
     },
   ];
 
@@ -190,7 +190,7 @@ export default function DashboardPage() {
                   <span className="text-sm text-muted-foreground w-32 truncate">{stage.stage}</span>
                   <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[hsl(246,80%,60%)] rounded-full"
+                      className="h-full bg-[hsl(var(--brand))] rounded-full"
                       style={{ width: `${Math.round((stage.count / maxPipelineCount) * 100)}%` }}
                     />
                   </div>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
             <ul className="space-y-3">
               {recentActivities.map((item) => (
                 <li key={item.id} className="flex items-start gap-3 text-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[hsl(246,80%,60%)] mt-1.5 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--brand))] mt-1.5 shrink-0" />
                   <span className="text-muted-foreground">
                     <span className="text-foreground font-medium">{item.type}</span>
                     {' — '}
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                 <span className="text-sm text-muted-foreground w-28 truncate">{stage.stage}</span>
                 <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[hsl(246,80%,60%)] rounded-full transition-all"
+                    className="h-full bg-[hsl(var(--brand))] rounded-full transition-all"
                     style={{ width: `${Math.round((stage.count / maxPipelineCount) * 100)}%` }}
                   />
                 </div>

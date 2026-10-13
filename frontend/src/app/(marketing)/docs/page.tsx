@@ -3,42 +3,12 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Book, Code2, Zap, FileText, Terminal, Globe } from 'lucide-react';
 const sections = [
-  {
-    icon: Zap,
-    title: 'Quick Start',
-    desc: 'Get up and running in 5 minutes with our step-by-step guides.',
-    href: '/docs',
-  },
-  {
-    icon: Code2,
-    title: 'API Reference',
-    desc: 'Complete REST and GraphQL API documentation with examples.',
-    href: '/docs',
-  },
-  {
-    icon: Terminal,
-    title: 'SDKs',
-    desc: 'Official TypeScript, Python, and Go SDKs for building integrations.',
-    href: '/docs',
-  },
-  {
-    icon: FileText,
-    title: 'Guides',
-    desc: 'In-depth tutorials for CRM, AI agents, voice, and workflow setup.',
-    href: '/docs',
-  },
-  {
-    icon: Globe,
-    title: 'Webhooks',
-    desc: 'Complete webhook reference with event types and payload schemas.',
-    href: '/docs',
-  },
-  {
-    icon: Book,
-    title: 'Changelog',
-    desc: 'Stay updated with the latest platform releases and improvements.',
-    href: '/blog',
-  },
+  { icon: Zap, title: 'Getting started', desc: 'Find answers to common questions about your workspace and its capabilities.', href: '/help' },
+  { icon: Code2, title: 'API reference', desc: 'Explore the platform API, authentication, and example requests.', href: '/api-docs' },
+  { icon: Terminal, title: 'OpenAPI schema', desc: 'Read the published API schema for use with your existing development tools.', href: '/openapi.json' },
+  { icon: FileText, title: 'Platform guide', desc: 'Explore CRM, agents, conversations, and visual workflow capabilities.', href: '/product' },
+  { icon: Globe, title: 'Integration options', desc: 'Review the available ways to connect the platform to your tools.', href: '/product/integrations' },
+  { icon: Book, title: 'Articles and updates', desc: 'Read the existing product and engineering articles.', href: '/blog' },
 ];
 export default function DocsPage() {
   return (
@@ -50,19 +20,19 @@ export default function DocsPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 mb-4 block">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-700 dark:text-blue-400 mb-4 block">
             Documentation
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             Build with
             <br />
             AutopilotMonster
           </h1>
           <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            Everything you need to integrate, customize, and extend the platform.
+            Reference material and product guides for your connected workspace.
           </p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0">
           {sections.map((s, i) => (
             <motion.div
               key={s.title}
@@ -73,14 +43,14 @@ export default function DocsPage() {
             >
               <Link
                 href={s.href}
-                className="group block p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-100 dark:bg-white/[0.06] transition-all hover:border-gray-300 dark:border-white/[0.12] hover:-translate-y-1 h-full"
+                className="group block py-8 border-b border-border transition-colors h-full"
               >
-                <s.icon className="w-8 h-8 text-indigo-400 mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{s.title}</h3>
+                <s.icon className="w-8 h-8 text-blue-700 dark:text-blue-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{s.title}</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">
                   {s.desc}
                 </p>
-                <span className="text-indigo-400 text-sm font-medium flex items-center gap-1.5 group-hover:gap-3 transition-all">
+                <span className="text-blue-700 dark:text-blue-400 text-sm font-medium flex items-center gap-1.5 group-hover:gap-3 transition-all">
                   Read more <ArrowRight className="w-4 h-4" />
                 </span>
               </Link>

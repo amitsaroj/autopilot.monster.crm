@@ -89,7 +89,7 @@ export default function ConfigureIntegrationModal({ integration, onClose, onSave
                     className="w-full pl-10 pr-4 py-2 bg-muted/30 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:outline-none transition-shadow text-sm"
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                   <Info className="w-3 h-3" /> Overrides platform-wide OpenAI key for your
                   workspace.
                 </p>
@@ -237,7 +237,7 @@ export default function ConfigureIntegrationModal({ integration, onClose, onSave
             </div>
             <div>
               <h2 className="font-bold text-foreground">Configure {integration.name}</h2>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">
+              <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">
                 Tenant Level Override
               </p>
             </div>

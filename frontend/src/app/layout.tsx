@@ -7,6 +7,7 @@ export const metadata: Metadata = {
     default: 'AutopilotMonster CRM',
     template: '%s | AutopilotMonster',
   },
+  icons: { icon: '/brand/autopilot-monster.png', apple: '/brand/autopilot-monster.png' },
   description: 'AI-powered enterprise CRM platform — AutopilotMonster',
   robots: { index: false, follow: false },
 };

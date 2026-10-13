@@ -76,7 +76,7 @@ export default function AdminSocialConnectionsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-700 dark:text-blue-400" />
       </div>
     );
   }
@@ -85,12 +85,12 @@ export default function AdminSocialConnectionsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Social Connections</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Social Connections</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Connected Social Accounts
           </p>
         </div>
-        <button className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+        <button className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
           <Plus className="w-4 h-4" /> Connect Account
         </button>
       </div>
@@ -103,23 +103,23 @@ export default function AdminSocialConnectionsPage() {
               key={p.id}
               className={`p-6 rounded-2xl border transition-all ${
                 p.status === 'CONNECTED'
-                  ? 'bg-white/[0.02] border-white/[0.05]'
-                  : 'bg-white/[0.01] border-dashed border-white/[0.08]'
+                  ? 'bg-card border-border'
+                  : 'bg-card border-dashed border-border'
               }`}
             >
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{meta.icon}</span>
                   <div>
-                    <h3 className="text-sm font-black text-white">{p.name}</h3>
-                    <p className="text-xs text-gray-600 font-mono">{p.posts} posts</p>
+                    <h3 className="text-sm font-semibold text-foreground">{p.name}</h3>
+                    <p className="text-xs text-muted-foreground font-mono">{p.posts} posts</p>
                   </div>
                 </div>
                 <span
-                  className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${
+                  className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${
                     p.status === 'CONNECTED'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                      : 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                      ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+                      : 'bg-gray-500/10 text-muted-foreground border-gray-500/20'
                   }`}
                 >
                   {p.status}
@@ -127,29 +127,29 @@ export default function AdminSocialConnectionsPage() {
               </div>
               {p.status === 'CONNECTED' ? (
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="p-3 rounded-xl bg-white/[0.02]">
-                    <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1">
+                  <div className="p-3 rounded-xl bg-card">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                       Posts
                     </p>
-                    <p className="text-base font-black text-white">{p.posts}</p>
+                    <p className="text-base font-semibold text-foreground">{p.posts}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.02]">
-                    <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1">
+                  <div className="p-3 rounded-xl bg-card">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                       Last Activity
                     </p>
-                    <p className="text-xs font-black text-gray-400">{p.lastSync}</p>
+                    <p className="text-xs font-semibold text-muted-foreground">{p.lastSync}</p>
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-gray-600 mb-4">
+                <p className="text-xs text-muted-foreground mb-4">
                   No posts scheduled for this platform yet.
                 </p>
               )}
               <div className="flex gap-2">
-                <button className="flex-1 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[10px] font-black text-gray-400 hover:text-white uppercase tracking-widest transition-all flex items-center justify-center gap-1.5">
+                <button className="flex-1 py-2 rounded-xl bg-card border border-border text-xs font-semibold text-muted-foreground hover:text-foreground dark:hover:text-white uppercase tracking-wide transition-all flex items-center justify-center gap-1.5">
                   <RefreshCw className="w-3.5 h-3.5" /> Sync
                 </button>
-                <button className="flex-1 py-2 rounded-xl bg-white/[0.03] border border-white/[0.05] text-[10px] font-black text-gray-400 hover:text-white uppercase tracking-widest transition-all flex items-center justify-center gap-1.5">
+                <button className="flex-1 py-2 rounded-xl bg-card border border-border text-xs font-semibold text-muted-foreground hover:text-foreground dark:hover:text-white uppercase tracking-wide transition-all flex items-center justify-center gap-1.5">
                   <Link2 className="w-3.5 h-3.5" /> Configure
                 </button>
               </div>

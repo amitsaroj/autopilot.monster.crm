@@ -39,8 +39,8 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
       label: 'Total Engagement',
       value: overview.totalLikes + overview.totalShares + overview.totalClicks,
       icon: TrendingUp,
-      color: 'text-indigo-600',
-      bg: 'bg-indigo-50',
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
     },
     {
       label: 'Likes',
@@ -60,7 +60,7 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
       label: 'Clicks',
       value: overview.totalClicks,
       icon: MousePointer2,
-      color: 'text-emerald-500',
+      color: 'text-emerald-700 dark:text-emerald-400',
       bg: 'bg-emerald-50',
     },
   ];
@@ -92,7 +92,7 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
               <h3 className="text-3xl font-black text-gray-900 dark:text-white leading-none">
                 {stat.value.toLocaleString()}
               </h3>
-              <div className="flex items-center gap-1 text-emerald-500 text-[10px] font-black">
+              <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 text-[10px] font-black">
                 <ArrowUpRight className="w-3 h-3" />
                 +12%
               </div>
@@ -113,7 +113,7 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
                 Content volume across your connected networks.
               </p>
             </div>
-            <BarChart3 className="w-6 h-6 text-indigo-600" />
+            <BarChart3 className="w-6 h-6 text-blue-600" />
           </div>
 
           <div className="space-y-8">
@@ -123,7 +123,7 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
                   <div className="flex items-center gap-3">
                     {platform === 'FACEBOOK' && <Facebook className="w-5 h-5 text-blue-600" />}
                     {platform === 'TWITTER' && <Twitter className="w-5 h-5 text-sky-400" />}
-                    {platform === 'LINKEDIN' && <Linkedin className="w-5 h-5 text-indigo-600" />}
+                    {platform === 'LINKEDIN' && <Linkedin className="w-5 h-5 text-blue-600" />}
                     <span className="text-xs font-black text-gray-700 dark:text-gray-300 capitalize">
                       {platform.toLowerCase()}
                     </span>
@@ -143,7 +143,7 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
                         ? 'bg-blue-600'
                         : platform === 'TWITTER'
                           ? 'bg-sky-400'
-                          : 'bg-indigo-600',
+                          : 'bg-blue-600',
                     )}
                   />
                 </div>
@@ -153,12 +153,12 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
         </div>
 
         {/* Pro Insights */}
-        <div className="bg-indigo-600 rounded-[40px] p-10 text-white shadow-xl shadow-indigo-500/20 relative overflow-hidden flex flex-col justify-between">
+        <div className="bg-blue-600 rounded-[40px] p-10 text-white shadow-xl shadow-blue-500/20 relative overflow-hidden flex flex-col justify-between">
           <Target className="absolute -right-12 -top-12 w-64 h-64 text-white/10 rotate-12" />
 
           <div className="relative">
             <h3 className="text-2xl font-black mb-4">AI Growth Insights</h3>
-            <p className="text-indigo-100 font-bold text-sm leading-relaxed mb-8 opacity-80">
+            <p className="text-blue-100 font-bold text-sm leading-relaxed mb-8 opacity-80">
               Your engagement is peaking on LinkedIn. We recommend scheduling 2 more posts between 9
               AM - 11 AM EST to maximize reach.
             </p>
@@ -169,7 +169,7 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
                   1.1x
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-blue-200">
                     Suggested multiplier
                   </p>
                   <p className="text-xs font-bold">Post frequency increase</p>
@@ -178,7 +178,7 @@ export function SocialAnalyticsDashboard({ data }: SocialAnalyticsDashboardProps
             </div>
           </div>
 
-          <button className="relative w-full py-4 bg-white text-indigo-600 rounded-2xl font-black text-sm shadow-xl transition hover:bg-gray-50 active:scale-95">
+          <button className="relative w-full py-4 bg-white text-blue-600 rounded-2xl font-black text-sm shadow-xl transition hover:bg-gray-50 active:scale-95">
             Optimize Strategy
           </button>
         </div>

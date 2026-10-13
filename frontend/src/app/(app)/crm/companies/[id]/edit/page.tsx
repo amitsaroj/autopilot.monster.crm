@@ -19,7 +19,7 @@ export default function EditCompanyPage() {
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
         <h2 className="text-sm font-semibold flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+          <Building2 className="h-4 w-4 text-[hsl(var(--brand))]" />
           Company Details
         </h2>
         <div className="grid grid-cols-2 gap-4">
@@ -37,7 +37,7 @@ export default function EditCompanyPage() {
               </label>
               <input
                 defaultValue={f.value}
-                className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+                className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
               />
             </div>
           ))}
@@ -46,7 +46,7 @@ export default function EditCompanyPage() {
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
         <h2 className="text-sm font-semibold flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+          <MapPin className="h-4 w-4 text-[hsl(var(--brand))]" />
           Address
         </h2>
         <div className="grid grid-cols-2 gap-4">
@@ -63,7 +63,7 @@ export default function EditCompanyPage() {
               </label>
               <input
                 defaultValue={f.value}
-                className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+                className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
               />
             </div>
           ))}
@@ -71,7 +71,7 @@ export default function EditCompanyPage() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors">
+        <button className="flex items-center gap-2 px-5 py-2.5 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors">
           <Save className="h-4 w-4" />
           Save Changes
         </button>

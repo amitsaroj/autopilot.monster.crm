@@ -66,7 +66,7 @@ export default function EditBuilderFormPage({ params }: { params: Promise<{ id: 
       <button
         type="button"
         onClick={() => void handleSave()}
-        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
       >
         <Save className="h-4 w-4" /> Save
       </button>

@@ -63,9 +63,9 @@ export default function WhatsappAnalyticsPage() {
             label: 'Total Messages',
             value: data.total,
             icon: MessageSquare,
-            color: 'text-[hsl(246,80%,60%)]',
+            color: 'text-[hsl(var(--brand))]',
           },
-          { label: 'Inbound', value: data.inbound, icon: ArrowDownLeft, color: 'text-green-500' },
+          { label: 'Inbound', value: data.inbound, icon: ArrowDownLeft, color: 'text-green-700 dark:text-green-400' },
           { label: 'Outbound', value: data.outbound, icon: ArrowUpRight, color: 'text-blue-500' },
         ].map((stat) => (
           <div key={stat.label} className="stat-card text-center">
@@ -80,7 +80,7 @@ export default function WhatsappAnalyticsPage() {
         <h2 className="text-sm font-semibold">Direction Split</h2>
         {[
           { label: 'Inbound', pct: inboundPct, color: 'bg-green-500' },
-          { label: 'Outbound', pct: outboundPct, color: 'bg-blue-500' },
+          { label: 'Outbound', pct: outboundPct, color: 'bg-blue-600' },
         ].map((item) => (
           <div key={item.label} className="space-y-2">
             <div className="flex justify-between text-xs font-medium">

@@ -43,7 +43,7 @@ export default function PluginsPage() {
         </div>
         <Link
           href="/plugins/new"
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
         >
           <Plus className="h-4 w-4" /> Browse Marketplace
         </Link>
@@ -70,7 +70,7 @@ export default function PluginsPage() {
                 {item.plugin?.description ?? 'No description'}
               </p>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-700 dark:text-green-400">
               Active
             </span>
             <Link
@@ -87,7 +87,7 @@ export default function PluginsPage() {
             <p>No plugins installed yet</p>
             <Link
               href="/marketplace"
-              className="text-sm text-[hsl(246,80%,60%)] hover:underline mt-2 inline-block"
+              className="text-sm text-[hsl(var(--brand))] hover:underline mt-2 inline-block"
             >
               Browse marketplace
             </Link>

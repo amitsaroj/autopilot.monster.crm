@@ -50,7 +50,7 @@ export default function AnalyticsDashboardsPage() {
         </div>
         <Link
           href="/analytics/dashboards/new"
-          className="flex items-center gap-2 px-3 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg"
+          className="flex items-center gap-2 px-3 py-2 text-sm bg-[hsl(var(--brand))] text-white rounded-lg"
         >
           <Plus className="h-4 w-4" /> New Dashboard
         </Link>
@@ -71,7 +71,7 @@ export default function AnalyticsDashboardsPage() {
             >
               <Link href={`/analytics/dashboards/${dashboard.id}`} className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <LayoutDashboard className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+                  <LayoutDashboard className="h-4 w-4 text-[hsl(var(--brand))]" />
                   <h3 className="font-medium">{dashboard.name}</h3>
                   {dashboard.isDefault && (
                     <span className="text-xs px-2 py-0.5 bg-muted rounded">Default</span>

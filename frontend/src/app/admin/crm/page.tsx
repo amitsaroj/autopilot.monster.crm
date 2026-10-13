@@ -33,7 +33,7 @@ const CRM_MODULES = [
     href: '/admin/crm/contacts',
     icon: Users,
     desc: 'Manage all contacts',
-    color: 'text-blue-400',
+    color: 'text-blue-700 dark:text-blue-400',
     bg: 'bg-blue-500/10',
     statKey: 'contacts' as const,
   },
@@ -42,15 +42,15 @@ const CRM_MODULES = [
     href: '/admin/crm/companies',
     icon: Building2,
     desc: 'Company records',
-    color: 'text-indigo-400',
-    bg: 'bg-indigo-500/10',
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   {
     label: 'Deals',
     href: '/admin/crm/deals',
     icon: Target,
     desc: 'Active deals & pipeline',
-    color: 'text-emerald-400',
+    color: 'text-emerald-700 dark:text-emerald-400',
     bg: 'bg-emerald-500/10',
     statKey: 'openDeals' as const,
   },
@@ -59,7 +59,7 @@ const CRM_MODULES = [
     href: '/admin/crm/leads',
     icon: TrendingUp,
     desc: 'Lead management',
-    color: 'text-amber-400',
+    color: 'text-amber-700 dark:text-amber-400',
     bg: 'bg-amber-500/10',
     statKey: 'leads' as const,
   },
@@ -68,8 +68,8 @@ const CRM_MODULES = [
     href: '/admin/crm/dashboard',
     icon: BarChart3,
     desc: 'CRM analytics overview',
-    color: 'text-purple-400',
-    bg: 'bg-purple-500/10',
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   {
     label: 'Emails',
@@ -84,7 +84,7 @@ const CRM_MODULES = [
     href: '/admin/crm/inbox',
     icon: MessageSquare,
     desc: 'Omnichannel inbox',
-    color: 'text-green-400',
+    color: 'text-green-700 dark:text-green-400',
     bg: 'bg-green-500/10',
   },
   {
@@ -108,7 +108,7 @@ const CRM_MODULES = [
     href: '/admin/crm/quotes',
     icon: DollarSign,
     desc: 'Quote management',
-    color: 'text-teal-400',
+    color: 'text-teal-700 dark:text-teal-400',
     bg: 'bg-teal-500/10',
   },
   {
@@ -116,8 +116,8 @@ const CRM_MODULES = [
     href: '/admin/crm/kb',
     icon: BookOpen,
     desc: 'Help articles',
-    color: 'text-violet-400',
-    bg: 'bg-violet-500/10',
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   {
     label: 'Support',
@@ -140,7 +140,7 @@ const CRM_MODULES = [
     href: '/admin/crm/search',
     icon: Search,
     desc: 'Global CRM search',
-    color: 'text-gray-400',
+    color: 'text-muted-foreground',
     bg: 'bg-gray-500/10',
   },
   {
@@ -210,7 +210,7 @@ export default function AdminCRMPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -218,8 +218,8 @@ export default function AdminCRMPage() {
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">CRM Control Center</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">CRM Control Center</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Admin CRM Suite Overview
         </p>
       </div>
@@ -228,18 +228,18 @@ export default function AdminCRMPage() {
         {TOP_KPIs.map((kpi) => (
           <div
             key={kpi.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all"
+            className="p-5 rounded-2xl bg-card border border-border hover:bg-white/[0.04] transition-all"
           >
-            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest mb-2">
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-2">
               {kpi.label}
             </p>
-            <p className="text-2xl font-black text-white mb-1">{kpi.value}</p>
+            <p className="text-2xl font-semibold text-foreground mb-1">{kpi.value}</p>
           </div>
         ))}
       </div>
 
       <div>
-        <h2 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-4">
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-4">
           CRM Modules
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -250,7 +250,7 @@ export default function AdminCRMPage() {
               <Link
                 key={mod.href}
                 href={mod.href}
-                className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-indigo-500/20 transition-all group flex flex-col"
+                className="p-5 rounded-2xl bg-card border border-border hover:bg-white/[0.04] hover:border-blue-500/20 transition-all group flex flex-col"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div
@@ -259,14 +259,14 @@ export default function AdminCRMPage() {
                     <mod.icon className={`w-4 h-4 ${mod.color}`} />
                   </div>
                   {stat && (
-                    <span className="text-[10px] text-gray-600 font-black">{stat}</span>
+                    <span className="text-xs text-muted-foreground font-semibold">{stat}</span>
                   )}
                 </div>
-                <p className="text-sm font-black text-white group-hover:text-indigo-400 transition-colors mb-0.5">
+                <p className="text-sm font-semibold text-foreground group-hover:text-blue-400 transition-colors mb-0.5">
                   {mod.label}
                 </p>
-                <p className="text-[10px] text-gray-500 leading-relaxed flex-1">{mod.desc}</p>
-                <div className="flex items-center gap-1 mt-3 text-[10px] font-black text-gray-600 group-hover:text-indigo-400 transition-colors uppercase tracking-widest">
+                <p className="text-xs text-muted-foreground leading-relaxed flex-1">{mod.desc}</p>
+                <div className="flex items-center gap-1 mt-3 text-xs font-semibold text-muted-foreground group-hover:text-blue-400 transition-colors uppercase tracking-wide">
                   Open{' '}
                   <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                 </div>

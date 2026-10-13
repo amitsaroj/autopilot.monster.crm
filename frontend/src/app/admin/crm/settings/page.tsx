@@ -91,7 +91,7 @@ export default function AdminCRMSettingsPage() {
       case 'general':
         return (
           <div className="space-y-5">
-            <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               General Settings
             </h2>
             {[
@@ -116,14 +116,14 @@ export default function AdminCRMSettingsPage() {
               },
             ].map((f) => (
               <div key={f.key}>
-                <label className="text-xs text-gray-400 font-black uppercase tracking-widest block mb-2">
+                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-2">
                   {f.label}
                 </label>
                 {f.type === 'select' ? (
                   <select
                     value={(settings as any)[f.key]}
                     onChange={(e) => setSettings((s) => ({ ...s, [f.key]: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-200 outline-none focus:border-indigo-500/40 transition-all"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/40 transition-all"
                   >
                     {f.options?.map((o) => (
                       <option key={o} value={o}>
@@ -136,7 +136,7 @@ export default function AdminCRMSettingsPage() {
                     type="text"
                     value={(settings as any)[f.key]}
                     onChange={(e) => setSettings((s) => ({ ...s, [f.key]: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-200 outline-none focus:border-indigo-500/40 transition-all placeholder:text-gray-600"
+                    className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/40 transition-all placeholder:text-gray-600"
                   />
                 )}
               </div>
@@ -146,7 +146,7 @@ export default function AdminCRMSettingsPage() {
       case 'notifications':
         return (
           <div className="space-y-5">
-            <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               Notification Preferences
             </h2>
             {[
@@ -173,15 +173,15 @@ export default function AdminCRMSettingsPage() {
             ].map((f) => (
               <div
                 key={f.key}
-                className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                className="flex items-center justify-between p-4 rounded-xl bg-card border border-border"
               >
                 <div>
-                  <p className="text-sm font-bold text-white">{f.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+                  <p className="text-sm font-bold text-foreground">{f.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
                 </div>
                 <button
                   onClick={() => setSettings((s) => ({ ...s, [f.key]: !(s as any)[f.key] }))}
-                  className={`relative w-12 h-6 rounded-full transition-all ${(settings as any)[f.key] ? 'bg-indigo-500' : 'bg-white/[0.1]'}`}
+                  className={`relative w-12 h-6 rounded-full transition-all ${(settings as any)[f.key] ? 'bg-blue-600' : 'bg-white/[0.1]'}`}
                 >
                   <span
                     className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${(settings as any)[f.key] ? 'left-7' : 'left-1'}`}
@@ -194,7 +194,7 @@ export default function AdminCRMSettingsPage() {
       case 'email':
         return (
           <div className="space-y-5">
-            <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               Email Configuration
             </h2>
             {[
@@ -202,26 +202,26 @@ export default function AdminCRMSettingsPage() {
               { label: 'From Email Address', key: 'emailFromAddress', type: 'email' },
             ].map((f) => (
               <div key={f.key}>
-                <label className="text-xs text-gray-400 font-black uppercase tracking-widest block mb-2">
+                <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-2">
                   {f.label}
                 </label>
                 <input
                   type={f.type}
                   value={(settings as any)[f.key]}
                   onChange={(e) => setSettings((s) => ({ ...s, [f.key]: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-200 outline-none focus:border-indigo-500/40 transition-all"
+                  className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/40 transition-all"
                 />
               </div>
             ))}
             <div>
-              <label className="text-xs text-gray-400 font-black uppercase tracking-widest block mb-2">
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-2">
                 Email Signature
               </label>
               <textarea
                 rows={4}
                 value={settings.emailSignature}
                 onChange={(e) => setSettings((s) => ({ ...s, emailSignature: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-200 outline-none focus:border-indigo-500/40 transition-all resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/40 transition-all resize-none"
               />
             </div>
           </div>
@@ -229,17 +229,17 @@ export default function AdminCRMSettingsPage() {
       case 'pipeline':
         return (
           <div className="space-y-5">
-            <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               Pipeline Configuration
             </h2>
             <div>
-              <label className="text-xs text-gray-400 font-black uppercase tracking-widest block mb-2">
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-2">
                 Default Pipeline
               </label>
               <select
                 value={settings.defaultPipeline}
                 onChange={(e) => setSettings((s) => ({ ...s, defaultPipeline: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-200 outline-none focus:border-indigo-500/40 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/40 transition-all"
               >
                 <option>Sales Pipeline</option>
                 <option>Enterprise Pipeline</option>
@@ -247,26 +247,26 @@ export default function AdminCRMSettingsPage() {
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-400 font-black uppercase tracking-widest block mb-2">
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-2">
                 Deal Rotting Threshold (days)
               </label>
               <input
                 type="number"
                 value={settings.dealRotting}
                 onChange={(e) => setSettings((s) => ({ ...s, dealRotting: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-200 outline-none focus:border-indigo-500/40 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/40 transition-all"
               />
             </div>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
               <div>
-                <p className="text-sm font-bold text-white">Auto-close stale deals</p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="text-sm font-bold text-foreground">Auto-close stale deals</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Automatically mark deals as lost after rotting threshold
                 </p>
               </div>
               <button
                 onClick={() => setSettings((s) => ({ ...s, autoClose: !s.autoClose }))}
-                className={`relative w-12 h-6 rounded-full transition-all ${settings.autoClose ? 'bg-indigo-500' : 'bg-white/[0.1]'}`}
+                className={`relative w-12 h-6 rounded-full transition-all ${settings.autoClose ? 'bg-blue-600' : 'bg-white/[0.1]'}`}
               >
                 <span
                   className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${settings.autoClose ? 'left-7' : 'left-1'}`}
@@ -278,11 +278,11 @@ export default function AdminCRMSettingsPage() {
       case 'security':
         return (
           <div className="space-y-5">
-            <h2 className="text-sm font-black text-white uppercase tracking-widest">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
               Data Privacy
             </h2>
             <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <p className="text-xs text-amber-400 font-black">
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold">
                 GDPR compliance settings affect how contact data is stored and processed.
               </p>
             </div>
@@ -300,15 +300,15 @@ export default function AdminCRMSettingsPage() {
             ].map((f) => (
               <div
                 key={f.key}
-                className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.05]"
+                className="flex items-center justify-between p-4 rounded-xl bg-card border border-border"
               >
                 <div>
-                  <p className="text-sm font-bold text-white">{f.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{f.desc}</p>
+                  <p className="text-sm font-bold text-foreground">{f.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{f.desc}</p>
                 </div>
                 <button
                   onClick={() => setSettings((s) => ({ ...s, [f.key]: !(s as any)[f.key] }))}
-                  className={`relative w-12 h-6 rounded-full transition-all ${(settings as any)[f.key] ? 'bg-indigo-500' : 'bg-white/[0.1]'}`}
+                  className={`relative w-12 h-6 rounded-full transition-all ${(settings as any)[f.key] ? 'bg-blue-600' : 'bg-white/[0.1]'}`}
                 >
                   <span
                     className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${(settings as any)[f.key] ? 'left-7' : 'left-1'}`}
@@ -317,14 +317,14 @@ export default function AdminCRMSettingsPage() {
               </div>
             ))}
             <div>
-              <label className="text-xs text-gray-400 font-black uppercase tracking-widest block mb-2">
+              <label className="text-xs text-muted-foreground font-semibold uppercase tracking-wide block mb-2">
                 Data Retention (months)
               </label>
               <input
                 type="number"
                 value={settings.dataRetention}
                 onChange={(e) => setSettings((s) => ({ ...s, dataRetention: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl bg-white/[0.03] border border-white/[0.08] text-sm text-gray-200 outline-none focus:border-indigo-500/40 transition-all"
+                className="w-full px-4 py-3 rounded-xl bg-card border border-border text-sm text-foreground outline-none focus:border-blue-500/40 transition-all"
               />
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function AdminCRMSettingsPage() {
 
   if (initialLoading) {
     return (
-      <div className="space-y-8 animate-in fade-in duration-700 text-gray-500 text-sm font-bold uppercase tracking-widest">
+      <div className="space-y-8 animate-in fade-in duration-700 text-muted-foreground text-sm font-bold uppercase tracking-wide">
         Loading CRM settings...
       </div>
     );
@@ -343,8 +343,8 @@ export default function AdminCRMSettingsPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">CRM Settings</h1>
-        <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">CRM Settings</h1>
+        <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Workspace Configuration
         </p>
       </div>
@@ -355,7 +355,7 @@ export default function AdminCRMSettingsPage() {
             <button
               key={s.id}
               onClick={() => setActiveSection(s.id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-black uppercase tracking-widest transition-all ${activeSection === s.id ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30' : 'text-gray-500 hover:text-white hover:bg-white/[0.03]'}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold uppercase tracking-wide transition-all ${activeSection === s.id ? 'bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/30' : 'text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.03]'}`}
             >
               <s.icon className="w-4 h-4" />
               {s.label}
@@ -364,17 +364,17 @@ export default function AdminCRMSettingsPage() {
         </div>
 
         <div className="lg:col-span-3">
-          <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
+          <div className="p-6 rounded-2xl bg-card border border-border">
             {renderSection()}
-            <div className="mt-8 pt-6 border-t border-white/[0.05] flex justify-end">
+            <div className="mt-8 pt-6 border-t border-border flex justify-end">
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-3 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2"
               >
                 {saving ? (
                   <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />{' '}
+                    <span className="w-4 h-4 border-2 border-border border-t-white rounded-full animate-spin" />{' '}
                     Saving...
                   </>
                 ) : (

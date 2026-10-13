@@ -64,7 +64,7 @@ export default function NewAiPromptPage() {
         <button
           type="submit"
           disabled={saving}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 text-sm bg-[hsl(var(--brand))] text-white rounded-lg disabled:opacity-50"
         >
           <Save className="h-4 w-4" /> {saving ? 'Saving...' : 'Create Prompt'}
         </button>

@@ -34,7 +34,7 @@ export function ListPagination({ meta, page, onPageChange, className }: ListPagi
           type="button"
           disabled={meta.prevPage == null}
           onClick={() => meta.prevPage != null && onPageChange(meta.prevPage)}
-          className="p-2.5 rounded-xl border border-white/[0.05] bg-white/[0.02] text-gray-400 hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2.5 rounded-xl border border-white/[0.05] bg-white/[0.02] text-gray-400 hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="Previous page"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -46,7 +46,7 @@ export function ListPagination({ meta, page, onPageChange, className }: ListPagi
           type="button"
           disabled={meta.nextPage == null}
           onClick={() => meta.nextPage != null && onPageChange(meta.nextPage)}
-          className="p-2.5 rounded-xl border border-white/[0.05] bg-white/[0.02] text-gray-400 hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2.5 rounded-xl border border-white/[0.05] bg-white/[0.02] text-gray-400 hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="Next page"
         >
           <ChevronRight className="w-4 h-4" />

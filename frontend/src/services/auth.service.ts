@@ -9,7 +9,7 @@ export interface AuthResponse {
 
 export const authService = {
   async login(data: any): Promise<AuthResponse> {
-    const response = await api.post('/auth/login', data);
+    const response = await api.post('/auth/login', data, { timeout: 20000 });
     return response.data;
   },
 

@@ -23,17 +23,17 @@ import { toast } from 'sonner';
 import { supportService, type SupportTicket } from '@/services/support.service';
 
 const PRIORITY_STYLES: Record<string, string> = {
-  LOW: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-  MEDIUM: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  HIGH: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  LOW: 'bg-gray-500/10 text-muted-foreground border-gray-500/20',
+  MEDIUM: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  HIGH: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
   URGENT: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  OPEN: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  IN_PROGRESS: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  RESOLVED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  CLOSED: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+  OPEN: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+  IN_PROGRESS: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+  RESOLVED: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
+  CLOSED: 'bg-gray-500/10 text-muted-foreground border-gray-500/20',
 };
 
 export default function AdminCRMSupportPage() {
@@ -68,7 +68,7 @@ export default function AdminCRMSupportPage() {
   if (loading) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -77,12 +77,12 @@ export default function AdminCRMSupportPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">CRM Support</h1>
-          <p className="text-gray-500 text-sm mt-1 uppercase tracking-widest font-bold">
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">CRM Support</h1>
+          <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Workspace Ticket Management
           </p>
         </div>
-        <button className="px-5 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-500/20 flex items-center gap-2">
+        <button className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Ticket
         </button>
       </div>
@@ -92,14 +92,14 @@ export default function AdminCRMSupportPage() {
           {
             label: 'Open',
             value: tickets.filter((t) => t.status === 'OPEN').length,
-            color: 'text-blue-400',
+            color: 'text-blue-700 dark:text-blue-400',
             bg: 'bg-blue-500/10',
             icon: MessageSquare,
           },
           {
             label: 'In Progress',
             value: tickets.filter((t) => t.status === 'IN_PROGRESS').length,
-            color: 'text-amber-400',
+            color: 'text-amber-700 dark:text-amber-400',
             bg: 'bg-amber-500/10',
             icon: Clock,
           },
@@ -113,43 +113,43 @@ export default function AdminCRMSupportPage() {
           {
             label: 'Resolved',
             value: tickets.filter((t) => t.status === 'RESOLVED').length,
-            color: 'text-emerald-400',
+            color: 'text-emerald-700 dark:text-emerald-400',
             bg: 'bg-emerald-500/10',
             icon: CheckCircle2,
           },
         ].map((s) => (
           <div
             key={s.label}
-            className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-4"
+            className="p-5 rounded-2xl bg-card border border-border flex items-center gap-4"
           >
             <div className={`p-3 rounded-xl ${s.bg}`}>
               <s.icon className={`w-5 h-5 ${s.color}`} />
             </div>
             <div>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {s.label}
               </p>
-              <p className="text-2xl font-black text-white">{s.value}</p>
+              <p className="text-2xl font-semibold text-foreground">{s.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="flex gap-3">
-        <div className="flex-1 p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.05] flex items-center gap-3 focus-within:border-indigo-500/30 transition-all">
-          <Search className="w-4 h-4 text-gray-500" />
+        <div className="flex-1 p-3.5 rounded-xl bg-card border border-border flex items-center gap-3 focus-within:border-blue-500/30 transition-all">
+          <Search className="w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search tickets..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-transparent outline-none text-sm text-gray-200 placeholder:text-gray-600"
+            className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-gray-600"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] text-xs text-gray-300 outline-none font-black uppercase tracking-widest"
+          className="px-4 py-3 rounded-xl bg-card border border-border text-xs text-foreground outline-none font-semibold uppercase tracking-wide"
         >
           {['All', 'OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'].map((s) => (
             <option key={s} value={s}>
@@ -159,10 +159,10 @@ export default function AdminCRMSupportPage() {
         </select>
       </div>
 
-      <div className="rounded-3xl border border-white/[0.05] bg-white/[0.01] overflow-hidden">
+      <div className="rounded-3xl border border-border bg-card overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-white/[0.05] bg-white/[0.02]">
+            <tr className="border-b border-border bg-card">
               {[
                 'Ticket',
                 'Contact',
@@ -175,7 +175,7 @@ export default function AdminCRMSupportPage() {
               ].map((h) => (
                 <th
                   key={h}
-                  className="px-5 py-4 text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap"
+                  className="px-5 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap"
                 >
                   {h}
                 </th>
@@ -190,42 +190,42 @@ export default function AdminCRMSupportPage() {
               >
                 <td className="px-5 py-4">
                   <div>
-                    <p className="text-[10px] font-mono text-gray-600">{t.ticketNumber}</p>
-                    <p className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors max-w-[200px] truncate">
+                    <p className="text-xs font-mono text-muted-foreground">{t.ticketNumber}</p>
+                    <p className="text-sm font-bold text-foreground group-hover:text-blue-400 transition-colors max-w-[200px] truncate">
                       {t.subject}
                     </p>
-                    <p className="text-[10px] text-gray-600">{t.priority}</p>
+                    <p className="text-xs text-muted-foreground">{t.priority}</p>
                   </div>
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 font-black text-xs border border-indigo-500/20">
+                    <div className="w-7 h-7 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-700 dark:text-blue-400 font-semibold text-xs border border-blue-500/20">
                       T
                     </div>
-                    <span className="text-xs text-gray-300">{t.contactId ?? '—'}</span>
+                    <span className="text-xs text-foreground">{t.contactId ?? '—'}</span>
                   </div>
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-500">{t.priority}</td>
+                <td className="px-5 py-4 text-xs text-muted-foreground">{t.priority}</td>
                 <td className="px-5 py-4">
                   <span
-                    className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${PRIORITY_STYLES[t.priority]}`}
+                    className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${PRIORITY_STYLES[t.priority]}`}
                   >
                     {t.priority}
                   </span>
                 </td>
                 <td className="px-5 py-4">
                   <span
-                    className={`px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest ${STATUS_STYLES[t.status]}`}
+                    className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[t.status]}`}
                   >
                     {t.status.replace('_', ' ')}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-xs text-gray-400">{t.assigneeId ?? 'Unassigned'}</td>
-                <td className="px-5 py-4 text-xs text-gray-500">
+                <td className="px-5 py-4 text-xs text-muted-foreground">{t.assigneeId ?? 'Unassigned'}</td>
+                <td className="px-5 py-4 text-xs text-muted-foreground">
                   {new Date(t.updatedAt).toLocaleDateString()}
                 </td>
                 <td className="px-5 py-4">
-                  <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-blue-400 transition-colors" />
                 </td>
               </tr>
             ))}

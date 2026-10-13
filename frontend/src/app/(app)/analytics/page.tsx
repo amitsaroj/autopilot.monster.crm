@@ -52,7 +52,7 @@ export default function AnalyticsMainPage() {
       title: 'Won Revenue',
       value: formatCurrency(data.wonValue),
       icon: DollarSign,
-      color: 'text-green-500',
+      color: 'text-green-700 dark:text-green-400',
       bg: 'bg-green-100',
     },
     {
@@ -66,8 +66,8 @@ export default function AnalyticsMainPage() {
       title: 'Pipeline Value',
       value: formatCurrency(data.pipelineValue),
       icon: Target,
-      color: 'text-purple-500',
-      bg: 'bg-purple-100',
+      color: 'text-blue-500',
+      bg: 'bg-blue-100',
     },
     {
       title: 'Open Deals',
@@ -127,7 +127,7 @@ export default function AnalyticsMainPage() {
           >
             <p className="text-sm text-muted-foreground">{item.label}</p>
             <p className="text-2xl font-bold mt-1">{item.value.toLocaleString()}</p>
-            <p className="text-xs text-[hsl(246,80%,60%)] mt-2">View details →</p>
+            <p className="text-xs text-[hsl(var(--brand))] mt-2">View details →</p>
           </a>
         ))}
       </div>

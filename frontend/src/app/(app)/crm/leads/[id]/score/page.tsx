@@ -40,7 +40,7 @@ export default function LeadScorePage({ params }: { params: Promise<{ id: string
       </Link>
       <h1 className="page-title">Lead Score</h1>
       <div className="rounded-xl border border-border bg-card p-6 text-center">
-        <p className="text-5xl font-bold text-[hsl(246,80%,60%)]">{lead.score}</p>
+        <p className="text-5xl font-bold text-[hsl(var(--brand))]">{lead.score}</p>
         <p className="text-sm text-muted-foreground mt-2">out of 100</p>
       </div>
       {lead.aiSummary && (

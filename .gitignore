@@ -215,3 +215,6 @@ apps/**/.next/
 apps/**/out/
 apps/**/node_modules/
 apps/**/.turbo/
+
+# Isolated redesign verification output
+frontend/.next-redesign/

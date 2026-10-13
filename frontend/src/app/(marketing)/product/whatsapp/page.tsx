@@ -52,10 +52,10 @@ export default function ProductWhatsAppPage() {
           transition={{ duration: 0.6 }}
           className="text-center mb-24"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-500/20 bg-green-500/5 text-sm font-medium text-green-400 mb-6">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-500/20 bg-green-500/5 text-sm font-medium text-green-700 dark:text-green-400 mb-6">
             <MessageSquare className="w-4 h-4" /> WhatsApp OS
           </span>
-          <h1 className="text-5xl md:text-7xl font-black text-gray-900 dark:text-white mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
             WhatsApp as a<br />
             revenue channel
           </h1>
@@ -65,7 +65,7 @@ export default function ProductWhatsAppPage() {
           </p>
           <Link
             href="/register"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-gray-900 dark:text-white font-semibold rounded-xl shadow-2xl shadow-green-500/20 hover:scale-[1.02] transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-2xl shadow-green-500/20 hover:scale-[1.02] transition-all"
           >
             Try WhatsApp Free <ArrowRight className="w-4 h-4" />
           </Link>
@@ -80,7 +80,7 @@ export default function ProductWhatsAppPage() {
               transition={{ delay: i * 0.08, duration: 0.5 }}
               className="p-8 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] hover:bg-gray-100 dark:bg-white/[0.06] transition-all hover:border-gray-300 dark:border-white/[0.12]"
             >
-              <f.icon className="w-8 h-8 text-green-400 mb-4" />
+              <f.icon className="w-8 h-8 text-green-700 dark:text-green-400 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{f.title}</h3>
               <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">{f.desc}</p>
             </motion.div>

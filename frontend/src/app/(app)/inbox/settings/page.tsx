@@ -72,7 +72,7 @@ export default function InboxSettingsPage() {
         <button
           type="button"
           onClick={() => void handleSave()}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
         >
           <Save className="inline h-4 w-4 mr-1" /> Save
         </button>

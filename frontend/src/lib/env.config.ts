@@ -4,9 +4,7 @@ export const env = {
   api: {
     baseUrl:
       process.env.NEXT_PUBLIC_API_URL ??
-      (process.env.NODE_ENV === 'production'
-        ? 'https://api.autopilots.monster/api/v1'
-        : 'http://localhost:8000/api/v1'),
+      'https://api.autopilots.monster/api/v1',
   },
   site: {
     url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://autopilotmonster.com',

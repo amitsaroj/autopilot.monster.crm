@@ -59,7 +59,7 @@ export default function WorkflowTemplatesPage() {
                 key={t.key}
                 className="rounded-xl border border-border bg-card p-4 flex items-center gap-3"
               >
-                <Zap className="h-4 w-4 text-[hsl(246,80%,60%)]" />
+                <Zap className="h-4 w-4 text-[hsl(var(--brand))]" />
                 <div>
                   <p className="font-medium text-sm">{t.label}</p>
                   <p className="text-xs text-muted-foreground">{t.key}</p>
@@ -76,7 +76,7 @@ export default function WorkflowTemplatesPage() {
                 key={a.key}
                 className="rounded-xl border border-border bg-card p-4 flex items-center gap-3"
               >
-                <Zap className="h-4 w-4 text-amber-500" />
+                <Zap className="h-4 w-4 text-amber-700 dark:text-amber-400" />
                 <div>
                   <p className="font-medium text-sm">{a.label}</p>
                   <p className="text-xs text-muted-foreground">{a.key}</p>
@@ -89,7 +89,7 @@ export default function WorkflowTemplatesPage() {
 
       <Link
         href="/workflows/builder"
-        className="inline-flex px-4 py-2 text-sm bg-[hsl(246,80%,60%)] text-white rounded-lg"
+        className="inline-flex px-4 py-2 text-sm bg-[hsl(var(--brand))] text-white rounded-lg"
       >
         Open Workflow Builder
       </Link>

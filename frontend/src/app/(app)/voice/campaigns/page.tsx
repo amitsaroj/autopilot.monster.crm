@@ -19,9 +19,9 @@ import { voiceCampaignService, VoiceCampaign } from '@/services/voice-campaign.s
 
 const STATUS_STYLES: Record<VoiceCampaign['status'], { label: string; className: string; icon: typeof Phone }> = {
   DRAFT: { label: 'Draft', className: 'text-muted-foreground bg-muted', icon: FileEdit },
-  RUNNING: { label: 'Running', className: 'text-green-500 bg-green-500/10', icon: PlayCircle },
-  PAUSED: { label: 'Paused', className: 'text-amber-500 bg-amber-500/10', icon: PauseCircle },
-  COMPLETED: { label: 'Completed', className: 'text-blue-400 bg-blue-400/10', icon: CheckCircle2 },
+  RUNNING: { label: 'Running', className: 'text-green-700 dark:text-green-400 bg-green-500/10', icon: PlayCircle },
+  PAUSED: { label: 'Paused', className: 'text-amber-700 dark:text-amber-400 bg-amber-500/10', icon: PauseCircle },
+  COMPLETED: { label: 'Completed', className: 'text-blue-700 dark:text-blue-400 bg-blue-400/10', icon: CheckCircle2 },
   STOPPED: { label: 'Stopped', className: 'text-red-400 bg-red-400/10', icon: Ban },
 };
 
@@ -63,7 +63,7 @@ export default function VoiceCampaignsPage() {
         </div>
         <Link
           href="/voice/campaigns/new"
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
         >
           <Plus className="h-4 w-4" />
           New Campaign
@@ -78,7 +78,7 @@ export default function VoiceCampaignsPage() {
           { label: 'Completed', value: String(completed), icon: CheckCircle2 },
         ].map((s) => (
           <div key={s.label} className="stat-card flex items-center gap-4">
-            <div className="p-3 rounded-lg bg-muted text-[hsl(246,80%,60%)]">
+            <div className="p-3 rounded-lg bg-muted text-[hsl(var(--brand))]">
               <s.icon className="h-5 w-5" />
             </div>
             <div>
@@ -95,7 +95,7 @@ export default function VoiceCampaignsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search campaigns..."
-          className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(246,80%,60%)]"
+          className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand))]"
         />
       </div>
 
@@ -105,7 +105,7 @@ export default function VoiceCampaignsPage() {
             {campaigns.length === 0 ? (
               <>
                 No campaigns yet.{' '}
-                <Link href="/voice/campaigns/new" className="text-[hsl(246,80%,60%)] hover:underline">
+                <Link href="/voice/campaigns/new" className="text-[hsl(var(--brand))] hover:underline">
                   Create one to get started.
                 </Link>
               </>
@@ -133,7 +133,7 @@ export default function VoiceCampaignsPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/voice/campaigns/${campaign.id}`}
-                        className="font-medium text-foreground hover:text-[hsl(246,80%,60%)]"
+                        className="font-medium text-foreground hover:text-[hsl(var(--brand))]"
                       >
                         {campaign.name}
                       </Link>
@@ -150,7 +150,7 @@ export default function VoiceCampaignsPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {campaign.callsMade} / {campaign.totalContacts || 0}
                     </td>
-                    <td className="px-4 py-3 text-green-500">{campaign.callsAnswered}</td>
+                    <td className="px-4 py-3 text-green-700 dark:text-green-400">{campaign.callsAnswered}</td>
                     <td className="px-4 py-3 text-red-400">{campaign.callsFailed}</td>
                   </tr>
                 );

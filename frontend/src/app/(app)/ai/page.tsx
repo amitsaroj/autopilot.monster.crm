@@ -53,7 +53,7 @@ export default function AIHubPage() {
       desc: 'Chat with your CRM data',
       href: '/ai/chat',
       icon: MessageSquare,
-      color: 'from-violet-500 to-purple-600',
+      color: 'from-blue-500 to-blue-600',
     },
     {
       label: 'AI Agents',
@@ -110,7 +110,7 @@ export default function AIHubPage() {
         </div>
         <Link
           href="/ai/chat"
-          className="flex items-center gap-2 px-4 py-2 bg-[hsl(246,80%,60%)] hover:bg-[hsl(246,80%,55%)] text-white rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[hsl(var(--brand))] hover:bg-[hsl(220,87%,45%)] text-white rounded-lg text-sm font-medium transition-colors"
         >
           <MessageSquare className="h-4 w-4" /> Open Chat
         </Link>
@@ -120,14 +120,14 @@ export default function AIHubPage() {
           <Link
             key={link.label}
             href={link.href}
-            className="group rounded-xl border border-border bg-card p-6 hover:border-[hsl(246,80%,60%)]/50 hover:shadow-lg transition-all"
+            className="group rounded-xl border border-border bg-card p-6 hover:border-[hsl(var(--brand))]/50 hover:shadow-lg transition-all"
           >
             <div
               className={`w-10 h-10 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center mb-4`}
             >
-              <link.icon className="h-5 w-5 text-white" />
+              <link.icon className="h-5 w-5 text-foreground" />
             </div>
-            <h3 className="font-semibold text-foreground group-hover:text-[hsl(246,80%,60%)] transition-colors">
+            <h3 className="font-semibold text-foreground group-hover:text-[hsl(var(--brand))] transition-colors">
               {link.label}
             </h3>
             <p className="text-sm text-muted-foreground mt-1">{link.desc}</p>
@@ -154,7 +154,7 @@ export default function AIHubPage() {
             <button
               type="button"
               onClick={loadUsage}
-              className="text-sm font-medium text-[hsl(246,80%,60%)] hover:underline"
+              className="text-sm font-medium text-[hsl(var(--brand))] hover:underline"
             >
               Retry
             </button>

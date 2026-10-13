@@ -57,7 +57,7 @@ export default function WhatsAppBroadcastPage() {
         </div>
         <Link
           href="/whatsapp/broadcast/new"
-          className="text-sm text-[hsl(246,80%,60%)] hover:underline"
+          className="text-sm text-[hsl(var(--brand))] hover:underline"
         >
           New broadcast
         </Link>

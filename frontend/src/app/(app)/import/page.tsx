@@ -85,7 +85,7 @@ export default function ImportGlobalPage() {
 
       <div className="rounded-xl border border-border bg-card p-6 space-y-4">
         <h2 className="text-sm font-semibold">1. Choose data type</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {ENTITY_OPTIONS.map((e) => (
             <button
               key={e.value}
@@ -93,8 +93,8 @@ export default function ImportGlobalPage() {
               onClick={() => setEntityType(e.value)}
               className={`p-4 rounded-xl border-2 text-sm font-medium transition-colors text-left ${
                 entityType === e.value
-                  ? 'border-[hsl(246,80%,60%)] bg-[hsl(246,80%,60%)]/5 text-[hsl(246,80%,60%)]'
-                  : 'border-border hover:border-[hsl(246,80%,60%)]/40 text-muted-foreground hover:text-foreground'
+                  ? 'border-[hsl(var(--brand))] bg-[hsl(var(--brand))]/5 text-[hsl(var(--brand))]'
+                  : 'border-border hover:border-[hsl(var(--brand))]/40 text-muted-foreground hover:text-foreground'
               }`}
             >
               {e.label}
@@ -116,7 +116,7 @@ export default function ImportGlobalPage() {
           }}
         />
         <div
-          className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-[hsl(246,80%,60%)]/40 transition-colors cursor-pointer"
+          className="border-2 border-dashed border-border rounded-xl p-10 text-center hover:border-[hsl(var(--brand))]/40 transition-colors cursor-pointer"
           onClick={() => fileInputRef.current?.click()}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') fileInputRef.current?.click();
@@ -138,7 +138,7 @@ export default function ImportGlobalPage() {
           <button
             type="button"
             disabled={uploading}
-            className="mt-4 px-4 py-2 text-xs bg-[hsl(246,80%,60%)] text-white rounded-lg hover:bg-[hsl(246,80%,55%)] transition-colors disabled:opacity-50"
+            className="mt-4 px-4 py-2 text-xs bg-[hsl(var(--brand))] text-white rounded-lg hover:bg-[hsl(220,87%,45%)] transition-colors disabled:opacity-50"
           >
             Browse Files
           </button>
@@ -148,8 +148,8 @@ export default function ImportGlobalPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-[hsl(246,80%,60%)]/20 bg-[hsl(246,80%,60%)]/5 p-4 flex items-start gap-3">
-        <AlertCircle className="h-4 w-4 text-[hsl(246,80%,60%)] shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-[hsl(var(--brand))]/20 bg-[hsl(var(--brand))]/5 p-4 flex items-start gap-3">
+        <AlertCircle className="h-4 w-4 text-[hsl(var(--brand))] shrink-0 mt-0.5" />
         <div className="text-sm text-muted-foreground">
           <p className="font-medium text-foreground">Field Mapping</p>
           <p className="mt-0.5">
@@ -194,7 +194,7 @@ export default function ImportGlobalPage() {
                   </p>
                   <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                     {r.status === 'COMPLETED' || r.status === 'SUCCESS' ? (
-                      <span className="flex items-center gap-1 text-green-500">
+                      <span className="flex items-center gap-1 text-green-700 dark:text-green-400">
                         <CheckCircle className="h-3 w-3" />
                         Completed
                       </span>

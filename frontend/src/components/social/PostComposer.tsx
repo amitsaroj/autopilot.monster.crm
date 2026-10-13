@@ -26,7 +26,8 @@ interface PostComposerProps {
 const PLATFORMS = [
   { id: 'FACEBOOK', icon: Facebook, color: 'text-blue-600', bg: 'bg-blue-50' },
   { id: 'TWITTER', icon: Twitter, color: 'text-sky-400', bg: 'bg-sky-50' },
-  { id: 'LINKEDIN', icon: Linkedin, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { id: 'LINKEDIN', icon: Linkedin, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { id: 'INSTAGRAM', icon: Instagram, color: 'text-pink-500', bg: 'bg-pink-50' },
 ];
 
 export function PostComposer({ onSchedule }: PostComposerProps) {
@@ -73,7 +74,7 @@ export function PostComposer({ onSchedule }: PostComposerProps) {
                   className={cn(
                     'w-12 h-12 rounded-2xl flex items-center justify-center transition border-2',
                     selectedPlatforms.includes(p.id)
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+                      ? 'border-blue-600 bg-blue-50 text-blue-600'
                       : 'border-gray-50 dark:border-white/5 text-gray-400',
                   )}
                 >
@@ -93,7 +94,7 @@ export function PostComposer({ onSchedule }: PostComposerProps) {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's on your mind? Build your brand..."
-                className="w-full h-48 p-6 rounded-[24px] bg-gray-50 dark:bg-white/5 border-none text-sm font-medium resize-none focus:ring-2 ring-indigo-500/20"
+                className="w-full h-48 p-6 rounded-[24px] bg-gray-50 dark:bg-white/5 border-none text-sm font-medium resize-none focus:ring-2 ring-blue-500/20"
               />
               <div className="absolute bottom-4 right-4 flex items-center gap-2">
                 <button className="p-2 hover:bg-white rounded-lg text-gray-400 transition shadow-sm">
@@ -108,7 +109,7 @@ export function PostComposer({ onSchedule }: PostComposerProps) {
               <span className="text-[10px] font-bold text-gray-400">
                 {content.length} characters
               </span>
-              <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" /> Auto-saved
               </span>
             </div>
@@ -126,7 +127,7 @@ export function PostComposer({ onSchedule }: PostComposerProps) {
                   type="datetime-local"
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border-none rounded-xl text-xs font-bold focus:ring-2 ring-indigo-500/20"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-white/5 border-none rounded-xl text-xs font-bold focus:ring-2 ring-blue-500/20"
                 />
               </div>
             </div>
@@ -134,7 +135,7 @@ export function PostComposer({ onSchedule }: PostComposerProps) {
               <button
                 onClick={handleSchedule}
                 disabled={!content.trim() || !scheduledAt}
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl font-black text-xs transition shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl font-black text-xs transition shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
               >
                 <Send className="w-4 h-4" />
                 Schedule Post
@@ -154,7 +155,7 @@ export function PostComposer({ onSchedule }: PostComposerProps) {
           {/* Fake Social Header */}
           <div className="p-4 flex items-center justify-between border-b border-gray-50 dark:border-white/5">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-xs">
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white text-xs">
                 AM
               </div>
               <div>
