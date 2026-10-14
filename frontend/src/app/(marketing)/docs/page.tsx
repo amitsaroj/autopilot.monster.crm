@@ -3,12 +3,42 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowRight, Book, Code2, Zap, FileText, Terminal, Globe } from 'lucide-react';
 const sections = [
-  { icon: Zap, title: 'Getting started', desc: 'Find answers to common questions about your workspace and its capabilities.', href: '/help' },
-  { icon: Code2, title: 'API reference', desc: 'Explore the platform API, authentication, and example requests.', href: '/api-docs' },
-  { icon: Terminal, title: 'OpenAPI schema', desc: 'Read the published API schema for use with your existing development tools.', href: '/openapi.json' },
-  { icon: FileText, title: 'Platform guide', desc: 'Explore CRM, agents, conversations, and visual workflow capabilities.', href: '/product' },
-  { icon: Globe, title: 'Integration options', desc: 'Review the available ways to connect the platform to your tools.', href: '/product/integrations' },
-  { icon: Book, title: 'Articles and updates', desc: 'Read the existing product and engineering articles.', href: '/blog' },
+  {
+    icon: Zap,
+    title: 'Getting started',
+    desc: 'Find answers to common questions about your workspace and its capabilities.',
+    href: '/help',
+  },
+  {
+    icon: Code2,
+    title: 'API reference',
+    desc: 'Explore the platform API, authentication, and example requests.',
+    href: '/api-docs',
+  },
+  {
+    icon: Terminal,
+    title: 'OpenAPI schema',
+    desc: 'Read the published API schema for use with your existing development tools.',
+    href: '/openapi.json',
+  },
+  {
+    icon: FileText,
+    title: 'Platform guide',
+    desc: 'Explore CRM, agents, conversations, and visual workflow capabilities.',
+    href: '/product',
+  },
+  {
+    icon: Globe,
+    title: 'Integration options',
+    desc: 'Review the available ways to connect the platform to your tools.',
+    href: '/product/integrations',
+  },
+  {
+    icon: Book,
+    title: 'Articles and updates',
+    desc: 'Read the existing product and engineering articles.',
+    href: '/blog',
+  },
 ];
 export default function DocsPage() {
   return (
@@ -46,7 +76,9 @@ export default function DocsPage() {
                 className="group block py-8 border-b border-border transition-colors h-full"
               >
                 <s.icon className="w-8 h-8 text-blue-700 dark:text-blue-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{s.title}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  {s.title}
+                </h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-4">
                   {s.desc}
                 </p>

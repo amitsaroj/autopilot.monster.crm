@@ -110,9 +110,7 @@ export class VoiceCampaignRecipientRepository extends BaseRepository<VoiceCampai
     return this.repository.save(recipient);
   }
 
-  createMany(
-    rows: Array<Partial<VoiceCampaignRecipient>>,
-  ): Promise<VoiceCampaignRecipient[]> {
+  createMany(rows: Array<Partial<VoiceCampaignRecipient>>): Promise<VoiceCampaignRecipient[]> {
     return this.repository.save(this.repository.create(rows));
   }
 }

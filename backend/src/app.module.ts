@@ -41,6 +41,7 @@ import { EmailModule } from './shared/email/email.module';
 // Business Modules
 import { AiModule } from './modules/ai/ai.module';
 import { VoiceModule } from './modules/voice/voice.module';
+import { WhatsappAutomationModule } from './modules/whatsapp-automation/whatsapp-automation.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 import { CrmModule } from './modules/crm/crm.module';
@@ -111,6 +112,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     AiModule,
     VoiceModule,
     WhatsappModule,
+    WhatsappAutomationModule,
     WorkflowModule,
     CrmModule,
     TenantModule,

@@ -74,7 +74,9 @@ export default function SubAdminWhatsappPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">WhatsApp Profiles</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            WhatsApp Profiles
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Linked Business Profiles
           </p>
@@ -164,7 +166,9 @@ export default function SubAdminWhatsappPage() {
                     <MessageSquare className="w-5 h-5 text-blue-700 dark:text-blue-400" />
                   </div>
                   <div>
-                    <p className="text-base font-semibold text-foreground">{p.displayName ?? p.id}</p>
+                    <p className="text-base font-semibold text-foreground">
+                      {p.displayName ?? p.id}
+                    </p>
                     <p className="text-xs text-muted-foreground font-mono">
                       {p.phoneNumberId ?? 'No phone number ID'}
                     </p>

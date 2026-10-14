@@ -185,7 +185,9 @@ export default function LeadAnalyticsPage() {
 
           <div className="space-y-6">
             {metrics.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-12">No lead funnel data yet</p>
+              <p className="text-sm text-muted-foreground text-center py-12">
+                No lead funnel data yet
+              </p>
             ) : (
               metrics.map((m, idx) => {
                 const total = metrics.reduce((sum, item) => sum + item.count, 0) || 1;

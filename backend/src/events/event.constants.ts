@@ -73,6 +73,7 @@ export const EVENT_NAMES = {
   MESSAGE_RECEIVED: 'message.received',
   MESSAGE_DELIVERED: 'message.delivered',
   MESSAGE_READ: 'message.read',
+  MESSAGE_FAILED: 'message.failed',
 
   // Notifications
   NOTIFICATION_SENT: 'notification.sent',

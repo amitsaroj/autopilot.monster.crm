@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsObject, IsOptional, IsString, MaxLength, IsUUID } from 'class-validator';
 
 export class SendWhatsappDto {
   @ApiProperty()
@@ -14,6 +14,11 @@ export class SendWhatsappDto {
   @IsString()
   @IsOptional()
   wabaId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  idempotencyKey?: string;
 }
 
 export class SendWhatsappTemplateDto {
@@ -39,4 +44,34 @@ export class SendWhatsappTemplateDto {
   @IsString()
   @IsOptional()
   wabaId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  idempotencyKey?: string;
+
+  @IsOptional()
+  @IsUUID()
+  expectedLastOutboundId?: string | null;
+}
+
+export class SendWhatsappContentDto {
+  @IsString()
+  to!: string;
+
+  @IsObject()
+  content!: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  wabaId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  idempotencyKey?: string;
+
+  @IsOptional()
+  @IsUUID()
+  expectedLastOutboundId?: string | null;
 }

@@ -24,7 +24,11 @@ export class WhatsappMessageRepository extends BaseRepository<WhatsAppMessage> {
     });
   }
 
-  async updateStatusByMessageSid(messageSid: string, status: string): Promise<void> {
-    await this.repository.update({ messageSid }, { status });
+  async updateStatusByMessageSid(
+    tenantId: string,
+    messageSid: string,
+    status: string,
+  ): Promise<void> {
+    await this.repository.update({ tenantId, messageSid }, { status });
   }
 }

@@ -99,7 +99,9 @@ export default function GlobalMarketplacePage() {
               Catalog: Global Plugins
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Plugin Orchestration</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Plugin Orchestration
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Curate & Manage Platform Functional Modules
           </p>
@@ -189,7 +191,9 @@ export default function GlobalMarketplacePage() {
                     <p className="text-xs text-muted-foreground font-semibold uppercase tracking-tighter leading-tight">
                       Installs
                     </p>
-                    <p className="text-xs font-semibold text-foreground">{plugin.installations || 142}</p>
+                    <p className="text-xs font-semibold text-foreground">
+                      {plugin.installations || 142}
+                    </p>
                   </div>
                 </div>
                 <div className="p-3 rounded-2xl bg-black/40 border border-border flex items-center gap-3">
@@ -204,7 +208,9 @@ export default function GlobalMarketplacePage() {
               </div>
 
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide px-1">
-                <span className="text-muted-foreground">Category: {plugin.category || 'Automation'}</span>
+                <span className="text-muted-foreground">
+                  Category: {plugin.category || 'Automation'}
+                </span>
                 <span
                   className={`flex items-center gap-1.5 ${plugin.active ? 'text-emerald-700 dark:text-emerald-400' : 'text-muted-foreground'}`}
                 >

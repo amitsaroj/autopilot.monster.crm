@@ -170,7 +170,8 @@ export default function LocalizationPage() {
 
         <div className="p-10 rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group">
           <h2 className="text-2xl font-semibold text-foreground uppercase tracking-tighter mb-10 flex items-center gap-4">
-            <DollarSign className="w-7 h-7 text-emerald-700 dark:text-emerald-400" /> Fiscal & Formats
+            <DollarSign className="w-7 h-7 text-emerald-700 dark:text-emerald-400" /> Fiscal &
+            Formats
           </h2>
 
           <div className="space-y-8">
@@ -239,9 +240,7 @@ export default function LocalizationPage() {
           </div>
           <div className="ml-auto flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400">
             <Check className="w-4 h-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide">
-              Compliance Active
-            </span>
+            <span className="text-xs font-semibold uppercase tracking-wide">Compliance Active</span>
           </div>
         </div>
       </div>

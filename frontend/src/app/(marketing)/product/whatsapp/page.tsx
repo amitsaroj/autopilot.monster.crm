@@ -64,10 +64,10 @@ export default function ProductWhatsAppPage() {
             collaboration.
           </p>
           <Link
-            href="/register"
+            href="/product/whatsapp/automations"
             className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl shadow-2xl shadow-green-500/20 hover:scale-[1.02] transition-all"
           >
-            Try WhatsApp Free <ArrowRight className="w-4 h-4" />
+            Browse WhatsApp automations <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

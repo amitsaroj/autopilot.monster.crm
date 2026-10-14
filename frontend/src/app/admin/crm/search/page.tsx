@@ -36,15 +36,30 @@ const TYPE_CONFIG: Record<
   ResultType,
   { icon: React.ElementType; color: string; bg: string; label: string }
 > = {
-  contact: { icon: Users, color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-500/10', label: 'Contact' },
+  contact: {
+    icon: Users,
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
+    label: 'Contact',
+  },
   company: {
     icon: Building2,
     color: 'text-emerald-700 dark:text-emerald-400',
     bg: 'bg-emerald-500/10',
     label: 'Company',
   },
-  deal: { icon: Target, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-500/10', label: 'Deal' },
-  quote: { icon: FileText, color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-500/10', label: 'Quote' },
+  deal: {
+    icon: Target,
+    color: 'text-amber-700 dark:text-amber-400',
+    bg: 'bg-amber-500/10',
+    label: 'Deal',
+  },
+  quote: {
+    icon: FileText,
+    color: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-500/10',
+    label: 'Quote',
+  },
 };
 
 const RECENT = ['contacts', 'companies', 'deals', 'quotes'];

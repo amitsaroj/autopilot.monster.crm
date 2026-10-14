@@ -75,7 +75,9 @@ export default function SubAdminAiPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">AI Configuration</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            AI Configuration
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Workspace Model &amp; Key Settings
           </p>
@@ -140,7 +142,11 @@ export default function SubAdminAiPage() {
             disabled={saving}
             className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all flex items-center gap-2"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Settings className="w-4 h-4" />}
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Settings className="w-4 h-4" />
+            )}
             Save Config
           </button>
         </div>

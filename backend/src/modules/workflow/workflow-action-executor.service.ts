@@ -17,7 +17,9 @@ import {
   WorkflowStep,
   WorkflowStepResult,
 } from './workflow-executor.service';
-import { resolveWorkflowConfig, resolveWorkflowTemplate } from './workflow-template.util';
+import { resolveWorkflowConfig } from './workflow-template.util';
+import { WorkflowAiService } from './workflow-ai.service';
+import { WorkflowRuntimePolicyService } from './workflow-runtime-policy.service';
 
 const INLINE_DELAY_MAX_MS = 30_000;
 
@@ -35,6 +37,8 @@ export class WorkflowActionExecutorService {
     private readonly whatsappService: WhatsappService,
     private readonly whatsappTemplateService: WhatsappTemplateService,
     private readonly voiceCallService: VoiceCallService,
+    private readonly ai: WorkflowAiService,
+    private readonly policy: WorkflowRuntimePolicyService,
   ) {}
 
   async executeAction(
@@ -42,6 +46,7 @@ export class WorkflowActionExecutorService {
     context: WorkflowExecutionContext,
   ): Promise<WorkflowStepResult> {
     const config = resolveWorkflowConfig(step.config ?? {}, context);
+    await this.policy.assertAction(context.tenantId, step, config);
 
     switch (step.type) {
       case 'CREATE_CONTACT':
@@ -87,12 +92,7 @@ export class WorkflowActionExecutorService {
         return this.executeDelay(step, config);
       case 'AI_CHAT':
       case 'AI_RESPONSE':
-        return {
-          stepId: step.id,
-          type: step.type,
-          status: 'SKIPPED',
-          reason: 'AI execution is not wired yet',
-        };
+        return this.ai.execute(step, context, config);
       default:
         return {
           stepId: step.id,
@@ -434,12 +434,12 @@ export class WorkflowActionExecutorService {
       throw new Error('SEND_WHATSAPP requires message');
     }
 
-    const resolvedMessage = resolveWorkflowTemplate(message, context);
     const messageRecord = await this.whatsappService.sendTextMessage(
       context.tenantId,
       toNumber,
-      resolvedMessage,
+      message,
       typeof config.wabaId === 'string' ? config.wabaId : undefined,
+      context.idempotencyKey,
     );
 
     return {
@@ -466,7 +466,16 @@ export class WorkflowActionExecutorService {
     let templateName = typeof config.templateName === 'string' ? config.templateName : '';
     let language =
       typeof config.language === 'string' && config.language ? config.language : 'en_US';
-    const components = Array.isArray(config.components) ? config.components : [];
+    const components = Array.isArray(config.components)
+      ? config.components
+      : Array.isArray(config.bodyParameters) && config.bodyParameters.length
+        ? [
+            {
+              type: 'body',
+              parameters: config.bodyParameters.map((text) => ({ type: 'text', text })),
+            },
+          ]
+        : [];
 
     if (!templateName && typeof config.templateId === 'string' && config.templateId) {
       const template = await this.whatsappTemplateService.findOne(
@@ -488,6 +497,7 @@ export class WorkflowActionExecutorService {
       language,
       components,
       typeof config.wabaId === 'string' ? config.wabaId : undefined,
+      context.idempotencyKey,
     );
 
     return {

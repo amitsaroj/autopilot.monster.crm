@@ -2,24 +2,31 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { WorkflowActionExecutorService } from './workflow-action-executor.service';
 
-export interface WorkflowStep {
-  id: string;
-  type: string;
-  name?: string;
-  config?: Record<string, unknown>;
-  nextStepId?: string;
-}
+import { compileWorkflow, normalizeStepType, WorkflowStep } from './workflow-definition';
+import { resolveWorkflowConfig, buildWorkflowVariableRoot } from './workflow-template.util';
+export type { WorkflowStep } from './workflow-definition';
 
 export interface WorkflowExecutionContext {
   tenantId: string;
   eventName: string;
   payload: Record<string, unknown>;
+  executionId?: string;
+  versionId?: string;
+  idempotencyKey?: string;
+  outputs?: Record<string, unknown>;
+  now?: string;
 }
 
-export type WorkflowStepStatus = 'COMPLETED' | 'SCHEDULED' | 'SKIPPED';
+export type WorkflowStepStatus = 'COMPLETED' | 'SCHEDULED' | 'SKIPPED' | 'STARTED' | 'FAILED';
 
 export interface WorkflowStepResult {
   stepId: string;
+  idempotencyKey?: string;
+  nextStepId?: string | null;
+  output?: Record<string, unknown>;
+  handoff?: boolean;
+  startedAt?: string;
+  completedAt?: string;
   type: string;
   status: WorkflowStepStatus;
   passed?: boolean;
@@ -49,85 +56,18 @@ export class WorkflowExecutorService {
   constructor(private readonly actionExecutor: WorkflowActionExecutorService) {}
 
   extractSteps(definition: Record<string, unknown>): WorkflowStep[] {
-    if (Array.isArray(definition.steps)) {
-      return (definition.steps as WorkflowStep[]).map((step) => ({
-        ...step,
-        type: this.normalizeStepType(step.type),
-      }));
-    }
-
-    const nodes = definition.nodes as
-      | Array<{ id: string; data?: Record<string, unknown> }>
-      | undefined;
-    const edges = definition.edges as Array<{ source: string; target: string }> | undefined;
-    if (!nodes?.length) {
-      return [];
-    }
-
-    const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-    const adjacency = new Map<string, string>();
-    for (const edge of edges ?? []) {
-      adjacency.set(edge.source, edge.target);
-    }
-
-    const startNode =
-      nodes.find((n) => n.data?.isTrigger === true) ??
-      nodes.find((n) => {
-        const raw = String(n.data?.stepType ?? n.data?.nodeType ?? n.data?.type ?? '');
-        return raw.toUpperCase().includes('TRIGGER');
-      }) ??
-      nodes[0];
-
-    const steps: WorkflowStep[] = [];
-    const visited = new Set<string>();
-    let currentId: string | undefined = startNode.id;
-
-    while (currentId && !visited.has(currentId)) {
-      visited.add(currentId);
-      const node = nodeMap.get(currentId);
-      if (!node) break;
-
-      const stepType = String(
-        node.data?.stepType ?? node.data?.nodeType ?? node.data?.type ?? 'LOG',
-      );
-      if (!stepType.toUpperCase().includes('TRIGGER')) {
-        const configFromNode =
-          node.data?.config && typeof node.data.config === 'object'
-            ? (node.data.config as Record<string, unknown>)
-            : {};
-        steps.push({
-          id: node.id,
-          type: this.normalizeStepType(stepType),
-          name: (node.data?.label as string) ?? stepType,
-          config: Object.keys(configFromNode).length > 0 ? configFromNode : (node.data ?? {}),
-          nextStepId: adjacency.get(currentId),
-        });
-      }
-      currentId = adjacency.get(currentId);
-    }
-
-    return steps;
+    return compileWorkflow(definition).steps;
   }
 
   normalizeStepType(type: string): string {
-    const upper = type.toUpperCase();
-    switch (upper) {
-      case 'SEND_MESSAGE':
-        return 'SEND_WHATSAPP';
-      case 'AWAIT_RESPONSE':
-        return 'WAIT_DELAY';
-      case 'CONDITION_BRANCH':
-        return 'CONDITION';
-      default:
-        return upper;
-    }
+    return normalizeStepType(type);
   }
 
   evaluateCondition(config: Record<string, unknown>, context: WorkflowExecutionContext): boolean {
     const field = config.field as string | undefined;
-    if (!field) return true;
+    if (!field) throw new Error('Condition requires field');
 
-    const actual = this.resolveField(field, context.payload);
+    const actual = this.resolveField(field, buildWorkflowVariableRoot(context));
     const operator = (config.operator as string) ?? 'equals';
     const expected = config.value;
 
@@ -162,11 +102,8 @@ export class WorkflowExecutorService {
         const values = Array.isArray(expected) ? expected : [expected];
         return !values.some((entry) => entry === actual);
       }
-      default: {
-        const unknownOperator: never = operator as never;
-        this.logger.warn(`Unknown condition operator: ${String(unknownOperator)}`);
-        return true;
-      }
+      default:
+        throw new Error(`Unknown condition operator: ${operator}`);
     }
   }
 
@@ -182,9 +119,14 @@ export class WorkflowExecutorService {
 
     switch (normalizedType) {
       case 'CONDITION': {
-        const passed = this.evaluateCondition(normalizedStep.config ?? {}, context);
+        const passed = this.evaluateCondition(
+          resolveWorkflowConfig(normalizedStep.config ?? {}, context),
+          context,
+        );
         return { stepId: normalizedStep.id, type: normalizedType, status: 'COMPLETED', passed };
       }
+      case 'END':
+        return { stepId: step.id, type: 'END', status: 'COMPLETED' };
       case 'LOG': {
         this.logger.log(
           `Workflow log [${context.eventName}]: ${String(normalizedStep.config?.message ?? normalizedStep.name ?? normalizedType)}`,
@@ -208,6 +150,11 @@ export class WorkflowExecutorService {
       if (current === null || current === undefined || typeof current !== 'object') {
         return undefined;
       }
+      if (
+        ['__proto__', 'prototype', 'constructor'].includes(part) ||
+        !Object.prototype.hasOwnProperty.call(current, part)
+      )
+        return undefined;
       current = (current as Record<string, unknown>)[part];
     }
     return current;

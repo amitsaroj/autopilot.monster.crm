@@ -78,7 +78,9 @@ export default function GlobalInvoicesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Financial Directory</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Financial Directory
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Platform-Wide Revenue Manifest ({invoices.length})
           </p>
@@ -207,7 +209,9 @@ export default function GlobalInvoicesPage() {
                     <div className="flex flex-col items-center gap-6 text-gray-700">
                       <DollarSign className="w-16 h-16 opacity-20" />
                       <div className="space-y-1">
-                        <p className="text-lg font-bold text-muted-foreground">No transactions recorded</p>
+                        <p className="text-lg font-bold text-muted-foreground">
+                          No transactions recorded
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           Sync with payment provider to populate financial artifacts.
                         </p>
@@ -232,7 +236,9 @@ export default function GlobalInvoicesPage() {
         <div className="p-10 rounded-xl bg-card border border-border relative overflow-hidden group">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors" />
           <div className="relative z-10 space-y-4">
-            <h3 className="text-2xl font-semibold text-foreground">Advanced Revenue Reconciliation</h3>
+            <h3 className="text-2xl font-semibold text-foreground">
+              Advanced Revenue Reconciliation
+            </h3>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
               Generate comprehensive platform-wide tax reports, manage cross-border VAT
               reconciliation, and orchestrate global subscription overrides.

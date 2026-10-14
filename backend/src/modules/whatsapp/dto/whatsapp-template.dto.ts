@@ -1,15 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsObject, ValidateIf, IsString, MaxLength, Matches } from 'class-validator';
 
-import {
-  WhatsAppTemplateCategory,
-  WhatsAppTemplateStatus,
-} from '../../../database/entities/whatsapp-template.entity';
+import { WhatsAppTemplateCategory } from '../../../database/entities/whatsapp-template.entity';
 
 export class CreateWhatsappTemplateDto {
   @ApiProperty()
   @IsString()
   @MaxLength(255)
+  @Matches(/^[a-z0-9_]+$/)
   name!: string;
 
   @ApiProperty({ enum: WhatsAppTemplateCategory })
@@ -18,7 +16,9 @@ export class CreateWhatsappTemplateDto {
 
   @ApiPropertyOptional({ default: 'en_US' })
   @IsString()
-  @IsOptional()
+  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
+  @MaxLength(10)
+  @Matches(/^[a-z]{2,3}(?:_[A-Z]{2})?$/)
   language?: string;
 
   @ApiProperty()
@@ -26,30 +26,36 @@ export class CreateWhatsappTemplateDto {
   components!: Record<string, unknown>;
 }
 
+export class WhatsappTemplateAccountDto {
+  @ApiPropertyOptional({ description: 'Connected provider phone number ID for this tenant' })
+  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
+  @IsString()
+  @Matches(/^[1-9][0-9]{0,63}$/)
+  wabaId?: string;
+}
+
 export class UpdateWhatsappTemplateDto {
   @ApiPropertyOptional()
   @IsString()
   @MaxLength(255)
-  @IsOptional()
+  @Matches(/^[a-z0-9_]+$/)
+  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
   name?: string;
 
   @ApiPropertyOptional({ enum: WhatsAppTemplateCategory })
   @IsEnum(WhatsAppTemplateCategory)
-  @IsOptional()
+  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
   category?: WhatsAppTemplateCategory;
 
   @ApiPropertyOptional()
   @IsString()
-  @IsOptional()
+  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
+  @MaxLength(10)
+  @Matches(/^[a-z]{2,3}(?:_[A-Z]{2})?$/)
   language?: string;
 
   @ApiPropertyOptional()
   @IsObject()
-  @IsOptional()
+  @ValidateIf((_object: unknown, value: unknown) => value !== undefined)
   components?: Record<string, unknown>;
-
-  @ApiPropertyOptional({ enum: WhatsAppTemplateStatus })
-  @IsEnum(WhatsAppTemplateStatus)
-  @IsOptional()
-  status?: WhatsAppTemplateStatus;
 }

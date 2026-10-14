@@ -289,7 +289,12 @@ export class RagService {
     );
 
     if (tenantId) {
-      await this.recordUsage(tenantId, response.usage.inputTokens, response.model, response.usage.outputTokens);
+      await this.recordUsage(
+        tenantId,
+        response.usage.inputTokens,
+        response.model,
+        response.usage.outputTokens,
+      );
     }
 
     return JSON.parse(response.content || '{}');

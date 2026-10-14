@@ -120,7 +120,9 @@ export default function MarketplaceCategoriesPage() {
               Catalog: Global Hierarchy
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Marketplace Taxonomy</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Marketplace Taxonomy
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Functional Groupings & Hierarchy
           </p>
@@ -208,7 +210,9 @@ export default function MarketplaceCategoriesPage() {
                       <Package className="w-4 h-4 text-muted-foreground" />
                       <span className="text-sm font-semibold text-foreground">
                         {cat.pluginCount}{' '}
-                        <span className="text-xs text-muted-foreground uppercase ml-1">Artifacts</span>
+                        <span className="text-xs text-muted-foreground uppercase ml-1">
+                          Artifacts
+                        </span>
                       </span>
                     </div>
                   </td>

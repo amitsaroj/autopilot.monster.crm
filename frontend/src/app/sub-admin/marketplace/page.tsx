@@ -120,7 +120,9 @@ export default function SubAdminMarketplacePage() {
                     </span>
                   )}
                 </div>
-                <p className="text-base font-semibold text-foreground mb-1">{item.name ?? item.slug}</p>
+                <p className="text-base font-semibold text-foreground mb-1">
+                  {item.name ?? item.slug}
+                </p>
                 <p className="text-xs text-muted-foreground mb-1">
                   {item.author ?? 'Unknown vendor'} · v{item.version ?? '1.0.0'}
                 </p>
@@ -130,9 +132,7 @@ export default function SubAdminMarketplacePage() {
               </div>
               <div className="flex items-center justify-between mt-5 pt-4 border-t border-border">
                 <span className="text-xs font-semibold text-foreground">
-                  {item.isPremium && item.price_monthly
-                    ? `$${item.price_monthly}/mo`
-                    : 'Free'}
+                  {item.isPremium && item.price_monthly ? `$${item.price_monthly}/mo` : 'Free'}
                 </span>
                 <button
                   disabled={installingId === item.id}

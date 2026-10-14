@@ -176,7 +176,9 @@ export default function InboxPage() {
                   </h2>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-sm font-bold text-muted-foreground">From:</span>
-                    <span className="text-sm font-semibold text-blue-600">{selectedEmail.from}</span>
+                    <span className="text-sm font-semibold text-blue-600">
+                      {selectedEmail.from}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -229,7 +231,9 @@ export default function InboxPage() {
             <div className="p-8 rounded-full bg-gray-50 dark:bg-white/5 text-foreground mb-6">
               <Mail className="w-16 h-16" />
             </div>
-            <h3 className="text-2xl font-semibold text-muted-foreground">Select a message to view</h3>
+            <h3 className="text-2xl font-semibold text-muted-foreground">
+              Select a message to view
+            </h3>
             <p className="text-muted-foreground mt-2 italic">
               Your centralized communication hub is ready.
             </p>

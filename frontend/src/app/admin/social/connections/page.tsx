@@ -85,7 +85,9 @@ export default function AdminSocialConnectionsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Social Connections</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Social Connections
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Connected Social Accounts
           </p>

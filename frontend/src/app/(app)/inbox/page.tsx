@@ -26,7 +26,8 @@ function channelIcon(ch: string) {
   const normalized = ch.toLowerCase();
   if (normalized.includes('whatsapp'))
     return <MessageSquare className="h-3.5 w-3.5 text-green-700 dark:text-green-400" />;
-  if (normalized.includes('email')) return <Mail className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />;
+  if (normalized.includes('email'))
+    return <Mail className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />;
   if (normalized.includes('phone') || normalized.includes('voice')) {
     return <Phone className="h-3.5 w-3.5 text-blue-700 dark:text-blue-400" />;
   }

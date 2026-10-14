@@ -83,7 +83,9 @@ export default function WorkspaceSecuritySettingsPage() {
               Node: Security-Orchestrator
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Workspace Protection</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Workspace Protection
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Authentication Lattices, Session Forensics & IP Persistence
           </p>

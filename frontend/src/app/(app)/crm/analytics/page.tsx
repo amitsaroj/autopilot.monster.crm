@@ -148,7 +148,9 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div>
-              <p className="text-sm font-bold text-muted-foreground dark:text-gray-400">{kpi.label}</p>
+              <p className="text-sm font-bold text-muted-foreground dark:text-gray-400">
+                {kpi.label}
+              </p>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mt-1">
                 {kpi.value}
               </h3>

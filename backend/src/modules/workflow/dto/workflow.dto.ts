@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsString, IsObject, IsOptional, IsBoolean, IsIn } from 'class-validator';
 
 export class CreateWorkflowDto {
@@ -29,4 +29,24 @@ export class CreateWorkflowDto {
   @IsBoolean()
   @IsOptional()
   isPublished?: boolean;
+}
+
+export class UpdateWorkflowDto extends PartialType(CreateWorkflowDto) {}
+
+export class WorkflowPreviewDto {
+  @ApiProperty()
+  @IsObject()
+  definition!: Record<string, unknown>;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsObject()
+  payload?: Record<string, unknown>;
+}
+
+export class WorkflowPayloadDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsObject()
+  payload?: Record<string, unknown>;
 }

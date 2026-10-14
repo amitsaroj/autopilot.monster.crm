@@ -137,7 +137,9 @@ export default function CompaniesPage() {
         </div>
       ) : error ? (
         <div className="py-20 text-center">
-          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">{error}</p>
+          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">
+            {error}
+          </p>
           <button
             type="button"
             onClick={() => reload()}

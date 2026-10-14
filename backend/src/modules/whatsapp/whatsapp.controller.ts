@@ -1,11 +1,29 @@
-import { Controller, Post, Get, Body, Param, Delete, Patch, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Query,
+  Delete,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappTemplateService } from './whatsapp-template.service';
 import { WhatsappBroadcastService } from './whatsapp-broadcast.service';
-import { SendWhatsappDto, SendWhatsappTemplateDto } from './dto/whatsapp.dto';
-import { CreateWhatsappTemplateDto, UpdateWhatsappTemplateDto } from './dto/whatsapp-template.dto';
+import {
+  SendWhatsappDto,
+  SendWhatsappTemplateDto,
+  SendWhatsappContentDto,
+} from './dto/whatsapp.dto';
+import {
+  CreateWhatsappTemplateDto,
+  UpdateWhatsappTemplateDto,
+  WhatsappTemplateAccountDto,
+} from './dto/whatsapp-template.dto';
 import {
   CreateWhatsappBroadcastDto,
   ScheduleWhatsappBroadcastDto,
@@ -13,9 +31,12 @@ import {
 import {
   AssignWhatsappConversationDto,
   SendConversationMessageDto,
+  UpdateWhatsappConversationDto,
+  AddWhatsappConversationNoteDto,
 } from './dto/whatsapp-conversation.dto';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
+import { CurrentUser, TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
+import type { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('WhatsApp')
 @ApiBearerAuth()
@@ -33,7 +54,13 @@ export class WhatsappController {
   @Post('send')
   @ApiOperation({ summary: 'Send a WhatsApp message' })
   async sendMessage(@TenantId() tenantId: string, @Body() dto: SendWhatsappDto) {
-    return await this.whatsappService.sendTextMessage(tenantId, dto.to, dto.message, dto.wabaId);
+    return await this.whatsappService.sendTextMessage(
+      tenantId,
+      dto.to,
+      dto.message,
+      dto.wabaId,
+      dto.idempotencyKey,
+    );
   }
 
   @Post('send-template')
@@ -46,7 +73,30 @@ export class WhatsappController {
       dto.language ?? 'en_US',
       dto.components ?? [],
       dto.wabaId,
+      dto.idempotencyKey,
+      undefined,
+      dto.expectedLastOutboundId,
     );
+  }
+
+  @Post('send-content')
+  @ApiOperation({
+    summary: 'Send supported media references or interactive messages inside the service window',
+  })
+  sendContent(@TenantId() tenantId: string, @Body() dto: SendWhatsappContentDto) {
+    return this.whatsappService.sendContentMessage(
+      tenantId,
+      dto.to,
+      dto.content,
+      dto.wabaId,
+      dto.idempotencyKey,
+      dto.expectedLastOutboundId,
+    );
+  }
+
+  @Get('analytics')
+  analytics(@TenantId() tenantId: string) {
+    return this.whatsappService.getAnalytics(tenantId);
   }
 
   @Get('messages')
@@ -74,7 +124,43 @@ export class WhatsappController {
     @Param('phone') phone: string,
     @Body() dto: SendConversationMessageDto,
   ) {
-    return await this.whatsappService.sendTextMessage(tenantId, phone, dto.message, dto.wabaId);
+    return await this.whatsappService.sendTextMessage(
+      tenantId,
+      phone,
+      dto.message,
+      dto.wabaId,
+      dto.idempotencyKey,
+      dto.expectedLastOutboundId,
+    );
+  }
+
+  @Patch('conversations/:phone')
+  updateConversation(
+    @TenantId() tenantId: string,
+    @Param('phone') phone: string,
+    @Body() dto: UpdateWhatsappConversationDto,
+  ) {
+    return this.whatsappService.updateConversation(tenantId, phone, dto);
+  }
+
+  @Post('conversations/:phone/read')
+  markRead(@TenantId() tenantId: string, @Param('phone') phone: string) {
+    return this.whatsappService.markConversationRead(tenantId, phone);
+  }
+
+  @Get('conversations/:phone/notes')
+  notes(@TenantId() tenantId: string, @Param('phone') phone: string) {
+    return this.whatsappService.conversationNotes(tenantId, phone);
+  }
+
+  @Post('conversations/:phone/notes')
+  addNote(
+    @TenantId() tenantId: string,
+    @Param('phone') phone: string,
+    @Body() dto: AddWhatsappConversationNoteDto,
+    @CurrentUser() actor: IRequestContext,
+  ) {
+    return this.whatsappService.addConversationNote(tenantId, phone, dto.content, actor.userId);
   }
 
   @Post('conversations/:phone/assign')
@@ -105,6 +191,19 @@ export class WhatsappController {
     return await this.templateService.create(tenantId, dto);
   }
 
+  @Post('templates/refresh')
+  refreshTemplates(@TenantId() tenantId: string, @Body() dto: WhatsappTemplateAccountDto) {
+    return this.templateService.refreshAll(tenantId, dto.wabaId);
+  }
+  @Post('templates/:id/refresh')
+  refreshTemplate(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: WhatsappTemplateAccountDto,
+  ) {
+    return this.templateService.refreshStatus(tenantId, id, dto.wabaId);
+  }
+
   @Get('templates/:id')
   @ApiOperation({ summary: 'Get WhatsApp template detail' })
   async getTemplate(@TenantId() tenantId: string, @Param('id') id: string) {
@@ -130,8 +229,12 @@ export class WhatsappController {
 
   @Post('templates/:id/sync')
   @ApiOperation({ summary: 'Submit template to Meta for approval' })
-  async syncTemplate(@TenantId() tenantId: string, @Param('id') id: string) {
-    return await this.templateService.syncWithMeta(tenantId, id);
+  async syncTemplate(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: WhatsappTemplateAccountDto,
+  ) {
+    return await this.templateService.syncWithMeta(tenantId, id, dto.wabaId);
   }
 
   @Get('broadcasts')
@@ -144,6 +247,35 @@ export class WhatsappController {
   @ApiOperation({ summary: 'Create WhatsApp broadcast' })
   async createBroadcast(@TenantId() tenantId: string, @Body() dto: CreateWhatsappBroadcastDto) {
     return await this.broadcastService.create(tenantId, dto);
+  }
+
+  @Get('broadcasts/:id/preview')
+  previewBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.broadcastService.preview(tenantId, id);
+  }
+  @Get('broadcasts/:id/recipients')
+  recipients(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Query('after') after?: string,
+  ) {
+    return this.broadcastService.recipients(tenantId, id, after);
+  }
+  @Post('broadcasts/:id/duplicate')
+  duplicateBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.broadcastService.duplicate(tenantId, id);
+  }
+  @Post('broadcasts/:id/pause')
+  pauseBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.broadcastService.pause(tenantId, id);
+  }
+  @Post('broadcasts/:id/resume')
+  resumeBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.broadcastService.resume(tenantId, id);
+  }
+  @Post('broadcasts/:id/cancel')
+  cancelBroadcast(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.broadcastService.cancel(tenantId, id);
   }
 
   @Get('broadcasts/:id')

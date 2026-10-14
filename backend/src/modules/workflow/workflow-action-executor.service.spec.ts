@@ -11,6 +11,8 @@ import { WhatsappTemplateService } from '../whatsapp/whatsapp-template.service';
 import { VoiceCallService } from '../voice/voice-call.service';
 import { PipelineService } from '../crm/pipeline.service';
 import { TaskPriority } from '../../database/entities/task.entity';
+import { WorkflowAiService } from './workflow-ai.service';
+import { WorkflowRuntimePolicyService } from './workflow-runtime-policy.service';
 
 describe('WorkflowActionExecutorService', () => {
   let service: WorkflowActionExecutorService;
@@ -69,6 +71,8 @@ describe('WorkflowActionExecutorService', () => {
         { provide: WhatsappTemplateService, useValue: mockWhatsappTemplateService },
         { provide: VoiceCallService, useValue: mockVoiceCallService },
         { provide: PipelineService, useValue: mockPipelineService },
+        { provide: WorkflowAiService, useValue: { execute: jest.fn() } },
+        { provide: WorkflowRuntimePolicyService, useValue: { assertAction: jest.fn() } },
       ],
     }).compile();
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api/client';
+import { parseApiData } from '@/lib/api/parse-response';
 import {
   Shield,
   ShieldCheck,
@@ -40,8 +41,7 @@ export default function TenantRolesPage() {
     setLoading(true);
     try {
       const res = await api.get('/rbac/roles');
-      const json = res.data;
-      if (json.data) setRoles(json.data);
+      setRoles(parseApiData<Role[]>(res) ?? []);
     } catch (e) {
       toast.error('Failed to sync security definitions');
     } finally {
@@ -72,7 +72,9 @@ export default function TenantRolesPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Security Orchestration</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Security Orchestration
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             RBAC Personas & Permission Mapping ({roles.length})
           </p>
@@ -127,21 +129,23 @@ export default function TenantRolesPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="p-4 rounded-2xl bg-black/40 border border-border flex items-center justify-between">
+                <div className="p-4 rounded-2xl bg-muted/50 border border-border flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Users className="w-4 h-4 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground font-bold uppercase tracking-tight">
                       Assigned Members
                     </span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">{role._count?.users || 0}</span>
+                  <span className="text-sm font-semibold text-foreground">
+                    {role._count?.users ?? '—'}
+                  </span>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wide px-1">
                     <span>Permission Schema</span>
                     <span className="text-blue-700 dark:text-blue-400">
-                      {role.permissions?.length || 0} Unified Rules
+                      {role.permissions?.length ?? '—'} Unified Rules
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 line-clamp-2 overflow-hidden max-h-[60px]">

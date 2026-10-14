@@ -109,9 +109,7 @@ export default function SubAdminBillingPage() {
               <p className="text-sm font-semibold text-foreground">{subscription.billingCycle}</p>
             </div>
             <div className="p-3 rounded-xl bg-card">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
-                Started
-              </p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Started</p>
               <p className="text-sm font-semibold text-foreground">
                 {subscription.startedAt
                   ? new Date(subscription.startedAt).toLocaleDateString()

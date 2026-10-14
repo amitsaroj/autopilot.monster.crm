@@ -184,9 +184,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
                       Spent
                     </p>
-                    <p className="text-sm font-bold text-blue-600">
-                      ${campaign?.spent || '0.00'}
-                    </p>
+                    <p className="text-sm font-bold text-blue-600">${campaign?.spent || '0.00'}</p>
                   </div>
                 </div>
               </div>
@@ -229,7 +227,9 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                 <div className="h-full bg-blue-600" style={{ width: `${progress}%` }}></div>
               </div>
               <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-white/5">
-                <span className="text-sm font-bold text-muted-foreground">Qualified Conversions</span>
+                <span className="text-sm font-bold text-muted-foreground">
+                  Qualified Conversions
+                </span>
                 <span className="text-sm font-semibold text-emerald-600">
                   {campaign?.qualifiedLeads}
                 </span>
@@ -292,7 +292,9 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                 <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                   Sarah (Sales Expert)
                 </p>
-                <p className="text-xs font-bold text-blue-700 dark:text-blue-400">Active Outbound Mode</p>
+                <p className="text-xs font-bold text-blue-700 dark:text-blue-400">
+                  Active Outbound Mode
+                </p>
               </div>
             </div>
           </div>

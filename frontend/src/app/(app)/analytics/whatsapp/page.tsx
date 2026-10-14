@@ -65,7 +65,12 @@ export default function WhatsappAnalyticsPage() {
             icon: MessageSquare,
             color: 'text-[hsl(var(--brand))]',
           },
-          { label: 'Inbound', value: data.inbound, icon: ArrowDownLeft, color: 'text-green-700 dark:text-green-400' },
+          {
+            label: 'Inbound',
+            value: data.inbound,
+            icon: ArrowDownLeft,
+            color: 'text-green-700 dark:text-green-400',
+          },
           { label: 'Outbound', value: data.outbound, icon: ArrowUpRight, color: 'text-blue-500' },
         ].map((stat) => (
           <div key={stat.label} className="stat-card text-center">

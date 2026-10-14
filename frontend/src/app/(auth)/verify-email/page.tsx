@@ -79,10 +79,7 @@ function VerifyEmailContent() {
         Verification Failed
       </h1>
       <p className="text-sm text-gray-500 dark:text-muted-foreground mb-8">{message}</p>
-      <Link
-        href="/login"
-        className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
-      >
+      <Link href="/login" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
         Back to login
       </Link>
     </div>

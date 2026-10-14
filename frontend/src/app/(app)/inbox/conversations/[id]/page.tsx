@@ -20,7 +20,7 @@ export default function InboxConversationPage({ params }: { params: Promise<{ id
     setLoading(true);
     try {
       const res = await whatsappConversationService.get(decodedPhone);
-      setMessages(res.data.data?.messages ?? []);
+      setMessages(res.data.data ?? []);
     } finally {
       setLoading(false);
     }

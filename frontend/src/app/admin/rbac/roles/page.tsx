@@ -25,8 +25,7 @@ export default function AdminRBACRolesPage() {
       setLoading(true);
       try {
         const res = await rbacService.getRoles();
-        const payload = res.data?.data ?? res.data;
-        setRoles(Array.isArray(payload) ? payload : (payload?.data ?? []));
+        setRoles(res.data.data);
       } catch {
         toast.error('Failed to load roles');
       } finally {
@@ -80,7 +79,9 @@ export default function AdminRBACRolesPage() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">{role.description ?? 'No description'}</p>
+                <p className="text-xs text-muted-foreground">
+                  {role.description ?? 'No description'}
+                </p>
               </div>
               <div className="flex items-center gap-4 shrink-0">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

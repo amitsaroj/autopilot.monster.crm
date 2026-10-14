@@ -18,14 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api/client';
-
-interface ActivityLog {
-  id: string;
-  type: string;
-  title: string;
-  description?: string;
-  createdAt: string;
-}
+import type { Activity as ActivityLog } from '@/services/activity.service';
 
 export default function ActivitiesPage() {
   const [activities, setActivities] = useState<ActivityLog[]>([]);
@@ -67,7 +60,7 @@ export default function ActivitiesPage() {
 
   const filteredActivities = activities.filter(
     (a) =>
-      a.title.toLowerCase().includes(search.toLowerCase()) ||
+      a.subject.toLowerCase().includes(search.toLowerCase()) ||
       a.description?.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -118,11 +111,11 @@ export default function ActivitiesPage() {
                 {getActivityIcon(activity.type)}
               </div>
               <div className="p-8 rounded-xl bg-card border border-border hover:border-emerald-500/10 transition-all relative overflow-hidden backdrop-blur-sm">
-                <div className="absolute right-8 top-8 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                  {new Date(activity.createdAt).toLocaleString()}
+                <div className="mb-3 text-xs font-semibold text-muted-foreground">
+                  {new Date(activity.occurredAt).toLocaleString()}
                 </div>
                 <h3 className="text-xl font-semibold text-foreground uppercase tracking-tighter mb-2 group-hover:text-emerald-400 transition-all">
-                  {activity.title}
+                  {activity.subject}
                 </h3>
                 <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl">
                   {activity.description ||

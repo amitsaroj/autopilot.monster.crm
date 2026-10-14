@@ -93,7 +93,9 @@ export default function SubAdminOverviewPage() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-semibold text-foreground tracking-tight">Sub-Admin Overview</h1>
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+          Sub-Admin Overview
+        </h1>
         <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Delegated Workspace Administration
         </p>
@@ -101,10 +103,7 @@ export default function SubAdminOverviewPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
-          <div
-            key={s.label}
-            className="p-5 rounded-2xl bg-card border border-border"
-          >
+          <div key={s.label} className="p-5 rounded-2xl bg-card border border-border">
             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {s.label}
             </p>

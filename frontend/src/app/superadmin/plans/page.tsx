@@ -96,7 +96,9 @@ export default function PlansManagementPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Monetization Registry</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Monetization Registry
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Billing Architecture ({plans.length} tiers)
           </p>
@@ -247,7 +249,9 @@ export default function PlansManagementPage() {
             <h2 className="text-xl font-bold text-foreground">Create New Plan</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1">Plan Name</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1">
+                  Plan Name
+                </label>
                 <input
                   type="text"
                   value={newPlan.name}

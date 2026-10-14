@@ -77,7 +77,10 @@ export default function NewVoiceCampaignPage() {
       toast.error('Select a contact list (segment)');
       return;
     }
-    if ((form.callingHoursStart && !form.callingHoursEnd) || (!form.callingHoursStart && form.callingHoursEnd)) {
+    if (
+      (form.callingHoursStart && !form.callingHoursEnd) ||
+      (!form.callingHoursStart && form.callingHoursEnd)
+    ) {
       toast.error('Set both a start and end calling-hours time, or leave both blank');
       return;
     }
@@ -136,7 +139,11 @@ export default function NewVoiceCampaignPage() {
           disabled={generating}
           className="inline-flex items-center gap-2 rounded-lg bg-[hsl(var(--brand))] px-4 py-2 text-sm font-semibold text-white hover:bg-[hsl(220,87%,45%)] disabled:opacity-50"
         >
-          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {generating ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4" />
+          )}
           Generate draft
         </button>
       </section>
@@ -187,7 +194,8 @@ export default function NewVoiceCampaignPage() {
               ))}
             </select>
             <p className="mt-1 text-xs text-muted-foreground">
-              Contacts marked do-not-contact or without a valid phone number are skipped automatically.
+              Contacts marked do-not-contact or without a valid phone number are skipped
+              automatically.
             </p>
           </div>
         </section>
@@ -303,8 +311,8 @@ export default function NewVoiceCampaignPage() {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Leave calling hours blank to allow calls at any time. Retries that would land outside the
-            window are pushed to the next window instead of being dropped.
+            Leave calling hours blank to allow calls at any time. Retries that would land outside
+            the window are pushed to the next window instead of being dropped.
           </p>
         </section>
 

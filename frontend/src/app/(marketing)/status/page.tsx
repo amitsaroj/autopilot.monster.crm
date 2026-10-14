@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { API_BASE } from '@/lib/constants';
+import { parseApiData } from '@/lib/api/parse-response';
 
 interface HealthCheck {
   name: string;
@@ -27,7 +28,8 @@ export default function StatusPage() {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(15000) });
-      const json = (await res.json()) as HealthResponse;
+      const json = parseApiData<HealthResponse>({ data: await res.json() });
+      if (!json) throw new Error('Health response unavailable');
       const items: HealthCheck[] = [];
       if (json.info) {
         for (const [name, detail] of Object.entries(json.info)) {
@@ -73,7 +75,8 @@ export default function StatusPage() {
             Platform Status
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Live health from the public <code className="text-blue-700 dark:text-blue-400">/health</code> endpoint.
+            Live health from the public{' '}
+            <code className="text-blue-700 dark:text-blue-400">/health</code> endpoint.
           </p>
         </motion.div>
 

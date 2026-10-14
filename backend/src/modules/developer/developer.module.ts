@@ -2,7 +2,11 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { WebhookService } from './webhook.service';
+import { BullModule } from '@nestjs/bull';
+import type { SignOptions } from 'jsonwebtoken';
+import { WEBHOOK_QUEUE, WebhookService } from './webhook.service';
+import { WebhookDeliveryProcessor } from './webhook-delivery.processor';
+import { WebhookEventListener } from './webhook-event.listener';
 import { WebhookController } from './webhook.controller';
 import { OAuthService } from './oauth.service';
 import { OAuthController } from './oauth.controller';
@@ -18,19 +22,29 @@ import type { JwtConfig } from '../../config/jwt.config';
 @Module({
   imports: [
     ConfigModule,
+    BullModule.registerQueue({ name: WEBHOOK_QUEUE }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const jwt = configService.get<JwtConfig>('jwt');
         if (jwt === undefined) throw new Error('JWT config missing');
-        return { secret: jwt.secret, signOptions: { expiresIn: jwt.expiresIn as any } };
+        return {
+          secret: jwt.secret,
+          signOptions: { expiresIn: jwt.expiresIn as SignOptions['expiresIn'] },
+        };
       },
     }),
     TypeOrmModule.forFeature([Webhook, WebhookDelivery, OAuthApp, OAuthCode, ApiLog]),
   ],
   controllers: [WebhookController, OAuthController, ApiLogController],
-  providers: [WebhookService, OAuthService, ApiLogService],
+  providers: [
+    WebhookService,
+    WebhookDeliveryProcessor,
+    WebhookEventListener,
+    OAuthService,
+    ApiLogService,
+  ],
   exports: [WebhookService, OAuthService, ApiLogService],
 })
 export class DeveloperModule {}

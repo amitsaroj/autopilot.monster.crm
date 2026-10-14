@@ -20,9 +20,9 @@ interface TeamMember {
   email: string;
   firstName: string;
   lastName: string;
-  roles: string[];
+  roles?: string[];
   status: string;
-  lastLogin: string | null;
+  lastLoginAt: string | null;
 }
 
 export default function UsersSettingsPage() {
@@ -96,12 +96,14 @@ export default function UsersSettingsPage() {
         </div>
         <div className="p-6 rounded-3xl bg-card border border-border flex flex-col justify-center relative overflow-hidden group">
           <Shield className="w-20 h-20 absolute -right-4 -bottom-4 text-foreground/5 group-hover:scale-110 transition-transform" />
-          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">Admins</p>
+          <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
+            Admins
+          </p>
           <p className="text-3xl font-semibold text-foreground">
-            {
-              users.filter((u) => u.roles.includes('ADMIN') || u.roles.includes('TENANT_ADMIN'))
-                .length
-            }
+            {users.every((u) => Array.isArray(u.roles))
+              ? users.filter((u) => u.roles?.includes('ADMIN') || u.roles?.includes('TENANT_ADMIN'))
+                  .length
+              : '—'}
           </p>
         </div>
         <div className="p-6 rounded-3xl bg-card border border-border flex flex-col justify-center relative overflow-hidden group">
@@ -155,7 +157,7 @@ export default function UsersSettingsPage() {
                   </td>
                   <td className="p-6">
                     <div className="flex gap-2">
-                      {member.roles.map((role) => (
+                      {member.roles?.map((role) => (
                         <span
                           key={role}
                           className="px-2 py-1 rounded-md bg-card border border-border text-xs font-semibold text-muted-foreground uppercase tracking-wide"
@@ -163,6 +165,9 @@ export default function UsersSettingsPage() {
                           {role.replace('_', ' ')}
                         </span>
                       ))}
+                      {!member.roles && (
+                        <span className="text-sm text-muted-foreground">Not provided</span>
+                      )}
                     </div>
                   </td>
                   <td className="p-6">
@@ -182,14 +187,15 @@ export default function UsersSettingsPage() {
                   </td>
                   <td className="p-6">
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                      {member.lastLogin
-                        ? new Date(member.lastLogin).toLocaleDateString()
-                        : 'Never Segmented'}
+                      {member.lastLoginAt
+                        ? new Date(member.lastLoginAt).toLocaleDateString()
+                        : 'Never'}
                     </span>
                   </td>
                   <td className="p-6 text-right">
                     <button
                       onClick={() => handleDeactivate(member.id, member.status)}
+                      aria-label={`${member.status === 'ACTIVE' ? 'Deactivate' : 'Activate'} ${member.email}`}
                       className="p-2 text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-white/[0.05] rounded-xl transition-all"
                     >
                       <MoreHorizontal className="w-5 h-5" />

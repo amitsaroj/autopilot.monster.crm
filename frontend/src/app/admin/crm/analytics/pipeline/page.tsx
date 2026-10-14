@@ -95,7 +95,9 @@ export default function PipelineAnalyticsPage() {
               Node: Pipeline-Conversion-Hub
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Conversion Funnel</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Conversion Funnel
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Stage-Velocity & Fiscal Transition Forensics
           </p>
@@ -180,7 +182,9 @@ export default function PipelineAnalyticsPage() {
 
           <div className="space-y-8">
             {metrics.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">No stage velocity data</p>
+              <p className="text-sm text-muted-foreground text-center py-8">
+                No stage velocity data
+              </p>
             ) : (
               metrics.map((step, idx) => (
                 <div

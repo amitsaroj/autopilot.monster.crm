@@ -122,7 +122,9 @@ export default function CRMAnalyticsSummaryPage() {
               Node: Analytic-Core
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Performance Summary</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Performance Summary
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Data Visuals & Strategic Fiscal Intelligence
           </p>
@@ -259,7 +261,9 @@ export default function CRMAnalyticsSummaryPage() {
               );
             })}
             {revenueData.length === 0 && (
-              <p className="text-sm text-muted-foreground w-full text-center py-16">No revenue data yet</p>
+              <p className="text-sm text-muted-foreground w-full text-center py-16">
+                No revenue data yet
+              </p>
             )}
           </div>
         </div>

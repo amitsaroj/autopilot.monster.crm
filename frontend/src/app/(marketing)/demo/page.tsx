@@ -147,7 +147,9 @@ export default function DemoPage() {
                     <user.icon className={`w-7 h-7 ${user.color}`} />
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className={`text-xs font-semibold uppercase tracking-widest ${user.color}`}>
+                    <span
+                      className={`text-xs font-semibold uppercase tracking-widest ${user.color}`}
+                    >
                       {user.role}
                     </span>
                     <span className="text-[10px] text-gray-500 mt-1 uppercase font-bold tracking-tighter">
@@ -172,7 +174,7 @@ export default function DemoPage() {
                     </span>
                     <button
                       aria-label={`Copy ${user.role} demo email`}
-                    onClick={() => copyToClipboard(user.email, user.role)}
+                      onClick={() => copyToClipboard(user.email, user.role)}
                       className="p-1 hover:bg-white/10 rounded-md transition-colors"
                     >
                       {copied === user.role ? (

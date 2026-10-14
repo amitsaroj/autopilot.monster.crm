@@ -2,17 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import api from '@/lib/api/client';
+import { storageFileService, type StorageFile } from '@/services/storage-file.service';
 
 import { ContactSubpage } from '@/components/crm/contact-subpage';
-
-interface StorageFile {
-  id: string;
-  filename: string;
-  mimeType: string;
-  size: number;
-  createdAt: string;
-}
 
 export default function ContactFilesPage({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -30,7 +22,7 @@ function FilesList() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await api.get<{ data: StorageFile[] }>('/storage/files');
+        const res = await storageFileService.list();
         setItems(res.data?.data ?? []);
       } catch {
         setItems([]);

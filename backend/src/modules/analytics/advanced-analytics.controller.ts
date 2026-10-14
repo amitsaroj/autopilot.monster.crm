@@ -62,7 +62,9 @@ export class AdvancedAnalyticsController {
     let parsedConfig = {};
     try {
       if (config) parsedConfig = JSON.parse(config);
-    } catch (e) {}
+    } catch {
+      /* Preserve the existing empty-config fallback for legacy report clients. */
+    }
     return this.analyticsService.buildCustomReport(tenantId, parsedConfig);
   }
 
@@ -78,7 +80,9 @@ export class AdvancedAnalyticsController {
     let parsedConfig = {};
     try {
       if (config) parsedConfig = JSON.parse(config);
-    } catch (e) {}
+    } catch {
+      /* Preserve the existing empty-config fallback for legacy report clients. */
+    }
     return this.analyticsService.scheduleReport(tenantId, parsedConfig);
   }
 

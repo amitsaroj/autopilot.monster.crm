@@ -133,7 +133,9 @@ export default function AdminVoiceNumbersPage() {
                   <Phone className="w-5 h-5 text-blue-700 dark:text-blue-400 group-hover:text-white transition-colors" />
                 </div>
                 <div>
-                  <p className="text-base font-semibold text-foreground font-mono">{num.phoneNumber}</p>
+                  <p className="text-base font-semibold text-foreground font-mono">
+                    {num.phoneNumber}
+                  </p>
                   <p className="text-xs text-muted-foreground">{num.twilioSid ?? 'Twilio'}</p>
                 </div>
               </div>
@@ -147,7 +149,9 @@ export default function AdminVoiceNumbersPage() {
             </div>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="p-3 rounded-xl bg-card">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Country</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  Country
+                </p>
                 <p className="text-sm font-semibold text-foreground">{num.country}</p>
               </div>
               <div className="p-3 rounded-xl bg-card">

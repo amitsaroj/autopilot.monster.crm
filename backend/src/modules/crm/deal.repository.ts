@@ -38,7 +38,8 @@ export class DealRepository extends BaseRepository<Deal> {
       qb.andWhere('d.name ILIKE :search', { search: `%${query.search}%` });
     }
 
-    qb.orderBy('d.created_at', 'DESC')
+    // Joined pagination resolves the sort field through entity metadata.
+    qb.orderBy('d.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

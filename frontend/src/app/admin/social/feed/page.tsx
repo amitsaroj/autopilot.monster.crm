@@ -119,10 +119,7 @@ export default function AdminSocialFeedPage() {
             color: 'text-blue-700 dark:text-blue-400',
           },
         ].map((s) => (
-          <div
-            key={s.label}
-            className="p-4 rounded-2xl bg-card border border-border text-center"
-          >
+          <div key={s.label} className="p-4 rounded-2xl bg-card border border-border text-center">
             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">
               {s.label}
             </p>

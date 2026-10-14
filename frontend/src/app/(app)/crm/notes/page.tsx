@@ -184,7 +184,8 @@ export default function NotesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
           <div className="w-full max-w-xl p-8 rounded-xl bg-card border border-border shadow-2xl animate-in zoom-in-95">
             <h2 className="text-2xl font-semibold text-foreground uppercase tracking-tighter mb-8 flex items-center gap-3">
-              <FileText className="w-6 h-6 text-amber-700 dark:text-amber-400" /> Initialize Artifact
+              <FileText className="w-6 h-6 text-amber-700 dark:text-amber-400" /> Initialize
+              Artifact
             </h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">

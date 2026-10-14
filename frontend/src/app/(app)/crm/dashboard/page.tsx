@@ -155,7 +155,9 @@ export default function CrmDashboardPage() {
               <div
                 className={cn(
                   'flex items-center gap-1 text-[10px] font-black uppercase tracking-tighter',
-                  card.trend.startsWith('+') ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-400',
+                  card.trend.startsWith('+')
+                    ? 'text-emerald-700 dark:text-emerald-400'
+                    : 'text-rose-400',
                 )}
               >
                 {card.trend.startsWith('+') ? (
@@ -166,7 +168,9 @@ export default function CrmDashboardPage() {
                 {card.trend}
               </div>
             </div>
-            <h3 className="text-3xl font-semibold text-foreground tracking-tighter mb-1">{card.value}</h3>
+            <h3 className="text-3xl font-semibold text-foreground tracking-tighter mb-1">
+              {card.value}
+            </h3>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               {card.label}
             </p>

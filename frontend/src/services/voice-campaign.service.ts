@@ -98,10 +98,9 @@ export const voiceCampaignService = {
   cancel: (id: string) => api.post<{ data: VoiceCampaign }>(`/voice/campaigns/${id}/cancel`),
   getStats: (id: string) => api.get<{ data: VoiceCampaignStats }>(`/voice/campaigns/${id}/stats`),
   listRecipients: (id: string, params?: { status?: VoiceCampaignRecipientStatus; page?: number }) =>
-    api.get<{ data: { items: VoiceCampaignRecipient[]; total: number; page: number; limit: number } }>(
-      `/voice/campaigns/${id}/recipients`,
-      { params },
-    ),
+    api.get<{
+      data: { items: VoiceCampaignRecipient[]; total: number; page: number; limit: number };
+    }>(`/voice/campaigns/${id}/recipients`, { params }),
   retryRecipient: (id: string, recipientId: string) =>
     api.post<{ data: VoiceCampaignRecipient }>(
       `/voice/campaigns/${id}/recipients/${recipientId}/retry`,

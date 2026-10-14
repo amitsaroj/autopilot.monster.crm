@@ -97,7 +97,13 @@ export function nextWithinCallingHours(
     }, {});
 
   let candidate = new Date(
-    Date.UTC(Number(localNow.year), Number(localNow.month) - 1, Number(localNow.day), hours, minutes) -
+    Date.UTC(
+      Number(localNow.year),
+      Number(localNow.month) - 1,
+      Number(localNow.day),
+      hours,
+      minutes,
+    ) -
       offset * 60000,
   );
 

@@ -95,7 +95,11 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
   const handlePause = () =>
     runAction(() => voiceCampaignService.pause(id), 'Campaign paused', 'Failed to pause campaign');
   const handleResume = () =>
-    runAction(() => voiceCampaignService.resume(id), 'Campaign resumed', 'Failed to resume campaign');
+    runAction(
+      () => voiceCampaignService.resume(id),
+      'Campaign resumed',
+      'Failed to resume campaign',
+    );
   const handleCancel = () =>
     runAction(() => voiceCampaignService.cancel(id), 'Campaign stopped', 'Failed to stop campaign');
 
@@ -122,11 +126,16 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
 
   if (!campaign) {
     return (
-      <div className="mx-auto max-w-3xl py-8 text-center text-muted-foreground">Campaign not found.</div>
+      <div className="mx-auto max-w-3xl py-8 text-center text-muted-foreground">
+        Campaign not found.
+      </div>
     );
   }
 
-  const progressPct = campaign.totalContacts > 0 ? Math.min(100, Math.round((campaign.callsMade / campaign.totalContacts) * 100)) : 0;
+  const progressPct =
+    campaign.totalContacts > 0
+      ? Math.min(100, Math.round((campaign.callsMade / campaign.totalContacts) * 100))
+      : 0;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 py-8">
@@ -162,10 +171,15 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
       <div className="rounded-xl border border-gray-200 bg-white p-4">
         <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
           <span>Progress</span>
-          <span>{campaign.callsMade} / {campaign.totalContacts}</span>
+          <span>
+            {campaign.callsMade} / {campaign.totalContacts}
+          </span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-          <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${progressPct}%` }} />
+          <div
+            className="h-full rounded-full bg-blue-600 transition-all"
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
 
@@ -193,7 +207,9 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             {Object.entries(RECIPIENT_STATUS_LABELS).map(([key, label]) => (
               <div key={key} className="rounded-lg bg-gray-50 p-3 text-center">
-                <p className="text-lg font-bold text-gray-900">{stats.byStatus[key as never] ?? 0}</p>
+                <p className="text-lg font-bold text-gray-900">
+                  {stats.byStatus[key as never] ?? 0}
+                </p>
                 <p className="text-[11px] text-muted-foreground">{label}</p>
               </div>
             ))}
@@ -242,11 +258,17 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
             Resume
           </button>
         )}
-        {(campaign.status === 'RUNNING' || campaign.status === 'PAUSED' || campaign.status === 'DRAFT') && (
+        {(campaign.status === 'RUNNING' ||
+          campaign.status === 'PAUSED' ||
+          campaign.status === 'DRAFT') && (
           <button
             type="button"
             onClick={() => {
-              if (window.confirm('Stop this campaign? Pending and in-progress recipients will be cancelled. This cannot be undone.')) {
+              if (
+                window.confirm(
+                  'Stop this campaign? Pending and in-progress recipients will be cancelled. This cannot be undone.',
+                )
+              ) {
                 void handleCancel();
               }
             }}
@@ -273,7 +295,9 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">Status</th>
                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">Attempts</th>
                 <th className="px-4 py-2 text-left font-medium text-muted-foreground">Outcome</th>
-                <th className="px-4 py-2 text-left font-medium text-muted-foreground">Next attempt</th>
+                <th className="px-4 py-2 text-left font-medium text-muted-foreground">
+                  Next attempt
+                </th>
                 <th className="px-4 py-2 text-right font-medium text-muted-foreground">Actions</th>
               </tr>
             </thead>
@@ -293,7 +317,9 @@ export default function VoiceCampaignDetailPage({ params }: { params: Promise<{ 
                   </td>
                   <td className="px-4 py-2 text-right">
                     <div className="flex justify-end gap-2">
-                      {['FAILED', 'NO_ANSWER', 'BUSY', 'SKIPPED', 'CANCELLED'].includes(r.status) && (
+                      {['FAILED', 'NO_ANSWER', 'BUSY', 'SKIPPED', 'CANCELLED'].includes(
+                        r.status,
+                      ) && (
                         <button
                           type="button"
                           onClick={() => void handleRetryRecipient(r.id)}

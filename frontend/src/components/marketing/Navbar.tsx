@@ -31,7 +31,11 @@ const navLinks = [
 
 export default function MarketingNavbar() {
   const { isAuthenticated, user } = useAuth();
-  const dashboardHref = user?.roles?.includes('SUPER_ADMIN') ? '/superadmin' : user?.roles?.includes('ADMIN') ? '/sub-admin' : '/dashboard';
+  const dashboardHref = user?.roles?.includes('SUPER_ADMIN')
+    ? '/superadmin'
+    : user?.roles?.includes('ADMIN')
+      ? '/sub-admin'
+      : '/dashboard';
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -72,7 +76,9 @@ export default function MarketingNavbar() {
                 <button
                   type="button"
                   onClick={() => setOpenDropdown(openDropdown === link.label ? null : link.label)}
-                  onKeyDown={(event) => { if (event.key === 'Escape') setOpenDropdown(null); }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape') setOpenDropdown(null);
+                  }}
                   aria-haspopup="true"
                   aria-expanded={openDropdown === link.label}
                   className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.05]"
@@ -161,7 +167,10 @@ export default function MarketingNavbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            onClick={(event) => { if (event.target instanceof Element && event.target.closest('a')) setMobileOpen(false); }}
+            onClick={(event) => {
+              if (event.target instanceof Element && event.target.closest('a'))
+                setMobileOpen(false);
+            }}
             id="mobile-nav-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}

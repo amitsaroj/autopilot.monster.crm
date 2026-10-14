@@ -14,7 +14,7 @@ export class SubAdminNotificationsService {
   }
 
   async create(tenantId: string, dto: any) {
-    let template = await this.notifRepo.findOne({ where: { tenantId, type: dto.type } });
+    const template = await this.notifRepo.findOne({ where: { tenantId, type: dto.type } });
     if (template) {
       Object.assign(template, dto);
       return this.notifRepo.save(template);

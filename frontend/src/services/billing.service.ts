@@ -56,7 +56,8 @@ export const billingService = {
     api.post<{ url: string }>('/monetization/upgrade', { planId, billingCycle }),
   getPortal: () => api.post<{ url: string }>('/monetization/portal'),
   getRecovery: () => api.get<{ data: BillingRecovery }>('/billing/subscription/recovery'),
-  retryPayment: () => api.post<{ data: { url: string; status: string } }>('/billing/subscription/retry-payment'),
+  retryPayment: () =>
+    api.post<{ data: { url: string; status: string } }>('/billing/subscription/retry-payment'),
   downgrade: (planId: string) => api.post('/billing/subscription/downgrade', { planId }),
   cancel: (atPeriodEnd = true) => api.post('/billing/subscription/cancel', { atPeriodEnd }),
   reactivate: () => api.post('/billing/subscription/reactivate'),

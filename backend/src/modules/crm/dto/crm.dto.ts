@@ -118,6 +118,10 @@ export class CreateContactDto {
   @IsOptional()
   @IsObject()
   customFields?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 export class UpdateContactDto extends PartialType(CreateContactDto) {}

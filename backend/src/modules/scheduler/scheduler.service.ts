@@ -86,7 +86,9 @@ export class SchedulerService implements OnModuleInit {
         this.schedulerRegistry.deleteCronJob(jobId);
         this.logger.log(`Job ${jobId} stopped and removed from registry`);
       }
-    } catch (e) {}
+    } catch {
+      /* Removing an already-stopped job is idempotent. */
+    }
   }
 
   private async executeJob(job: ScheduledJob) {

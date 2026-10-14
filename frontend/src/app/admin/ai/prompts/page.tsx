@@ -134,7 +134,9 @@ export default function AdminAIPromptsPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">{prompt.category ?? 'General'}</span>
+                <span className="text-xs text-muted-foreground">
+                  {prompt.category ?? 'General'}
+                </span>
               </div>
               <span className="text-xs font-mono text-muted-foreground">
                 {new Date(prompt.updatedAt).toLocaleDateString()}

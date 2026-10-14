@@ -142,7 +142,9 @@ export default function AdminAIModelsPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
               <div className="p-3 rounded-xl bg-card">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Context</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  Context
+                </p>
                 <p className="text-sm font-semibold text-foreground">{model.contextWindow}</p>
               </div>
               <div className="p-3 rounded-xl bg-card">
@@ -152,7 +154,9 @@ export default function AdminAIModelsPage() {
                 <p className="text-sm font-semibold text-foreground">${model.costPer1kTokens}</p>
               </div>
               <div className="p-3 rounded-xl bg-card">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Latency</p>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                  Latency
+                </p>
                 <p className="text-sm font-semibold text-foreground">{model.latency}</p>
               </div>
             </div>

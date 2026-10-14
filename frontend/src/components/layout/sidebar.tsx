@@ -97,6 +97,15 @@ export function Sidebar() {
   const { isOpen, close, collapsed, toggleCollapsed } = useSidebar();
   const { hasAnyPermission } = usePermission();
 
+  const handleSignOut = async () => {
+    try {
+      await logout();
+    } catch {
+      // logout clears the local session even if server revocation fails.
+    }
+    window.location.assign('/login');
+  };
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -113,17 +122,22 @@ export function Sidebar() {
         data-collapsed={collapsed}
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex flex-col w-64 shrink-0 min-h-screen bg-sidebar border-r border-sidebar-border transition-transform duration-300 md:relative md:translate-x-0',
-          isOpen ? 'translate-x-0' : '-translate-x-full',
+          isOpen ? 'translate-x-0 visible' : '-translate-x-full invisible md:visible',
           collapsed && 'md:w-20',
         )}
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-          <Link href="/" aria-label="Autopilot Monster home"><BrandLogo /></Link>
+          <Link href="/" aria-label="Autopilot Monster home">
+            <BrandLogo />
+          </Link>
         </div>
 
         {/* Nav */}
-        <nav aria-label="Workspace navigation" className="flex-1 overflow-y-auto py-4 scrollbar-hide">
+        <nav
+          aria-label="Workspace navigation"
+          className="flex-1 overflow-y-auto py-4 scrollbar-hide"
+        >
           <ul className="space-y-0.5 px-3">
             {navItems.map((item) => {
               // Simplified dynamic permission check: If resource matches a prominent route, ensure read/view
@@ -146,7 +160,9 @@ export function Sidebar() {
                       <summary
                         aria-label={item.label}
                         title={item.label}
-                        onClick={() => { if (collapsed) toggleCollapsed(); }}
+                        onClick={() => {
+                          if (collapsed) toggleCollapsed();
+                        }}
                         className={cn(
                           'flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-sm list-none select-none transition-colors',
                           isActive
@@ -212,7 +228,14 @@ export function Sidebar() {
         <div className="px-3 py-3 border-t border-sidebar-border space-y-0.5">
           {user?.roles?.includes('SUPER_ADMIN') && (
             <details className="group mb-2">
-              <summary aria-label="Platform administration" title="Platform administration" onClick={() => { if (collapsed) toggleCollapsed(); }} className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-xs font-semibold uppercase tracking-widest text-brand hover:bg-brand/5 list-none select-none transition-all">
+              <summary
+                aria-label="Platform administration"
+                title="Platform administration"
+                onClick={() => {
+                  if (collapsed) toggleCollapsed();
+                }}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-xs font-semibold uppercase tracking-widest text-brand hover:bg-brand/5 list-none select-none transition-all"
+              >
                 <ShieldCheck className="h-4 w-4" />
                 <span className="flex-1">Platform administration</span>
                 <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
@@ -265,7 +288,7 @@ export function Sidebar() {
           <button
             aria-label="Sign out"
             title="Sign out"
-            onClick={() => logout()}
+            onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500/70 hover:bg-red-500/5 hover:text-red-500 transition-colors"
           >
             <LogOut className="h-4 w-4" />

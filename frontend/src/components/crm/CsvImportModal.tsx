@@ -243,7 +243,9 @@ export function CsvImportModal({ isOpen, onClose, onSuccess, entityType }: CsvIm
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
                 Processing Data...
               </h3>
-              <p className="text-muted-foreground font-bold mt-2">Uploading and indexing your records.</p>
+              <p className="text-muted-foreground font-bold mt-2">
+                Uploading and indexing your records.
+              </p>
             </div>
           )}
         </div>

@@ -19,6 +19,12 @@ import { CrmModule } from '../crm/crm.module';
 import { NotificationModule } from '../notifications/notification.module';
 import { VoiceModule } from '../voice/voice.module';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
+import { MonetizationModule } from '../monetization.module';
+import { WorkflowRuntimePolicyService } from './workflow-runtime-policy.service';
+import { WorkflowVersion } from '../../database/entities/workflow-version.entity';
+import { AiModule } from '../ai/ai.module';
+import { WorkflowAiService } from './workflow-ai.service';
+import { WorkflowSequenceService } from './workflow-sequence.service';
 
 @Module({
   imports: [
@@ -27,7 +33,9 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     CrmModule,
     NotificationModule,
     VoiceModule,
-    TypeOrmModule.forFeature([Flow, WorkflowExecution]),
+    MonetizationModule,
+    AiModule,
+    TypeOrmModule.forFeature([Flow, WorkflowExecution, WorkflowVersion]),
     BullModule.registerQueue({ name: QUEUE_NAMES.WORKFLOW }),
   ],
   controllers: [WorkflowController, WorkflowMetaController],
@@ -37,6 +45,9 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     WorkflowExecutorService,
     WorkflowActionExecutorService,
     WorkflowRepository,
+    WorkflowRuntimePolicyService,
+    WorkflowAiService,
+    WorkflowSequenceService,
     WorkflowEventListener,
   ],
   exports: [WorkflowService],

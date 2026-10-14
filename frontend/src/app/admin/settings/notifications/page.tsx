@@ -164,7 +164,10 @@ export default function NotificationsPage() {
                   type="text"
                   value={emailSettings.port}
                   onChange={(e) =>
-                    setEmailSettings({ ...emailSettings, port: parseInt(e.target.value, 10) || 587 })
+                    setEmailSettings({
+                      ...emailSettings,
+                      port: parseInt(e.target.value, 10) || 587,
+                    })
                   }
                   className="w-full bg-card border border-border rounded-[24px] px-8 py-5 text-sm text-blue-700 dark:text-blue-400 font-bold outline-none focus:border-blue-500/40"
                   placeholder="587"

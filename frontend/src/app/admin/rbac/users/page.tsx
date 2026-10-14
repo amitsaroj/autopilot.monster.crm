@@ -101,7 +101,9 @@ export default function AdminRBACUsersPage() {
           },
           {
             label: 'Roles',
-            value: [...new Set(users.flatMap((u) => u.roles))].length,
+            value: users.every((u) => Array.isArray(u.roles))
+              ? [...new Set(users.flatMap((u) => u.roles))].length
+              : '—',
             icon: ShieldCheck,
             color: 'text-blue-700 dark:text-blue-400',
             bg: 'bg-blue-500/10',
@@ -174,9 +176,9 @@ export default function AdminRBACUsersPage() {
                 </td>
                 <td className="px-5 py-4">
                   <span
-                    className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${ROLE_STYLES[user.roles[0] ?? ''] || 'bg-gray-500/10 text-muted-foreground border-gray-500/20'}`}
+                    className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${ROLE_STYLES[user.roles?.[0] ?? ''] || 'bg-gray-500/10 text-muted-foreground border-gray-500/20'}`}
                   >
-                    {(user.roles[0] ?? 'USER').replace('_', ' ')}
+                    {(user.roles?.[0] ?? 'Not provided').replace('_', ' ')}
                   </span>
                 </td>
                 <td className="px-5 py-4">

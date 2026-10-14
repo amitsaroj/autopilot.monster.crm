@@ -1,112 +1,244 @@
 'use client';
-
-import { useEffect, useState } from 'react';
-import { Loader2, Save } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { tenantSettingsService } from '@/services/tenant-settings.service';
-
-export default function WhatsappSettingsPage() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [accessToken, setAccessToken] = useState('');
-  const [phoneNumberId, setPhoneNumberId] = useState('');
-  const [businessAccountId, setBusinessAccountId] = useState('');
-
-  useEffect(() => {
-    void tenantSettingsService
-      .getSettings()
-      .then((res) => {
-        const settings = (res as { data?: Record<string, string> }).data ?? res;
-        setAccessToken(String(settings?.whatsapp_access_token ?? ''));
-        setPhoneNumberId(String(settings?.whatsapp_phone_number_id ?? ''));
-        setBusinessAccountId(String(settings?.whatsapp_business_account_id ?? ''));
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
+import { useState } from 'react';
+import { RefreshCw, ShieldCheck, Unplug, Loader2 } from 'lucide-react';
+import { whatsappAccountService, type AccountHealth } from '@/services/whatsapp-account.service';
+import { useResource } from '@/components/whatsapp/use-resource';
+import {
+  PageHeading,
+  Notice,
+  Loading,
+  StatusBadge,
+  Field,
+  inputClass,
+  buttonClass,
+  secondaryClass,
+  panelClass,
+  errorMessage,
+  formatDate,
+} from '@/components/whatsapp/ui';
+import { DialogShell } from '@/components/ui/dialog-shell';
+export default function AccountsPage() {
+  const accounts = useResource(whatsappAccountService.list);
+  const [form, setForm] = useState({ phoneNumberId: '', businessAccountId: '', accessToken: '' });
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
+  const [health, setHealth] = useState<Record<string, AccountHealth>>({});
+  const [disconnectId, setDisconnectId] = useState<string | null>(null);
+  const connect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy('connect');
+    setError(null);
+    setNotice('');
     try {
-      await Promise.all([
-        tenantSettingsService.updateSetting({
-          key: 'whatsapp_access_token',
-          value: accessToken,
-          group: 'whatsapp',
-        }),
-        tenantSettingsService.updateSetting({
-          key: 'whatsapp_phone_number_id',
-          value: phoneNumberId,
-          group: 'whatsapp',
-        }),
-        tenantSettingsService.updateSetting({
-          key: 'whatsapp_business_account_id',
-          value: businessAccountId,
-          group: 'whatsapp',
-        }),
-      ]);
-      toast.success('Settings saved');
-    } catch {
-      toast.error('Failed to save settings');
+      await whatsappAccountService.connect({ ...form, provider: 'meta' });
+      setForm({ phoneNumberId: '', businessAccountId: '', accessToken: '' });
+      setNotice('Account connected. Credentials are stored encrypted by the server.');
+      await accounts.reload();
+    } catch (e) {
+      setError(errorMessage(e));
+      setForm((f) => ({ ...f, accessToken: '' }));
     } finally {
-      setSaving(false);
+      setBusy('');
     }
   };
-
-  if (loading)
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-
+  const check = async (id: string) => {
+    setBusy(id);
+    setError(null);
+    try {
+      const h = await whatsappAccountService.health(id);
+      if (h) setHealth((current) => ({ ...current, [id]: h }));
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy('');
+    }
+  };
+  const disconnect = async () => {
+    if (!disconnectId) return;
+    setBusy(disconnectId);
+    setError(null);
+    try {
+      await whatsappAccountService.disconnect(disconnectId);
+      setDisconnectId(null);
+      setNotice('Account disconnected and stored token erased.');
+      await accounts.reload();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy('');
+    }
+  };
   return (
-    <div className="mx-auto max-w-2xl space-y-6 py-8">
-      <h1 className="text-2xl font-bold">WhatsApp Settings</h1>
-      <p className="text-sm text-muted-foreground -mt-4">
-        Connect your Meta WhatsApp Cloud API credentials. All three fields are required to send
-        messages.
-      </p>
-      <div className="space-y-4 rounded-xl border border-border bg-card p-6">
-        <div>
-          <label className="text-sm font-medium">Access Token</label>
-          <input
-            value={accessToken}
-            onChange={(e) => setAccessToken(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
-            placeholder="EAAG..."
-          />
-        </div>
-        <div>
-          <label className="text-sm font-medium">Phone Number ID</label>
-          <input
-            value={phoneNumberId}
-            onChange={(e) => setPhoneNumberId(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
-            placeholder="1234567890"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            From Meta Business Manager → WhatsApp → API Setup. Required to send messages — sends
-            will fail without it even if the access token is valid.
+    <div className="space-y-6">
+      <PageHeading
+        title="Connected accounts"
+        description="Connect a Meta WhatsApp Business number and check its access without sending a message."
+        action={
+          <button className={secondaryClass} onClick={() => void accounts.reload()}>
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </button>
+        }
+      />
+      {(error || accounts.error) && <Notice error>{error || accounts.error}</Notice>}
+      {notice && <Notice>{notice}</Notice>}
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+        <section className="space-y-4">
+          {accounts.loading ? (
+            <Loading />
+          ) : accounts.data?.length ? (
+            accounts.data.map((a) => (
+              <article key={a.id} className={panelClass}>
+                <div className="flex flex-wrap justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold">
+                      {a.verifiedName || a.displayPhoneNumber || 'WhatsApp Business'}
+                    </h2>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {a.displayPhoneNumber || a.phoneNumberId}
+                    </p>
+                  </div>
+                  <StatusBadge value={a.status} />
+                </div>
+                <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <dt className="text-muted-foreground">Phone number ID</dt>
+                    <dd className="break-all font-mono">{a.phoneNumberId}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Business account ID</dt>
+                    <dd className="break-all font-mono">{a.businessAccountId}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Last validated</dt>
+                    <dd>{formatDate(a.validatedAt)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Provider version</dt>
+                    <dd>{a.apiVersion}</dd>
+                  </div>
+                </dl>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {Object.entries(a.capabilities).map(([key, supported]) => (
+                    <span key={key} className="rounded bg-muted px-2 py-1 text-xs">
+                      {key}: {supported ? 'supported' : 'unavailable'}
+                    </span>
+                  ))}
+                </div>
+                {health[a.id] && (
+                  <div className="mt-4">
+                    <Notice>
+                      {health[a.id].healthy
+                        ? 'Meta reports a verified number and acceptable quality.'
+                        : 'Account needs attention.'}{' '}
+                      {health[a.id].qualityRating && `Quality: ${health[a.id].qualityRating}.`}{' '}
+                      {health[a.id].codeVerificationStatus &&
+                        `Verification: ${health[a.id].codeVerificationStatus}.`}{' '}
+                      Checked {formatDate(health[a.id].checkedAt)}. Read access does not guarantee
+                      message delivery.
+                    </Notice>
+                  </div>
+                )}
+                <div className="mt-4 flex gap-2">
+                  <button
+                    className={secondaryClass}
+                    disabled={!!busy || a.status !== 'CONNECTED'}
+                    onClick={() => void check(a.id)}
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Check access
+                  </button>
+                  <button
+                    className={secondaryClass}
+                    disabled={!!busy || a.status !== 'CONNECTED'}
+                    onClick={() => setDisconnectId(a.id)}
+                  >
+                    <Unplug className="h-4 w-4" />
+                    Disconnect
+                  </button>
+                </div>
+              </article>
+            ))
+          ) : (
+            !accounts.error && (
+              <Notice>
+                No connected numbers yet. Add your Meta credentials to start configuring WhatsApp.
+              </Notice>
+            )
+          )}
+        </section>
+        <form className={`${panelClass} space-y-4 self-start`} onSubmit={(e) => void connect(e)}>
+          <h2 className="font-semibold">Connect or reconnect a number</h2>
+          <Field label="Meta phone number ID">
+            <input
+              className={inputClass}
+              value={form.phoneNumberId}
+              onChange={(e) => setForm({ ...form, phoneNumberId: e.target.value })}
+              required
+              pattern="[1-9][0-9]{0,63}"
+              autoComplete="off"
+            />
+          </Field>
+          <Field label="WhatsApp Business Account ID">
+            <input
+              className={inputClass}
+              value={form.businessAccountId}
+              onChange={(e) => setForm({ ...form, businessAccountId: e.target.value })}
+              required
+              pattern="[1-9][0-9]{0,63}"
+              autoComplete="off"
+            />
+          </Field>
+          <Field
+            label="Access token"
+            hint="Write-only. Existing tokens are never downloaded or displayed. The server validates access and encrypts this credential."
+          >
+            <input
+              type="password"
+              className={inputClass}
+              value={form.accessToken}
+              onChange={(e) => setForm({ ...form, accessToken: e.target.value })}
+              required
+              maxLength={8192}
+              autoComplete="new-password"
+              spellCheck={false}
+            />
+          </Field>
+          <button className={buttonClass} disabled={!!busy}>
+            {busy === 'connect' && <Loader2 className="h-4 w-4 animate-spin" />}Validate and connect
+          </button>
+          <p className="text-xs text-muted-foreground">
+            Requires a Meta Business account, an authorized phone number, provider permissions, and
+            server credential encryption. Connecting does not send messages.
           </p>
-        </div>
-        <div>
-          <label className="text-sm font-medium">Business Account ID</label>
-          <input
-            value={businessAccountId}
-            onChange={(e) => setBusinessAccountId(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
-            placeholder="1234567890"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={saving}
-          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
-        >
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save
-        </button>
+        </form>
       </div>
+      <DialogShell
+        open={!!disconnectId}
+        onOpenChange={(o) => !o && setDisconnectId(null)}
+        title="Disconnect WhatsApp account"
+      >
+        <div className="space-y-4 p-6">
+          <h2 className="font-semibold">Disconnect this number?</h2>
+          <p className="text-sm text-muted-foreground">
+            Stored credentials will be erased. Sending from this number will stop until you
+            reconnect it.
+          </p>
+          <div className="flex gap-2">
+            <button
+              className={secondaryClass}
+              disabled={!!busy}
+              onClick={() => setDisconnectId(null)}
+            >
+              Keep connected
+            </button>
+            <button className={buttonClass} disabled={!!busy} onClick={() => void disconnect()}>
+              Disconnect
+            </button>
+          </div>
+        </div>
+      </DialogShell>
     </div>
   );
 }

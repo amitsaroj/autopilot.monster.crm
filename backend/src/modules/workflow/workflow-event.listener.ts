@@ -97,7 +97,7 @@ export class WorkflowEventListener {
     }
   }
 
-  @OnEvent(EVENT_NAMES.MESSAGE_RECEIVED)
+  @OnEvent(EVENT_NAMES.MESSAGE_RECEIVED, { suppressErrors: false })
   async handleMessageReceived(payload: {
     tenantId: string;
     channel?: string;
@@ -105,6 +105,10 @@ export class WorkflowEventListener {
     body?: string;
     messageSid?: string;
     contactId?: string;
+    eventId?: string;
+    phoneNumberId?: string;
+    messageType?: string;
+    selectionId?: string;
   }): Promise<void> {
     if (payload.channel !== 'whatsapp' || !payload.tenantId) {
       return;
@@ -119,14 +123,18 @@ export class WorkflowEventListener {
       messageSid: payload.messageSid,
       contactId: payload.contactId,
       channel: 'whatsapp',
+      eventId: payload.eventId ?? payload.messageSid,
+      phoneNumberId: payload.phoneNumberId,
+      messageType: payload.messageType,
+      selectionId: payload.selectionId,
     };
 
-    await this.trigger('WHATSAPP_MESSAGE_RECEIVED', payload.tenantId, eventPayload);
-    try {
-      await this.triggerWhatsappKeywordFlows(payload.tenantId, body, eventPayload);
-    } catch (error) {
-      this.logger.error('Failed to execute WhatsApp keyword flows', error);
-    }
+    await this.workflowService.triggerWorkflow(
+      payload.tenantId,
+      'WHATSAPP_MESSAGE_RECEIVED',
+      eventPayload,
+    );
+    await this.triggerWhatsappKeywordFlows(payload.tenantId, body, eventPayload);
   }
 
   private async triggerWhatsappKeywordFlows(
@@ -162,6 +170,42 @@ export class WorkflowEventListener {
     if (matched > 0) {
       this.logger.log(`Triggered ${matched} WhatsApp keyword flow(s) for tenant ${tenantId}`);
     }
+  }
+
+  @OnEvent(EVENT_NAMES.MESSAGE_DELIVERED, { suppressErrors: false })
+  async handleDelivered(
+    payload: { tenantId: string; channel?: string } & Record<string, unknown>,
+  ): Promise<void> {
+    if (payload.channel === 'whatsapp')
+      await this.workflowService.triggerWorkflow(
+        payload.tenantId,
+        'WHATSAPP_MESSAGE_DELIVERED',
+        payload,
+      );
+  }
+
+  @OnEvent(EVENT_NAMES.MESSAGE_READ, { suppressErrors: false })
+  async handleRead(
+    payload: { tenantId: string; channel?: string } & Record<string, unknown>,
+  ): Promise<void> {
+    if (payload.channel === 'whatsapp')
+      await this.workflowService.triggerWorkflow(
+        payload.tenantId,
+        'WHATSAPP_MESSAGE_READ',
+        payload,
+      );
+  }
+
+  @OnEvent(EVENT_NAMES.MESSAGE_FAILED, { suppressErrors: false })
+  async handleFailed(
+    payload: { tenantId: string; channel?: string } & Record<string, unknown>,
+  ): Promise<void> {
+    if (payload.channel === 'whatsapp')
+      await this.workflowService.triggerWorkflow(
+        payload.tenantId,
+        'WHATSAPP_MESSAGE_FAILED',
+        payload,
+      );
   }
 
   private async trigger(

@@ -1,15 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Lock,
-  Save,
-  Loader2,
-  ShieldCheck,
-  KeyRound,
-  Smartphone,
-  ShieldOff,
-} from 'lucide-react';
+import { Lock, Save, Loader2, ShieldCheck, KeyRound, Smartphone, ShieldOff } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '@/lib/api/client';
 import { authService } from '@/services/auth.service';
@@ -274,11 +266,7 @@ export default function SecurityPasswordPage() {
           <form onSubmit={handleVerifyMfa} className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-6 items-start">
               <div className="shrink-0 p-4 rounded-2xl bg-white border border-border">
-                <img
-                  src={mfaSetup.qrCodeUrl}
-                  alt="MFA QR code"
-                  className="w-40 h-40"
-                />
+                <img src={mfaSetup.qrCodeUrl} alt="MFA QR code" className="w-40 h-40" />
               </div>
               <div className="space-y-3 flex-1">
                 <p className="text-xs text-muted-foreground">
@@ -310,7 +298,11 @@ export default function SecurityPasswordPage() {
               disabled={mfaLoading || verifyCode.length < 6}
               className="flex items-center justify-center gap-3 w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-semibold uppercase tracking-wide transition-all disabled:opacity-50"
             >
-              {mfaLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
+              {mfaLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <ShieldCheck className="w-5 h-5" />
+              )}
               Verify and Activate
             </button>
           </form>

@@ -17,11 +17,26 @@ import toast from 'react-hot-toast';
 
 import { voiceCampaignService, VoiceCampaign } from '@/services/voice-campaign.service';
 
-const STATUS_STYLES: Record<VoiceCampaign['status'], { label: string; className: string; icon: typeof Phone }> = {
+const STATUS_STYLES: Record<
+  VoiceCampaign['status'],
+  { label: string; className: string; icon: typeof Phone }
+> = {
   DRAFT: { label: 'Draft', className: 'text-muted-foreground bg-muted', icon: FileEdit },
-  RUNNING: { label: 'Running', className: 'text-green-700 dark:text-green-400 bg-green-500/10', icon: PlayCircle },
-  PAUSED: { label: 'Paused', className: 'text-amber-700 dark:text-amber-400 bg-amber-500/10', icon: PauseCircle },
-  COMPLETED: { label: 'Completed', className: 'text-blue-700 dark:text-blue-400 bg-blue-400/10', icon: CheckCircle2 },
+  RUNNING: {
+    label: 'Running',
+    className: 'text-green-700 dark:text-green-400 bg-green-500/10',
+    icon: PlayCircle,
+  },
+  PAUSED: {
+    label: 'Paused',
+    className: 'text-amber-700 dark:text-amber-400 bg-amber-500/10',
+    icon: PauseCircle,
+  },
+  COMPLETED: {
+    label: 'Completed',
+    className: 'text-blue-700 dark:text-blue-400 bg-blue-400/10',
+    icon: CheckCircle2,
+  },
   STOPPED: { label: 'Stopped', className: 'text-red-400 bg-red-400/10', icon: Ban },
 };
 
@@ -105,7 +120,10 @@ export default function VoiceCampaignsPage() {
             {campaigns.length === 0 ? (
               <>
                 No campaigns yet.{' '}
-                <Link href="/voice/campaigns/new" className="text-[hsl(var(--brand))] hover:underline">
+                <Link
+                  href="/voice/campaigns/new"
+                  className="text-[hsl(var(--brand))] hover:underline"
+                >
                   Create one to get started.
                 </Link>
               </>
@@ -150,7 +168,9 @@ export default function VoiceCampaignsPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {campaign.callsMade} / {campaign.totalContacts || 0}
                     </td>
-                    <td className="px-4 py-3 text-green-700 dark:text-green-400">{campaign.callsAnswered}</td>
+                    <td className="px-4 py-3 text-green-700 dark:text-green-400">
+                      {campaign.callsAnswered}
+                    </td>
                     <td className="px-4 py-3 text-red-400">{campaign.callsFailed}</td>
                   </tr>
                 );

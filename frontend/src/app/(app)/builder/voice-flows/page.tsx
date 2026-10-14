@@ -30,7 +30,10 @@ export default function VoiceFlowsPage() {
           </div>
         </div>
 
-        <Link href="/voice/settings" className="product-button product-button-secondary"><Settings className="w-4 h-4" />Voice settings</Link>
+        <Link href="/voice/settings" className="product-button product-button-secondary">
+          <Settings className="w-4 h-4" />
+          Voice settings
+        </Link>
       </div>
 
       {/* Main Builder Area */}

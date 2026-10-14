@@ -109,7 +109,9 @@ export default function PlatformErrorForensicsPage() {
               Node: Error-Forensics-Core
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">System Error Forensics</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            System Error Forensics
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Monitor Systemic Failures, Stack-Trace Artifacts & Cross-Tenant Bug Persistence
           </p>

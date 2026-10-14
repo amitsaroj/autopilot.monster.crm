@@ -166,7 +166,8 @@ export default function TenantApiSettingsPage() {
           <div className="rounded-xl border border-border bg-card overflow-hidden shadow-2xl">
             <div className="p-8 border-b border-border bg-card flex items-center justify-between">
               <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-3">
-                <Key className="w-5 h-5 text-blue-700 dark:text-blue-400" /> Active Service Artifacts
+                <Key className="w-5 h-5 text-blue-700 dark:text-blue-400" /> Active Service
+                Artifacts
               </h3>
               <button
                 onClick={fetchSettings}
@@ -251,7 +252,8 @@ export default function TenantApiSettingsPage() {
             <div className="space-y-4">
               <div className="p-4 rounded-2xl bg-black/40 border border-border space-y-3">
                 <p className="text-xs font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
-                  <Terminal className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" /> Primary Receiver [local]
+                  <Terminal className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" /> Primary
+                  Receiver [local]
                 </p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 bg-black/60 p-2 rounded-lg text-xs text-muted-foreground font-mono truncate">

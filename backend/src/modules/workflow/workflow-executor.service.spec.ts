@@ -27,7 +27,10 @@ describe('WorkflowExecutorService', () => {
       nodes: [
         { id: 'trigger', data: { type: 'TRIGGER', isTrigger: true } },
         { id: 'step-1', data: { stepType: 'CREATE_TASK', label: 'Follow up' } },
-        { id: 'step-2', data: { stepType: 'SEND_EMAIL', label: 'Notify' } },
+        {
+          id: 'step-2',
+          data: { stepType: 'SEND_EMAIL', label: 'Notify', config: { to: 'user@example.com' } },
+        },
       ],
       edges: [
         { source: 'trigger', target: 'step-1' },

@@ -4,6 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -18,6 +19,7 @@ import { Plan } from '../../database/entities/plan.entity';
 import { AppConfig } from '../../config/app.config';
 import { resolveUsagePeriodBounds, UsagePeriod } from './usage-period.util';
 import { resolveStripePriceId, stripePriceConfigHint } from './stripe-price.util';
+import { WhatsappAutomationStripeBilling } from '../whatsapp-automation/whatsapp-automation.stripe';
 
 @Injectable()
 export class BillingService {
@@ -40,7 +42,8 @@ export class BillingService {
     private readonly configService: ConfigService,
   ) {
     const stripeConfig = this.configService.get<AppConfig['stripe']>('app.stripe');
-    const isProduction = (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production';
+    const isProduction =
+      (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production';
     const secretKey = stripeConfig?.secretKey;
 
     if (!secretKey) {
@@ -161,6 +164,15 @@ export class BillingService {
       throw new BadRequestException(`Webhook Error: ${message}`);
     }
 
+    if (
+      await new WhatsappAutomationStripeBilling(
+        this.stripe,
+        this.subscriptionRepo.manager,
+      ).handleVerifiedEvent(event)
+    ) {
+      return { received: true, type: event.type };
+    }
+
     switch (event.type) {
       case 'checkout.session.completed':
         await this.handleCheckoutComplete(event.data.object as Stripe.Checkout.Session);
@@ -183,6 +195,35 @@ export class BillingService {
     }
 
     return { received: true, type: event.type };
+  }
+
+  isProductCheckoutConfigured(): boolean {
+    const key = this.configService.get<string>('app.stripe.secretKey');
+    const webhook = this.configService.get<string>('app.stripe.webhookSecret');
+    const frontend = this.configService.get<string>('app.frontendUrl');
+    return (
+      !!key &&
+      /^sk_(test|live)_/.test(key) &&
+      !/placeholder|changeme|change-me|not_configured/i.test(key) &&
+      !!webhook &&
+      /^whsec_/.test(webhook) &&
+      !/placeholder|changeme|change-me/i.test(webhook) &&
+      !!frontend
+    );
+  }
+
+  async createProductCheckoutSession(tenantId: string, pluginId: string, version: string) {
+    if (!this.isProductCheckoutConfigured()) {
+      throw new ServiceUnavailableException(
+        'Paid product checkout requires configured Stripe credentials, signed webhook secret and frontend URL',
+      );
+    }
+    return new WhatsappAutomationStripeBilling(this.stripe, this.subscriptionRepo.manager).checkout(
+      tenantId,
+      pluginId,
+      version,
+      this.configService.get<string>('app.frontendUrl')!,
+    );
   }
 
   private async handleCheckoutComplete(session: Stripe.Checkout.Session) {

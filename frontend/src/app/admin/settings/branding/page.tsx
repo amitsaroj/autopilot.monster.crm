@@ -1,16 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Upload,
-  Palette,
-  Globe,
-  Shield,
-  Layout,
-  Camera,
-  Save,
-  RefreshCw,
-} from 'lucide-react';
+import { Upload, Palette, Globe, Shield, Layout, Camera, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { tenantService } from '@/services/tenant.service';
 
@@ -177,7 +168,8 @@ export default function BrandingPage() {
 
           <div className="p-10 rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group">
             <h2 className="text-2xl font-semibold text-foreground uppercase tracking-tighter mb-10 flex items-center gap-4">
-              <Palette className="w-7 h-7 text-emerald-700 dark:text-emerald-400" /> Chromatic Palette
+              <Palette className="w-7 h-7 text-emerald-700 dark:text-emerald-400" /> Chromatic
+              Palette
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">

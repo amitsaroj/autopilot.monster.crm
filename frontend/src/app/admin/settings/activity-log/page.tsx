@@ -98,7 +98,9 @@ export default function WorkspaceActivityLogPage() {
               Node: Audit-Orchestrator
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Workspace Audit Ledger</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Workspace Audit Ledger
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Monitor Administrative Dispatches, Policy Divergences & Systemic Integrity
           </p>

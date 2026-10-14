@@ -1,3 +1,14 @@
+import { WhatsappAccountService } from './whatsapp-account.service';
+import { WhatsappAccountController } from './whatsapp-account.controller';
+import { MetaWhatsappProvider, WhatsappProviderRegistry } from './whatsapp-provider';
+import { WhatsAppAccount } from '../../database/entities/whatsapp-account.entity';
+import { WhatsAppConsent } from '../../database/entities/whatsapp-consent.entity';
+import { WhatsappConsentService } from './whatsapp-consent.service';
+import { WhatsappConsentController } from './whatsapp-consent.controller';
+import { WhatsappWebhookProcessor } from './whatsapp-webhook.processor';
+import { UserEntity } from '../auth/entities/user.entity';
+import { UsageRecord } from '../../database/entities/usage-record.entity';
+import { MonetizationModule } from '../monetization.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -20,8 +31,13 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
 @Module({
   imports: [
     ConfigModule,
+    MonetizationModule,
     BullModule.registerQueue({ name: QUEUE_NAMES.WHATSAPP }),
     TypeOrmModule.forFeature([
+      WhatsAppAccount,
+      WhatsAppConsent,
+      UserEntity,
+      UsageRecord,
       WhatsAppMessage,
       WhatsAppTemplate,
       WhatsAppBroadcast,
@@ -29,14 +45,30 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
       Segment,
     ]),
   ],
-  controllers: [MetaWebhookController, WhatsappController],
+  controllers: [
+    MetaWebhookController,
+    WhatsappController,
+    WhatsappAccountController,
+    WhatsappConsentController,
+  ],
   providers: [
+    WhatsappAccountService,
+    WhatsappConsentService,
+    MetaWhatsappProvider,
+    WhatsappProviderRegistry,
+    WhatsappWebhookProcessor,
     WhatsappService,
     WhatsappMessageRepository,
     WhatsappTemplateService,
     WhatsappBroadcastService,
     WhatsappBroadcastProcessor,
   ],
-  exports: [WhatsappService, WhatsappTemplateService, WhatsappBroadcastService],
+  exports: [
+    WhatsappAccountService,
+    WhatsappConsentService,
+    WhatsappService,
+    WhatsappTemplateService,
+    WhatsappBroadcastService,
+  ],
 })
 export class WhatsappModule {}

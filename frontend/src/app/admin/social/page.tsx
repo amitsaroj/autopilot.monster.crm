@@ -185,10 +185,7 @@ export default function AdminSocialPage() {
             { label: 'Total Shares', value: analytics.overview.totalShares },
             { label: 'Total Clicks', value: analytics.overview.totalClicks },
           ].map((stat) => (
-            <div
-              key={stat.label}
-              className="p-5 rounded-2xl bg-card border border-border"
-            >
+            <div key={stat.label} className="p-5 rounded-2xl bg-card border border-border">
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold">
                 {stat.label}
               </p>

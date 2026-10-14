@@ -60,7 +60,9 @@ export default function AdminWhatsAppProfilesPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">WhatsApp Profiles</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            WhatsApp Profiles
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             WhatsApp Business Account Management
           </p>
@@ -73,7 +75,9 @@ export default function AdminWhatsAppProfilesPage() {
       {profiles.length === 0 ? (
         <div className="p-12 rounded-2xl bg-card border border-border text-center">
           <MessageSquare className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">No WhatsApp profiles linked for this tenant.</p>
+          <p className="text-sm text-muted-foreground">
+            No WhatsApp profiles linked for this tenant.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

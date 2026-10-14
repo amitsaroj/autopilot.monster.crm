@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Upload, File, Trash2, Download, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { storageFileService, type StorageFile } from '@/services/storage-file.service';
+import { parseApiData } from '@/lib/api/parse-response';
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -46,7 +47,7 @@ export default function StoragePage() {
     setError(null);
     try {
       const res = await storageFileService.list();
-      setFiles(res.data?.data ?? []);
+      setFiles(parseApiData<StorageFile[]>(res) ?? []);
     } catch {
       setFiles([]);
       setError('Unable to load files.');
@@ -65,7 +66,7 @@ export default function StoragePage() {
     setActionId(id);
     try {
       const res = await storageFileService.getDownloadUrl(id);
-      const url = res.data?.data?.downloadUrl;
+      const url = parseApiData<{ downloadUrl: string }>(res)?.downloadUrl;
       if (url) {
         window.open(url, '_blank');
       } else {
@@ -180,9 +181,7 @@ export default function StoragePage() {
                         </Link>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {fileTypeLabel(f.mimeType)}
-                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{fileTypeLabel(f.mimeType)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{formatSize(f.size)}</td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {f.createdAt ? formatModified(f.createdAt) : '—'}

@@ -40,6 +40,9 @@ export class WhatsAppTemplate extends BaseEntity {
   })
   status!: WhatsAppTemplateStatus;
 
+  @Column({ name: 'business_account_id', nullable: true })
+  businessAccountId?: string;
+
   @Column({ name: 'wa_template_id', nullable: true })
   waTemplateId?: string;
 

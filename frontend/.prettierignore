@@ -1,0 +1,16 @@
+node_modules
+.next
+.next-*
+dist
+build
+.turbo
+coverage
+public
+.cache
+.out
+logs
+*.log
+*.local
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

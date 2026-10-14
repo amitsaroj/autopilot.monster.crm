@@ -178,7 +178,9 @@ export default function AgentTemplatesPage() {
             <Plus className="w-12 h-12" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">Custom Personality</h3>
-          <p className="text-sm text-muted-foreground mt-2 font-medium">Build a unique AI from scratch</p>
+          <p className="text-sm text-muted-foreground mt-2 font-medium">
+            Build a unique AI from scratch
+          </p>
         </motion.button>
       </div>
     </div>

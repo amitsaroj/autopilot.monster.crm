@@ -109,7 +109,9 @@ export default function RefinedAdminBillingPage() {
             </span>
             <span className="text-xs text-muted-foreground font-mono">PROVIDER: STRIPE_LATEST</span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Financial Orchestration</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Financial Orchestration
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Subscription Lifecycle & Resource Quotas
           </p>
@@ -171,7 +173,9 @@ export default function RefinedAdminBillingPage() {
                 <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                   Pricing Point
                 </span>
-                <p className="text-sm font-bold text-foreground uppercase">Metered Enterprise Core</p>
+                <p className="text-sm font-bold text-foreground uppercase">
+                  Metered Enterprise Core
+                </p>
               </div>
               <div className="space-y-1">
                 <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">

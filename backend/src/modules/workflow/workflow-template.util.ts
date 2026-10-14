@@ -1,4 +1,4 @@
-import { WorkflowExecutionContext } from './workflow-executor.service';
+import type { WorkflowExecutionContext } from './workflow-executor.service';
 
 function readPath(root: Record<string, unknown>, path: string): unknown {
   const parts = path.split('.');
@@ -7,6 +7,11 @@ function readPath(root: Record<string, unknown>, path: string): unknown {
     if (current === null || current === undefined || typeof current !== 'object') {
       return undefined;
     }
+    if (
+      ['__proto__', 'prototype', 'constructor'].includes(part) ||
+      !Object.prototype.hasOwnProperty.call(current, part)
+    )
+      return undefined;
     current = (current as Record<string, unknown>)[part];
   }
   return current;
@@ -28,7 +33,9 @@ export function buildWorkflowVariableRoot(
     contact,
     deal,
     trigger: { data: payload },
-    now: new Date().toISOString(),
+    steps: context.outputs ?? {},
+    outputs: context.outputs ?? {},
+    now: context.now ?? new Date().toISOString(),
   };
 }
 
@@ -37,7 +44,9 @@ export function resolveWorkflowTemplate(value: string, context: WorkflowExecutio
   return value.replace(/\{\{([^}]+)\}\}/g, (_match, rawPath: string) => {
     const resolved = readPath(root, rawPath.trim());
     if (resolved === undefined || resolved === null) {
-      return '';
+      throw new Error(
+        `Workflow variable ${rawPath.trim()} is unavailable; supply it before executing this action`,
+      );
     }
     return String(resolved);
   });

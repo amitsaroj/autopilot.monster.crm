@@ -116,7 +116,9 @@ export default function MarketingFooter() {
             &copy; {new Date().getFullYear()} AutopilotMonster. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
-            <Link href="/status" className="text-xs text-muted-foreground hover:text-primary">Service status</Link>
+            <Link href="/status" className="text-xs text-muted-foreground hover:text-primary">
+              Service status
+            </Link>
           </div>
         </div>
       </div>

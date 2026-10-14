@@ -46,6 +46,7 @@ export default function LoginPage() {
         router.push('/mfa');
         return;
       }
+      router.replace(roleHome(user?.roles));
     } catch (error: unknown) {
       if (axios.isAxiosError<{ message?: unknown }>(error)) {
         const message = error.response?.data?.message;

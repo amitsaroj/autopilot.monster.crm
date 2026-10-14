@@ -34,7 +34,13 @@ import { ProvisionPhoneNumberDto, SearchAvailableNumbersDto } from './dto/voice-
 import { VoicePhoneNumberService } from './voice-phone-number.service';
 import { TwilioService } from './twilio.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
-import { TenantId, PlanFeature, ResourcePermissions, Public, CurrentUser } from '../../common/decorators';
+import {
+  TenantId,
+  PlanFeature,
+  ResourcePermissions,
+  Public,
+  CurrentUser,
+} from '../../common/decorators';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { TenantSettingsService } from '../tenant-settings/tenant-settings.service';
 import { VoiceProviderRegistry } from './providers/voice-provider.registry';
@@ -345,7 +351,7 @@ export class VoiceController {
   }
 
   @Get('campaigns/:id/export')
-  @ApiOperation({ summary: 'Export a campaign\'s recipients as CSV' })
+  @ApiOperation({ summary: "Export a campaign's recipients as CSV" })
   async exportCampaign(
     @TenantId() tenantId: string,
     @Param('id') id: string,
@@ -358,7 +364,7 @@ export class VoiceController {
   }
 
   @Get('campaigns/:id/recipients')
-  @ApiOperation({ summary: 'List a campaign\'s recipients' })
+  @ApiOperation({ summary: "List a campaign's recipients" })
   async listCampaignRecipients(
     @TenantId() tenantId: string,
     @Param('id') id: string,

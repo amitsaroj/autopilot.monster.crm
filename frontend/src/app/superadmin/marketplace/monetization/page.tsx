@@ -169,7 +169,8 @@ export default function MarketplaceMonetizationPage() {
         </div>
         <div className="flex items-center gap-4">
           <button className="px-8 py-3 bg-white text-[#0b0f19] rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl flex items-center gap-2 group">
-            <Landmark className="w-4 h-4 text-emerald-700 dark:text-emerald-400" /> Initialize Payout Node
+            <Landmark className="w-4 h-4 text-emerald-700 dark:text-emerald-400" /> Initialize
+            Payout Node
           </button>
         </div>
       </div>

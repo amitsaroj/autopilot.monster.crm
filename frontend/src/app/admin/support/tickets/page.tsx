@@ -129,7 +129,9 @@ export default function SupportTicketsPage() {
               Node: Help-Desk-Orchestrator
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Support Artifacts</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Support Artifacts
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Customer Requests, Ticket Persistence & Help-Desk Forensics
           </p>

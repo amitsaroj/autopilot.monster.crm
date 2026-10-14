@@ -231,7 +231,13 @@ export default function GlobalWorkerClusterPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between text-[11px] text-gray-700 font-semibold uppercase tracking-wide px-1">
                     <span>CPU Artifact</span>
-                    <span className={worker.cpuUsage > 80 ? 'text-red-500' : 'text-emerald-700 dark:text-emerald-400'}>
+                    <span
+                      className={
+                        worker.cpuUsage > 80
+                          ? 'text-red-500'
+                          : 'text-emerald-700 dark:text-emerald-400'
+                      }
+                    >
                       {worker.cpuUsage}%
                     </span>
                   </div>

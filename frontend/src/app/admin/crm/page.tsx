@@ -192,8 +192,7 @@ export default function AdminCRMPage() {
     },
     {
       label: 'Pipeline Value',
-      value:
-        overview != null ? `$${Number(overview.pipelineValue).toLocaleString()}` : '—',
+      value: overview != null ? `$${Number(overview.pipelineValue).toLocaleString()}` : '—',
     },
     {
       label: 'Win Rate',
@@ -218,7 +217,9 @@ export default function AdminCRMPage() {
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <div>
-        <h1 className="text-3xl font-semibold text-foreground tracking-tight">CRM Control Center</h1>
+        <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+          CRM Control Center
+        </h1>
         <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
           Admin CRM Suite Overview
         </p>
@@ -244,8 +245,7 @@ export default function AdminCRMPage() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {CRM_MODULES.map((mod) => {
-            const stat =
-              'statKey' in mod && mod.statKey ? moduleStats[mod.statKey] : '';
+            const stat = 'statKey' in mod && mod.statKey ? moduleStats[mod.statKey] : '';
             return (
               <Link
                 key={mod.href}
