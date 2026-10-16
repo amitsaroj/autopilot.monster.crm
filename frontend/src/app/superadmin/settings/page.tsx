@@ -101,7 +101,9 @@ export default function GlobalGeneralSettingsPage() {
               Node: Infrastructure-Master
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Systemic Configuration</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Systemic Configuration
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Global Metadata & Platform Identity
           </p>
@@ -163,7 +165,8 @@ export default function GlobalGeneralSettingsPage() {
 
           <div className="p-10 rounded-xl bg-card border border-border shadow-2xl space-y-10">
             <h3 className="text-xl font-semibold text-foreground flex items-center gap-3 uppercase tracking-tighter">
-              <LinkIcon className="w-6 h-6 text-emerald-700 dark:text-emerald-400" /> Platform Persistence Links
+              <LinkIcon className="w-6 h-6 text-emerald-700 dark:text-emerald-400" /> Platform
+              Persistence Links
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -260,7 +263,9 @@ export default function GlobalGeneralSettingsPage() {
             <HelpCircle className="w-8 h-8 text-gray-700" />
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-foreground mb-1">Advanced Orchestration Required?</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-1">
+              Advanced Orchestration Required?
+            </h3>
             <p className="text-sm text-muted-foreground max-w-xl">
               Fine-grained system settings including DNS mapping, SMTP integration, and MFA policies
               are managed in specialized orchestration sections.

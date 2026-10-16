@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminNotificationsService } from './sub-admin-notifications.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { UpsertNotificationTemplateDto } from './sub-admin-notifications.dto';
 
 @ApiTags('SubAdmin / Notifications')
 @ApiBearerAuth()
@@ -21,7 +22,7 @@ export class SubAdminNotificationsController {
 
   @Post()
   @ApiOperation({ summary: 'Send a targeted notification' })
-  async create(@TenantId() tenantId: string, @Body() dto: any) {
+  async create(@TenantId() tenantId: string, @Body() dto: UpsertNotificationTemplateDto) {
     return await this.notificationsService.create(tenantId, dto);
   }
 }

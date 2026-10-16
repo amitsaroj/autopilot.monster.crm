@@ -306,8 +306,8 @@ export function WorkspaceSettings() {
                   </p>
                   <p className="text-xs text-muted-foreground uppercase tracking-wide leading-relaxed">
                     Point your CNAME records to{' '}
-                    <code className="text-brand font-semibold">proxy.monster.fm</code> to enable custom
-                    domain resolution for your CRM instance.
+                    <code className="text-brand font-semibold">proxy.monster.fm</code> to enable
+                    custom domain resolution for your CRM instance.
                   </p>
                 </div>
 

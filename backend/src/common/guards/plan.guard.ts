@@ -33,30 +33,30 @@ export class PlanGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request & { user?: IRequestContext }>();
-    const { tenantId, planId } = request.user ?? {};
-
-    if (!tenantId || !planId) {
+    // The JWT planId is only a snapshot from login; entitlement is resolved server-side so
+    // tokens minted before a trial/upgrade (or with an empty planId) still work.
+    const tenantId = request.user?.tenantId;
+    if (!tenantId) {
       throw new ForbiddenException({
         message: `Plan feature '${requiredFeature}' requires an active subscription`,
         code: ERROR_CODES.PLAN_FEATURE_DISABLED,
       });
     }
 
+    let isEnabled: boolean;
     try {
       const pricingService = this.moduleRef.get(PricingService, { strict: false });
-      if (pricingService) {
-        const isEnabled = await pricingService.isFeatureEnabled(tenantId, requiredFeature);
-        if (!isEnabled) {
-          throw new ForbiddenException({
-            message: `Plan feature '${requiredFeature}' is not available on your current plan`,
-            code: ERROR_CODES.PLAN_FEATURE_DISABLED,
-          });
-        }
-      }
-    } catch (e: any) {
-      if (e instanceof ForbiddenException) throw e;
+      isEnabled = await pricingService.isFeatureEnabled(tenantId, requiredFeature);
+    } catch {
       throw new ForbiddenException({
         message: `Plan feature check failed`,
+        code: ERROR_CODES.PLAN_FEATURE_DISABLED,
+      });
+    }
+
+    if (!isEnabled) {
+      throw new ForbiddenException({
+        message: `Plan feature '${requiredFeature}' is not available on your current plan`,
         code: ERROR_CODES.PLAN_FEATURE_DISABLED,
       });
     }

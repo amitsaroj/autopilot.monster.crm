@@ -1,5 +1,14 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID, IsEnum } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsEnum,
+  IsObject,
+  MaxLength,
+} from 'class-validator';
 import { UserStatus } from '@autopilot/core/modules/auth/entities/user.entity';
 
 export class UpdateUserDto {
@@ -57,3 +66,28 @@ export class AcceptInvitationDto {
   @IsNotEmpty()
   lastName!: string;
 }
+
+export class CreateTeamGroupDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  name!: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @ApiPropertyOptional()
+  @IsUUID()
+  @IsOptional()
+  leaderId?: string;
+
+  @ApiPropertyOptional({ type: Object })
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, unknown>;
+}
+
+export class UpdateTeamGroupDto extends PartialType(CreateTeamGroupDto) {}

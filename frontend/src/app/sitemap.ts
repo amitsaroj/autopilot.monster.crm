@@ -9,8 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${SITE_URL}${path === '/' ? '' : path}`,
     lastModified,
     changeFrequency: (path === '/' || path === '/blog' ? 'weekly' : 'monthly') as
-      | 'weekly'
-      | 'monthly',
+      'weekly' | 'monthly',
     priority: path === '/' ? 1 : path === '/pricing' || path === '/features' ? 0.9 : 0.7,
   }));
 

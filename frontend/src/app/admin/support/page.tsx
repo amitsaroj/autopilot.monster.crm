@@ -93,7 +93,9 @@ export default function SupportDashboardPage() {
               Node: Support-Forensics
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Support Intelligence</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Support Intelligence
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Resolution Velocity & Help-Desk Analytics
           </p>

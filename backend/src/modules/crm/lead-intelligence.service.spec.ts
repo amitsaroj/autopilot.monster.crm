@@ -36,7 +36,9 @@ describe('LeadIntelligenceService', () => {
   beforeEach(async () => {
     leadService = {
       update: jest.fn().mockResolvedValue(undefined),
-      findOne: jest.fn().mockResolvedValue({ id: 'lead-1', phone: '+15551230000', firstName: 'Jordan' }),
+      findOne: jest
+        .fn()
+        .mockResolvedValue({ id: 'lead-1', phone: '+15551230000', firstName: 'Jordan' }),
     };
     contactService = {
       findOne: jest.fn(),
@@ -88,7 +90,11 @@ describe('LeadIntelligenceService', () => {
       );
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         EVENT_NAMES.CALL_DISPOSITIONED,
-        expect.objectContaining({ tenantId: 'tenant-1', leadId: 'lead-1', disposition: 'QUALIFIED' }),
+        expect.objectContaining({
+          tenantId: 'tenant-1',
+          leadId: 'lead-1',
+          disposition: 'QUALIFIED',
+        }),
       );
     });
   });

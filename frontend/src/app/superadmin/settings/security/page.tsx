@@ -172,7 +172,8 @@ export default function GlobalSecuritySettingsPage() {
 
           <div className="p-10 rounded-xl bg-card border border-border shadow-2xl space-y-10">
             <h3 className="text-xl font-semibold text-foreground flex items-center gap-3 uppercase tracking-tighter">
-              <Key className="w-6 h-6 text-emerald-700 dark:text-emerald-400" /> Entropy & Complexity Manifest
+              <Key className="w-6 h-6 text-emerald-700 dark:text-emerald-400" /> Entropy &
+              Complexity Manifest
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">

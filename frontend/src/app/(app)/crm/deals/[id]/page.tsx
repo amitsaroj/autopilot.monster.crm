@@ -133,7 +133,9 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             <div className="w-24 h-24 mx-auto rounded-3xl bg-emerald-600 flex items-center justify-center text-white text-4xl font-semibold mb-6 shadow-xl shadow-emerald-500/30 font-serif">
               $
             </div>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">{deal?.name}</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
+              {deal?.name}
+            </h2>
             <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-6 uppercase tracking-wide text-xs">
               {currentStage?.name || 'Unmapped Stage'}
             </p>

@@ -1,5 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsIn, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsDateString,
+  IsInt,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import {
+  PERMISSION_ACTIONS,
+  PERMISSION_RESOURCES,
+} from '../../../common/constants/permission-resources.constants';
+
+const API_KEY_PERMISSIONS = PERMISSION_RESOURCES.flatMap((resource) =>
+  PERMISSION_ACTIONS.map((action) => `${resource}:${action}`),
+);
 
 export class CreateApiKeyDto {
   @ApiProperty()
@@ -9,12 +29,25 @@ export class CreateApiKeyDto {
 
   @ApiPropertyOptional({ type: [String] })
   @IsArray()
-  @IsString({ each: true })
+  @ArrayMaxSize(100)
+  @IsIn(API_KEY_PERMISSIONS, { each: true })
   @IsOptional()
   permissions?: string[];
 
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: 100000,
+    default: 1000,
+    description: 'Maximum requests allowed in the configured global throttle window',
+  })
+  @IsInt()
+  @Min(1)
+  @Max(100000)
+  @IsOptional()
+  rateLimit?: number;
+
   @ApiPropertyOptional()
-  @IsString()
+  @IsDateString()
   @IsOptional()
   expiresAt?: string;
 }

@@ -62,12 +62,7 @@ export class ConversationsController {
     @Param('id') id: string,
     @Body() dto: AddConversationMessageDto,
   ) {
-    return await this.conversationService.addMessage(
-      tenantId,
-      id,
-      dto.role ?? 'USER',
-      dto.content,
-    );
+    return await this.conversationService.addMessage(tenantId, id, dto.role ?? 'USER', dto.content);
   }
 
   @Delete(':id')

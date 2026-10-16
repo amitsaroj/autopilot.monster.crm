@@ -122,7 +122,9 @@ export default function SystemAuditsPage() {
               SECURITY LEVEL: CRITICAL
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">System Audit Trail</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            System Audit Trail
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Platform-Wide Security Event Chronicle
           </p>
@@ -275,7 +277,9 @@ export default function SystemAuditsPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="text-xs font-mono text-muted-foreground">{log.ip || '—'}</span>
+                        <span className="text-xs font-mono text-muted-foreground">
+                          {log.ip || '—'}
+                        </span>
                       </td>
                       <td className="px-5 py-4 text-right">
                         <button className="p-2 rounded-lg bg-card border border-border text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-blue-500/20 hover:border-blue-500/30 transition-all opacity-0 group-hover:opacity-100">

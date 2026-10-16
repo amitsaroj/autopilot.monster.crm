@@ -169,7 +169,9 @@ export default function MarketplaceCatalogManagementPage() {
               Node: Catalog-Orchestrator
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Marketplace Catalog</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Marketplace Catalog
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Taxonomy Artifacts, Featured extension dispatches & structural persistence
           </p>
@@ -310,7 +312,9 @@ export default function MarketplaceCatalogManagementPage() {
                     <h4 className="text-lg font-semibold text-foreground uppercase tracking-tight leading-none group-hover/row:text-blue-400 transition-colors">
                       {col.name}
                     </h4>
-                    {col.featured && <Sparkles className="w-5 h-5 text-amber-700 dark:text-amber-400" />}
+                    {col.featured && (
+                      <Sparkles className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+                    )}
                   </div>
                   <div className="flex justify-between items-center text-xs text-muted-foreground font-semibold uppercase tracking-wide italic">
                     <span>{col.pluginCount} Nodes</span>

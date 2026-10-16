@@ -105,7 +105,8 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 border-emerald-100';
+    if (score >= 80)
+      return 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 border-emerald-100';
     if (score >= 50) return 'text-amber-700 dark:text-amber-400 bg-amber-50 border-amber-100';
     return 'text-red-500 bg-red-50 border-red-100';
   };
@@ -267,7 +268,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                     </span>
                   </div>
                 ) : (
-                  <p className="text-xs font-bold text-muted-foreground">Not yet analyzed — call this lead to generate insights.</p>
+                  <p className="text-xs font-bold text-muted-foreground">
+                    Not yet analyzed — call this lead to generate insights.
+                  </p>
                 )}
               </div>
               <div className="p-6 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-border">
@@ -277,10 +280,14 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                 {formData.metadata?.intent ? (
                   <div className="flex items-end gap-2 text-blue-600">
                     <BarChart3 className="w-4 h-4" />
-                    <span className="text-xs font-semibold uppercase">{formData.metadata.intent}</span>
+                    <span className="text-xs font-semibold uppercase">
+                      {formData.metadata.intent}
+                    </span>
                   </div>
                 ) : (
-                  <p className="text-xs font-bold text-muted-foreground">Not yet analyzed — call this lead to generate insights.</p>
+                  <p className="text-xs font-bold text-muted-foreground">
+                    Not yet analyzed — call this lead to generate insights.
+                  </p>
                 )}
               </div>
             </div>
@@ -316,7 +323,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   )}
                 >
                   {status}
-                  {formData.status === status && <CheckCircle2 className="w-3 h-3 text-foreground" />}
+                  {formData.status === status && (
+                    <CheckCircle2 className="w-3 h-3 text-foreground" />
+                  )}
                 </button>
               ))}
             </div>
@@ -333,7 +342,9 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tighter mb-0.5">
                     Source Channel
                   </p>
-                  <p className="text-xs font-semibold text-gray-900 dark:text-white">Direct Website</p>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                    Direct Website
+                  </p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-border">

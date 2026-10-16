@@ -17,8 +17,7 @@ export interface CompanyDuplicateGroup {
 }
 
 export const duplicateService = {
-  findContactDuplicates: () =>
-    api.get<{ data: ContactDuplicateGroup[] }>('/crm/duplicates'),
+  findContactDuplicates: () => api.get<{ data: ContactDuplicateGroup[] }>('/crm/duplicates'),
 
   findCompanyDuplicates: () =>
     api.get<{ data: CompanyDuplicateGroup[] }>('/crm/duplicates/companies'),

@@ -64,7 +64,11 @@ export default function SubAdminNotificationsPage() {
     }
     setSaving(true);
     try {
-      await subAdminNotificationsService.create({ type, title: title.trim(), content: content.trim() });
+      await subAdminNotificationsService.create({
+        type,
+        title: title.trim(),
+        content: content.trim(),
+      });
       toast.success('Notification template saved');
       setShowForm(false);
       setTitle('');

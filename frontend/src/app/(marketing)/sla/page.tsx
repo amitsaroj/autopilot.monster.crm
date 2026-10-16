@@ -143,7 +143,9 @@ export default function SLAPage() {
                       <td className="py-3 text-gray-600 dark:text-gray-400">&lt; 4 Hours</td>
                     </tr>
                     <tr>
-                      <td className="py-3 text-amber-700 dark:text-amber-400 font-bold">P2 - Standard Issue</td>
+                      <td className="py-3 text-amber-700 dark:text-amber-400 font-bold">
+                        P2 - Standard Issue
+                      </td>
                       <td className="py-3 text-gray-600 dark:text-gray-400">&lt; 12 Hours</td>
                     </tr>
                     <tr>

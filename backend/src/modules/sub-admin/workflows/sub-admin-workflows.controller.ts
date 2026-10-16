@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminWorkflowsService } from './sub-admin-workflows.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { CreateSubAdminWorkflowDto } from '../sub-admin.dto';
 
 @ApiTags('SubAdmin / Workflows')
 @ApiBearerAuth()
@@ -21,7 +22,7 @@ export class SubAdminWorkflowsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new workflow' })
-  async create(@TenantId() tenantId: string, @Body() dto: any) {
+  async create(@TenantId() tenantId: string, @Body() dto: CreateSubAdminWorkflowDto) {
     return await this.workflowsService.create(tenantId, dto);
   }
 

@@ -104,10 +104,7 @@ export default function SubAdminPermissionsPage() {
       ) : (
         <div className="space-y-5">
           {grouped.map(([resource, perms]) => (
-            <div
-              key={resource}
-              className="p-6 rounded-2xl bg-card border border-border"
-            >
+            <div key={resource} className="p-6 rounded-2xl bg-card border border-border">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2.5 rounded-xl bg-blue-500/10">
                   <FileSearch className="w-4 h-4 text-blue-700 dark:text-blue-400" />

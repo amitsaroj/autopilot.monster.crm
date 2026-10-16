@@ -105,7 +105,11 @@ export default function DuplicatesPage() {
           disabled={loading}
           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all flex items-center gap-2 disabled:opacity-50"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
           Rescan
         </button>
       </div>
@@ -146,7 +150,9 @@ export default function DuplicatesPage() {
       ) : tab === 'contacts' ? (
         <div className="space-y-6">
           {contactGroups.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-16 text-center">No duplicate contacts found</p>
+            <p className="text-muted-foreground text-sm py-16 text-center">
+              No duplicate contacts found
+            </p>
           ) : (
             contactGroups.map((group) => (
               <div
@@ -214,7 +220,9 @@ export default function DuplicatesPage() {
       ) : (
         <div className="space-y-6">
           {companyGroups.length === 0 ? (
-            <p className="text-muted-foreground text-sm py-16 text-center">No duplicate companies found</p>
+            <p className="text-muted-foreground text-sm py-16 text-center">
+              No duplicate companies found
+            </p>
           ) : (
             companyGroups.map((group) => (
               <div

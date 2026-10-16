@@ -143,7 +143,9 @@ export default function AdminCRMDocumentsPage() {
                         <p className="text-sm font-bold text-foreground truncate max-w-[200px]">
                           {doc.filename}
                         </p>
-                        <span className="text-xs text-muted-foreground font-mono">{doc.mimeType}</span>
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {doc.mimeType}
+                        </span>
                       </div>
                     </div>
                   </td>

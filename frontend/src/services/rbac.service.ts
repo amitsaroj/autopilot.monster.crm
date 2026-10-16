@@ -1,4 +1,5 @@
 import api from '../lib/api/client';
+import { parseApiData } from '../lib/api/parse-response';
 
 export interface Permission {
   id: string;
@@ -24,7 +25,10 @@ export const rbacService = {
     action: string;
     description?: string;
   }) => api.post('/rbac/permissions', data),
-  getRoles: () => api.get('/rbac/roles'),
+  getRoles: async () => {
+    const response = await api.get<{ data: unknown }>('/rbac/roles');
+    return { ...response, data: { ...response.data, data: parseApiData<Role[]>(response) ?? [] } };
+  },
   getRole: (id: string) => api.get(`/rbac/roles/${id}`),
   createRole: (data: { name: string; description?: string; permissionIds: string[] }) =>
     api.post('/rbac/roles', data),

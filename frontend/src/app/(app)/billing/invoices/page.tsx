@@ -14,18 +14,21 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+import { parseApiData } from '@/lib/api/parse-response';
 import { billingService, Invoice } from '@/services/billing.service';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('ALL');
 
   useEffect(() => {
     async function load() {
       try {
         const res = await billingService.getInvoices();
-        setInvoices(Array.isArray(res.data) ? res.data : []);
+        const rows = parseApiData<Invoice[]>(res);
+        setInvoices(Array.isArray(rows) ? rows : []);
       } catch {
         toast.error('Failed to load invoices');
       } finally {
@@ -35,8 +38,10 @@ export default function InvoicesPage() {
     void load();
   }, []);
 
-  const filtered = invoices.filter((inv) =>
-    inv.number.toLowerCase().includes(search.toLowerCase()),
+  const filtered = invoices.filter(
+    (inv) =>
+      inv.number.toLowerCase().includes(search.toLowerCase()) &&
+      (status === 'ALL' || inv.status === status),
   );
 
   if (loading) {
@@ -79,9 +84,23 @@ export default function InvoicesPage() {
             className="w-full pl-9 pr-4 py-2 text-sm border border-input rounded-lg bg-background focus:ring-2 focus:ring-primary focus:outline-none transition-shadow"
           />
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 border border-input rounded-lg hover:bg-muted text-foreground text-sm font-medium transition-colors bg-background">
-          <Filter className="w-4 h-4" /> Filter by Status
-        </button>
+        <label className="flex items-center gap-2 px-3 py-2 border border-input rounded-lg text-foreground text-sm font-medium bg-background">
+          <Filter className="w-4 h-4" />
+          <span className="sr-only">Filter invoices by status</span>
+          <select
+            aria-label="Filter invoices by status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            className="bg-transparent outline-none"
+          >
+            <option value="ALL">All statuses</option>
+            <option value="DRAFT">Draft</option>
+            <option value="OPEN">Open</option>
+            <option value="PAID">Paid</option>
+            <option value="UNCOLLECTIBLE">Uncollectible</option>
+            <option value="VOID">Void</option>
+          </select>
+        </label>
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">

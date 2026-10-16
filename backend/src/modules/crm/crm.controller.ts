@@ -21,6 +21,8 @@ import { AgentService } from './agent.service';
 import { CampaignService } from './campaign.service';
 import { CsvService } from './csv.service';
 import { FlowService } from './flow.service';
+import { CreateWorkflowDto, UpdateWorkflowDto } from './dto/flow.dto';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { LeadService } from './lead.service';
 import { ContactService } from './contact.service';
 import { CompanyService } from './company.service';
@@ -182,30 +184,52 @@ export class CrmController {
 
   // --- Flows ---
   @Get('flows')
+  @ResourcePermissions('workflow')
+  @PlanFeature('workflow')
+  @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Get all conversation flows' })
   getFlows(@TenantId() tenantId: string) {
     return this.flowService.findAll(tenantId);
   }
 
   @Get('flows/:id')
+  @ResourcePermissions('workflow')
+  @PlanFeature('workflow')
+  @UseGuards(RolesGuard)
   @ApiOperation({ summary: 'Get a specific flow' })
   getFlow(@TenantId() tenantId: string, @Param('id') id: string) {
     return this.flowService.findOne(tenantId, id);
   }
 
   @Post('flows')
+  @ResourcePermissions('workflow')
+  @PlanFeature('workflow')
+  @UseGuards(RolesGuard)
+  @Roles('TENANT_ADMIN')
   @ApiOperation({ summary: 'Save a visual conversation flow' })
-  createFlow(@TenantId() tenantId: string, @Body() data: any) {
+  createFlow(@TenantId() tenantId: string, @Body() data: CreateWorkflowDto) {
     return this.flowService.create(tenantId, data);
   }
 
   @Put('flows/:id')
+  @ResourcePermissions('workflow')
+  @PlanFeature('workflow')
+  @UseGuards(RolesGuard)
+  @Roles('TENANT_ADMIN')
   @ApiOperation({ summary: 'Update a flow' })
-  updateFlow(@TenantId() tenantId: string, @Param('id') id: string, @Body() data: any) {
+  updateFlow(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() data: UpdateWorkflowDto,
+  ) {
     return this.flowService.update(tenantId, id, data);
   }
 
   @Delete('flows/:id')
+  @ResourcePermissions('workflow')
+  @PlanFeature('workflow')
+  @UseGuards(RolesGuard)
+  @Roles('TENANT_ADMIN')
   @ApiOperation({ summary: 'Delete a flow' })
   deleteFlow(@TenantId() tenantId: string, @Param('id') id: string) {
     return this.flowService.remove(tenantId, id);
@@ -515,13 +539,7 @@ export class CrmController {
     @Param('id') id: string,
     @Body() dto: MoveDealStageDto,
   ) {
-    return await this.dealService.moveStage(
-      tenantId,
-      id,
-      dto.stageId,
-      actor.userId,
-      dto.reason,
-    );
+    return await this.dealService.moveStage(tenantId, id, dto.stageId, actor.userId, dto.reason);
   }
 
   @Patch('deals/:id/won')

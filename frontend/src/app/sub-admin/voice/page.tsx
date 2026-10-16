@@ -179,7 +179,9 @@ export default function SubAdminVoicePage() {
                     <p className="text-base font-semibold text-foreground font-mono">
                       {num.phoneNumber ?? '—'}
                     </p>
-                    <p className="text-xs text-muted-foreground">{num.country ?? 'Unknown region'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {num.country ?? 'Unknown region'}
+                    </p>
                   </div>
                 </div>
                 <span className="px-2 py-0.5 rounded-full border text-xs font-semibold uppercase bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20">

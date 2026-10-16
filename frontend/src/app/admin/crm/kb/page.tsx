@@ -168,11 +168,14 @@ export default function AdminCRMKnowledgeBasePage() {
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1.5 text-sm text-foreground">
-                    <Eye className="w-3.5 h-3.5 text-muted-foreground" /> {article.views.toLocaleString()}
+                    <Eye className="w-3.5 h-3.5 text-muted-foreground" />{' '}
+                    {article.views.toLocaleString()}
                   </div>
                 </td>
                 <td className="px-5 py-4">
-                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">{article.views}</span>
+                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                    {article.views}
+                  </span>
                 </td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

@@ -56,10 +56,7 @@ export default function AdminRBACPermissionsPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {resources.slice(0, 8).map((resource) => (
-          <div
-            key={resource}
-            className="p-4 rounded-2xl bg-card border border-border"
-          >
+          <div key={resource} className="p-4 rounded-2xl bg-card border border-border">
             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
               {resource}
             </p>
@@ -103,7 +100,9 @@ export default function AdminRBACPermissionsPage() {
                 </td>
                 <td className="px-5 py-4 text-xs text-foreground">{perm.resource}</td>
                 <td className="px-5 py-4 text-xs text-muted-foreground">{perm.action}</td>
-                <td className="px-5 py-4 text-xs text-muted-foreground">{perm.description ?? '—'}</td>
+                <td className="px-5 py-4 text-xs text-muted-foreground">
+                  {perm.description ?? '—'}
+                </td>
               </tr>
             ))}
           </tbody>

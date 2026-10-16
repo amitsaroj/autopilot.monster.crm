@@ -126,7 +126,9 @@ export default function GlobalQueueOrchestratorPage() {
               Node: Queue-Orchestrator-Core
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Queue Orchestration</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Queue Orchestration
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Monitor Structural Backlog, Throughput Forensics & Worker Persistence
           </p>

@@ -89,7 +89,7 @@ export default function TasksPage() {
   const getPriorityColor = (p: string) => {
     switch (p) {
       case 'HIGH':
-        return 'text-red-400 bg-red-500/10 border-red-500/20';
+        return 'text-red-700 dark:text-red-400 bg-red-500/10 border-red-500/20';
       case 'MEDIUM':
         return 'text-amber-700 dark:text-amber-400 bg-amber-500/10 border-amber-500/20';
       default:
@@ -140,7 +140,9 @@ export default function TasksPage() {
         </div>
       ) : error ? (
         <div className="py-20 text-center">
-          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">{error}</p>
+          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">
+            {error}
+          </p>
           <button
             type="button"
             onClick={() => reload()}
@@ -159,6 +161,7 @@ export default function TasksPage() {
               >
                 <button
                   onClick={() => handleToggleStatus(task)}
+                  aria-label={`${task.status === 'COMPLETED' ? 'Reopen' : 'Complete'} task: ${task.title}`}
                   className={cn(
                     'shrink-0 w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all shadow-lg',
                     task.status === 'COMPLETED'
@@ -175,12 +178,12 @@ export default function TasksPage() {
                       'text-base font-black tracking-tight transition-all',
                       task.status === 'COMPLETED'
                         ? 'text-muted-foreground line-through'
-                        : 'text-white group-hover:text-blue-400',
+                        : 'text-foreground group-hover:text-blue-700 dark:group-hover:text-blue-400',
                     )}
                   >
                     {task.title}
                   </h4>
-                  <div className="flex items-center gap-4 mt-2">
+                  <div className="flex flex-wrap items-center gap-4 mt-2">
                     <span
                       className={cn(
                         'px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border',
@@ -201,9 +204,10 @@ export default function TasksPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-all">
                   <button
                     onClick={() => handleDelete(task.id)}
+                    aria-label={`Delete task: ${task.title}`}
                     className="p-2.5 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
                   >
                     <Trash2 className="w-4 h-4" />

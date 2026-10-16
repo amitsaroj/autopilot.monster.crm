@@ -16,6 +16,8 @@ import { OAuthService } from './oauth.service';
 import { JwtAuthGuard, TenantGuard } from '../../common/guards';
 import { Public, ResourcePermissions, Roles, TenantId } from '../../common/decorators';
 import { CreateOAuthAppDto } from '../tenant-settings/dto/developer-settings.dto';
+import { OAuthAuthorizeDto, OAuthTokenDto } from './oauth.dto';
+import { IRequestContext } from '../../common/interfaces/request-context.interface';
 
 @ApiTags('Developer - OAuth')
 @ResourcePermissions('settings')
@@ -74,8 +76,8 @@ export class OAuthController {
   @ApiOperation({ summary: 'Authorize a client and generate OAuth authorization code' })
   async authorize(
     @TenantId() tenantId: string,
-    @Req() req: any,
-    @Body() dto: { client_id: string; redirect_uri: string; scopes: string[] },
+    @Req() req: { user: IRequestContext },
+    @Body() dto: OAuthAuthorizeDto,
   ) {
     const userId = req.user.userId;
     const code = await this.oauthService.createAuthCode(
@@ -92,7 +94,7 @@ export class OAuthController {
   @Public()
   @ApiOperation({ summary: 'Exchange authorization code for an Access Token' })
   async token(
-    @Body() dto: { client_id: string; client_secret: string; code: string; redirect_uri: string },
+    @Body() dto: OAuthTokenDto,
   ) {
     return this.oauthService.exchangeCodeForToken(
       dto.client_id,

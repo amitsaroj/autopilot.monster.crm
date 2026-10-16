@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Search,
-  Filter,
   CheckCircle2,
   Link as LinkIcon,
   AlertCircle,
@@ -12,14 +11,18 @@ import {
   Webhook,
 } from 'lucide-react';
 import Link from 'next/link';
-import ConfigureIntegrationModal from '@/components/settings/ConfigureIntegrationModal';
+import {
+  shopifyIntegrationService,
+  type ShopifyIntegrationStatus,
+} from '@/services/shopify-integration.service';
 
 type Integration = {
   id: string;
   name: string;
   category: 'Communication' | 'AI' | 'Payment' | 'CRM' | 'E-commerce';
   description: string;
-  status: 'Connected' | 'Not Connected' | 'Authentication Error';
+  availability: 'PLATFORM' | 'MANAGED' | 'UNAVAILABLE' | 'SHOPIFY';
+  manageHref?: string;
   iconStr: string;
 };
 
@@ -28,33 +31,36 @@ const integrations: Integration[] = [
     id: '1',
     name: 'Stripe',
     category: 'Payment',
-    description:
-      'Process payments, handle SaaS subscriptions, and generate invoices automatically.',
-    status: 'Connected',
+    description: 'Manage Autopilot Monster subscription billing and invoices.',
+    availability: 'PLATFORM',
+    manageHref: '/billing',
     iconStr: '💳',
   },
   {
     id: '2',
     name: 'OpenAI',
     category: 'AI',
-    description: 'Power your AI Knowledge Base, RAG, and Realtime conversational agents.',
-    status: 'Connected',
+    description: 'Configure AI providers and agents in the AI workspace.',
+    availability: 'MANAGED',
+    manageHref: '/ai/settings',
     iconStr: '🧠',
   },
   {
     id: '3',
     name: 'Twilio',
     category: 'Communication',
-    description: 'Enable programmatic AI Voice calling, SMS campaigns, and phone numbers.',
-    status: 'Connected',
+    description: 'Configure voice providers and calling in Voice settings.',
+    availability: 'MANAGED',
+    manageHref: '/voice/settings',
     iconStr: '📞',
   },
   {
     id: '4',
     name: 'Meta WhatsApp',
     category: 'Communication',
-    description: 'Run WhatsaAs campaigns, shared inbox, and visual bot flows.',
-    status: 'Authentication Error',
+    description: 'Manage official WhatsApp Business accounts, campaigns, inbox, and workflows.',
+    availability: 'MANAGED',
+    manageHref: '/whatsapp/settings',
     iconStr: '💬',
   },
   {
@@ -62,7 +68,7 @@ const integrations: Integration[] = [
     name: 'Slack',
     category: 'Communication',
     description: 'Send automated CRM alerts and internal notifications to Slack channels.',
-    status: 'Not Connected',
+    availability: 'UNAVAILABLE',
     iconStr: '📱',
   },
   {
@@ -70,15 +76,15 @@ const integrations: Integration[] = [
     name: 'HubSpot',
     category: 'CRM',
     description: 'Two-way sync for Contacts, Companies, and Deals pipelines.',
-    status: 'Not Connected',
+    availability: 'UNAVAILABLE',
     iconStr: '🚀',
   },
   {
     id: '7',
     name: 'Shopify',
     category: 'E-commerce',
-    description: 'Sync products and automate abandoned cart recovery workflows.',
-    status: 'Not Connected',
+    description: 'Route supported Shopify cart and order events into your workflows.',
+    availability: 'SHOPIFY',
     iconStr: '🛍️',
   },
   {
@@ -86,7 +92,7 @@ const integrations: Integration[] = [
     name: 'Anthropic Claude',
     category: 'AI',
     description: 'Alternative LLM powering complex data analysis and long-context processing.',
-    status: 'Not Connected',
+    availability: 'UNAVAILABLE',
     iconStr: '🤖',
   },
 ];
@@ -102,7 +108,96 @@ const categoryColors: Record<string, string> = {
 export default function IntegrationsPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [configIntegration, setConfigIntegration] = useState<Integration | null>(null);
+  const [shopifyStatus, setShopifyStatus] = useState<ShopifyIntegrationStatus | null>(null);
+  const [shopifyLoading, setShopifyLoading] = useState(true);
+  const [shopifyBusy, setShopifyBusy] = useState(false);
+  const [shopifyError, setShopifyError] = useState<string | null>(null);
+  const [shopifyShop, setShopifyShop] = useState('');
+
+  const refreshShopifyStatus = useCallback(async () => {
+    setShopifyLoading(true);
+    setShopifyError(null);
+    try {
+      const status = await shopifyIntegrationService.status();
+      if (!status) throw new Error('Shopify status response was empty.');
+      setShopifyStatus(status);
+      setShopifyShop(status.shop ?? '');
+    } catch (error) {
+      setShopifyError(
+        error instanceof Error ? error.message : 'Unable to load Shopify connection status.',
+      );
+    } finally {
+      setShopifyLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshShopifyStatus();
+  }, [refreshShopifyStatus]);
+
+  const connectShopify = async () => {
+    const shop = shopifyShop.trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
+      setShopifyError('Enter your Shopify store domain, such as store.myshopify.com.');
+      return;
+    }
+
+    setShopifyBusy(true);
+    setShopifyError(null);
+    try {
+      const result = await shopifyIntegrationService.connect(shop);
+      if (!result?.authorizationUrl)
+        throw new Error('Shopify did not return an authorization URL.');
+      const authorizationUrl = new URL(result.authorizationUrl);
+      if (
+        authorizationUrl.protocol !== 'https:' ||
+        !/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(authorizationUrl.hostname) ||
+        authorizationUrl.pathname !== '/admin/oauth/authorize'
+      ) {
+        throw new Error('Shopify returned an invalid authorization URL.');
+      }
+      window.location.assign(authorizationUrl.toString());
+    } catch (error) {
+      setShopifyError(
+        error instanceof Error ? error.message : 'Unable to start Shopify authorization.',
+      );
+      setShopifyBusy(false);
+    }
+  };
+
+  const disconnectShopify = async () => {
+    if (
+      !window.confirm(
+        'Disconnect this Shopify store? Its automations will stop receiving store events.',
+      )
+    )
+      return;
+    setShopifyBusy(true);
+    setShopifyError(null);
+    try {
+      await shopifyIntegrationService.disconnect();
+      await refreshShopifyStatus();
+    } catch (error) {
+      setShopifyError(error instanceof Error ? error.message : 'Unable to disconnect Shopify.');
+    } finally {
+      setShopifyBusy(false);
+    }
+  };
+
+  const retryShopifyWebhooks = async () => {
+    setShopifyBusy(true);
+    setShopifyError(null);
+    try {
+      await shopifyIntegrationService.syncWebhooks();
+      await refreshShopifyStatus();
+    } catch (error) {
+      setShopifyError(
+        error instanceof Error ? error.message : 'Unable to retry Shopify webhook setup.',
+      );
+    } finally {
+      setShopifyBusy(false);
+    }
+  };
 
   const categories = ['All', 'Communication', 'AI', 'Payment', 'CRM', 'E-commerce'];
 
@@ -134,9 +229,12 @@ export default function IntegrationsPage() {
           </p>
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-2 bg-background border border-border hover:bg-muted text-foreground font-medium text-sm rounded-lg transition-colors shadow-sm">
+        <Link
+          href="/settings/api"
+          className="flex items-center gap-2 px-4 py-2 bg-background border border-border hover:bg-muted text-foreground font-medium text-sm rounded-lg transition-colors shadow-sm"
+        >
           <Webhook className="w-4 h-4" /> Manage Webhooks
-        </button>
+        </Link>
       </div>
 
       {/* Toolbar & Filters */}
@@ -190,52 +288,177 @@ export default function IntegrationsPage() {
                 {app.name}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{app.description}</p>
+              {app.name === 'Shopify' && (
+                <div className="mt-4 space-y-3" aria-live="polite">
+                  {shopifyLoading ? (
+                    <p className="text-xs text-muted-foreground">Loading Shopify connection…</p>
+                  ) : shopifyError ? (
+                    <div
+                      className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800"
+                      role="alert"
+                    >
+                      {shopifyError}
+                      {!shopifyStatus && (
+                        <button
+                          type="button"
+                          onClick={() => void refreshShopifyStatus()}
+                          className="ml-2 font-semibold underline"
+                        >
+                          Retry
+                        </button>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {!shopifyLoading && shopifyStatus && !shopifyStatus.configured && (
+                    <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+                      Shopify connection is not configured on this server. Ask your administrator to
+                      finish the Shopify app setup.
+                    </p>
+                  )}
+
+                  {!shopifyLoading && shopifyStatus?.connected && (
+                    <>
+                      <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-foreground">
+                        <p className="font-semibold">{shopifyStatus.shop}</p>
+                        <p className="mt-1 text-muted-foreground">
+                          Webhooks:{' '}
+                          {shopifyStatus.webhookStatus?.toLowerCase().replace('_', ' ') ??
+                            'unknown'}
+                        </p>
+                        {shopifyStatus.scopes.length > 0 && (
+                          <p className="mt-1 break-words text-muted-foreground">
+                            Permissions: {shopifyStatus.scopes.join(', ')}
+                          </p>
+                        )}
+                      </div>
+                      {shopifyStatus.webhookStatus !== 'READY' && (
+                        <button
+                          type="button"
+                          disabled={shopifyBusy}
+                          onClick={() => void retryShopifyWebhooks()}
+                          className="text-xs font-semibold text-primary hover:underline disabled:opacity-50"
+                        >
+                          {shopifyBusy ? 'Retrying webhook setup…' : 'Retry webhook setup'}
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {!shopifyLoading && shopifyStatus?.lastError && (
+                    <p
+                      className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800"
+                      role="alert"
+                    >
+                      {shopifyStatus.lastError}
+                    </p>
+                  )}
+
+                  {!shopifyLoading && shopifyStatus?.configured && !shopifyStatus.connected && (
+                    <label className="block text-xs font-medium text-foreground">
+                      Shopify store domain
+                      <input
+                        type="text"
+                        autoComplete="url"
+                        placeholder="store.myshopify.com"
+                        value={shopifyShop}
+                        onChange={(event) => setShopifyShop(event.target.value)}
+                        className="mt-1.5 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm font-normal shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
               {/* Status Indicator */}
               <div className="flex items-center gap-1.5">
-                {app.status === 'Connected' && (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 text-green-700 dark:text-green-400" />
-                    <span className="text-xs font-semibold text-green-700">Connected</span>
-                  </>
+                {app.name === 'Shopify' ? (
+                  shopifyLoading ? (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      Checking status…
+                    </span>
+                  ) : shopifyStatus?.connected ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-green-700 dark:text-green-400" />
+                      <span className="text-xs font-semibold text-green-700">Connected</span>
+                    </>
+                  ) : shopifyStatus?.configured ? (
+                    <>
+                      <Blocks className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Not Connected
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4 text-amber-600" />
+                      <span className="text-xs font-semibold text-amber-800">Setup Required</span>
+                    </>
+                  )
+                ) : null}
+                {app.name !== 'Shopify' && app.availability === 'PLATFORM' && (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Platform managed
+                  </span>
                 )}
-                {app.status === 'Authentication Error' && (
-                  <>
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <span className="text-xs font-semibold text-red-700">Token Expired</span>
-                  </>
+                {app.name !== 'Shopify' && app.availability === 'MANAGED' && (
+                  <span className="text-xs font-medium text-muted-foreground">
+                    Manage in product
+                  </span>
                 )}
-                {app.status === 'Not Connected' && (
+                {app.availability === 'UNAVAILABLE' && (
                   <>
                     <Blocks className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground">Not Connected</span>
+                    <span className="text-xs font-medium text-muted-foreground">Not available</span>
                   </>
                 )}
               </div>
 
               {/* Action Button */}
-              {app.status === 'Connected' ? (
-                <button
-                  onClick={() => setConfigIntegration(app)}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  Configure
-                </button>
-              ) : app.status === 'Authentication Error' ? (
-                <button
-                  onClick={() => setConfigIntegration(app)}
-                  className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1"
-                >
-                  Reconnect
-                </button>
-              ) : (
-                <button
-                  onClick={() => setConfigIntegration(app)}
+              {app.name === 'Shopify' ? (
+                shopifyStatus?.connected ? (
+                  <button
+                    type="button"
+                    disabled={shopifyBusy}
+                    onClick={() => void disconnectShopify()}
+                    className="text-sm font-medium text-red-600 hover:text-red-700 disabled:opacity-50"
+                  >
+                    {shopifyBusy ? 'Disconnecting…' : 'Disconnect'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={shopifyLoading || shopifyBusy || !shopifyStatus?.configured}
+                    onClick={() => void connectShopify()}
+                    className="text-sm font-medium text-primary hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-1"
+                    title={
+                      !shopifyStatus?.configured
+                        ? 'Shopify app setup is required on the server'
+                        : undefined
+                    }
+                  >
+                    {shopifyBusy ? 'Connecting…' : 'Connect'}{' '}
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                )
+              ) : app.manageHref ? (
+                <Link
+                  href={app.manageHref}
                   className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
                 >
-                  Install <ArrowUpRight className="w-3.5 h-3.5" />
+                  {app.availability === 'PLATFORM' ? 'Open billing' : 'Manage'}
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  title="This integration does not have a supported connection adapter yet."
+                  className="text-sm font-medium text-muted-foreground cursor-not-allowed opacity-60"
+                >
+                  Unavailable
                 </button>
               )}
             </div>
@@ -243,7 +466,10 @@ export default function IntegrationsPage() {
         ))}
 
         {/* Custom App CTA */}
-        <div className="bg-gradient-to-br from-[hsl(var(--brand))]/5 to-[hsl(280,80%,60%)]/10 border border-[hsl(var(--brand))]/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-center items-center text-center h-full group cursor-pointer border-dashed">
+        <Link
+          href="/settings/api"
+          className="bg-gradient-to-br from-[hsl(var(--brand))]/5 to-[hsl(280,80%,60%)]/10 border border-[hsl(var(--brand))]/20 rounded-xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-center items-center text-center h-full group border-dashed"
+        >
           <div className="w-12 h-12 bg-background rounded-full flex items-center justify-center text-[hsl(var(--brand))] shadow-sm mb-4 group-hover:-translate-y-1 transition-transform border border-border">
             <LinkIcon className="w-5 h-5" />
           </div>
@@ -254,20 +480,8 @@ export default function IntegrationsPage() {
           <span className="text-sm font-bold text-[hsl(var(--brand))] group-hover:underline">
             View API Docs &rarr;
           </span>
-        </div>
+        </Link>
       </div>
-
-      {configIntegration && (
-        <ConfigureIntegrationModal
-          integration={configIntegration}
-          onClose={() => setConfigIntegration(null)}
-          onSaved={() => {
-            // In a real app, you might want to refresh the status
-            console.log('Integration saved');
-            setConfigIntegration(null);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -71,7 +71,8 @@ export default function BackupPage() {
     setActionId(id);
     try {
       const res = await importExportService.getBackupDownload(id);
-      const url = parseApiData<{ downloadUrl: string }>(res)?.downloadUrl ?? res.data?.data?.downloadUrl;
+      const url =
+        parseApiData<{ downloadUrl: string }>(res)?.downloadUrl ?? res.data?.data?.downloadUrl;
       if (url) {
         window.open(url, '_blank');
       } else {
@@ -142,9 +143,7 @@ export default function BackupPage() {
             <HardDrive className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-lg font-bold text-foreground">
-              {loading ? '—' : completedCount}
-            </p>
+            <p className="text-lg font-bold text-foreground">{loading ? '—' : completedCount}</p>
             <p className="text-xs text-muted-foreground">Completed</p>
           </div>
         </div>

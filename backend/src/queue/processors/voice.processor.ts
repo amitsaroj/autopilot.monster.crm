@@ -40,7 +40,9 @@ export class VoiceQueueProcessor {
   ): Promise<{ callId?: string; skipped?: boolean; requeued?: boolean }> {
     const { tenantId, campaignId, recipientId } = job.data;
 
-    const campaign = await this.voiceCampaignService.findOne(tenantId, campaignId).catch(() => null);
+    const campaign = await this.voiceCampaignService
+      .findOne(tenantId, campaignId)
+      .catch(() => null);
     if (!campaign) {
       return { skipped: true };
     }

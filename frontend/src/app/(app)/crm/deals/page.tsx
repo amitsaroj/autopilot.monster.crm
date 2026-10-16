@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Trophy,
   Plus,
@@ -41,6 +42,8 @@ export default function DealsPage() {
   const [selectedPipelineId, setSelectedPipelineId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
   const [pipelineMetrics, setPipelineMetrics] = useState<ForecastSummary | null>(null);
 
   const fetchDeals = useCallback(
@@ -48,8 +51,9 @@ export default function DealsPage() {
       dealService.getDeals({
         ...params,
         pipelineId: selectedPipelineId || undefined,
+        status: statusFilter || undefined,
       }),
-    [selectedPipelineId],
+    [selectedPipelineId, statusFilter],
   );
 
   const {
@@ -116,7 +120,7 @@ export default function DealsPage() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto py-12 px-6">
+    <div className="max-w-[1600px] min-w-0 mx-auto py-6 sm:py-12 sm:px-6">
       {/* Premium Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-16">
         <div className="max-w-md">
@@ -132,7 +136,7 @@ export default function DealsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="p-8 bg-white dark:bg-card rounded-xl border border-gray-100 dark:border-white/5 flex flex-col items-center min-w-[160px] shadow-soft">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1 text-center">
               Open Pipeline
@@ -141,24 +145,24 @@ export default function DealsPage() {
               <TrendingUp className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
               <span className="text-3xl font-semibold text-gray-900 dark:text-white">
                 {pipelineMetrics
-                  ? formatPipelineValue(
-                      pipelineMetrics.totalPipeline,
-                      pipelineMetrics.currency,
-                    )
+                  ? formatPipelineValue(pipelineMetrics.totalPipeline, pipelineMetrics.currency)
                   : '—'}
               </span>
             </div>
           </div>
-          <button className="h-[100px] px-8 bg-blue-600 text-white rounded-xl font-semibold text-sm shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 group">
+          <Link
+            href="/crm/deals/new"
+            className="h-[100px] px-8 bg-blue-600 text-white rounded-xl font-semibold text-sm shadow-xl shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center gap-2 group"
+          >
             <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
             New Deal
-          </button>
+          </Link>
         </div>
       </div>
 
       {/* Control Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 bg-white dark:bg-card/50 p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-soft">
-        <div className="flex items-center gap-6 flex-1">
+        <div className="flex flex-wrap items-center gap-4 min-w-0 flex-1">
           <div className="relative max-w-sm w-full group">
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-blue-600 transition-colors" />
             <input
@@ -170,10 +174,11 @@ export default function DealsPage() {
             />
           </div>
 
-          <div className="h-10 w-[1px] bg-gray-100 dark:bg-white/10 mx-2" />
+          <div className="hidden md:block h-10 w-[1px] bg-gray-100 dark:bg-white/10 mx-2" />
 
           <select
-            className="bg-transparent border-none text-sm font-semibold text-gray-900 dark:text-white focus:ring-0 cursor-pointer"
+            aria-label="Pipeline"
+            className="max-w-full bg-transparent border-none text-sm font-semibold text-gray-900 dark:text-white focus:ring-0 cursor-pointer"
             value={selectedPipelineId}
             onChange={(e) => setSelectedPipelineId(e.target.value)}
           >
@@ -185,14 +190,22 @@ export default function DealsPage() {
           </select>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="px-6 py-4 bg-gray-50 dark:bg-white/5 rounded-2xl text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-blue-600 transition flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowFilters((current) => !current)}
+            aria-expanded={showFilters}
+            aria-controls="deal-status-filter"
+            className="px-6 py-4 bg-gray-50 dark:bg-white/5 rounded-2xl text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-blue-600 transition flex items-center gap-2"
+          >
             <Filter className="w-4 h-4" />
             Filters
           </button>
           <div className="flex bg-gray-50 dark:bg-white/5 p-1.5 rounded-2xl border border-gray-100 dark:border-white/5">
             <button
               type="button"
+              aria-label="Board view"
+              aria-pressed={viewMode === 'kanban'}
               onClick={() => setViewMode('kanban')}
               className={cn(
                 'p-2.5 rounded-xl transition',
@@ -205,6 +218,8 @@ export default function DealsPage() {
             </button>
             <button
               type="button"
+              aria-label="List view"
+              aria-pressed={viewMode === 'list'}
               onClick={() => setViewMode('list')}
               className={cn(
                 'p-2.5 rounded-xl transition',
@@ -219,6 +234,28 @@ export default function DealsPage() {
         </div>
       </div>
 
+      {showFilters && (
+        <div id="deal-status-filter" className="mb-6 flex flex-wrap items-center gap-3">
+          <label htmlFor="deal-status" className="text-sm font-medium">
+            Deal status
+          </label>
+          <select
+            id="deal-status"
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-input bg-card px-3 py-2"
+          >
+            <option value="">All statuses</option>
+            <option value="OPEN">Open</option>
+            <option value="WON">Won</option>
+            <option value="LOST">Lost</option>
+          </select>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-40 animate-pulse">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />
@@ -227,7 +264,11 @@ export default function DealsPage() {
           </p>
         </div>
       ) : viewMode === 'kanban' ? (
-        <DealBoard pipelineId={selectedPipelineId} searchQuery={search} />
+        <DealBoard
+          pipelineId={selectedPipelineId}
+          searchQuery={search}
+          statusFilter={statusFilter}
+        />
       ) : listLoading ? (
         <div className="flex flex-col items-center justify-center py-40">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mb-4" />

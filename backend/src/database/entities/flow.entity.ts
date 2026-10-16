@@ -12,10 +12,13 @@ export class Flow extends BaseEntity {
 
   /** The React Flow JSON representation (nodes, edges) */
   @Column({ type: 'jsonb' })
-  definition!: any;
+  definition!: Record<string, unknown>;
 
   @Column({ type: 'boolean', default: false })
   isPublished!: boolean;
+
+  @Column({ name: 'published_version_id', type: 'uuid', nullable: true })
+  publishedVersionId?: string | null;
 
   @Column({ type: 'text', nullable: true })
   description?: string;

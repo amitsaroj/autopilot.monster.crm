@@ -23,7 +23,12 @@ export interface OmnichannelMessage {
 
 export const omnichannelService = {
   getConversations: async () => {
-    const res = await api.get('/omnichannel/conversations');
+    // A workspace without the omnichannel feature uses the inbox's existing
+    // WhatsApp fallback. Keep the 403 local instead of navigating away first.
+    const res = await api.get('/omnichannel/conversations', {
+      validateStatus: (status) => (status >= 200 && status < 300) || status === 403,
+    });
+    if (res.status === 403) throw new Error('Unified inbox is unavailable for this workspace');
     return (
       parseApiData<OmnichannelConversation[]>(res) ?? (Array.isArray(res.data) ? res.data : [])
     );

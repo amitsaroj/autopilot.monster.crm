@@ -4,10 +4,19 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  EntityManager,
+  IsNull,
+  LessThan,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import { ConfigService } from '@nestjs/config';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import Stripe from 'stripe';
 import { Subscription as SubscriptionEntity } from '../../database/entities/subscription.entity';
 import { Invoice as InvoiceEntity } from '../../database/entities/invoice.entity';
@@ -18,6 +27,39 @@ import { Plan } from '../../database/entities/plan.entity';
 import { AppConfig } from '../../config/app.config';
 import { resolveUsagePeriodBounds, UsagePeriod } from './usage-period.util';
 import { resolveStripePriceId, stripePriceConfigHint } from './stripe-price.util';
+import { WhatsappAutomationStripeBilling } from '../whatsapp-automation/whatsapp-automation.stripe';
+import { ensureTrialSubscription } from './subscription-entitlement';
+import { EVENT_NAMES } from '../../events/event.constants';
+
+type BillingCycle = 'MONTHLY' | 'ANNUAL';
+type SubscriptionStatus = SubscriptionEntity['status'];
+
+const STRIPE_STATUS_MAP: Record<string, SubscriptionStatus> = {
+  active: 'ACTIVE',
+  past_due: 'PAST_DUE',
+  unpaid: 'PAST_DUE',
+  canceled: 'CANCELLED',
+  incomplete: 'PAST_DUE',
+  incomplete_expired: 'EXPIRED',
+  trialing: 'TRIAL',
+};
+
+/** Stripe moved current_period_* from the subscription to its items in newer API versions. */
+function stripePeriod(stripeSub: Stripe.Subscription): { start?: Date; end?: Date } {
+  type Period = { current_period_start?: number; current_period_end?: number };
+  const raw = stripeSub as unknown as Period;
+  const item = stripeSub.items?.data?.[0] as unknown as Period | undefined;
+  const start = raw.current_period_start ?? item?.current_period_start;
+  const end = raw.current_period_end ?? item?.current_period_end;
+  return {
+    start: start ? new Date(start * 1000) : undefined,
+    end: end ? new Date(end * 1000) : undefined,
+  };
+}
+
+function stripeId(value: string | { id: string } | null | undefined): string | undefined {
+  return typeof value === 'string' ? value : value?.id;
+}
 
 @Injectable()
 export class BillingService {
@@ -40,7 +82,8 @@ export class BillingService {
     private readonly configService: ConfigService,
   ) {
     const stripeConfig = this.configService.get<AppConfig['stripe']>('app.stripe');
-    const isProduction = (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production';
+    const isProduction =
+      (this.configService.get<string>('app.nodeEnv') ?? 'development') === 'production';
     const secretKey = stripeConfig?.secretKey;
 
     if (!secretKey) {
@@ -88,28 +131,30 @@ export class BillingService {
     return priceId;
   }
 
-  async createCheckoutSession(
-    tenantId: string,
-    planId: string,
-    billingCycle: 'MONTHLY' | 'ANNUAL',
-  ) {
+  /**
+   * Upgrade entry point. A tenant with a live Stripe subscription gets an in-place price swap
+   * (prorated) — never a second subscription. Everyone else goes through Checkout.
+   */
+  async createCheckoutSession(tenantId: string, planId: string, billingCycle: BillingCycle) {
     const plan = await this.planRepo.findOne({ where: { id: planId } });
     if (!plan) throw new NotFoundException('Plan not found');
 
     const priceId = this.resolvePlanStripePriceId(plan, billingCycle);
-
-    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as any });
-
-    let customerId = sub?.stripeCustomerId;
-    if (!customerId) {
-      const customer = await this.stripe.customers.create({
-        metadata: { tenantId },
-      });
-      customerId = customer.id;
-    }
-
+    const sub = await this.getSubscription(tenantId);
     const appUrl = this.configService.get<string>('app.frontendUrl');
 
+    if (sub.stripeSubscriptionId) {
+      const stripeSub = await this.stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
+      if (!['canceled', 'incomplete_expired'].includes(stripeSub.status)) {
+        await this.swapSubscriptionPrice(stripeSub, priceId);
+        sub.planId = plan.id;
+        sub.billingCycle = billingCycle;
+        await this.subscriptionRepo.save(sub);
+        return { url: `${appUrl}/billing?upgraded=true`, updated: true };
+      }
+    }
+
+    const customerId = await this.ensureStripeCustomer(tenantId);
     const session = await this.stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
@@ -120,11 +165,22 @@ export class BillingService {
       metadata: { tenantId, planId, billingCycle },
     });
 
-    return { url: session.url };
+    return { url: session.url, updated: false };
+  }
+
+  private async swapSubscriptionPrice(stripeSub: Stripe.Subscription, priceId: string) {
+    const itemId = stripeSub.items.data[0]?.id;
+    if (!itemId) {
+      throw new BadRequestException('Subscription has no line items');
+    }
+    await this.stripe.subscriptions.update(stripeSub.id, {
+      items: [{ id: itemId, price: priceId }],
+      proration_behavior: 'create_prorations',
+    });
   }
 
   async createPortalSession(tenantId: string) {
-    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } as any });
+    const sub = await this.subscriptionRepo.findOne({ where: { tenantId } });
     if (!sub?.stripeCustomerId) {
       throw new BadRequestException('No stripe customer found for this tenant');
     }
@@ -161,66 +217,235 @@ export class BillingService {
       throw new BadRequestException(`Webhook Error: ${message}`);
     }
 
+    // Idempotency: the stripe_events row and every state change commit together, so a
+    // redelivered (or concurrently delivered) event is applied exactly once.
+    let duplicate = false;
+    await this.subscriptionRepo.manager.transaction(async (manager) => {
+      const inserted: unknown[] = await manager.query(
+        `INSERT INTO stripe_events (id, type, created) VALUES ($1, $2, $3)
+         ON CONFLICT (id) DO NOTHING RETURNING id`,
+        [event.id, event.type, event.created],
+      );
+      if (inserted.length === 0) {
+        duplicate = true;
+        return;
+      }
+      await this.dispatchEvent(manager, event);
+    });
+
+    return { received: true, type: event.type, duplicate };
+  }
+
+  private async dispatchEvent(manager: EntityManager, event: Stripe.Event): Promise<void> {
+    if (
+      await new WhatsappAutomationStripeBilling(
+        this.stripe,
+        this.subscriptionRepo.manager,
+      ).handleVerifiedEvent(event)
+    ) {
+      return;
+    }
+
     switch (event.type) {
       case 'checkout.session.completed':
-        await this.handleCheckoutComplete(event.data.object as Stripe.Checkout.Session);
+        await this.handleCheckoutComplete(manager, event, event.data.object);
         break;
       case 'invoice.paid':
-        await this.handleInvoicePaid(event.data.object as Stripe.Invoice);
+        await this.handleInvoicePaid(manager, event.data.object);
         break;
       case 'invoice.payment_failed':
-        await this.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
+        await this.handleInvoicePaymentFailed(manager, event, event.data.object);
         break;
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-        await this.handleSubscriptionChange(event.data.object as Stripe.Subscription);
+        await this.handleSubscriptionChange(manager, event, event.data.object);
         break;
       case 'charge.refunded':
-        await this.handleChargeRefunded(event.data.object as Stripe.Charge);
+        await this.handleChargeRefunded(manager, event.data.object);
         break;
       default:
         break;
     }
-
-    return { received: true, type: event.type };
   }
 
-  private async handleCheckoutComplete(session: Stripe.Checkout.Session) {
-    const { tenantId, planId, billingCycle } = session.metadata!;
-    const stripeSubscriptionId = session.subscription as string;
-    const stripeCustomerId = session.customer as string;
+  isProductCheckoutConfigured(): boolean {
+    const key = this.configService.get<string>('app.stripe.secretKey');
+    const webhook = this.configService.get<string>('app.stripe.webhookSecret');
+    const frontend = this.configService.get<string>('app.frontendUrl');
+    return (
+      !!key &&
+      /^sk_(test|live)_/.test(key) &&
+      !/placeholder|changeme|change-me|not_configured/i.test(key) &&
+      !!webhook &&
+      /^whsec_/.test(webhook) &&
+      !/placeholder|changeme|change-me/i.test(webhook) &&
+      !!frontend
+    );
+  }
+
+  async createProductCheckoutSession(tenantId: string, pluginId: string, version: string) {
+    if (!this.isProductCheckoutConfigured()) {
+      throw new ServiceUnavailableException(
+        'Paid product checkout requires configured Stripe credentials, signed webhook secret and frontend URL',
+      );
+    }
+    return new WhatsappAutomationStripeBilling(this.stripe, this.subscriptionRepo.manager).checkout(
+      tenantId,
+      pluginId,
+      version,
+      this.configService.get<string>('app.frontendUrl')!,
+    );
+  }
+
+  /** Locks the subscription row and reports whether `event` is older than what was applied. */
+  private async lockSubscription(
+    manager: EntityManager,
+    where: { tenantId: string } | { stripeSubscriptionId: string } | { stripeCustomerId: string },
+  ): Promise<SubscriptionEntity | null> {
+    return manager.getRepository(SubscriptionEntity).findOne({
+      where,
+      order: { createdAt: 'DESC' },
+      lock: { mode: 'pessimistic_write' },
+    });
+  }
+
+  private isStaleEvent(sub: SubscriptionEntity, event: Stripe.Event): boolean {
+    return sub.lastStripeEventCreated != null && Number(sub.lastStripeEventCreated) > event.created;
+  }
+
+  private setStatus(sub: SubscriptionEntity, status: SubscriptionStatus): void {
+    if (status === 'PAST_DUE') {
+      sub.pastDueSince =
+        sub.status === 'PAST_DUE' && sub.pastDueSince ? sub.pastDueSince : new Date();
+    } else {
+      sub.pastDueSince = null;
+    }
+    sub.status = status;
+  }
+
+  private enqueueBillingEvent(
+    manager: EntityManager,
+    tenantId: string,
+    event: string,
+    eventId: string,
+    payload: Record<string, unknown>,
+  ): Promise<unknown> {
+    return manager.query(
+      `INSERT INTO billing_event_outbox (tenant_id, event, event_id, payload)
+       VALUES ($1, $2, $3, $4::jsonb) ON CONFLICT (tenant_id, event, event_id) DO NOTHING`,
+      [tenantId, event, eventId, JSON.stringify({ tenantId, eventId, ...payload })],
+    );
+  }
+
+  /** Applies the Stripe subscription's status, plan/price, period and cancellation flags. */
+  private async applyStripeSubscription(
+    manager: EntityManager,
+    sub: SubscriptionEntity,
+    stripeSub: Stripe.Subscription,
+    event: Stripe.Event,
+  ): Promise<void> {
+    this.setStatus(
+      sub,
+      event.type === 'customer.subscription.deleted'
+        ? 'CANCELLED'
+        : (STRIPE_STATUS_MAP[stripeSub.status] ?? 'EXPIRED'),
+    );
+
+    const priceId = stripeSub.items?.data?.[0]?.price?.id;
+    const match = priceId ? await this.planForStripePrice(manager, priceId) : null;
+    if (match) {
+      sub.planId = match.plan.id;
+      sub.billingCycle = match.billingCycle;
+    }
+
+    const period = stripePeriod(stripeSub);
+    sub.currentPeriodStart = period.start ?? sub.currentPeriodStart;
+    sub.currentPeriodEnd = period.end ?? sub.currentPeriodEnd;
+    sub.trialEndsAt = stripeSub.trial_end ? new Date(stripeSub.trial_end * 1000) : undefined;
+    sub.cancelAtPeriodEnd = !!stripeSub.cancel_at_period_end;
+    if (sub.status === 'CANCELLED') {
+      sub.cancelledAt = sub.cancelledAt ?? new Date(event.created * 1000);
+    }
+    sub.lastStripeEventCreated = event.created;
+  }
+
+  private async planForStripePrice(
+    manager: EntityManager,
+    priceId: string,
+  ): Promise<{ plan: Plan; billingCycle: BillingCycle } | null> {
+    const plans = await manager.getRepository(Plan).find();
+    for (const plan of plans) {
+      for (const billingCycle of ['MONTHLY', 'ANNUAL'] as const) {
+        const dbPriceId =
+          billingCycle === 'MONTHLY' ? plan.stripePriceIdMonthly : plan.stripePriceIdAnnual;
+        if (
+          resolveStripePriceId(plan.slug, billingCycle, dbPriceId, this.getStripePrices()) ===
+          priceId
+        ) {
+          return { plan, billingCycle };
+        }
+      }
+    }
+    return null;
+  }
+
+  private async handleCheckoutComplete(
+    manager: EntityManager,
+    event: Stripe.Event,
+    session: Stripe.Checkout.Session,
+  ) {
+    const { tenantId, planId, billingCycle } = session.metadata ?? {};
+    const stripeSubscriptionId = stripeId(session.subscription);
+    if (session.mode !== 'subscription' || !tenantId || !planId || !stripeSubscriptionId) return;
 
     const stripeSub = await this.stripe.subscriptions.retrieve(stripeSubscriptionId);
-    if (!stripeSub) return;
+    const repo = manager.getRepository(SubscriptionEntity);
+    const sub =
+      (await this.lockSubscription(manager, { tenantId })) ??
+      repo.create({ tenantId, planId, billingCycle: 'MONTHLY', status: 'TRIAL' });
+    if (this.isStaleEvent(sub, event)) return;
 
-    let sub = await this.subscriptionRepo.findOne({ where: { tenantId } as any });
-    if (!sub) {
-      sub = this.subscriptionRepo.create({ tenantId } as any) as any;
-    }
+    const previousStripeSubscriptionId = sub.stripeSubscriptionId;
+    sub.planId = planId;
+    sub.billingCycle = billingCycle === 'ANNUAL' ? 'ANNUAL' : 'MONTHLY';
+    sub.stripeCustomerId = stripeId(session.customer) ?? sub.stripeCustomerId;
+    sub.stripeSubscriptionId = stripeSubscriptionId;
+    await this.applyStripeSubscription(manager, sub, stripeSub, event);
+    await repo.save(sub);
+    const lifecycleEvent = previousStripeSubscriptionId
+      ? EVENT_NAMES.SUBSCRIPTION_UPDATED
+      : EVENT_NAMES.SUBSCRIPTION_CREATED;
+    await this.enqueueBillingEvent(manager, tenantId, lifecycleEvent, event.id, {
+      subscriptionId: sub.id,
+      planId: sub.planId,
+      status: sub.status,
+      currentPeriodEnd: sub.currentPeriodEnd?.toISOString(),
+    });
 
-    if (sub) {
-      sub.planId = planId;
-      sub.billingCycle = billingCycle as any;
-      sub.status = 'ACTIVE';
-      sub.stripeCustomerId = stripeCustomerId;
-      sub.stripeSubscriptionId = stripeSubscriptionId;
-      sub.currentPeriodStart = new Date((stripeSub as any).current_period_start * 1000);
-      sub.currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
-
-      await this.subscriptionRepo.save(sub);
+    // A tenant must never be billed for two subscriptions (e.g. two checkout tabs).
+    if (previousStripeSubscriptionId && previousStripeSubscriptionId !== stripeSubscriptionId) {
+      try {
+        await this.stripe.subscriptions.cancel(previousStripeSubscriptionId, { prorate: true });
+      } catch (error) {
+        BillingService.logger.error(
+          `Failed to cancel superseded Stripe subscription ${previousStripeSubscriptionId} (tenant ${tenantId})`,
+          error,
+        );
+      }
     }
   }
 
-  private async handleInvoicePaid(invoice: Stripe.Invoice) {
-    const stripeCustomerId = invoice.customer as string;
-    const sub = await this.subscriptionRepo.findOne({
-      where: { stripeCustomerId } as Record<string, string>,
-    });
+  private async handleInvoicePaid(manager: EntityManager, invoice: Stripe.Invoice) {
+    const stripeCustomerId = stripeId(invoice.customer);
+    if (!stripeCustomerId) return;
+    const sub = await manager
+      .getRepository(SubscriptionEntity)
+      .findOne({ where: { stripeCustomerId } });
     if (!sub) return;
 
-    const existing = await this.invoiceRepo.findOne({
-      where: { stripeInvoiceId: invoice.id } as Record<string, string>,
-    });
+    const existing = await manager
+      .getRepository(InvoiceEntity)
+      .findOne({ where: { stripeInvoiceId: invoice.id } });
     if (existing) return;
 
     const stripeInvoice = invoice as Stripe.Invoice & {
@@ -235,7 +460,7 @@ export class BillingService {
     const periodStart = invoice.period_start ?? invoice.created;
     const periodEnd = invoice.period_end ?? invoice.created;
 
-    const savedInvoice = await this.invoiceRepo.save({
+    const savedInvoice = await manager.getRepository(InvoiceEntity).save({
       tenantId: sub.tenantId,
       subscriptionId: sub.id,
       number: invoice.number || `INV-${invoice.id.replace('in_', '').slice(0, 12).toUpperCase()}`,
@@ -267,7 +492,7 @@ export class BillingService {
         ? stripeInvoice.payment_intent
         : stripeInvoice.payment_intent?.id;
 
-    await this.paymentRepo.save({
+    const payment = await manager.getRepository(Payment).save({
       tenantId: sub.tenantId,
       invoiceId: savedInvoice.id,
       amount: amountPaid,
@@ -279,16 +504,43 @@ export class BillingService {
         (typeof stripeInvoice.charge === 'string' ? stripeInvoice.charge : undefined),
       metadata: { stripeInvoiceId: invoice.id },
     } as Partial<Payment>);
+    await this.enqueueBillingEvent(
+      manager,
+      sub.tenantId,
+      EVENT_NAMES.PAYMENT_SUCCEEDED,
+      invoice.id,
+      {
+        paymentId: payment.id,
+        invoiceId: savedInvoice.id,
+        amount: amountPaid,
+        currency: invoice.currency.toUpperCase(),
+        status: 'SUCCEEDED',
+      },
+    );
+    if (invoice.billing_reason === 'subscription_cycle') {
+      await this.enqueueBillingEvent(
+        manager,
+        sub.tenantId,
+        EVENT_NAMES.SUBSCRIPTION_RENEWED,
+        invoice.id,
+        {
+          subscriptionId: sub.id,
+          planId: sub.planId,
+          currentPeriodEnd: new Date(periodEnd * 1000).toISOString(),
+        },
+      );
+    }
   }
 
-  private async handleChargeRefunded(charge: Stripe.Charge) {
+  private async handleChargeRefunded(manager: EntityManager, charge: Stripe.Charge) {
     const paymentIntentId =
       typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id;
 
     if (!paymentIntentId) return;
 
-    const payment = await this.paymentRepo.findOne({
-      where: { providerPaymentId: paymentIntentId } as Record<string, string>,
+    const paymentRepo = manager.getRepository(Payment);
+    const payment = await paymentRepo.findOne({
+      where: { providerPaymentId: paymentIntentId },
     });
     if (!payment) return;
 
@@ -298,75 +550,93 @@ export class BillingService {
       refundId: charge.refunds?.data[0]?.id,
       refundedAt: new Date().toISOString(),
     };
-    await this.paymentRepo.save(payment);
+    await paymentRepo.save(payment);
+    await this.enqueueBillingEvent(
+      manager,
+      payment.tenantId,
+      EVENT_NAMES.PAYMENT_REFUNDED,
+      charge.id,
+      { paymentId: payment.id, status: 'REFUNDED' },
+    );
   }
 
-  private async handleSubscriptionChange(stripeSub: Stripe.Subscription) {
-    const sub = await this.subscriptionRepo.findOne({
-      where: { stripeSubscriptionId: stripeSub.id } as any,
-    });
-    if (!sub) return;
+  private async handleSubscriptionChange(
+    manager: EntityManager,
+    event: Stripe.Event,
+    stripeSub: Stripe.Subscription,
+  ) {
+    const sub = await this.lockSubscription(manager, { stripeSubscriptionId: stripeSub.id });
+    if (!sub || this.isStaleEvent(sub, event)) return;
 
-    const statusMap: Record<string, SubscriptionEntity['status']> = {
-      active: 'ACTIVE',
-      past_due: 'PAST_DUE',
-      unpaid: 'PAST_DUE',
-      canceled: 'CANCELLED',
-      incomplete: 'PAST_DUE',
-      trialing: 'TRIAL',
-    };
-
-    sub.status = statusMap[stripeSub.status] || 'EXPIRED';
-    sub.currentPeriodStart = new Date((stripeSub as any).current_period_start * 1000);
-    sub.currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000);
-
-    if (stripeSub.status === 'canceled') {
-      sub.cancelledAt = new Date();
+    const previous = `${sub.status}:${sub.planId}:${sub.currentPeriodEnd?.toISOString() ?? ''}:${sub.cancelAtPeriodEnd}`;
+    await this.applyStripeSubscription(manager, sub, stripeSub, event);
+    await manager.getRepository(SubscriptionEntity).save(sub);
+    const next = `${sub.status}:${sub.planId}:${sub.currentPeriodEnd?.toISOString() ?? ''}:${sub.cancelAtPeriodEnd}`;
+    if (previous !== next) {
+      await this.enqueueBillingEvent(
+        manager,
+        sub.tenantId,
+        sub.status === 'CANCELLED'
+          ? EVENT_NAMES.SUBSCRIPTION_CANCELLED
+          : EVENT_NAMES.SUBSCRIPTION_UPDATED,
+        event.id,
+        {
+          subscriptionId: sub.id,
+          planId: sub.planId,
+          status: sub.status,
+          currentPeriodEnd: sub.currentPeriodEnd?.toISOString(),
+        },
+      );
     }
-
-    await this.subscriptionRepo.save(sub);
   }
 
-  private async handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-    const stripeCustomerId = invoice.customer as string;
-    const sub = await this.subscriptionRepo.findOne({
-      where: { stripeCustomerId } as Record<string, string>,
+  private async handleInvoicePaymentFailed(
+    manager: EntityManager,
+    event: Stripe.Event,
+    invoice: Stripe.Invoice,
+  ) {
+    const stripeCustomerId = stripeId(invoice.customer);
+    if (!stripeCustomerId) return;
+    const sub = await this.lockSubscription(manager, { stripeCustomerId });
+    if (!sub || this.isStaleEvent(sub, event)) return;
+
+    this.setStatus(sub, 'PAST_DUE');
+    sub.lastStripeEventCreated = event.created;
+    await manager.getRepository(SubscriptionEntity).save(sub);
+    await this.enqueueBillingEvent(manager, sub.tenantId, EVENT_NAMES.PAYMENT_FAILED, event.id, {
+      invoiceId: invoice.id,
+      amount: invoice.amount_due / 100,
+      currency: invoice.currency.toUpperCase(),
+      status: 'FAILED',
     });
-    if (!sub) return;
-
-    sub.status = 'PAST_DUE';
-    await this.subscriptionRepo.save(sub);
   }
 
-  async getSubscription(tenantId: string) {
-    let sub = await this.subscriptionRepo.findOne({
-      where: { tenantId } as Record<string, string>,
+  async getSubscription(tenantId: string): Promise<SubscriptionEntity> {
+    const sub = await this.subscriptionRepo.findOne({
+      where: { tenantId },
       order: { createdAt: 'DESC' },
     });
-    if (!sub) {
-      sub = await this.ensureTrialSubscription(tenantId);
-    }
-    return sub;
+    return sub ?? this.ensureTrialSubscription(tenantId);
   }
 
-  private async ensureTrialSubscription(tenantId: string): Promise<SubscriptionEntity> {
-    const freePlan = await this.planRepo.findOne({ where: { slug: 'FREE' } });
-    if (!freePlan) {
-      throw new NotFoundException('Default plan not configured');
-    }
+  /** Idempotent signup hook: gives a tenant with no subscription its trial. */
+  ensureTrialSubscription(tenantId: string): Promise<SubscriptionEntity> {
+    return ensureTrialSubscription(this.subscriptionRepo.manager, tenantId);
+  }
 
-    const trialEndsAt = new Date();
-    trialEndsAt.setDate(trialEndsAt.getDate() + 14);
-
-    const sub = this.subscriptionRepo.create({
-      tenantId,
-      planId: freePlan.id,
-      status: 'TRIAL',
-      billingCycle: 'MONTHLY',
-      trialEndsAt,
-    } as Partial<SubscriptionEntity>);
-
-    return this.subscriptionRepo.save(sub);
+  /**
+   * Daily trial expiry. A single conditional UPDATE is idempotent, so it is safe for every
+   * replica to run it — no leader election needed. Stripe-managed trials are left to webhooks.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_1AM, { name: 'billing-expire-trials' })
+  async expireTrials(now = new Date()): Promise<number> {
+    const result = await this.subscriptionRepo.update(
+      { status: 'TRIAL', trialEndsAt: LessThan(now), stripeSubscriptionId: IsNull() },
+      { status: 'EXPIRED' },
+    );
+    const expired = result.affected ?? 0;
+    if (expired > 0) BillingService.logger.log(`Expired ${expired} trial subscription(s)`);
+    return expired;
   }
 
   async getInvoices(tenantId: string) {
@@ -383,31 +653,58 @@ export class BillingService {
     return this.paymentRepo.find({ where: { tenantId } as any, order: { createdAt: 'DESC' } });
   }
 
+  /** Atomically adds `quantity` (may be negative to release) and returns the new total. */
   async trackUsage(
     tenantId: string,
     metric: string,
     quantity: number,
     period: UsagePeriod = 'MONTHLY',
-  ): Promise<UsageRecord> {
+  ): Promise<number> {
+    const rows = await this.upsertUsage(tenantId, metric, quantity, period);
+    return Number(rows[0]?.quantity ?? 0);
+  }
+
+  /**
+   * Atomically adds `quantity` only if the total stays within `limit`. Returns false (and
+   * changes nothing) when the limit would be exceeded — one statement, so no check-then-act race.
+   */
+  async reserveUsage(
+    tenantId: string,
+    metric: string,
+    quantity: number,
+    period: UsagePeriod,
+    limit: number,
+  ): Promise<boolean> {
+    if (quantity > limit) return false;
+    const rows = await this.upsertUsage(tenantId, metric, quantity, period, limit);
+    return rows.length > 0;
+  }
+
+  private upsertUsage(
+    tenantId: string,
+    metric: string,
+    quantity: number,
+    period: UsagePeriod,
+    limit?: number,
+  ): Promise<Array<{ quantity: string }>> {
     const { periodStart, periodEnd } = resolveUsagePeriodBounds(period);
-
-    const record = await this.usageRepo.findOne({
-      where: { tenantId, metric, periodStart },
-    });
-
-    if (record) {
-      record.quantity = Number(record.quantity) + quantity;
-      return this.usageRepo.save(record);
-    }
-
-    const newRecord = this.usageRepo.create({
+    const params: Array<string | number | Date> = [
       tenantId,
       metric,
       quantity,
       periodStart,
       periodEnd,
-    });
-    return this.usageRepo.save(newRecord);
+    ];
+    if (limit !== undefined) params.push(limit);
+    return this.usageRepo.query(
+      `INSERT INTO usage_records (tenant_id, metric, quantity, period_start, period_end)
+       VALUES ($1, $2, GREATEST($3::bigint, 0), $4, $5)
+       ON CONFLICT (tenant_id, metric, period_start) DO UPDATE
+         SET quantity = GREATEST(usage_records.quantity + $3::bigint, 0), updated_at = now()
+       ${limit === undefined ? '' : 'WHERE usage_records.quantity + $3::bigint <= $6::bigint'}
+       RETURNING quantity`,
+      params,
+    );
   }
 
   async getUsage(
@@ -415,27 +712,25 @@ export class BillingService {
     metric: string,
     period: UsagePeriod = 'MONTHLY',
   ): Promise<number> {
+    const { periodStart } = resolveUsagePeriodBounds(period);
     if (metric === 'all') {
-      const { periodStart } = resolveUsagePeriodBounds(period);
       const records = await this.usageRepo.find({ where: { tenantId, periodStart } });
       return records.reduce((sum, record) => sum + Number(record.quantity), 0);
     }
 
-    const { periodStart } = resolveUsagePeriodBounds(period);
     const record = await this.usageRepo.findOne({
       where: { tenantId, metric, periodStart },
     });
     return record ? Number(record.quantity) : 0;
   }
 
-  async getUsageBreakdown(
-    tenantId: string,
-    period: UsagePeriod = 'MONTHLY',
-  ): Promise<Record<string, number>> {
-    const { periodStart } = resolveUsagePeriodBounds(period);
-    const records = await this.usageRepo.find({ where: { tenantId, periodStart } });
+  /** Current-period usage per metric, whatever period (DAILY/MONTHLY/TOTAL) each is metered in. */
+  async getUsageBreakdown(tenantId: string, now = new Date()): Promise<Record<string, number>> {
+    const records = await this.usageRepo.find({
+      where: { tenantId, periodStart: LessThanOrEqual(now), periodEnd: MoreThanOrEqual(now) },
+    });
     return records.reduce<Record<string, number>>((acc, record) => {
-      acc[record.metric] = Number(record.quantity);
+      acc[record.metric] = (acc[record.metric] ?? 0) + Number(record.quantity);
       return acc;
     }, {});
   }
@@ -475,18 +770,14 @@ export class BillingService {
   }
 
   private async ensureStripeCustomer(tenantId: string): Promise<string> {
-    const sub = await this.subscriptionRepo.findOne({
-      where: { tenantId } as Record<string, string>,
-    });
-    if (sub?.stripeCustomerId) {
+    const sub = await this.getSubscription(tenantId);
+    if (sub.stripeCustomerId) {
       return sub.stripeCustomerId;
     }
 
     const customer = await this.stripe.customers.create({ metadata: { tenantId } });
-    if (sub) {
-      sub.stripeCustomerId = customer.id;
-      await this.subscriptionRepo.save(sub);
-    }
+    sub.stripeCustomerId = customer.id;
+    await this.subscriptionRepo.save(sub);
     return customer.id;
   }
 
@@ -605,18 +896,9 @@ export class BillingService {
       throw new NotFoundException('Plan not found');
     }
 
-    const priceId = this.resolvePlanStripePriceId(plan, sub.billingCycle as 'MONTHLY' | 'ANNUAL');
-
+    const priceId = this.resolvePlanStripePriceId(plan, sub.billingCycle);
     const stripeSub = await this.stripe.subscriptions.retrieve(sub.stripeSubscriptionId);
-    const itemId = stripeSub.items.data[0]?.id;
-    if (!itemId) {
-      throw new BadRequestException('Subscription has no line items');
-    }
-
-    await this.stripe.subscriptions.update(sub.stripeSubscriptionId, {
-      items: [{ id: itemId, price: priceId }],
-      proration_behavior: 'create_prorations',
-    });
+    await this.swapSubscriptionPrice(stripeSub, priceId);
 
     sub.planId = planId;
     return this.subscriptionRepo.save(sub);
@@ -634,6 +916,7 @@ export class BillingService {
       await this.stripe.subscriptions.update(sub.stripeSubscriptionId, {
         cancel_at_period_end: true,
       });
+      sub.cancelAtPeriodEnd = true;
     } else {
       await this.stripe.subscriptions.cancel(sub.stripeSubscriptionId);
       sub.status = 'CANCELLED';
@@ -656,6 +939,7 @@ export class BillingService {
     });
 
     sub.status = 'ACTIVE';
+    sub.cancelAtPeriodEnd = false;
     sub.cancelledAt = undefined;
     return this.subscriptionRepo.save(sub);
   }

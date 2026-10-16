@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Coupon } from '../../database/entities/coupon.entity';
+import { stripImmutableFields } from '../../database/base.repository';
 
 @Injectable()
 export class CouponService {
@@ -13,7 +14,7 @@ export class CouponService {
   async create(tenantId: string, dto: Partial<Coupon>): Promise<Coupon> {
     const existing = await this.couponRepo.findOne({ where: { tenantId, code: dto.code } as any });
     if (existing) throw new BadRequestException('Coupon code already exists');
-    const coupon = this.couponRepo.create({ ...dto, tenantId } as any) as unknown as Coupon;
+    const coupon = this.couponRepo.create({ ...stripImmutableFields(dto), usedCount: 0, tenantId } as any) as unknown as Coupon;
     return this.couponRepo.save(coupon) as unknown as Promise<Coupon>;
   }
 
@@ -64,7 +65,9 @@ export class CouponService {
 
   async update(tenantId: string, id: string, dto: Partial<Coupon>): Promise<Coupon> {
     const coupon = await this.findOne(tenantId, id);
-    Object.assign(coupon, dto);
+    // usedCount is server-managed (redeem); never let a payload reset it.
+    const { usedCount: _usedCount, ...changes } = stripImmutableFields(dto);
+    Object.assign(coupon, changes);
     return this.couponRepo.save(coupon) as unknown as Promise<Coupon>;
   }
 

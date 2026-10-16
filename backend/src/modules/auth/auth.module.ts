@@ -16,6 +16,7 @@ import { Tenant } from '../../database/entities/tenant.entity';
 import { Role } from '../../database/entities/role.entity';
 import { Permission } from '../../database/entities/permission.entity';
 import { UserRole } from '../../database/entities/user-role.entity';
+import { ApiKey } from '../../database/entities/api-key.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
@@ -30,6 +31,7 @@ import { GithubStrategy } from './strategies/github.strategy';
 import { AppleStrategy } from './strategies/apple.strategy';
 import { MfaService } from './mfa.service';
 import { MonetizationModule } from '../monetization.module';
+import { ApiKeyAuthService } from './api-key-auth.service';
 
 @Module({
   imports: [
@@ -53,6 +55,7 @@ import { MonetizationModule } from '../monetization.module';
       Role,
       Permission,
       UserRole,
+      ApiKey,
     ]),
   ],
   controllers: [AuthController],
@@ -60,6 +63,7 @@ import { MonetizationModule } from '../monetization.module';
     AuthService,
     AuthRepository,
     MfaService,
+    ApiKeyAuthService,
     JwtStrategy,
     LocalStrategy,
     GoogleStrategy,
@@ -73,6 +77,6 @@ import { MonetizationModule } from '../monetization.module';
     GithubAuthGuard,
     AppleAuthGuard,
   ],
-  exports: [AuthService, JwtAuthGuard, TypeOrmModule],
+  exports: [AuthService, JwtAuthGuard, ApiKeyAuthService, TypeOrmModule],
 })
 export class AuthModule {}

@@ -119,7 +119,9 @@ export default function GlobalStoragePersistencePage() {
               Node: Storage-Persistence-Orchestrator
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Storage Persistence</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Storage Persistence
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Structural data dispatches, bucket forensics & systemic artifact persistence
           </p>

@@ -37,4 +37,15 @@ export class Subscription extends BaseEntity {
 
   @Column({ name: 'stripe_customer_id', nullable: true })
   stripeCustomerId?: string;
+
+  @Column({ name: 'cancel_at_period_end', default: false })
+  cancelAtPeriodEnd!: boolean;
+
+  /** Start of the current dunning window; entitlement continues for the configured grace. */
+  @Column({ name: 'past_due_since', type: 'timestamptz', nullable: true })
+  pastDueSince?: Date | null;
+
+  /** `created` (unix seconds) of the newest Stripe event applied — older events are ignored. */
+  @Column({ name: 'last_stripe_event_created', type: 'bigint', nullable: true })
+  lastStripeEventCreated?: number | null;
 }

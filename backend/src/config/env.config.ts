@@ -135,6 +135,22 @@ export const env = {
     webhookSecret: process.env['RAZORPAY_WEBHOOK_SECRET'] ?? '',
   },
 
+  shopify: {
+    clientId: process.env['SHOPIFY_CLIENT_ID'] ?? '',
+    clientSecret: process.env['SHOPIFY_CLIENT_SECRET'] ?? '',
+    callbackUrl:
+      process.env['SHOPIFY_CALLBACK_URL'] ??
+      `${process.env['APP_URL'] ?? 'http://localhost:8000'}/api/v1/integrations/shopify/callback`,
+    webhookUrl:
+      process.env['SHOPIFY_WEBHOOK_URL'] ??
+      `${process.env['APP_URL'] ?? 'http://localhost:8000'}/api/v1/integrations/shopify/webhooks`,
+    apiVersion: process.env['SHOPIFY_API_VERSION'] ?? '2026-10',
+    scopes: process.env['SHOPIFY_SCOPES'] ?? 'read_orders,read_products',
+    tokenKeyId: process.env['SHOPIFY_TOKEN_KEY_ID'] ?? 'v1',
+    tokenKeys: process.env['SHOPIFY_TOKEN_KEYS'] ?? '',
+    legacyTokenKey: process.env['SHOPIFY_TOKEN_ENCRYPTION_KEY'] ?? '',
+  },
+
   health: {
     diskThreshold: Number.parseFloat(process.env['HEALTH_DISK_THRESHOLD'] ?? '0.98'),
   },

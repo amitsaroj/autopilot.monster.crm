@@ -13,7 +13,8 @@ export class StartImportDto {
   fileKey!: string;
 
   @ApiPropertyOptional({
-    description: 'Applied to every imported row that supports tags (e.g. contacts) — lets a segment target exactly this import batch afterward.',
+    description:
+      'Applied to every imported row that supports tags (e.g. contacts) — lets a segment target exactly this import batch afterward.',
   })
   @IsArray()
   @IsString({ each: true })

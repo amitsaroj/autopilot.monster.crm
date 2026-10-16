@@ -12,7 +12,9 @@ export class AdminSchedulerService {
       let nextDate: string | null = null;
       try {
         nextDate = value.nextDate().toString();
-      } catch (e) {}
+      } catch {
+        /* A stopped job may have no next occurrence. */
+      }
 
       result.push({
         name: key,

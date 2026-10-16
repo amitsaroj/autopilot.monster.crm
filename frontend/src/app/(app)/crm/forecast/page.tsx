@@ -155,7 +155,13 @@ export default function CrmForecastPage() {
                   ${deal.value.toLocaleString()}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <span className={deal.probability >= 50 ? 'text-green-700 dark:text-green-400' : 'text-yellow-700 dark:text-yellow-400'}>
+                  <span
+                    className={
+                      deal.probability >= 50
+                        ? 'text-green-700 dark:text-green-400'
+                        : 'text-yellow-700 dark:text-yellow-400'
+                    }
+                  >
                     {deal.probability}%
                   </span>
                 </td>

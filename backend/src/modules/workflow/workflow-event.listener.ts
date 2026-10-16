@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { DealStatus } from '../../database/entities/deal.entity';
 import type { Contact } from '../../database/entities/contact.entity';
 import type { Deal } from '../../database/entities/deal.entity';
+import type { Lead } from '../../database/entities/lead.entity';
 import { EVENT_NAMES } from '../../events/event.constants';
 import { WorkflowService } from './workflow.service';
 import { WorkflowRepository } from './workflow.repository';
@@ -31,6 +32,21 @@ export class WorkflowEventListener {
     await this.trigger('CONTACT_UPDATED', payload.tenantId, {
       contactId: payload.contact.id,
       contact: payload.contact,
+    });
+  }
+
+  @OnEvent(EVENT_NAMES.LEAD_CREATED)
+  async handleLeadCreated(payload: {
+    lead: Lead;
+    tenantId: string;
+    workflowDepth?: number;
+  }): Promise<void> {
+    await this.trigger('LEAD_CREATED', payload.tenantId, {
+      leadId: payload.lead.id,
+      lead: payload.lead,
+      // A lead is created once, so its id makes re-delivered events idempotent.
+      eventId: `lead.created:${payload.lead.id}`,
+      ...(payload.workflowDepth === undefined ? {} : { workflowDepth: payload.workflowDepth }),
     });
   }
 
@@ -97,7 +113,7 @@ export class WorkflowEventListener {
     }
   }
 
-  @OnEvent(EVENT_NAMES.MESSAGE_RECEIVED)
+  @OnEvent(EVENT_NAMES.MESSAGE_RECEIVED, { suppressErrors: false })
   async handleMessageReceived(payload: {
     tenantId: string;
     channel?: string;
@@ -105,6 +121,11 @@ export class WorkflowEventListener {
     body?: string;
     messageSid?: string;
     contactId?: string;
+    eventId?: string;
+    phoneNumberId?: string;
+    messageType?: string;
+    selectionId?: string;
+    attribution?: Record<string, string>;
   }): Promise<void> {
     if (payload.channel !== 'whatsapp' || !payload.tenantId) {
       return;
@@ -119,14 +140,108 @@ export class WorkflowEventListener {
       messageSid: payload.messageSid,
       contactId: payload.contactId,
       channel: 'whatsapp',
+      eventId: payload.eventId ?? payload.messageSid,
+      phoneNumberId: payload.phoneNumberId,
+      messageType: payload.messageType,
+      selectionId: payload.selectionId,
+      ...(payload.attribution ? { attribution: payload.attribution } : {}),
     };
 
-    await this.trigger('WHATSAPP_MESSAGE_RECEIVED', payload.tenantId, eventPayload);
-    try {
-      await this.triggerWhatsappKeywordFlows(payload.tenantId, body, eventPayload);
-    } catch (error) {
-      this.logger.error('Failed to execute WhatsApp keyword flows', error);
-    }
+    await this.workflowService.triggerWorkflow(
+      payload.tenantId,
+      'WHATSAPP_MESSAGE_RECEIVED',
+      eventPayload,
+    );
+    await this.triggerWhatsappKeywordFlows(payload.tenantId, body, eventPayload);
+  }
+
+  @OnEvent(EVENT_NAMES.WHATSAPP_CONVERSATION_RESOLVED, { suppressErrors: false })
+  async handleWhatsappConversationResolved(payload: {
+    tenantId: string;
+    phone: string;
+    contactId: string;
+    phoneNumberId?: string;
+    status: 'RESOLVED';
+    eventId: string;
+  }): Promise<void> {
+    await this.trigger('WHATSAPP_CONVERSATION_RESOLVED', payload.tenantId, payload);
+  }
+
+  @OnEvent(EVENT_NAMES.WHATSAPP_CONVERSATION_REOPENED, { suppressErrors: false })
+  async handleWhatsappConversationReopened(payload: {
+    tenantId: string;
+    phone: string;
+    contactId: string;
+    phoneNumberId?: string;
+    status: 'OPEN';
+    eventId: string;
+  }): Promise<void> {
+    await this.trigger('WHATSAPP_CONVERSATION_REOPENED', payload.tenantId, payload);
+  }
+
+  @OnEvent(EVENT_NAMES.SHOPIFY_CART_UPDATED, { suppressErrors: false })
+  async handleShopifyCartUpdated(
+    payload: { tenantId: string } & Record<string, unknown>,
+  ): Promise<void> {
+    await this.workflowService.triggerWorkflow(payload.tenantId, 'SHOPIFY_CART_UPDATED', payload);
+  }
+
+  @OnEvent(EVENT_NAMES.SHOPIFY_CHECKOUT_CREATED, { suppressErrors: false })
+  async handleShopifyCheckoutCreated(
+    payload: { tenantId: string } & Record<string, unknown>,
+  ): Promise<void> {
+    await this.workflowService.triggerWorkflow(
+      payload.tenantId,
+      'SHOPIFY_CHECKOUT_CREATED',
+      payload,
+    );
+  }
+
+  @OnEvent(EVENT_NAMES.SHOPIFY_CHECKOUT_UPDATED, { suppressErrors: false })
+  async handleShopifyCheckoutUpdated(
+    payload: { tenantId: string } & Record<string, unknown>,
+  ): Promise<void> {
+    await this.workflowService.triggerWorkflow(
+      payload.tenantId,
+      'SHOPIFY_CHECKOUT_UPDATED',
+      payload,
+    );
+  }
+
+  @OnEvent(EVENT_NAMES.SHOPIFY_ORDER_CREATED, { suppressErrors: false })
+  async handleShopifyOrderCreated(
+    payload: { tenantId: string } & Record<string, unknown>,
+  ): Promise<void> {
+    await this.workflowService.triggerWorkflow(payload.tenantId, 'SHOPIFY_ORDER_CREATED', payload);
+  }
+
+  @OnEvent(EVENT_NAMES.SHOPIFY_ORDER_PAID, { suppressErrors: false })
+  async handleShopifyOrderPaid(
+    payload: { tenantId: string } & Record<string, unknown>,
+  ): Promise<void> {
+    await this.workflowService.triggerWorkflow(payload.tenantId, 'SHOPIFY_ORDER_PAID', payload);
+  }
+
+  @OnEvent(EVENT_NAMES.SHOPIFY_ORDER_FULFILLED, { suppressErrors: false })
+  async handleShopifyOrderFulfilled(
+    payload: { tenantId: string } & Record<string, unknown>,
+  ): Promise<void> {
+    await this.workflowService.triggerWorkflow(
+      payload.tenantId,
+      'SHOPIFY_ORDER_FULFILLED',
+      payload,
+    );
+  }
+
+  @OnEvent(EVENT_NAMES.SHOPIFY_APP_UNINSTALLED, { suppressErrors: false })
+  async handleShopifyUninstalled(
+    payload: { tenantId: string } & Record<string, unknown>,
+  ): Promise<void> {
+    await this.workflowService.triggerWorkflow(
+      payload.tenantId,
+      'SHOPIFY_APP_UNINSTALLED',
+      payload,
+    );
   }
 
   private async triggerWhatsappKeywordFlows(
@@ -162,6 +277,42 @@ export class WorkflowEventListener {
     if (matched > 0) {
       this.logger.log(`Triggered ${matched} WhatsApp keyword flow(s) for tenant ${tenantId}`);
     }
+  }
+
+  @OnEvent(EVENT_NAMES.MESSAGE_DELIVERED, { suppressErrors: false })
+  async handleDelivered(
+    payload: { tenantId: string; channel?: string } & Record<string, unknown>,
+  ): Promise<void> {
+    if (payload.channel === 'whatsapp')
+      await this.workflowService.triggerWorkflow(
+        payload.tenantId,
+        'WHATSAPP_MESSAGE_DELIVERED',
+        payload,
+      );
+  }
+
+  @OnEvent(EVENT_NAMES.MESSAGE_READ, { suppressErrors: false })
+  async handleRead(
+    payload: { tenantId: string; channel?: string } & Record<string, unknown>,
+  ): Promise<void> {
+    if (payload.channel === 'whatsapp')
+      await this.workflowService.triggerWorkflow(
+        payload.tenantId,
+        'WHATSAPP_MESSAGE_READ',
+        payload,
+      );
+  }
+
+  @OnEvent(EVENT_NAMES.MESSAGE_FAILED, { suppressErrors: false })
+  async handleFailed(
+    payload: { tenantId: string; channel?: string } & Record<string, unknown>,
+  ): Promise<void> {
+    if (payload.channel === 'whatsapp')
+      await this.workflowService.triggerWorkflow(
+        payload.tenantId,
+        'WHATSAPP_MESSAGE_FAILED',
+        payload,
+      );
   }
 
   private async trigger(

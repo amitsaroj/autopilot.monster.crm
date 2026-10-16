@@ -116,7 +116,9 @@ export default function OnboardingPage() {
                     }
                     className="w-full bg-card border border-border rounded-2xl px-5 py-4 pl-[80px] text-sm text-foreground outline-none focus:border-blue-500/50 focus:bg-blue-500/5 transition-all font-mono"
                   />
-                  <span className="absolute left-5 text-muted-foreground font-mono text-sm">https://</span>
+                  <span className="absolute left-5 text-muted-foreground font-mono text-sm">
+                    https://
+                  </span>
                   <span className="absolute right-5 text-muted-foreground font-mono text-sm leading-none pt-1">
                     .autopilot.crm
                   </span>

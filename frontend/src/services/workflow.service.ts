@@ -12,6 +12,19 @@ export interface Workflow {
   updatedAt: string;
 }
 
+export interface WorkflowSequencePolicy {
+  stopOnReply?: boolean;
+  stopOnConversion?: boolean;
+  businessHours?: {
+    timezone: string;
+    startHour: number;
+    endHour: number;
+    days: number[];
+    useRecipientTimezone?: boolean;
+  };
+  exitCondition?: { field: string; operator?: string; value?: unknown };
+}
+
 export interface WorkflowExecution {
   id: string;
   flowId: string;
@@ -19,6 +32,7 @@ export interface WorkflowExecution {
   startedAt: string;
   completedAt?: string;
   error?: string;
+  pauseReason?: string | null;
   input?: Record<string, unknown>;
   output?: Record<string, unknown>;
 }
@@ -29,7 +43,16 @@ export interface WorkflowTrigger {
   category?: string;
 }
 
+export interface WorkflowPreview {
+  valid: boolean;
+  errors: string[];
+  warnings?: string[];
+  preview?: { stepId: string; type: string; config: Record<string, unknown>; passed?: boolean }[];
+}
+
 export const workflowService = {
+  preview: async (definition: Record<string, unknown>, payload: Record<string, unknown>) =>
+    parseApiData<WorkflowPreview>(await api.post('/workflows/preview', { definition, payload })),
   list: async () => {
     const res = await api.get('/workflows');
     return { data: { data: parseApiData<Workflow[]>(res) ?? [] } };
@@ -70,4 +93,6 @@ export const workflowService = {
     const res = await api.post(`/workflows/executions/${execId}/retry`);
     return { data: { data: parseApiData<{ jobId: string; executionId: string }>(res) } };
   },
+  controlExecution: async (execId: string, action: 'pause' | 'resume' | 'cancel') =>
+    parseApiData<WorkflowExecution>(await api.post(`/workflows/executions/${execId}/${action}`)),
 };

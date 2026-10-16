@@ -18,6 +18,7 @@ import { resolveUsagePeriodBounds } from '../billing/usage-period.util';
 import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
 import { KnowledgeBaseService } from './knowledge-base.service';
 import { AiProviderService } from './providers/ai-provider.service';
+import { safeFetchPublicUrl } from '../../common/utils/safe-fetch.util';
 
 const MODEL_COST_PER_1K: Record<string, { input: number; output: number }> = {
   'gpt-4o': { input: 0.005, output: 0.015 },
@@ -289,7 +290,12 @@ export class RagService {
     );
 
     if (tenantId) {
-      await this.recordUsage(tenantId, response.usage.inputTokens, response.model, response.usage.outputTokens);
+      await this.recordUsage(
+        tenantId,
+        response.usage.inputTokens,
+        response.model,
+        response.usage.outputTokens,
+      );
     }
 
     return JSON.parse(response.content || '{}');
@@ -357,23 +363,29 @@ export class RagService {
 
     this.logger.log(`Crawling URL ${url} for tenant ${tenantId}`);
 
-    let response: Response;
+    let response: Awaited<ReturnType<typeof safeFetchPublicUrl>>;
     try {
-      response = await fetch(url, {
+      // SSRF-safe: public destinations only, no redirects, 30s / 5 MB caps.
+      response = await safeFetchPublicUrl(url, {
         headers: { 'User-Agent': 'AutopilotMonsterCRM/1.0' },
-        signal: AbortSignal.timeout(30_000),
+        timeoutMs: 30_000,
+        maxBytes: 5 * 1024 * 1024,
       });
     } catch (err) {
+      if (err instanceof BadRequestException) throw err;
       this.logger.error(`Failed to fetch URL ${url}`, err);
       throw new ServiceUnavailableException(`Unable to fetch URL: ${url}`);
     }
 
-    if (!response.ok) {
+    if (response.status >= 300 && response.status < 400) {
+      throw new BadRequestException('URL redirects are not followed; submit the final URL');
+    }
+    if (response.status < 200 || response.status >= 300) {
       throw new BadRequestException(`URL fetch failed with status ${response.status}`);
     }
 
-    const contentType = response.headers.get('content-type') || '';
-    const body = await response.text();
+    const contentType = response.contentType;
+    const body = response.body.toString('utf8');
     const text = contentType.includes('html') ? this.extractTextFromHtml(body) : body;
 
     if (!text.trim()) {

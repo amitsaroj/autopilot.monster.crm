@@ -114,7 +114,12 @@ export class StorageService {
     fileName: string,
     mimeType: string,
   ): Promise<StoredObjectResult> {
-    return this.putObject(tenantId, `${randomUUID()}/${this.sanitizeFilename(fileName)}`, fileBuffer, mimeType);
+    return this.putObject(
+      tenantId,
+      `${randomUUID()}/${this.sanitizeFilename(fileName)}`,
+      fileBuffer,
+      mimeType,
+    );
   }
 
   async delete(tenantId: string, key: string): Promise<void> {

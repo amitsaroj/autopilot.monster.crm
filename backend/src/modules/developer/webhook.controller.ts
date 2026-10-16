@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Headers,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -52,7 +53,23 @@ export class WebhookController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.webhookService.getDeliveries(tenantId, id, Number(page) || 1, Number(limit) || 20);
+    return this.webhookService.getDeliveries(
+      tenantId,
+      id,
+      page === undefined ? 1 : Number(page),
+      limit === undefined ? 20 : Number(limit),
+    );
+  }
+
+  @Post(':id/deliveries/:deliveryId/replay')
+  @ApiOperation({ summary: 'Replay a delivery with a new delivery ID and retry budget' })
+  async replay(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Param('deliveryId') deliveryId: string,
+    @Headers('idempotency-key') replayRequestKey?: string,
+  ) {
+    return this.webhookService.replay(tenantId, id, deliveryId, replayRequestKey);
   }
 
   @Post(':id/test')

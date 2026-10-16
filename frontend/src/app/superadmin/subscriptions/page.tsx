@@ -78,7 +78,9 @@ export default function GlobalSubscriptionsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Global Subscriptions</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Global Subscriptions
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Platform Billing Registry ({filtered.length})
           </p>
@@ -144,7 +146,9 @@ export default function GlobalSubscriptionsPage() {
                       {sub.status}
                     </span>
                   </td>
-                  <td className="px-6 py-5 text-xs text-muted-foreground">{sub.billingCycle ?? '—'}</td>
+                  <td className="px-6 py-5 text-xs text-muted-foreground">
+                    {sub.billingCycle ?? '—'}
+                  </td>
                   <td className="px-6 py-5 text-xs text-muted-foreground">
                     {sub.currentPeriodEnd
                       ? new Date(sub.currentPeriodEnd).toLocaleDateString()

@@ -121,7 +121,9 @@ export default function TenantGeneralSettingsPage() {
               UID: {settings.subdomain || 'local'}.cluster
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Workspace Orchestration</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Workspace Orchestration
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Branding, Domain & Metadata
           </p>
@@ -189,7 +191,8 @@ export default function TenantGeneralSettingsPage() {
           <div className="p-10 rounded-xl bg-card border border-border shadow-2xl space-y-10 group">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold text-foreground flex items-center gap-3 uppercase tracking-tighter">
-                <Globe className="w-6 h-6 text-emerald-700 dark:text-emerald-400" /> Custom Domain Artifact
+                <Globe className="w-6 h-6 text-emerald-700 dark:text-emerald-400" /> Custom Domain
+                Artifact
               </h3>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wide border border-emerald-500/20">
                 DNS Verified

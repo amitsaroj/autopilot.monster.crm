@@ -21,9 +21,14 @@ import { cn } from '@/lib/utils';
 interface DealBoardProps {
   pipelineId: string;
   searchQuery?: string;
+  statusFilter?: string;
 }
 
-export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = '' }) => {
+export const DealBoard: React.FC<DealBoardProps> = ({
+  pipelineId,
+  searchQuery = '',
+  statusFilter = '',
+}) => {
   const [boardData, setBoardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -48,14 +53,15 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
     if (currentStageId === targetStageId) return;
 
     // Optimistic update
-    const oldData = { ...boardData };
-    const newBoardData = { ...boardData };
+    const oldData = structuredClone(boardData);
+    const newBoardData = structuredClone(boardData);
 
     const sourceStage = newBoardData.stages.find((s: any) => s.id === currentStageId);
     const targetStage = newBoardData.stages.find((s: any) => s.id === targetStageId);
 
     if (sourceStage && targetStage) {
       const dealIndex = sourceStage.deals.findIndex((d: any) => d.id === dealId);
+      if (dealIndex < 0) return;
       const [deal] = sourceStage.deals.splice(dealIndex, 1);
       targetStage.deals.push(deal);
       setBoardData(newBoardData);
@@ -73,7 +79,10 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
   if (isLoading) return null;
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-12 min-h-[75vh] scrollbar-hide perspective-1000">
+    <div
+      id="board-container"
+      className="flex min-w-0 max-w-full gap-6 overflow-x-auto pb-12 min-h-[75vh] scrollbar-hide perspective-1000"
+    >
       {boardData?.stages?.map((stage: any) => (
         <div key={stage.id} className="flex-shrink-0 w-[350px] group/column">
           {/* Stage Header */}
@@ -112,7 +121,11 @@ export const DealBoard: React.FC<DealBoardProps> = ({ pipelineId, searchQuery = 
           <div className="flex flex-col gap-5 px-1 min-h-[600px] transition-colors rounded-xl pb-20">
             <AnimatePresence mode="popLayout">
               {stage.deals
-                ?.filter((d: any) => d.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                ?.filter(
+                  (d: any) =>
+                    d.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+                    (!statusFilter || d.status === statusFilter),
+                )
                 .map((deal: any) => (
                   <motion.div
                     key={deal.id}

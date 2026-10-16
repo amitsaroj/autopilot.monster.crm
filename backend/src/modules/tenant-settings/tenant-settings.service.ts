@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TenantSetting } from '../../database/entities/tenant-setting.entity';
+import { UpsertTenantSettingDto } from './dto/tenant-setting.dto';
 
 @Injectable()
 export class TenantSettingsService {
@@ -22,10 +23,15 @@ export class TenantSettingsService {
     return this.settingRepo.findOne({ where: { tenantId, key } });
   }
 
-  async updateSetting(tenantId: string, data: { key: string; value: any; group?: string }) {
+  async updateSetting(tenantId: string, data: UpsertTenantSettingDto) {
     let setting = await this.settingRepo.findOne({ where: { tenantId, key: data.key } });
     if (!setting) {
-      setting = this.settingRepo.create({ ...data, tenantId });
+      setting = this.settingRepo.create({
+        key: data.key,
+        value: data.value,
+        group: data.group,
+        tenantId,
+      });
     } else {
       setting.value = data.value;
       if (data.group) setting.group = data.group;

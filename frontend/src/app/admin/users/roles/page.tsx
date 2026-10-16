@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { parseApiData } from '@/lib/api/parse-response';
+import { rbacService, type Role, type Permission } from '@/services/rbac.service';
 import api from '@/lib/api/client';
 import {
   Plus,
@@ -44,26 +46,50 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface Role {
-  id: string;
-  name: string;
-  description: string;
-  isSystem: boolean;
-  permissions: string[];
-}
-
-interface Permission {
-  id: string;
-  name: string;
-  code: string;
-  module: string;
-}
-
 export default function RbacManagementPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const selectRole = async (role: Role) => {
+    setSelectedRole(null);
+    try {
+      const response = await rbacService.getRole(role.id);
+      setSelectedRole(parseApiData<Role>(response));
+    } catch {
+      toast.error('Unable to load role permissions');
+    }
+  };
+
+  const togglePermission = (permission: Permission) => {
+    setSelectedRole((role) => {
+      if (!role || role.isSystem) return role;
+      const current = role.permissions ?? [];
+      return {
+        ...role,
+        permissions: current.some((item) => item.id === permission.id)
+          ? current.filter((item) => item.id !== permission.id)
+          : [...current, permission],
+      };
+    });
+  };
+
+  const savePermissions = async () => {
+    if (!selectedRole || selectedRole.isSystem) return;
+    setSaving(true);
+    try {
+      await rbacService.updateRole(selectedRole.id, {
+        permissionIds: selectedRole.permissions.map((permission) => permission.id),
+      });
+      toast.success('Role permissions saved');
+    } catch {
+      toast.error('Unable to save role permissions');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -72,10 +98,8 @@ export default function RbacManagementPage() {
         api.get('/rbac/roles'),
         api.get('/rbac/permissions'),
       ]);
-      const rolesJson = rolesRes.data;
-      const permsJson = permsRes.data;
-      setRoles(rolesJson.data || []);
-      setPermissions(permsJson.data || []);
+      setRoles(parseApiData<Role[]>(rolesRes) ?? []);
+      setPermissions(parseApiData<Permission[]>(permsRes) ?? []);
     } catch (e) {
       toast.error('Failed to synchronize RBAC topology');
     } finally {
@@ -108,7 +132,9 @@ export default function RbacManagementPage() {
               Node: RBAC-Orchestrator
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Authority Topology</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Authority Topology
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Granular Permissions, Custom Roles & Access Persistence
           </p>
@@ -179,10 +205,11 @@ export default function RbacManagementPage() {
           </h3>
           <div className="space-y-4">
             {roles.map((role) => (
-              <div
+              <button
+                type="button"
                 key={role.id}
-                onClick={() => setSelectedRole(role)}
-                className={`p-6 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${selectedRole?.id === role.id ? 'bg-blue-600 border-blue-500 shadow-2xl shadow-blue-900/20' : 'bg-card border-border hover:border-blue-500/30'}`}
+                onClick={() => void selectRole(role)}
+                className={`w-full text-left p-6 rounded-xl border transition-all cursor-pointer group relative overflow-hidden ${selectedRole?.id === role.id ? 'bg-blue-50 dark:bg-blue-950 border-blue-500 shadow-2xl shadow-blue-900/20' : 'bg-card border-border hover:border-blue-500/30'}`}
               >
                 {role.isSystem && selectedRole?.id !== role.id && (
                   <span className="absolute top-4 right-4 text-[8px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
@@ -208,7 +235,7 @@ export default function RbacManagementPage() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -232,7 +259,12 @@ export default function RbacManagementPage() {
               <div className="p-3 bg-card border border-border rounded-xl text-muted-foreground">
                 <Search className="w-5 h-5" />
               </div>
-              <button className="px-8 py-3 bg-white text-[#0b0f19] rounded-xl text-xs font-semibold uppercase tracking-wide shadow-xl flex items-center gap-2 group">
+              <button
+                type="button"
+                onClick={() => void savePermissions()}
+                disabled={!selectedRole || selectedRole.isSystem || saving}
+                className="px-8 py-3 bg-white text-[#0b0f19] rounded-xl text-xs font-semibold uppercase tracking-wide shadow-xl flex items-center gap-2 group disabled:opacity-50"
+              >
                 <Save className="w-4 h-4 group-hover:scale-110 transition-transform" /> Save
                 Assignments
               </button>
@@ -241,14 +273,14 @@ export default function RbacManagementPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 relative max-h-[600px] overflow-y-auto custom-scrollbar pr-4">
             {permissions.length > 0 ? (
-              Array.from(new Set(permissions.map((p) => p.module))).map((module) => (
+              Array.from(new Set(permissions.map((p) => p.resource))).map((module) => (
                 <div key={module} className="space-y-6">
                   <h4 className="text-[11px] font-semibold text-blue-700 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2 leading-none">
                     <Activity className="w-4 h-4 opacity-40 shrink-0" /> {module} Intel
                   </h4>
                   <div className="space-y-4 pt-2">
                     {permissions
-                      .filter((p) => p.module === module)
+                      .filter((p) => p.resource === module)
                       .map((p) => (
                         <div
                           key={p.id}
@@ -258,17 +290,30 @@ export default function RbacManagementPage() {
                             <p className="text-xs font-semibold text-foreground uppercase tracking-tight group-hover/item:text-blue-400 transition-colors">
                               {p.name}
                             </p>
-                            <p className="text-xs text-gray-700 font-mono italic">{p.code}</p>
+                            <p className="text-xs text-muted-foreground font-mono italic">
+                              {p.action}
+                            </p>
                           </div>
-                          <div
-                            className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${selectedRole?.permissions.includes(p.code) ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20' : 'bg-card border-border text-gray-800 hover:border-blue-500/40'}`}
+                          <button
+                            type="button"
+                            aria-label={`Toggle ${p.name}`}
+                            aria-pressed={
+                              selectedRole?.permissions?.some(
+                                (permission) => permission.id === p.id,
+                              ) ?? false
+                            }
+                            disabled={!selectedRole || selectedRole.isSystem || saving}
+                            onClick={() => togglePermission(p)}
+                            className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${selectedRole?.permissions?.some((permission) => permission.id === p.id) ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/20' : 'bg-card border-border text-muted-foreground hover:border-blue-500/40'}`}
                           >
-                            {selectedRole?.permissions.includes(p.code) ? (
+                            {selectedRole?.permissions?.some(
+                              (permission) => permission.id === p.id,
+                            ) ? (
                               <CheckSquare className="w-5 h-5" />
                             ) : (
                               <Plus className="w-5 h-5 opacity-20 group-hover/item:opacity-40" />
                             )}
-                          </div>
+                          </button>
                         </div>
                       ))}
                   </div>

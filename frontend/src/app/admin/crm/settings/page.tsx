@@ -1,14 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import {
-  Settings,
-  Bell,
-  Mail,
-  Sliders,
-  Shield,
-  Save,
-} from 'lucide-react';
+import { Settings, Bell, Mail, Sliders, Shield, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { tenantService } from '@/services/tenant.service';
 

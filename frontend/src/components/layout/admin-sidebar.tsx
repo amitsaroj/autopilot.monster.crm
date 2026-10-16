@@ -139,7 +139,7 @@ const adminNavItems: AdminNavItem[] = [
       { label: 'WhatsApp Admin', href: '/admin/whatsapp' },
       { label: 'WhatsApp Campaigns', href: '/admin/whatsapp/campaigns' },
       { label: 'WhatsApp Metrics', href: '/admin/whatsapp/metrics' },
-      { label: 'WhatsApp Profiles', href: '/admin/whatsapp/profiles' },
+      { label: 'WhatsApp Accounts', href: '/whatsapp/settings' },
     ],
   },
   {
@@ -225,10 +225,15 @@ export function AdminSidebar() {
         )}
       >
         <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-          <Link href="/" aria-label="Autopilot Monster home"><BrandLogo /></Link>
+          <Link href="/" aria-label="Autopilot Monster home">
+            <BrandLogo />
+          </Link>
         </div>
 
-        <nav aria-label="Workspace navigation" className="flex-1 overflow-y-auto py-4 scrollbar-hide">
+        <nav
+          aria-label="Workspace navigation"
+          className="flex-1 overflow-y-auto py-4 scrollbar-hide"
+        >
           <ul className="space-y-0.5 px-3">
             {adminNavItems.map((item) => {
               if (isGroup(item)) {
@@ -248,7 +253,9 @@ export function AdminSidebar() {
                       <summary
                         aria-label={item.label}
                         title={item.label}
-                        onClick={() => { if (collapsed) toggleCollapsed(); }}
+                        onClick={() => {
+                          if (collapsed) toggleCollapsed();
+                        }}
                         className={cn(
                           'flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer text-sm list-none select-none transition-colors',
                           isActive
@@ -268,8 +275,8 @@ export function AdminSidebar() {
                             <li key={child.href}>
                               <Link
                                 href={child.href}
-                              onClick={close}
-                              aria-current={pathname === child.href ? 'page' : undefined}
+                                onClick={close}
+                                aria-current={pathname === child.href ? 'page' : undefined}
                                 className={cn(
                                   'block px-3 py-1.5 rounded-md text-sm transition-colors',
                                   childActive
@@ -288,8 +295,7 @@ export function AdminSidebar() {
                 );
               }
 
-              const isActive =
-                pathname === item.href || pathname.startsWith(item.href + '/');
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <li key={item.label}>
                   <Link

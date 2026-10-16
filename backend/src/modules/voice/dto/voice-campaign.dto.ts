@@ -38,12 +38,17 @@ export class CreateVoiceCampaignDto {
   @IsOptional()
   scheduledAt?: string;
 
-  @ApiPropertyOptional({ description: 'Optional AI agent whose prompt replaces the free-text script' })
+  @ApiPropertyOptional({
+    description: 'Optional AI agent whose prompt replaces the free-text script',
+  })
   @IsUUID()
   @IsOptional()
   agentId?: string;
 
-  @ApiPropertyOptional({ default: 3, description: 'Max simultaneous active calls for this campaign' })
+  @ApiPropertyOptional({
+    default: 3,
+    description: 'Max simultaneous active calls for this campaign',
+  })
   @IsInt()
   @Min(1)
   @Max(100)
@@ -79,13 +84,17 @@ export class CreateVoiceCampaignDto {
   @IsOptional()
   timezone?: string;
 
-  @ApiPropertyOptional({ description: 'Hard cap on total dial attempts; the campaign auto-pauses once reached' })
+  @ApiPropertyOptional({
+    description: 'Hard cap on total dial attempts; the campaign auto-pauses once reached',
+  })
   @IsInt()
   @Min(1)
   @IsOptional()
   maxCalls?: number;
 
-  @ApiPropertyOptional({ description: 'Free-text objective this campaign was generated from, if any' })
+  @ApiPropertyOptional({
+    description: 'Free-text objective this campaign was generated from, if any',
+  })
   @IsString()
   @IsOptional()
   objective?: string;

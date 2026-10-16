@@ -41,6 +41,7 @@ import { EmailModule } from './shared/email/email.module';
 // Business Modules
 import { AiModule } from './modules/ai/ai.module';
 import { VoiceModule } from './modules/voice/voice.module';
+import { WhatsappAutomationModule } from './modules/whatsapp-automation/whatsapp-automation.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { WorkflowModule } from './modules/workflow/workflow.module';
 import { CrmModule } from './modules/crm/crm.module';
@@ -60,6 +61,7 @@ import { SupportModule } from './modules/support/support.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { DataJobsModule } from './modules/data-jobs/data-jobs.module';
 import { DeveloperModule } from './modules/developer/developer.module';
+import { CommerceModule } from './modules/commerce/commerce.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -111,6 +113,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     AiModule,
     VoiceModule,
     WhatsappModule,
+    WhatsappAutomationModule,
     WorkflowModule,
     CrmModule,
     TenantModule,
@@ -130,6 +133,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     AnalyticsModule,
     DataJobsModule,
     DeveloperModule,
+    CommerceModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

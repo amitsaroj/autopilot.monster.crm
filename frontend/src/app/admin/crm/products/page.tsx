@@ -133,7 +133,9 @@ export default function AdminCRMProductsPage() {
         </div>
       ) : error ? (
         <div className="py-20 text-center">
-          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">{error}</p>
+          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">
+            {error}
+          </p>
           <button
             type="button"
             onClick={() => reload()}
@@ -182,7 +184,9 @@ export default function AdminCRMProductsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Billing</p>
-                    <p className="text-base font-semibold text-emerald-700 dark:text-emerald-400">{product.billingType}</p>
+                    <p className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
+                      {product.billingType}
+                    </p>
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4 border-t border-border">

@@ -220,7 +220,9 @@ export default function AdminCRMSupportPage() {
                     {t.status.replace('_', ' ')}
                   </span>
                 </td>
-                <td className="px-5 py-4 text-xs text-muted-foreground">{t.assigneeId ?? 'Unassigned'}</td>
+                <td className="px-5 py-4 text-xs text-muted-foreground">
+                  {t.assigneeId ?? 'Unassigned'}
+                </td>
                 <td className="px-5 py-4 text-xs text-muted-foreground">
                   {new Date(t.updatedAt).toLocaleDateString()}
                 </td>

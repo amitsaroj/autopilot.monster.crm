@@ -17,8 +17,7 @@ import type {
 import { OpenAiFineTuningProvider, OpenAiProvider } from './openai.provider';
 
 const PLACEHOLDER_KEYS = new Set(['mock-api-key']);
-const isPlaceholderKey = (key: string) =>
-  PLACEHOLDER_KEYS.has(key) || key.startsWith('sk-ci-test');
+const isPlaceholderKey = (key: string) => PLACEHOLDER_KEYS.has(key) || key.startsWith('sk-ci-test');
 
 /**
  * Single seam between the app and whichever LLM vendor is configured.
@@ -66,7 +65,11 @@ export class AiProviderService {
     yield* provider.chatCompleteStream(messages, options);
   }
 
-  async embed(tenantId: string | undefined, input: string, model?: string): Promise<AiEmbeddingResult> {
+  async embed(
+    tenantId: string | undefined,
+    input: string,
+    model?: string,
+  ): Promise<AiEmbeddingResult> {
     const provider = await this.getChatProvider(tenantId);
     return provider.embed(input, model);
   }

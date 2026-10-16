@@ -18,8 +18,16 @@ const typeConfig = {
   [ActivityType.EMAIL]: { icon: Mail, color: 'text-blue-500', bg: 'bg-blue-50' },
   [ActivityType.MEETING]: { icon: Users, color: 'text-orange-500', bg: 'bg-orange-50' },
   [ActivityType.NOTE]: { icon: FileText, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-  [ActivityType.TASK]: { icon: CheckSquare, color: 'text-green-700 dark:text-green-400', bg: 'bg-green-50' },
-  [ActivityType.WHATSAPP]: { icon: MessageSquare, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50' },
+  [ActivityType.TASK]: {
+    icon: CheckSquare,
+    color: 'text-green-700 dark:text-green-400',
+    bg: 'bg-green-50',
+  },
+  [ActivityType.WHATSAPP]: {
+    icon: MessageSquare,
+    color: 'text-emerald-700 dark:text-emerald-400',
+    bg: 'bg-emerald-50',
+  },
 };
 
 export function ActivityFeed({ activities }: { activities: Activity[] }) {

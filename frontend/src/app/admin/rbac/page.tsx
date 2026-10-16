@@ -196,7 +196,10 @@ export default function AdminRBACPage() {
           {
             label: 'RBAC Violations',
             value: String(stats.violations),
-            color: stats.violations > 0 ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400',
+            color:
+              stats.violations > 0
+                ? 'text-amber-700 dark:text-amber-400'
+                : 'text-emerald-700 dark:text-emerald-400',
             bg: stats.violations > 0 ? 'bg-amber-500/10' : 'bg-emerald-500/10',
             icon: stats.violations > 0 ? AlertTriangle : CheckCircle2,
           },

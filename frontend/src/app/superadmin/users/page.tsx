@@ -65,7 +65,8 @@ export default function GlobalUsersPage() {
       active: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20',
       inactive: 'bg-gray-500/10 text-muted-foreground border-gray-500/20',
       suspended: 'bg-red-500/10 text-red-500 border-red-500/20',
-      pending_verification: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+      pending_verification:
+        'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
     };
     return (
       <span
@@ -81,7 +82,9 @@ export default function GlobalUsersPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Identity Directory</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Identity Directory
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Platform Personas Across All Clusters
           </p>
@@ -145,7 +148,9 @@ export default function GlobalUsersPage() {
                         <p className="text-sm font-bold text-foreground group-hover:text-blue-400 transition-colors">
                           {user.firstName} {user.lastName}
                         </p>
-                        <p className="text-xs text-muted-foreground font-mono mt-0.5">{user.email}</p>
+                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                          {user.email}
+                        </p>
                       </div>
                     </div>
                   </td>
@@ -158,7 +163,9 @@ export default function GlobalUsersPage() {
                         >
                           {user.provider.toUpperCase()}
                         </span>
-                        {user.isMfaEnabled && <Lock className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />}
+                        {user.isMfaEnabled && (
+                          <Lock className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
+                        )}
                       </div>
                     </div>
                   </td>

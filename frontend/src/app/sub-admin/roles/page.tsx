@@ -132,7 +132,10 @@ export default function SubAdminRolesPage() {
                   <p className="text-base font-semibold text-foreground">{role.name}</p>
                 </div>
                 {role.isSystem ? (
-                  <span className="p-2 rounded-lg bg-card border border-border text-muted-foreground" title="System role — cannot be deleted">
+                  <span
+                    className="p-2 rounded-lg bg-card border border-border text-muted-foreground"
+                    title="System role — cannot be deleted"
+                  >
                     <Lock className="w-3.5 h-3.5" />
                   </span>
                 ) : (
@@ -145,7 +148,9 @@ export default function SubAdminRolesPage() {
                   </button>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">{role.description || 'No description'}</p>
+              <p className="text-xs text-muted-foreground">
+                {role.description || 'No description'}
+              </p>
             </div>
           ))}
         </div>
@@ -193,7 +198,11 @@ export default function SubAdminRolesPage() {
                 disabled={submitting}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold uppercase tracking-wide transition-all shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2"
               >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                {submitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
                 Create Role
               </button>
             </form>

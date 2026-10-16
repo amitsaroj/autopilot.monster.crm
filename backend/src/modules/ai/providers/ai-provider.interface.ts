@@ -70,11 +70,7 @@ export interface AiProvider {
 
   embed(input: string, model?: string): Promise<AiEmbeddingResult>;
 
-  transcribeAudio(
-    file: Buffer,
-    filename: string,
-    mimeType: string,
-  ): Promise<AiTranscriptionResult>;
+  transcribeAudio(file: Buffer, filename: string, mimeType: string): Promise<AiTranscriptionResult>;
 
   synthesizeSpeech(text: string, voice?: string): Promise<AiSpeechResult>;
 }

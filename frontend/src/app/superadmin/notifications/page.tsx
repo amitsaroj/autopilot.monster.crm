@@ -123,7 +123,9 @@ export default function PlatformCommunicationsOrchestrator() {
               Node: Global-Notification-Hub
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Platform Communications</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Platform Communications
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Structural broadcasts, systemic Alerts & global Engagement forensics
           </p>

@@ -24,9 +24,9 @@ The selected tokens are navy `#0B1538`, blue `#155EEF`, cyan `#00D9F5`, teal `#0
 
 ## API configuration
 
-The frontend now uses `https://api.autopilots.monster/api/v1`, deriving the base from the supplied login URL. The local frontend environment, default API configuration, example environment, OAuth destinations, and Next API rewrite agree on that base. No local backend was started. Login has a 20-second timeout and a persistent error that distinguishes connectivity failures from credential failures.
+Production defaults use `https://api.autopilots.monster/api/v1`, deriving the base from the supplied login URL. At the user's later request, local verification now runs the backend in Docker at `http://localhost:8000/api/v1`; the ignored frontend `.env.local` selects this local API. Login has a 20-second timeout and a persistent error that distinguishes connectivity failures from credential failures.
 
-## Verification
+## Initial redesign verification
 
 - Production build completed successfully, including TypeScript and 305 generated static pages.
 - Standalone TypeScript checking passed after correcting a duplicate status-button attribute introduced during the accessibility pass. Existing Vitest globals are included in TypeScript configuration.
@@ -40,6 +40,6 @@ The frontend now uses `https://api.autopilots.monster/api/v1`, deriving the base
 
 ## Remaining limitations
 
-Authenticated screen rendering, API-backed CRUD, admin permissions, billing checkout, and live workflow execution could not be verified without a reachable remote API and successful session. These checks remain required before release. Existing marketing content outside the rebuilt homepage was largely retained and was not independently substantiated. Some routes inherit the foundation rather than a bespoke page-layout rewrite. Dedicated logo variants, full protected-route visual verification, and the repository's lint configuration remain unfinished.
+The later [local verification report](local-verification.md) records checks of all 295 static destinations and 37 dynamic route patterns using the Docker API, along with the resulting runtime, response-shape, CRUD, and responsive fixes. Six destinations remain blocked by the current API role/feature configuration, and twenty dynamic patterns require missing records or provider inputs. Payment checkout, provider-backed messaging/calling, OAuth/MFA completion, and exhaustive control interactions still need verification. Existing marketing content outside the rebuilt homepage was largely retained and was not independently substantiated. Some routes inherit the foundation rather than a bespoke page-layout rewrite. Dedicated logo variants and the repository's lint configuration remain unfinished.
 
 Important implementation files include `src/app/globals.css`, `tailwind.config.ts`, `components/brand-logo.tsx`, `components/layout/*`, `components/marketing/pages/HomePageContent.tsx`, `components/settings/team-invite-form.tsx`, `components/settings/workspace-settings.tsx`, `components/billing/plan-picker.tsx`, `components/ui/dialog-shell.tsx`, `app/(app)/workflows/builder/page.tsx`, `components/FlowBuilder/FlowBuilder.tsx`, `lib/env.config.ts`, and `proxy.ts`, all under `frontend`.

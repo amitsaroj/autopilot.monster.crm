@@ -42,7 +42,6 @@ import { AdminEnvironmentModule } from './environment/admin-environment.module';
 import { AdminSystemSettingsModule } from './system-settings/admin-system-settings.module';
 import { AdminEmailSettingsModule } from './email-settings/admin-email-settings.module';
 import { AdminSmsSettingsModule } from './sms-settings/admin-sms-settings.module';
-import { AdminWhatsAppSettingsModule } from './whatsapp-settings/admin-whatsapp-settings.module';
 import { AdminAISettingsModule } from './ai-settings/admin-ai-settings.module';
 import { AdminVoiceSettingsModule } from './voice-settings/admin-voice-settings.module';
 import { AdminSecuritySettingsModule } from './security-settings/admin-security-settings.module';
@@ -97,7 +96,6 @@ import { AdminInternalModule } from './internal/admin-internal.module';
     AdminSystemSettingsModule,
     AdminEmailSettingsModule,
     AdminSmsSettingsModule,
-    AdminWhatsAppSettingsModule,
     AdminAISettingsModule,
     AdminVoiceSettingsModule,
     AdminSecuritySettingsModule,

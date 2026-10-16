@@ -20,6 +20,17 @@ function readKeywordFromLabel(label: string): string | null {
 
 /** Extract keyword trigger from a WhatsApp React Flow definition. */
 export function extractWhatsappFlowKeyword(definition: Record<string, unknown>): string | null {
+  if (typeof definition.keyword === 'string' && definition.keyword.trim())
+    return definition.keyword.trim();
+  const configuredTrigger = definition.trigger;
+  if (
+    configuredTrigger &&
+    typeof configuredTrigger === 'object' &&
+    'keyword' in configuredTrigger &&
+    typeof configuredTrigger.keyword === 'string' &&
+    configuredTrigger.keyword.trim()
+  )
+    return configuredTrigger.keyword.trim();
   const nodes = (definition.nodes as FlowNode[] | undefined) ?? [];
   if (!nodes.length) {
     return null;

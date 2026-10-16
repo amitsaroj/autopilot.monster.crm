@@ -1,43 +1,54 @@
-import * as crypto from 'crypto';
-
+import { createHmac, timingSafeEqual, createHash } from 'crypto';
 import {
+  Body,
   Controller,
   Get,
+  Param,
+  ParseUUIDPipe,
   Post,
   Query,
   Req,
   Res,
   Headers,
   ForbiddenException,
+  BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
-
-import { WhatsappService } from './whatsapp.service';
-import { Public } from '../../common/decorators/public.decorator';
 import { SkipThrottle } from '@nestjs/throttler';
-import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrator.service';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
+import { WhatsappService } from './whatsapp.service';
+import { WhatsappWebhookProcessor } from './whatsapp-webhook.processor';
+import type { MetaWebhookBody } from './whatsapp-webhook.processor';
+import { Public } from '../../common/decorators/public.decorator';
+import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
+import { PlanFeature, ResourcePermissions, Roles, TenantId } from '../../common/decorators';
 import { env } from '../../config/env.config';
+
+/** Constant-time comparison for secrets of arbitrary length. */
+export function safeEqual(a: string, b: string): boolean {
+  const digest = (value: string) => createHash('sha256').update(value).digest();
+  return timingSafeEqual(digest(a), digest(b));
+}
 
 @SkipThrottle()
 @Controller('whatsapp/webhook')
 export class MetaWebhookController {
-  private readonly appSecret: string;
-  private readonly isProduction: boolean;
-
   constructor(
-    private readonly whatsappService: WhatsappService,
-    private configService: ConfigService,
-    private readonly configOrchestrator: ConfigOrchestratorService,
-  ) {
-    this.isProduction = env.isProduction;
-    this.appSecret = env.whatsapp.appSecret || this.configService.get('META_APP_SECRET') || '';
-  }
-
-  private isMockSecret(): boolean {
-    return !this.appSecret || this.appSecret === 'mock_secret';
-  }
-
+    private readonly whatsapp: WhatsappService,
+    private readonly config: ConfigService,
+    private readonly inbox: WhatsappWebhookProcessor,
+  ) {}
   @Get()
   @Public()
   verifyWebhook(
@@ -45,67 +56,112 @@ export class MetaWebhookController {
     @Query('hub.verify_token') token: string,
     @Query('hub.challenge') challenge: string,
   ) {
-    if (mode === 'subscribe' && token === this.whatsappService.getVerifyToken()) {
+    const configured = this.whatsapp.getVerifyToken();
+    if (configured && mode === 'subscribe' && safeEqual(String(token ?? ''), configured))
       return challenge;
-    }
     throw new ForbiddenException('Invalid verify token');
   }
-
   @Post()
   @Public()
   async receiveMessage(
     @Req() req: Request & { rawBody?: Buffer },
     @Res() res: Response,
-    @Headers('x-hub-signature-256') signature: string,
-    @Headers('x-tenant-id') tenantHeader: string,
+    @Headers('x-hub-signature-256') signature?: string,
   ) {
-    if (this.isProduction && this.isMockSecret()) {
-      throw new ForbiddenException('Webhook signature verification is not configured');
-    }
-
-    if (!this.isMockSecret()) {
-      if (!signature) {
-        throw new ForbiddenException('Missing webhook signature');
-      }
-
-      const rawBody = req.rawBody ?? Buffer.from(JSON.stringify(req.body));
-      if (this.isProduction && !req.rawBody) {
-        throw new ForbiddenException('Raw request body required for webhook verification');
-      }
-
-      const expectedSig =
-        'sha256=' + crypto.createHmac('sha256', this.appSecret).update(rawBody).digest('hex');
-      if (expectedSig !== signature) {
-        throw new ForbiddenException('Signature mismatch');
-      }
-    }
-
+    const secret = this.config.get<string>('META_APP_SECRET') || env.whatsapp.appSecret;
+    if (!secret || secret === 'mock_secret' || !req.rawBody)
+      throw new ForbiddenException('Webhook verification is not configured');
+    if (!signature || !/^sha256=[a-f0-9]{64}$/.test(signature))
+      throw new ForbiddenException('Missing or invalid webhook signature');
+    const actual = Buffer.from(signature.slice(7), 'hex');
+    const expected = createHmac('sha256', secret).update(req.rawBody).digest();
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected))
+      throw new ForbiddenException('Signature mismatch');
+    const body = req.body as Partial<MetaWebhookBody>;
+    if (!Array.isArray(body.entry)) throw new BadRequestException('Invalid webhook payload');
+    // Durable insert before acknowledgment; a DB failure returns 5xx so Meta redelivers.
+    await this.inbox.ingest({ object: body.object, entry: body.entry });
     res.status(200).send('OK');
+  }
+}
 
-    const tenantId =
-      tenantHeader ||
-      this.configService.get<string>('DEFAULT_TENANT_ID') ||
-      (await this.extractTenantFromPayload(req.body));
+export class ReplayWhatsappWebhookEventsDto {
+  @IsOptional()
+  @IsUUID()
+  tenantId?: string;
 
-    if (tenantId) {
-      await this.whatsappService.processIncomingMessage(tenantId, req.body);
-    }
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(500)
+  @IsUUID('all', { each: true })
+  ids?: string[];
+}
+
+@ApiTags('Admin / WhatsApp webhooks')
+@ResourcePermissions('admin')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
+@Controller('admin/whatsapp/webhook-events')
+export class WhatsappWebhookAdminController {
+  constructor(private readonly inbox: WhatsappWebhookProcessor) {}
+
+  @Post('replay')
+  @ApiOperation({ summary: 'Re-enqueue FAILED WhatsApp webhook events (optionally per tenant)' })
+  replay(@Body() dto: ReplayWhatsappWebhookEventsDto) {
+    return this.inbox.replayFailed(dto);
+  }
+}
+
+@ApiTags('WhatsApp webhooks')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('whatsapp')
+@PlanFeature('whatsapp')
+@Controller('whatsapp/webhook-events')
+export class WhatsappWebhookTenantController {
+  constructor(private readonly inbox: WhatsappWebhookProcessor) {}
+
+  @Get()
+  @ApiOperation({ summary: 'List recent WhatsApp webhook delivery events for this tenant' })
+  list(@TenantId() tenantId: string) {
+    return this.inbox.listTenantEvents(tenantId);
   }
 
-  private async extractTenantFromPayload(body: Record<string, unknown>): Promise<string> {
-    const entry = (body.entry as Array<Record<string, unknown>> | undefined)?.[0];
-    const changes = (entry?.changes as Array<Record<string, unknown>> | undefined)?.[0];
-    const value = changes?.value as Record<string, unknown> | undefined;
-    const metadata = value?.metadata as { phone_number_id?: string } | undefined;
-    const phoneNumberId = String(metadata?.phone_number_id ?? '');
-    if (!phoneNumberId) {
-      return '';
-    }
-    return (
-      (await this.configOrchestrator.findTenantByConfig(
-        'whatsapp_phone_number_id',
-        phoneNumberId,
-      )) || ''
-    );
+  @Post(':id/replay')
+  @ApiOperation({ summary: 'Replay one failed WhatsApp webhook event belonging to this tenant' })
+  replay(@TenantId() tenantId: string, @Param('id', ParseUUIDPipe) id: string) {
+    return this.inbox.replayTenantEvent(tenantId, id);
+  }
+}
+
+export class ReconcileWhatsappMessageDto {
+  @IsIn(['SENT', 'FAILED'])
+  outcome!: 'SENT' | 'FAILED';
+
+  /** The wamid, when the operator can confirm it from Meta. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  providerMessageId?: string;
+}
+
+@ApiTags('WhatsApp')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, TenantGuard)
+@ResourcePermissions('whatsapp')
+@PlanFeature('whatsapp')
+@Controller('whatsapp/messages')
+export class WhatsappReconciliationController {
+  constructor(private readonly whatsapp: WhatsappService) {}
+
+  @Post(':id/reconcile')
+  @ApiOperation({ summary: 'Resolve an UNKNOWN/EXPIRED outbound message as sent or failed' })
+  reconcile(
+    @TenantId() tenantId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReconcileWhatsappMessageDto,
+  ) {
+    return this.whatsapp.reconcileMessage(tenantId, id, dto.outcome, dto.providerMessageId);
   }
 }

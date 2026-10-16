@@ -1,13 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PricingRepository } from './pricing.repository';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import type { UsagePeriod } from '../billing/usage-period.util';
+import {
+  ensureTrialSubscription,
+  isSubscriptionEntitled,
+} from '../billing/subscription-entitlement';
+import type {
+  CreatePlanDto,
+  CreatePlanFeatureDto,
+  CreatePlanLimitDto,
+  UpdatePlanDto,
+  UpdatePlanFeatureDto,
+  UpdatePlanLimitDto,
+} from '../billing/dto/billing.dto';
 
 @Injectable()
 export class PricingService {
+  private readonly logger = new Logger(PricingService.name);
+
   constructor(
     private readonly pricingRepository: PricingRepository,
     @InjectRepository(Subscription)
@@ -16,10 +30,32 @@ export class PricingService {
     private readonly tenantRepo: Repository<Tenant>,
   ) {}
 
+  /**
+   * The subscription that currently entitles the tenant (ACTIVE, unexpired TRIAL, or PAST_DUE
+   * within the grace period), or null. A tenant that never had a subscription gets a trial.
+   */
   async getTenantSubscription(tenantId: string): Promise<Subscription | null> {
-    return this.subscriptionRepo.findOne({
-      where: { tenantId, status: 'ACTIVE' } as any,
-    });
+    const sub =
+      (await this.subscriptionRepo.findOne({
+        where: { tenantId },
+        order: { createdAt: 'DESC' },
+      })) ?? (await this.tryEnsureTrialSubscription(tenantId));
+    return sub && isSubscriptionEntitled(sub) ? sub : null;
+  }
+
+  /** Idempotent: creates the signup trial if the tenant has no subscription yet. */
+  async ensureTrialSubscription(tenantId: string): Promise<Subscription> {
+    return ensureTrialSubscription(this.subscriptionRepo.manager, tenantId);
+  }
+
+  private async tryEnsureTrialSubscription(tenantId: string): Promise<Subscription | null> {
+    try {
+      return await this.ensureTrialSubscription(tenantId);
+    } catch (error) {
+      // Never break login/guards on a missing default plan — the tenant is simply not entitled.
+      this.logger.warn(`Could not create trial subscription for tenant ${tenantId}`, error);
+      return null;
+    }
   }
 
   async isFeatureEnabled(tenantId: string, featureKey: string): Promise<boolean> {
@@ -110,11 +146,11 @@ export class PricingService {
 
   // --- Management (SuperAdmin) ---
 
-  async createPlan(data: any) {
+  async createPlan(data: CreatePlanDto) {
     return this.pricingRepository.createPlan(data);
   }
 
-  async updatePlan(id: string, data: any) {
+  async updatePlan(id: string, data: UpdatePlanDto) {
     return this.pricingRepository.updatePlan(id, data);
   }
 
@@ -122,11 +158,11 @@ export class PricingService {
     return this.pricingRepository.deletePlan(id);
   }
 
-  async addFeatureToPlan(data: any) {
+  async addFeatureToPlan(data: CreatePlanFeatureDto & { planId: string }) {
     return this.pricingRepository.createFeature(data);
   }
 
-  async updatePlanFeature(id: string, data: any) {
+  async updatePlanFeature(id: string, data: UpdatePlanFeatureDto) {
     return this.pricingRepository.updateFeature(id, data);
   }
 
@@ -134,11 +170,11 @@ export class PricingService {
     return this.pricingRepository.deleteFeature(id);
   }
 
-  async addLimitToPlan(data: any) {
+  async addLimitToPlan(data: CreatePlanLimitDto & { planId: string }) {
     return this.pricingRepository.createLimit(data);
   }
 
-  async updatePlanLimit(id: string, data: any) {
+  async updatePlanLimit(id: string, data: UpdatePlanLimitDto) {
     return this.pricingRepository.updateLimit(id, data);
   }
 

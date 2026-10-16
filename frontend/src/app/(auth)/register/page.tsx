@@ -60,10 +60,14 @@ export default function RegisterPage() {
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="register-firstName" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            <label
+              htmlFor="register-firstName"
+              className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+            >
               First name
             </label>
-            <input id="register-firstName"
+            <input
+              id="register-firstName"
               {...register('firstName')}
               type="text"
               placeholder="John"
@@ -78,10 +82,14 @@ export default function RegisterPage() {
             )}
           </div>
           <div>
-            <label htmlFor="register-lastName" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+            <label
+              htmlFor="register-lastName"
+              className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+            >
               Last name
             </label>
-            <input id="register-lastName"
+            <input
+              id="register-lastName"
               {...register('lastName')}
               type="text"
               placeholder="Doe"
@@ -98,10 +106,14 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="register-tenantName" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+          <label
+            htmlFor="register-tenantName"
+            className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+          >
             Workspace Name
           </label>
-          <input id="register-tenantName"
+          <input
+            id="register-tenantName"
             {...register('tenantName')}
             type="text"
             placeholder="Acme Corp"
@@ -117,10 +129,14 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="register-email" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+          <label
+            htmlFor="register-email"
+            className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+          >
             Work email
           </label>
-          <input id="register-email"
+          <input
+            id="register-email"
             {...register('email')}
             type="email"
             placeholder="autopilots.monster@gmail.com"
@@ -134,10 +150,14 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="register-password" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+          <label
+            htmlFor="register-password"
+            className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+          >
             Password
           </label>
-          <input id="register-password"
+          <input
+            id="register-password"
             {...register('password')}
             type="password"
             placeholder="Min 8 characters"

@@ -336,9 +336,7 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs font-bold text-muted-foreground">
-                    <span className="uppercase tracking-wide opacity-50">
-                      Estimated Tax (10%)
-                    </span>
+                    <span className="uppercase tracking-wide opacity-50">Estimated Tax (10%)</span>
                     <span className="font-semibold text-gray-900 dark:text-white">
                       ${formData.taxAmount?.toLocaleString()}
                     </span>
@@ -399,7 +397,9 @@ export default function QuoteDetailPage({ params }: { params: Promise<{ id: stri
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-tighter mb-0.5">
                     Primary Contact
                   </p>
-                  <p className="text-xs font-semibold text-gray-900 dark:text-white">Alex Johnson</p>
+                  <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                    Alex Johnson
+                  </p>
                 </div>
               </div>
             </div>

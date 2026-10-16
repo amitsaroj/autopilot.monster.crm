@@ -207,7 +207,8 @@ export default function TenantMarketplacePage() {
             <div className="space-y-6 pt-4 border-t border-border">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide">
                 <span className="text-muted-foreground flex items-center gap-1.5">
-                  <Star className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" /> 4.9 Artifacts/5
+                  <Star className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" /> 4.9
+                  Artifacts/5
                 </span>
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <Users className="w-3.5 h-3.5 text-blue-700 dark:text-blue-400" /> 2k Active Users

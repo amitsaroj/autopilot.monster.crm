@@ -31,12 +31,16 @@ export default function ContactPage() {
             viewport={{ once: true }}
             className="lg:col-span-3 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06] rounded-2xl p-8"
           >
-            <form className="space-y-6" aria-label="Contact form" onSubmit={(event) => {
-              event.preventDefault();
-              const data = new FormData(event.currentTarget);
-              const body = `Name: ${String(data.get('firstName') ?? '')} ${String(data.get('lastName') ?? '')}\nEmail: ${String(data.get('email') ?? '')}\nCompany: ${String(data.get('company') ?? '')}\n\n${String(data.get('message') ?? '')}`;
-              window.location.href = `mailto:contact@autopilotmonster.com?subject=${encodeURIComponent('Autopilot Monster inquiry')}&body=${encodeURIComponent(body)}`;
-            }}>
+            <form
+              className="space-y-6"
+              aria-label="Contact form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const data = new FormData(event.currentTarget);
+                const body = `Name: ${String(data.get('firstName') ?? '')} ${String(data.get('lastName') ?? '')}\nEmail: ${String(data.get('email') ?? '')}\nCompany: ${String(data.get('company') ?? '')}\n\n${String(data.get('message') ?? '')}`;
+                window.location.href = `mailto:contact@autopilotmonster.com?subject=${encodeURIComponent('Autopilot Monster inquiry')}&body=${encodeURIComponent(body)}`;
+              }}
+            >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label
@@ -144,7 +148,10 @@ export default function ContactPage() {
                 key={item.title}
                 className="p-6 rounded-2xl bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06]"
               >
-                <item.icon className="w-6 h-6 text-blue-700 dark:text-blue-400 mb-3" aria-hidden="true" />
+                <item.icon
+                  className="w-6 h-6 text-blue-700 dark:text-blue-400 mb-3"
+                  aria-hidden="true"
+                />
                 <h2 className="font-bold text-gray-900 dark:text-white mb-1">{item.title}</h2>
                 <p className="text-blue-700 dark:text-blue-400 text-sm font-medium">{item.info}</p>
                 <p className="text-gray-500 text-sm mt-1">{item.desc}</p>

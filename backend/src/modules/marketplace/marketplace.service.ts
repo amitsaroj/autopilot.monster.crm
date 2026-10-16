@@ -1,14 +1,23 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Plugin } from '../../database/entities/plugin.entity';
 import { TenantPlugin } from '../../database/entities/tenant-plugin.entity';
+import { ProductEntitlement } from '../../database/entities/product-entitlement.entity';
+import {
+  AUTOMATION_PLUGIN_CATEGORY,
+  AUTOMATION_SLUG_PREFIX,
+} from '../whatsapp-automation/whatsapp-automation.registry';
 
 @Injectable()
 export class MarketplaceService {
-  private readonly logger = new Logger(MarketplaceService.name);
-
   constructor(
     @InjectRepository(Plugin)
     private readonly pluginRepository: Repository<Plugin>,
@@ -42,10 +51,29 @@ export class MarketplaceService {
   async install(tenantId: string, pluginId: string): Promise<TenantPlugin> {
     const plugin = await this.getApp(pluginId);
 
-    if (plugin.isPremium && !plugin.stripePriceId) {
+    if (plugin.status !== 'ACTIVE') throw new BadRequestException('App is not active');
+    if (
+      plugin.category === AUTOMATION_PLUGIN_CATEGORY ||
+      plugin.slug.startsWith(AUTOMATION_SLUG_PREFIX)
+    ) {
       throw new BadRequestException(
-        'Premium app requires billing setup. Contact support to enable this plugin.',
+        'Install WhatsApp products through /whatsapp-automations/catalog/:slug/install with validated configuration',
       );
+    }
+    if (plugin.isPremium) {
+      const entitled = await this.tenantPluginRepository.manager
+        .getRepository(ProductEntitlement)
+        .createQueryBuilder('entitlement')
+        .where('entitlement.tenantId = :tenantId', { tenantId })
+        .andWhere('entitlement.pluginId = :pluginId', { pluginId })
+        .andWhere('entitlement.status = :status', { status: 'ACTIVE' })
+        .andWhere('entitlement.lastEventId IS NOT NULL')
+        .andWhere('(entitlement.expiresAt IS NULL OR entitlement.expiresAt > now())')
+        .getExists();
+      if (!entitled)
+        throw new ForbiddenException(
+          'Verified paid product entitlement is required before installation',
+        );
     }
 
     const existing = await this.tenantPluginRepository.findOne({
@@ -81,97 +109,35 @@ export class MarketplaceService {
       throw new NotFoundException('App not installed');
     }
 
+    if (installation.config.kind === AUTOMATION_PLUGIN_CATEGORY) {
+      throw new BadRequestException(
+        'Uninstall linked WhatsApp workflows through /whatsapp-automations/installed/:id',
+      );
+    }
     installation.isEnabled = false;
     await this.tenantPluginRepository.save(installation);
   }
 
-  private vendors: Map<
-    string,
-    {
-      tenantId: string;
-      companyName: string;
-      contactEmail: string;
-      stripeAccountId?: string;
-      revenueShareRate: number;
-      balance: number;
-      payouts: any[];
-    }
-  > = new Map();
-
   async onboardVendor(
-    tenantId: string,
-    details: { companyName: string; contactEmail: string; stripeAccountId?: string },
-  ) {
-    this.logger.log(`Onboarding vendor for tenant ${tenantId}`);
-    const vendor = {
-      tenantId,
-      companyName: details.companyName,
-      contactEmail: details.contactEmail,
-      stripeAccountId: details.stripeAccountId || `acct_sim_${Date.now()}`,
-      revenueShareRate: 0.7,
-      balance: 0.0,
-      payouts: [],
-    };
-    this.vendors.set(tenantId, vendor);
-    return vendor;
+    _tenantId: string,
+    _details: { companyName: string; contactEmail: string; stripeAccountId?: string },
+  ): Promise<never> {
+    throw new ServiceUnavailableException(
+      'Verified vendor onboarding and payouts are not implemented',
+    );
   }
 
-  async getVendorDetails(tenantId: string) {
-    let vendor = this.vendors.get(tenantId);
-    if (!vendor) {
-      return {
-        tenantId,
-        onboarded: false,
-        balance: 0.0,
-        revenueShareRate: 0.7,
-        payouts: [],
-      };
-    }
-    return {
-      ...vendor,
-      onboarded: true,
-    };
+  async getVendorDetails(_tenantId: string): Promise<never> {
+    throw new ServiceUnavailableException('Verified vendor account data is not available');
   }
 
-  async recordPurchase(_tenantId: string, appId: string, amount: number) {
-    const plugin = await this.getApp(appId);
-    const vendorTenantId = plugin.author || 'system-platform';
-    const vendor = this.vendors.get(vendorTenantId);
-
-    const platformShare = amount * 0.3;
-    const vendorShare = amount * 0.7;
-
-    if (vendor) {
-      vendor.balance += vendorShare;
-      this.logger.log(
-        `Credited vendor ${vendorTenantId} with $${vendorShare.toFixed(2)} (Platform share: $${platformShare.toFixed(2)})`,
-      );
-    } else {
-      this.logger.log(`Purchase of $${amount} recorded. No custom vendor found.`);
-    }
-
-    return {
-      success: true,
-      appId,
-      amount,
-      vendorShare: vendor ? vendorShare : 0,
-      platformShare,
-    };
+  async recordPurchase(_tenantId: string, _appId: string, _amount: number): Promise<never> {
+    throw new ForbiddenException(
+      'Client-reported purchases cannot grant access or revenue; use verified product checkout',
+    );
   }
 
-  async getRevenueReport(tenantId: string) {
-    const vendor = this.vendors.get(tenantId);
-    if (!vendor) {
-      return {
-        totalEarnings: 0,
-        currentBalance: 0,
-        payouts: [],
-      };
-    }
-    return {
-      totalEarnings: vendor.balance,
-      currentBalance: vendor.balance,
-      payouts: vendor.payouts,
-    };
+  async getRevenueReport(_tenantId: string): Promise<never> {
+    throw new ServiceUnavailableException('Settled vendor revenue reporting is not implemented');
   }
 }

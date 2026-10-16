@@ -3,6 +3,10 @@ import { BaseEntity } from './base.entity';
 
 @Entity('usage_records')
 @Index(['tenantId', 'metric', 'periodStart', 'periodEnd'])
+// Atomic usage upserts (ON CONFLICT) rely on this — see migration 1740000000026.
+@Index('uq_usage_records_tenant_metric_period', ['tenantId', 'metric', 'periodStart'], {
+  unique: true,
+})
 export class UsageRecord extends BaseEntity {
   @Column({ length: 100 })
   metric!: string; // e.g. 'ai_calls', 'whatsapp_messages'

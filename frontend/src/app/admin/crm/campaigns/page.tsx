@@ -252,14 +252,18 @@ export default function CampaignsManagementPage() {
                         <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">
                           CTR
                         </p>
-                        <p className="text-sm font-semibold text-foreground">{camp.stats?.clicked || 0}%</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {camp.stats?.clicked || 0}%
+                        </p>
                       </div>
                       <div className="w-px h-6 bg-card" />
                       <div>
                         <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">
                           Open
                         </p>
-                        <p className="text-sm font-semibold text-foreground">{camp.stats?.opened || 0}%</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {camp.stats?.opened || 0}%
+                        </p>
                       </div>
                     </div>
                   </td>

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantSettingsService } from './tenant-settings.service';
+import { UpsertTenantSettingDto } from './dto/tenant-setting.dto';
 import { JwtAuthGuard, RolesGuard } from '../../common/guards';
 import { Roles, ResourcePermissions } from '../../common/decorators';
 
@@ -8,7 +9,7 @@ import { Roles, ResourcePermissions } from '../../common/decorators';
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ResourcePermissions('admin')
-@Roles('SUPER_ADMIN', 'ADMIN')
+@Roles('SUPER_ADMIN')
 @Controller('admin/tenants/:tenantId/settings')
 export class AdminTenantSettingsController {
   constructor(private readonly service: TenantSettingsService) {}
@@ -23,7 +24,7 @@ export class AdminTenantSettingsController {
   @ApiOperation({ summary: 'Update or create an integration setting for a tenant' })
   async update(
     @Param('tenantId') tenantId: string,
-    @Body() data: { key: string; value: any; group?: string },
+    @Body() data: UpsertTenantSettingDto,
   ) {
     return await this.service.updateSetting(tenantId, data);
   }

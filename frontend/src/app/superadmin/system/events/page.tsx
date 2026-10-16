@@ -110,7 +110,9 @@ export default function PlatformEventBusForensicsPage() {
               Node: Event-Bus-Forensics
             </span>
           </div>
-          <h1 className="text-4xl font-semibold text-foreground tracking-tight">Event Bus Forensics</h1>
+          <h1 className="text-4xl font-semibold text-foreground tracking-tight">
+            Event Bus Forensics
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Monitor structural Dispatches, systemic Pub/Sub forensics & event Persistence
           </p>

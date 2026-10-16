@@ -1,15 +1,7 @@
 import api from '../lib/api/client';
 
 export type AnalyticsReportType =
-  | 'OVERVIEW'
-  | 'CRM'
-  | 'REVENUE'
-  | 'PIPELINE'
-  | 'TEAM'
-  | 'VOICE'
-  | 'WHATSAPP'
-  | 'AI'
-  | 'FORECAST';
+  'OVERVIEW' | 'CRM' | 'REVENUE' | 'PIPELINE' | 'TEAM' | 'VOICE' | 'WHATSAPP' | 'AI' | 'FORECAST';
 
 export type AnalyticsReportStatus = 'DRAFT' | 'READY' | 'RUNNING' | 'FAILED';
 

@@ -93,7 +93,9 @@ export default function AdminWorkflowTriggersPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Workflow Triggers</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Workflow Triggers
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Event Triggers & Webhook Configuration
           </p>
@@ -110,10 +112,7 @@ export default function AdminWorkflowTriggersPage() {
           { label: 'Events', value: triggers.filter((t) => t.type === 'EVENT').length },
           { label: 'Webhooks', value: triggers.filter((t) => t.type === 'WEBHOOK').length },
         ].map((s) => (
-          <div
-            key={s.label}
-            className="p-4 rounded-2xl bg-card border border-border text-center"
-          >
+          <div key={s.label} className="p-4 rounded-2xl bg-card border border-border text-center">
             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mb-1">
               {s.label}
             </p>

@@ -113,7 +113,9 @@ export default function KnowledgeBasePage() {
               Node: KB-Orchestrator
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Help-Center Artifacts</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Help-Center Artifacts
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Self-Service Documentation, FAQs & Searchable Wisdom
           </p>

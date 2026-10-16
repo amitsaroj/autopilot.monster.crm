@@ -4,16 +4,9 @@ import { useState, useEffect } from 'react';
 import {
   MessageSquare,
   Search,
-  Filter,
-  User,
-  Bot,
-  Clock,
-  CheckCircle2,
   Phone,
   Mail,
-  ArrowRight,
   Plus,
-  MoreVertical,
   ChevronRight,
   Loader2,
 } from 'lucide-react';
@@ -65,8 +58,7 @@ export default function AdminCRMInboxPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await whatsappConversationService.list();
-        const items = res.data?.data ?? [];
+        const items = await whatsappConversationService.listAll();
         setThreads(
           items.map((c: WhatsAppConversation) => ({
             id: c.phone,
@@ -219,7 +211,9 @@ export default function AdminCRMInboxPage() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-muted-foreground truncate flex-1">{thread.lastMessage}</p>
+                    <p className="text-xs text-muted-foreground truncate flex-1">
+                      {thread.lastMessage}
+                    </p>
                     <div className="flex items-center gap-2 ml-3 shrink-0">
                       <span
                         className={`px-2 py-0.5 rounded-full border text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[thread.status]}`}
@@ -229,7 +223,9 @@ export default function AdminCRMInboxPage() {
                       <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-blue-400 transition-colors" />
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">Assigned: {thread.assignedTo}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Assigned: {thread.assignedTo}
+                  </p>
                 </div>
               </div>
             </div>

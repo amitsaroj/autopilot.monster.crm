@@ -111,7 +111,8 @@ export default function MarketplaceInventoryPage() {
     const caps: any = {
       PUBLISHED: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
       DRAFT: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
-      VERIFICATION_PENDING: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
+      VERIFICATION_PENDING:
+        'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20',
     };
     return (
       <span
@@ -143,7 +144,9 @@ export default function MarketplaceInventoryPage() {
               Node: Extension-Orchestrator
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Marketplace Inventory</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Marketplace Inventory
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Orchestrate Global Extension artifacts, Installation Forensics & Developer Persistence
           </p>
@@ -289,7 +292,8 @@ export default function MarketplaceInventoryPage() {
                   Installs
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-700 font-semibold uppercase tracking-wide shrink-0">
-                  <Star className="w-4 h-4 text-amber-700 dark:text-amber-400/40 shrink-0" /> 4.8 Rating
+                  <Star className="w-4 h-4 text-amber-700 dark:text-amber-400/40 shrink-0" /> 4.8
+                  Rating
                 </div>
               </div>
               <div className="flex gap-4">

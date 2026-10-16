@@ -1,4 +1,12 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  HttpException,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { Reflector, ModuleRef } from '@nestjs/core';
 
 import { METADATA_KEYS } from '../constants/app.constants';
@@ -7,9 +15,23 @@ import type { IRequestContext } from '../interfaces/request-context.interface';
 import type { Request } from 'express';
 import { PricingService } from '../../modules/pricing/pricing.service';
 import { BillingService } from '../../modules/billing/billing.service';
+import type { UsagePeriod } from '../../modules/billing/usage-period.util';
+
+/** Usage reserved by LimitGuard; UsageMeteringInterceptor releases it if the handler fails. */
+export interface UsageReservation {
+  metric: string;
+  period: UsagePeriod;
+}
+
+export type LimitedRequest = Request & {
+  user?: IRequestContext;
+  usageReservation?: UsageReservation;
+};
 
 @Injectable()
 export class LimitGuard implements CanActivate {
+  private readonly logger = new Logger(LimitGuard.name);
+
   constructor(
     private readonly reflector: Reflector,
     private readonly moduleRef: ModuleRef,
@@ -25,7 +47,7 @@ export class LimitGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<Request & { user: IRequestContext }>();
+    const request = context.switchToHttp().getRequest<LimitedRequest>();
     if (!request.user) return true;
 
     const { tenantId } = request.user;
@@ -35,24 +57,28 @@ export class LimitGuard implements CanActivate {
       const pricingService = this.moduleRef.get(PricingService, { strict: false });
       const billingService = this.moduleRef.get(BillingService, { strict: false });
 
-      if (pricingService && billingService) {
-        const limit = await pricingService.getLimit(tenantId, metric);
-        if (limit === -1) return true;
+      const limit = await pricingService.getLimit(tenantId, metric);
+      if (limit === -1) return true;
 
-        const usage = await billingService.getUsage(tenantId, metric);
-        const allowed = usage < limit;
-
-        if (!allowed) {
-          throw new ForbiddenException({
-            message: `Usage limit reached for '${metric}' (${usage}/${limit})`,
-            code: ERROR_CODES.USAGE_LIMIT_EXCEEDED,
-          });
-        }
+      // Check-and-increment in one statement so concurrent requests cannot overshoot.
+      const period = await pricingService.getLimitPeriod(tenantId, metric);
+      const reserved = await billingService.reserveUsage(tenantId, metric, 1, period, limit);
+      if (!reserved) {
+        throw new ForbiddenException({
+          message: `Usage limit reached for '${metric}' (limit ${limit})`,
+          code: ERROR_CODES.USAGE_LIMIT_EXCEEDED,
+        });
       }
-    } catch (e: any) {
-      if (e instanceof ForbiddenException) throw e;
+      request.usageReservation = { metric, period };
+      return true;
+    } catch (error) {
+      if (error instanceof HttpException) throw error;
+      // Fail closed: an unverifiable limit must not grant unmetered usage.
+      this.logger.error(`Usage limit check failed for '${metric}' (tenant ${tenantId})`, error);
+      throw new ServiceUnavailableException({
+        message: `Usage limit check for '${metric}' is temporarily unavailable`,
+        code: ERROR_CODES.USAGE_LIMIT_EXCEEDED,
+      });
     }
-
-    return true;
   }
 }

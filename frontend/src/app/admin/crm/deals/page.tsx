@@ -28,7 +28,7 @@ interface Deal {
   id: string;
   name: string;
   value: number;
-  stage?: string;
+  stage?: string | { name: string };
   stageId?: string;
   probability: number;
   expectedCloseDate?: string;
@@ -79,20 +79,25 @@ export default function AdministrativeDealIntelligencePage() {
 
   const getStageBadge = (stage?: string) => {
     const s = (stage ?? '').toLowerCase();
-    if (s.includes('closed')) return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20';
-    if (s.includes('negotiation')) return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20';
-    if (s.includes('discovery')) return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20';
+    if (s.includes('closed'))
+      return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20';
+    if (s.includes('negotiation'))
+      return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20';
+    if (s.includes('discovery'))
+      return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20';
     return 'bg-card text-muted-foreground border-border';
   };
 
-  const totalValue = forecast?.totalPipeline ?? deals.reduce((acc, d) => acc + (d.value || 0), 0);
+  const totalValue =
+    forecast?.totalPipeline ?? deals.reduce((acc, d) => acc + (Number(d.value) || 0), 0);
   const activeDeals = forecast?.dealCount ?? meta.total;
   const closingVelocity =
     forecast && forecast.dealCount > 0
       ? `${Math.round((forecast.onTrackCount / forecast.dealCount) * 100)}% on-track`
       : '—';
   const structuralYield = winRate !== null ? `${winRate.toFixed(1)}% win rate` : '—';
-  const getStageLabel = (deal: Deal) => deal.stage ?? deal.status ?? 'UNRANKED';
+  const getStageLabel = (deal: Deal) =>
+    (typeof deal.stage === 'string' ? deal.stage : deal.stage?.name) ?? deal.status ?? 'UNRANKED';
   const getContactLabel = (deal: Deal) =>
     deal.contact?.name ??
     ([deal.contact?.firstName, deal.contact?.lastName].filter(Boolean).join(' ') ||
@@ -216,7 +221,9 @@ export default function AdministrativeDealIntelligencePage() {
         </div>
       ) : error ? (
         <div className="py-20 text-center">
-          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">{error}</p>
+          <p className="text-muted-foreground font-semibold text-xs uppercase tracking-wide mb-4">
+            {error}
+          </p>
           <button
             type="button"
             onClick={() => reload()}

@@ -141,7 +141,9 @@ export default function VoiceCallDetailPage({ params }: { params: Promise<{ id: 
         {call.transcript && (
           <div className="mt-6">
             <h2 className="text-sm font-semibold text-gray-900">Transcript</h2>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{call.transcript}</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+              {call.transcript}
+            </p>
           </div>
         )}
       </div>

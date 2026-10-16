@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { isEmail } from 'class-validator';
 import axios from 'axios';
 
 import { ContactService } from '../crm/contact.service';
+import { LeadService } from '../crm/lead.service';
 import { DealService } from '../crm/deal.service';
 import { PipelineService } from '../crm/pipeline.service';
 import { TaskCrmService, NoteService, EmailCrmService } from '../crm/crm-support.service';
@@ -17,14 +19,36 @@ import {
   WorkflowStep,
   WorkflowStepResult,
 } from './workflow-executor.service';
-import { resolveWorkflowConfig, resolveWorkflowTemplate } from './workflow-template.util';
+import { resolveWorkflowConfig } from './workflow-template.util';
+import { WorkflowAiService } from './workflow-ai.service';
+import { WorkflowRuntimePolicyService } from './workflow-runtime-policy.service';
+import { publicWebhookAgents } from './workflow-webhook.util';
+import { ShopifyIntegrationService } from '../commerce/shopify-integration.service';
 
 const INLINE_DELAY_MAX_MS = 30_000;
+const WEBHOOK_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+/** Caller-supplied webhook headers: these names plus custom x-* (no Host/routing/hop-by-hop). */
+const WEBHOOK_HEADERS = new Set(['accept', 'authorization', 'content-type', 'user-agent']);
+
+/** Keeps only safe, single-line string headers; anything else is dropped. */
+export function safeWebhookHeaders(input: unknown): Record<string, string> {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return {};
+  return Object.fromEntries(
+    Object.entries(input).filter(
+      ([name, value]) =>
+        (WEBHOOK_HEADERS.has(name.toLowerCase()) || /^x-[a-z0-9-]+$/i.test(name)) &&
+        !/^x-forwarded-/i.test(name) &&
+        typeof value === 'string' &&
+        !/[\r\n]/.test(value),
+    ),
+  ) as Record<string, string>;
+}
 
 @Injectable()
 export class WorkflowActionExecutorService {
   constructor(
     private readonly contactService: ContactService,
+    private readonly leadService: LeadService,
     private readonly dealService: DealService,
     private readonly pipelineService: PipelineService,
     private readonly taskService: TaskCrmService,
@@ -35,6 +59,9 @@ export class WorkflowActionExecutorService {
     private readonly whatsappService: WhatsappService,
     private readonly whatsappTemplateService: WhatsappTemplateService,
     private readonly voiceCallService: VoiceCallService,
+    private readonly ai: WorkflowAiService,
+    private readonly policy: WorkflowRuntimePolicyService,
+    private readonly shopify: ShopifyIntegrationService,
   ) {}
 
   async executeAction(
@@ -42,10 +69,13 @@ export class WorkflowActionExecutorService {
     context: WorkflowExecutionContext,
   ): Promise<WorkflowStepResult> {
     const config = resolveWorkflowConfig(step.config ?? {}, context);
+    await this.policy.assertAction(context.tenantId, step, config);
 
     switch (step.type) {
       case 'CREATE_CONTACT':
         return this.createContact(step, context, config);
+      case 'CREATE_LEAD':
+        return this.createLead(step, context, config);
       case 'UPDATE_CONTACT':
         return this.updateContact(step, context, config);
       case 'UPDATE_DEAL':
@@ -70,6 +100,8 @@ export class WorkflowActionExecutorService {
         return this.sendWhatsapp(step, context, config);
       case 'SEND_TEMPLATE':
         return this.sendWhatsappTemplate(step, context, config);
+      case 'LOOKUP_SHOPIFY_ORDER':
+        return this.lookupShopifyOrder(step, context, config);
       case 'ASSIGN_AGENT':
         return this.assignWhatsappAgent(step, context, config);
       case 'RESOLVE':
@@ -87,12 +119,7 @@ export class WorkflowActionExecutorService {
         return this.executeDelay(step, config);
       case 'AI_CHAT':
       case 'AI_RESPONSE':
-        return {
-          stepId: step.id,
-          type: step.type,
-          status: 'SKIPPED',
-          reason: 'AI execution is not wired yet',
-        };
+        return this.ai.execute(step, context, config);
       default:
         return {
           stepId: step.id,
@@ -101,6 +128,28 @@ export class WorkflowActionExecutorService {
           reason: `Unsupported action type: ${step.type}`,
         };
     }
+  }
+
+  private async lookupShopifyOrder(
+    step: WorkflowStep,
+    context: WorkflowExecutionContext,
+    config: Record<string, unknown>,
+  ): Promise<WorkflowStepResult> {
+    if (!['WHATSAPP_MESSAGE_RECEIVED', 'WHATSAPP_KEYWORD'].includes(context.eventName))
+      throw new Error('LOOKUP_SHOPIFY_ORDER is only available for inbound WhatsApp messages');
+    const senderPhone = context.payload.phone;
+    if (typeof senderPhone !== 'string' || !senderPhone.trim())
+      throw new Error('LOOKUP_SHOPIFY_ORDER requires an inbound WhatsApp sender number');
+    const orderName = config.orderName;
+    if (typeof orderName !== 'string' || !orderName.trim())
+      throw new Error('LOOKUP_SHOPIFY_ORDER requires an order number');
+    const order = await this.shopify.lookupOrderStatus(context.tenantId, orderName, senderPhone);
+    return {
+      stepId: step.id,
+      type: step.type,
+      status: 'COMPLETED',
+      output: order,
+    };
   }
 
   private async createContact(
@@ -128,6 +177,68 @@ export class WorkflowActionExecutorService {
       type: step.type,
       status: 'COMPLETED',
       contactId: contact.id,
+    };
+  }
+
+  private async createLead(
+    step: WorkflowStep,
+    context: WorkflowExecutionContext,
+    config: Record<string, unknown>,
+  ): Promise<WorkflowStepResult> {
+    const firstName = config.firstName;
+    if (typeof firstName !== 'string' || !firstName.trim() || firstName.length > 255)
+      throw new Error('CREATE_LEAD requires a firstName of at most 255 characters');
+    const optionalString = (key: string, maximum: number): string | undefined => {
+      const value = config[key];
+      if (value === undefined || value === null || value === '') return undefined;
+      if (typeof value !== 'string' || value.length > maximum)
+        throw new Error(`CREATE_LEAD ${key} must be a string of at most ${maximum} characters`);
+      return value;
+    };
+    const email = optionalString('email', 255);
+    if (email && !isEmail(email)) throw new Error('CREATE_LEAD email must be a valid email address');
+    const phone =
+      optionalString('phone', 50) ??
+      (typeof context.payload.phone === 'string' ? context.payload.phone : undefined);
+    if (phone && phone.length > 50)
+      throw new Error('CREATE_LEAD phone must be at most 50 characters');
+    const metadata = config.metadata;
+    if (metadata !== undefined && (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)))
+      throw new Error('CREATE_LEAD metadata must be an object');
+    if (!context.idempotencyKey)
+      throw new Error('CREATE_LEAD requires a workflow execution idempotency key');
+    const currentDepth = Number(context.payload.workflowDepth ?? 0);
+    if (!Number.isInteger(currentDepth) || currentDepth < 0 || currentDepth >= 8)
+      throw new Error('Workflow event depth exceeded');
+    const whatsappAttribution =
+      context.payload.channel === 'whatsapp' &&
+      ['WHATSAPP_MESSAGE_RECEIVED', 'WHATSAPP_KEYWORD'].includes(context.eventName) &&
+      context.payload.attribution &&
+      typeof context.payload.attribution === 'object' &&
+      !Array.isArray(context.payload.attribution)
+        ? (context.payload.attribution as Record<string, unknown>)
+        : undefined;
+    const lead = await this.leadService.createFromWorkflow(
+      context.tenantId,
+      {
+        firstName: firstName.trim(),
+        lastName: optionalString('lastName', 255),
+        phone,
+        email,
+        source: optionalString('source', 100) ?? 'WhatsApp',
+        metadata: {
+          ...((metadata as Record<string, unknown> | undefined) ?? {}),
+          ...(whatsappAttribution ? { whatsappAttribution } : {}),
+        },
+      },
+      context.idempotencyKey,
+      currentDepth + 1,
+    );
+    return {
+      stepId: step.id,
+      type: step.type,
+      status: 'COMPLETED',
+      output: { leadId: lead.id, score: lead.score },
     };
   }
 
@@ -343,7 +454,7 @@ export class WorkflowActionExecutorService {
       dealId: this.resolveDealId(config, context),
       assigneeId: typeof config.assigneeId === 'string' ? config.assigneeId : undefined,
       priority,
-      dueDate,
+      dueDate: dueDate.toISOString(),
     });
 
     return {
@@ -425,6 +536,7 @@ export class WorkflowActionExecutorService {
     const toNumber = String(
       config.toNumber ?? config.to ?? config.phone ?? context.payload.phone ?? '',
     );
+    this.assertOrderLookupRecipient(context, toNumber);
     const message = String(config.message ?? config.body ?? config.text ?? '');
 
     if (!toNumber) {
@@ -434,12 +546,12 @@ export class WorkflowActionExecutorService {
       throw new Error('SEND_WHATSAPP requires message');
     }
 
-    const resolvedMessage = resolveWorkflowTemplate(message, context);
     const messageRecord = await this.whatsappService.sendTextMessage(
       context.tenantId,
       toNumber,
-      resolvedMessage,
+      message,
       typeof config.wabaId === 'string' ? config.wabaId : undefined,
+      context.idempotencyKey,
     );
 
     return {
@@ -459,6 +571,7 @@ export class WorkflowActionExecutorService {
     const toNumber = String(
       config.toNumber ?? config.to ?? config.phone ?? context.payload.phone ?? '',
     );
+    this.assertOrderLookupRecipient(context, toNumber);
     if (!toNumber) {
       throw new Error('SEND_TEMPLATE requires toNumber');
     }
@@ -466,7 +579,16 @@ export class WorkflowActionExecutorService {
     let templateName = typeof config.templateName === 'string' ? config.templateName : '';
     let language =
       typeof config.language === 'string' && config.language ? config.language : 'en_US';
-    const components = Array.isArray(config.components) ? config.components : [];
+    const components = Array.isArray(config.components)
+      ? config.components
+      : Array.isArray(config.bodyParameters) && config.bodyParameters.length
+        ? [
+            {
+              type: 'body',
+              parameters: config.bodyParameters.map((text) => ({ type: 'text', text })),
+            },
+          ]
+        : [];
 
     if (!templateName && typeof config.templateId === 'string' && config.templateId) {
       const template = await this.whatsappTemplateService.findOne(
@@ -488,6 +610,7 @@ export class WorkflowActionExecutorService {
       language,
       components,
       typeof config.wabaId === 'string' ? config.wabaId : undefined,
+      context.idempotencyKey,
     );
 
     return {
@@ -497,6 +620,27 @@ export class WorkflowActionExecutorService {
       messageId: messageRecord.id,
       to: toNumber,
     };
+  }
+
+  private assertOrderLookupRecipient(context: WorkflowExecutionContext, recipient: string): void {
+    const hasVerifiedLookup = Object.values(context.outputs ?? {}).some((value) => {
+      if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+      const result = value as Record<string, unknown>;
+      return result.type === 'LOOKUP_SHOPIFY_ORDER' && result.status === 'COMPLETED';
+    });
+    if (!hasVerifiedLookup) return;
+
+    const sender = context.payload.phone;
+    const normalizedRecipient = recipient.replace(/\D/g, '');
+    if (
+      typeof sender !== 'string' ||
+      !normalizedRecipient ||
+      normalizedRecipient !== sender.replace(/\D/g, '')
+    ) {
+      throw new Error(
+        'Order status can only be sent to the WhatsApp number verified for that order',
+      );
+    }
   }
 
   private async assignWhatsappAgent(
@@ -613,32 +757,50 @@ export class WorkflowActionExecutorService {
     }
 
     const method = String(config.method ?? 'POST').toUpperCase();
-    const headers =
-      config.headers && typeof config.headers === 'object'
-        ? (config.headers as Record<string, string>)
-        : {};
+    if (!WEBHOOK_METHODS.includes(method)) throw new Error('Unsupported webhook method');
+    const seconds = Number(config.timeoutSeconds ?? 30);
+    const timeout = Number.isFinite(seconds) && seconds > 0 ? Math.min(seconds, 30) * 1000 : 30000;
     const body = config.body ??
       config.payload ?? { eventName: context.eventName, payload: context.payload };
 
-    const response = await axios.request({
-      url,
-      method,
-      headers,
-      data: body,
-      timeout: Number(config.timeoutSeconds ?? 30) * 1000,
-      validateStatus: () => true,
-    });
+    // Validate the rendered URL (templates may resolve to anything) and pin its public DNS answer.
+    const agents = await publicWebhookAgents(url);
+    try {
+      const response = await axios.request({
+        url,
+        method,
+        headers: safeWebhookHeaders(config.headers),
+        data: body,
+        ...agents,
+        proxy: false,
+        maxRedirects: 0,
+        timeout,
+        signal: AbortSignal.timeout(timeout),
+        maxContentLength: 65536,
+        maxBodyLength: 1048576,
+        responseType: 'text',
+        validateStatus: () => true,
+      });
+      const host = new URL(url).host;
+      if (response.status >= 300 && response.status < 400) {
+        throw new Error(
+          `Webhook ${host} redirected (HTTP ${response.status}); redirects are not followed`,
+        );
+      }
+      if (response.status >= 400) {
+        throw new Error(`Webhook ${host} returned HTTP ${response.status}`);
+      }
 
-    if (response.status >= 400) {
-      throw new Error(`Webhook ${url} returned HTTP ${response.status}`);
+      return {
+        stepId: step.id,
+        type: step.type,
+        status: 'COMPLETED',
+        httpStatus: response.status,
+      };
+    } finally {
+      agents.httpAgent.destroy();
+      agents.httpsAgent.destroy();
     }
-
-    return {
-      stepId: step.id,
-      type: step.type,
-      status: 'COMPLETED',
-      httpStatus: response.status,
-    };
   }
 
   private async executeDelay(

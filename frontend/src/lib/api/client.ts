@@ -81,7 +81,10 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.response?.status === 403) {
+    if (
+      error.response?.status === 403 &&
+      !originalRequest?.url?.startsWith('/whatsapp-automations')
+    ) {
       if (typeof window !== 'undefined') {
         window.location.href = '/403';
       }

@@ -8,6 +8,7 @@ import {
   developerSettingsService,
   ApiKey,
   WebhookEndpoint,
+  WebhookDelivery,
   OAuthApp,
 } from '@/services/developer-settings.service';
 
@@ -17,7 +18,14 @@ export default function SettingsApiPage() {
   const [oauthApps, setOauthApps] = useState<OAuthApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState('');
+  const [newKeyPermissions, setNewKeyPermissions] = useState('whatsapp:read');
+  const [newKeyRateLimit, setNewKeyRateLimit] = useState('1000');
   const [createdKey, setCreatedKey] = useState<string | null>(null);
+  const [newWebhookName, setNewWebhookName] = useState('');
+  const [newWebhookUrl, setNewWebhookUrl] = useState('');
+  const [newWebhookEvents, setNewWebhookEvents] = useState('message.received');
+  const [webhookSecret, setWebhookSecret] = useState<string | null>(null);
+  const [deliveryLogs, setDeliveryLogs] = useState<Record<string, WebhookDelivery[]>>({});
   const [newAppName, setNewAppName] = useState('');
   const [newAppRedirect, setNewAppRedirect] = useState('https://localhost/callback');
   const [createdOAuth, setCreatedOAuth] = useState<{
@@ -49,8 +57,29 @@ export default function SettingsApiPage() {
 
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) return;
+    const permissions = [
+      ...new Set(
+        newKeyPermissions
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean),
+      ),
+    ];
+    if (!permissions.length) {
+      toast.error('Select at least one API key permission');
+      return;
+    }
+    const rateLimit = Number(newKeyRateLimit);
+    if (!Number.isInteger(rateLimit) || rateLimit < 1 || rateLimit > 100000) {
+      toast.error('Rate limit must be an integer from 1 to 100,000 requests per window');
+      return;
+    }
     try {
-      const res = await developerSettingsService.createApiKey(newKeyName.trim());
+      const res = await developerSettingsService.createApiKey(
+        newKeyName.trim(),
+        permissions,
+        rateLimit,
+      );
       setCreatedKey(res.data.data.key);
       setNewKeyName('');
       toast.success('API key created');
@@ -79,6 +108,86 @@ export default function SettingsApiPage() {
       void load();
     } catch {
       toast.error('Failed to delete webhook');
+    }
+  };
+
+  const handleCreateWebhook = async () => {
+    const events = [
+      ...new Set(
+        newWebhookEvents
+          .split(',')
+          .map((event) => event.trim())
+          .filter(Boolean),
+      ),
+    ];
+    if (!newWebhookName.trim() || !newWebhookUrl.trim() || !events.length) return;
+    try {
+      const res = await developerSettingsService.createWebhook({
+        name: newWebhookName.trim(),
+        url: newWebhookUrl.trim(),
+        events,
+      });
+      setWebhookSecret(res.data.data.secret);
+      setNewWebhookName('');
+      setNewWebhookUrl('');
+      toast.success('Webhook created');
+      void load();
+    } catch {
+      toast.error('Webhook creation failed. Use a public HTTPS endpoint and valid event names.');
+    }
+  };
+
+  const handleTestWebhook = async (id: string) => {
+    try {
+      const result = (await developerSettingsService.testWebhook(id)).data.data;
+      if (result.success) toast.success(`Test delivered (HTTP ${result.status})`);
+      else toast.error(`Test failed${result.status ? ` (HTTP ${result.status})` : ''}`);
+      void load();
+    } catch {
+      toast.error('Webhook test failed');
+    }
+  };
+
+  const handleToggleWebhook = async (webhook: WebhookEndpoint) => {
+    try {
+      await developerSettingsService.updateWebhook(webhook.id, {
+        status: webhook.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+      });
+      toast.success(webhook.status === 'ACTIVE' ? 'Webhook paused' : 'Webhook activated');
+      void load();
+    } catch {
+      toast.error('Could not update webhook status');
+    }
+  };
+
+  const handleRotateWebhookSecret = async (id: string) => {
+    if (!confirm('Rotate this signing secret? The existing receiver must be updated immediately.'))
+      return;
+    try {
+      const result = await developerSettingsService.rotateWebhookSecret(id);
+      setWebhookSecret(result.data.data.secret);
+      toast.success('Signing secret rotated');
+    } catch {
+      toast.error('Could not rotate webhook secret');
+    }
+  };
+
+  const handleLoadDeliveries = async (id: string) => {
+    try {
+      const result = await developerSettingsService.getWebhookDeliveries(id);
+      setDeliveryLogs((current) => ({ ...current, [id]: result.data.data.data }));
+    } catch {
+      toast.error('Could not load webhook delivery history');
+    }
+  };
+
+  const handleReplayDelivery = async (id: string, deliveryId: string) => {
+    try {
+      await developerSettingsService.replayWebhookDelivery(id, deliveryId, crypto.randomUUID());
+      toast.success('Delivery replay queued');
+      await handleLoadDeliveries(id);
+    } catch {
+      toast.error('Replay failed; successful deliveries cannot be replayed');
     }
   };
 
@@ -130,7 +239,8 @@ export default function SettingsApiPage() {
       <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-4 flex items-start gap-3">
         <AlertTriangle className="h-4 w-4 text-yellow-700 dark:text-yellow-400 shrink-0 mt-0.5" />
         <p className="text-sm text-yellow-600 dark:text-yellow-400">
-          API keys grant full access. Never share them publicly or commit them to version control.
+          API keys are server-to-server credentials. Grant only the permissions required, and never
+          share a key publicly or commit it to version control.
         </p>
       </div>
 
@@ -146,12 +256,29 @@ export default function SettingsApiPage() {
           <Key className="h-4 w-4 text-[hsl(var(--brand))]" />
           <h2 className="text-sm font-semibold">API Keys</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="grid gap-2 sm:grid-cols-[1fr_1.4fr_0.65fr_auto]">
           <input
             value={newKeyName}
             onChange={(e) => setNewKeyName(e.target.value)}
             placeholder="Key name"
             className="flex-1 px-3 py-2 text-sm border border-border rounded-lg bg-background"
+          />
+          <input
+            aria-label="API key permissions"
+            value={newKeyPermissions}
+            onChange={(e) => setNewKeyPermissions(e.target.value)}
+            placeholder="whatsapp:read, workflow:execute"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-background"
+          />
+          <input
+            aria-label="API key requests per rate window"
+            type="number"
+            min={1}
+            max={100000}
+            step={1}
+            value={newKeyRateLimit}
+            onChange={(event) => setNewKeyRateLimit(event.target.value)}
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-background"
           />
           <button
             onClick={() => void handleCreateKey()}
@@ -159,7 +286,55 @@ export default function SettingsApiPage() {
           >
             <Plus className="h-3.5 w-3.5" /> Generate
           </button>
+          <p className="text-xs text-muted-foreground sm:col-span-4">
+            Comma-separated resource permissions, such as <code>whatsapp:read</code> or{' '}
+            <code>workflow:execute</code>. Permissions cannot exceed your own access. Rate limit is
+            requests per configured throttle window.
+          </p>
         </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <input
+            aria-label="Webhook name"
+            value={newWebhookName}
+            onChange={(e) => setNewWebhookName(e.target.value)}
+            placeholder="Endpoint name"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-background"
+          />
+          <input
+            aria-label="Webhook HTTPS URL"
+            type="url"
+            value={newWebhookUrl}
+            onChange={(e) => setNewWebhookUrl(e.target.value)}
+            placeholder="https://example.com/webhook"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-background"
+          />
+          <input
+            aria-label="Webhook event names"
+            value={newWebhookEvents}
+            onChange={(e) => setNewWebhookEvents(e.target.value)}
+            placeholder="message.received, message.delivered"
+            className="px-3 py-2 text-sm border border-border rounded-lg bg-background sm:col-span-2"
+          />
+          <button
+            onClick={() => void handleCreateWebhook()}
+            className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-[hsl(var(--brand))] text-white rounded-lg sm:col-span-2"
+          >
+            <Plus className="h-3.5 w-3.5" /> Add HTTPS webhook
+          </button>
+        </div>
+        {webhookSecret && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3" role="status">
+            <p className="text-sm font-medium">Signing secret — copy now; it is shown only once.</p>
+            <code className="mt-1 block break-all text-xs">{webhookSecret}</code>
+            <button onClick={() => setWebhookSecret(null)} className="mt-2 text-xs underline">
+              Hide secret
+            </button>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Requests include an HMAC-SHA256 X-Webhook-Signature, event name, delivery ID, and stable
+          idempotency key. Retries reuse the same delivery ID.
+        </p>
         <div className="space-y-3">
           {keys.map((key) => (
             <div
@@ -170,7 +345,13 @@ export default function SettingsApiPage() {
                 <p className="text-sm font-medium">{key.name}</p>
                 <code className="text-xs font-mono text-muted-foreground">{key.keyPrefix}...</code>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Created {new Date(key.createdAt).toLocaleDateString()}
+                  Created {new Date(key.createdAt).toLocaleDateString()} · {key.status ?? 'ACTIVE'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Scopes: {key.permissions.length ? key.permissions.join(', ') : 'none'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {key.rateLimit ?? 1000} requests per throttle window
                 </p>
               </div>
               <button
@@ -201,6 +382,9 @@ export default function SettingsApiPage() {
                     <p className="text-sm font-mono break-all text-muted-foreground">
                       {webhook.url}
                     </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {webhook.status} · {webhook.failureCount} consecutive failures
+                    </p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {webhook.events.map((event) => (
                         <span
@@ -213,12 +397,66 @@ export default function SettingsApiPage() {
                     </div>
                   </div>
                   <button
+                    onClick={() => void handleToggleWebhook(webhook)}
+                    className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted"
+                  >
+                    {webhook.status === 'ACTIVE' ? 'Pause' : 'Activate'}
+                  </button>
+                  <button
+                    aria-label={`Test ${webhook.name}`}
+                    onClick={() => void handleTestWebhook(webhook.id)}
+                    className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted"
+                  >
+                    Test
+                  </button>
+                  <button
+                    onClick={() => void handleRotateWebhookSecret(webhook.id)}
+                    className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted"
+                  >
+                    Rotate secret
+                  </button>
+                  <button
+                    onClick={() => void handleLoadDeliveries(webhook.id)}
+                    className="rounded-lg border border-border px-2 py-1 text-xs hover:bg-muted"
+                  >
+                    Deliveries
+                  </button>
+                  <button
                     onClick={() => void handleDeleteWebhook(webhook.id)}
                     className="p-1.5 rounded-lg border border-border hover:bg-red-500/10"
                   >
                     <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                 </div>
+                {deliveryLogs[webhook.id] && (
+                  <div className="mt-3 space-y-2 border-t border-border pt-3">
+                    {deliveryLogs[webhook.id].length === 0 ? (
+                      <p className="text-xs text-muted-foreground">No deliveries yet.</p>
+                    ) : (
+                      deliveryLogs[webhook.id].map((delivery) => (
+                        <div
+                          key={delivery.id}
+                          className="flex items-center justify-between gap-2 text-xs"
+                        >
+                          <span className="min-w-0 truncate">
+                            {delivery.event} · {delivery.success ? 'Delivered' : 'Failed'}
+                            {delivery.replayOf ? ' · Replay' : ''} ·{' '}
+                            {delivery.responseStatus ?? 'No response'} · {delivery.attempts}{' '}
+                            attempts
+                          </span>
+                          {!delivery.success && (
+                            <button
+                              onClick={() => void handleReplayDelivery(webhook.id, delivery.id)}
+                              className="shrink-0 underline"
+                            >
+                              Replay
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
             ))
           )}

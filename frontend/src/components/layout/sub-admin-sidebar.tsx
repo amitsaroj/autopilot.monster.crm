@@ -40,7 +40,7 @@ const subAdminNavItems: SubAdminNavLink[] = [
   { label: 'Usage', href: '/sub-admin/usage', icon: BarChart3 },
   { label: 'AI', href: '/sub-admin/ai', icon: Bot },
   { label: 'Voice', href: '/sub-admin/voice', icon: Phone },
-  { label: 'WhatsApp', href: '/sub-admin/whatsapp', icon: MessageSquare },
+  { label: 'WhatsApp', href: '/whatsapp/settings', icon: MessageSquare },
   { label: 'Workflows', href: '/sub-admin/workflows', icon: Zap },
   { label: 'Marketplace', href: '/sub-admin/marketplace', icon: Store },
   { label: 'Plugins', href: '/sub-admin/plugins', icon: Puzzle },
@@ -75,14 +75,18 @@ export function SubAdminSidebar() {
         )}
       >
         <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
-          <Link href="/" aria-label="Autopilot Monster home"><BrandLogo /></Link>
+          <Link href="/" aria-label="Autopilot Monster home">
+            <BrandLogo />
+          </Link>
         </div>
 
-        <nav aria-label="Workspace navigation" className="flex-1 overflow-y-auto py-4 scrollbar-hide">
+        <nav
+          aria-label="Workspace navigation"
+          className="flex-1 overflow-y-auto py-4 scrollbar-hide"
+        >
           <ul className="space-y-0.5 px-3">
             {subAdminNavItems.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(item.href + '/');
+              const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
               return (
                 <li key={item.label}>
                   <Link

@@ -1,9 +1,20 @@
-import { assertCustomRoleName, assertMutableRole } from '../../common/utils/role-policy';
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  assertAssignableRole,
+  assertCustomRoleName,
+  assertGrantablePermissions,
+  assertMutableRole,
+} from '../../common/utils/role-policy';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { v4 as uuidv4 } from 'uuid';
 import { RbacRepository } from './rbac.repository';
-import { CreateRoleDto, RoleFilterDto, PermissionFilterDto } from './dto/create-role.dto';
+import {
+  CreateRoleDto,
+  UpdateRoleDto,
+  CreatePermissionDto,
+  RoleFilterDto,
+  PermissionFilterDto,
+} from './dto/create-role.dto';
 import { Role } from '../../database/entities/role.entity';
 import { Permission } from '../../database/entities/permission.entity';
 import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
@@ -20,9 +31,11 @@ export class RbacService {
     tenantId: string,
     createRoleDto: CreateRoleDto,
     actorId?: string,
+    actorRoles: readonly string[] = [],
   ): Promise<Role> {
     assertCustomRoleName(createRoleDto.name);
     const permissions = await this.rbacRepository.findPermissionsByIds(createRoleDto.permissionIds);
+    assertGrantablePermissions(permissions, actorRoles);
     const role = await this.rbacRepository.create(tenantId, {
       name: createRoleDto.name,
       description: createRoleDto.description,
@@ -88,16 +101,19 @@ export class RbacService {
   async updateRole(
     tenantId: string,
     id: string,
-    updateRoleDto: Partial<CreateRoleDto>,
+    updateRoleDto: UpdateRoleDto,
     actorId?: string,
+    actorRoles: readonly string[] = [],
   ): Promise<Role> {
     const role = await this.findRole(tenantId, id);
     assertMutableRole(role);
     if (updateRoleDto.name) assertCustomRoleName(updateRoleDto.name);
     if (updateRoleDto.permissionIds) {
-      role.permissions = await this.rbacRepository.findPermissionsByIds(
+      const permissions = await this.rbacRepository.findPermissionsByIds(
         updateRoleDto.permissionIds,
       );
+      assertGrantablePermissions(permissions, actorRoles);
+      role.permissions = permissions;
     }
     if (updateRoleDto.name) role.name = updateRoleDto.name;
     if (updateRoleDto.description) role.description = updateRoleDto.description;
@@ -124,12 +140,10 @@ export class RbacService {
     userId: string,
     roleId: string,
     actorId?: string,
+    actorRoles: readonly string[] = [],
   ): Promise<void> {
     const role = await this.findRole(tenantId, roleId);
-    if (role.name === 'SUPER_ADMIN')
-      throw new ForbiddenException(
-        'Platform roles cannot be assigned or revoked through tenant role management',
-      );
+    assertAssignableRole(role, actorRoles);
     if (!(await this.rbacRepository.userExistsInTenant(tenantId, userId))) {
       throw new NotFoundException('User not found');
     }
@@ -149,15 +163,13 @@ export class RbacService {
     userId: string,
     roleId: string,
     actorId?: string,
+    actorRoles: readonly string[] = [],
   ): Promise<void> {
     if (!(await this.rbacRepository.userExistsInTenant(tenantId, userId))) {
       throw new NotFoundException('User not found');
     }
     const role = await this.findRole(tenantId, roleId);
-    if (role.name === 'SUPER_ADMIN')
-      throw new ForbiddenException(
-        'Platform roles cannot be assigned or revoked through tenant role management',
-      );
+    assertAssignableRole(role, actorRoles);
     await this.rbacRepository.revokeRole(tenantId, userId, roleId);
     this.eventEmitter.emit(EVENT_NAMES.ROLE_REVOKED, {
       name: EVENT_NAMES.ROLE_REVOKED,
@@ -169,7 +181,7 @@ export class RbacService {
     });
   }
 
-  async createPermission(data: any): Promise<Permission> {
+  async createPermission(data: CreatePermissionDto): Promise<Permission> {
     return this.rbacRepository.createPermission(data);
   }
 }

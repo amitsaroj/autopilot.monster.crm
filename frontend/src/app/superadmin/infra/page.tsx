@@ -159,7 +159,9 @@ export default function CloudOrchestrationPage() {
               Live Infrastructure Feed
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Cloud Infrastructure</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Cloud Infrastructure
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             {healthyNodes}/{totalNodes} Nodes Healthy · Last sync:{' '}
             {lastRefresh.toLocaleTimeString()}
@@ -348,13 +350,18 @@ export default function CloudOrchestrationPage() {
                 </span>
               </div>
               <h3 className="text-xs font-bold text-foreground mb-1">{svc.name}</h3>
-              <p className="text-xs font-mono text-muted-foreground mb-3 truncate">{svc.endpoint}</p>
+              <p className="text-xs font-mono text-muted-foreground mb-3 truncate">
+                {svc.endpoint}
+              </p>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
                   Latency: <span className="text-foreground font-semibold">{svc.latency}ms</span>
                 </span>
                 <span>
-                  Up: <span className="text-emerald-700 dark:text-emerald-400 font-semibold">{svc.uptime}</span>
+                  Up:{' '}
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                    {svc.uptime}
+                  </span>
                 </span>
               </div>
             </div>

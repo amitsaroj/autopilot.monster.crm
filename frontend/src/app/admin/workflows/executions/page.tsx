@@ -70,7 +70,9 @@ export default function AdminWorkflowExecutionsPage() {
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Workflow Executions</h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
+            Workflow Executions
+          </h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Live & Historical Run Monitor
           </p>
@@ -166,7 +168,9 @@ export default function AdminWorkflowExecutionsPage() {
           <tbody className="divide-y divide-white/[0.03]">
             {filtered.map((exec) => (
               <tr key={exec.id} className="group hover:bg-white/[0.02] transition-colors">
-                <td className="px-5 py-4 text-sm font-bold text-foreground font-mono">{exec.flowId}</td>
+                <td className="px-5 py-4 text-sm font-bold text-foreground font-mono">
+                  {exec.flowId}
+                </td>
                 <td className="px-5 py-4 text-xs font-mono text-muted-foreground">{exec.id}</td>
                 <td className="px-5 py-4">
                   <span

@@ -5,6 +5,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 
 import { ContactService } from './contact.service';
 import { ContactRepository } from './contact.repository';
+import { CustomFieldRepository } from './crm-support.repository';
 import { DealService } from './deal.service';
 import { Activity } from '../../database/entities/activity.entity';
 import { Note } from '../../database/entities/note.entity';
@@ -71,6 +72,7 @@ describe('ContactService.mergeContacts', () => {
         { provide: getRepositoryToken(EmailMessage), useValue: {} },
         { provide: getRepositoryToken(VoiceCall), useValue: {} },
         { provide: getRepositoryToken(WhatsAppMessage), useValue: {} },
+        { provide: CustomFieldRepository, useValue: { findAll: jest.fn().mockResolvedValue([]) } },
       ],
     }).compile();
 

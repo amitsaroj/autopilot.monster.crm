@@ -150,7 +150,9 @@ export default function SubAdminIntegrationsPage() {
       {integrations.length === 0 ? (
         <div className="p-10 rounded-2xl bg-card border border-border text-center">
           <Plug className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No integrations configured for this workspace yet.</p>
+          <p className="text-sm text-muted-foreground">
+            No integrations configured for this workspace yet.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -165,7 +167,9 @@ export default function SubAdminIntegrationsPage() {
                     <Plug className="w-5 h-5 text-blue-700 dark:text-blue-400 group-hover:text-white transition-colors" />
                   </div>
                   <div>
-                    <p className="text-base font-semibold text-foreground font-mono">{integration.key}</p>
+                    <p className="text-base font-semibold text-foreground font-mono">
+                      {integration.key}
+                    </p>
                     <p className="text-xs text-muted-foreground">{integration.group}</p>
                   </div>
                 </div>

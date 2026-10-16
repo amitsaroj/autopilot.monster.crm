@@ -151,11 +151,15 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
     try {
       parsed = JSON.parse(response.content || '{}');
     } catch {
-      throw new BadRequestException('AI campaign generation returned an unparseable response — try again.');
+      throw new BadRequestException(
+        'AI campaign generation returned an unparseable response — try again.',
+      );
     }
 
     if (!parsed.script?.trim()) {
-      throw new BadRequestException('AI campaign generation did not produce a script — try rephrasing the objective.');
+      throw new BadRequestException(
+        'AI campaign generation did not produce a script — try rephrasing the objective.',
+      );
     }
 
     return {
@@ -186,7 +190,8 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
     if (dto.maxCalls !== undefined) campaign.maxCalls = dto.maxCalls;
     if (dto.objective !== undefined) campaign.objective = dto.objective;
     if (dto.voicemailAction !== undefined) campaign.voicemailAction = dto.voicemailAction;
-    if (dto.humanTransferNumber !== undefined) campaign.humanTransferNumber = dto.humanTransferNumber;
+    if (dto.humanTransferNumber !== undefined)
+      campaign.humanTransferNumber = dto.humanTransferNumber;
 
     return this.campaignRepository.save(campaign);
   }
@@ -265,7 +270,9 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
       await this.recipientRepository.save(recipient);
     }
 
-    this.logger.log(`Campaign ${id} paused: ${queued.length} queued recipients reverted to pending`);
+    this.logger.log(
+      `Campaign ${id} paused: ${queued.length} queued recipients reverted to pending`,
+    );
     return this.campaignRepository.save(campaign);
   }
 
@@ -311,7 +318,9 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
 
     campaign.status = VoiceCampaignStatus.STOPPED;
     campaign.stoppedAt = new Date();
-    this.logger.log(`Campaign ${id} stopped — cancelled ${active.length} in-flight/pending recipients`);
+    this.logger.log(
+      `Campaign ${id} stopped — cancelled ${active.length} in-flight/pending recipients`,
+    );
     return this.campaignRepository.save(campaign);
   }
 
@@ -459,8 +468,7 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
         // final outcome is what byStatus / getStats() exposes for that instead.
         callsMade: () => 'calls_made + 1',
 
-        callsAnswered: () =>
-          normalized === 'COMPLETED' ? 'calls_answered + 1' : 'calls_answered',
+        callsAnswered: () => (normalized === 'COMPLETED' ? 'calls_answered + 1' : 'calls_answered'),
         callsFailed: () => (isFailure ? 'calls_failed + 1' : 'calls_failed'),
       })
       .where('id = :id', { id: campaignId })
@@ -551,7 +559,10 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
       return;
     }
 
-    const recipient = await this.recipientRepository.findById(payload.tenantId, payload.recipientId);
+    const recipient = await this.recipientRepository.findById(
+      payload.tenantId,
+      payload.recipientId,
+    );
     if (!recipient || recipient.campaignId !== payload.campaignId) {
       return;
     }
@@ -568,7 +579,10 @@ Return ONLY a JSON object: { "name": "...", "script": "..." }`,
 
     const call = await this.voiceCallService.findOne(campaign.tenantId, callId);
     if (call.recipientId) {
-      const recipient = await this.recipientRepository.findById(campaign.tenantId, call.recipientId);
+      const recipient = await this.recipientRepository.findById(
+        campaign.tenantId,
+        call.recipientId,
+      );
       if (recipient) {
         recipient.status = VoiceCampaignRecipientStatus.VOICEMAIL;
         recipient.outcome = 'VOICEMAIL';

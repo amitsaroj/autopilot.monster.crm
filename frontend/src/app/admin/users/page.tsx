@@ -120,9 +120,7 @@ export default function TeamManagementPage() {
               Node: Team-Orchestrator
             </span>
           </div>
-          <h1 className="text-3xl font-semibold text-foreground tracking-tight">
-            Team management
-          </h1>
+          <h1 className="text-3xl font-semibold text-foreground tracking-tight">Team management</h1>
           <p className="text-muted-foreground text-sm mt-1 uppercase tracking-wide font-bold">
             Manage Personnel Artifacts, RBAC Assignments & Identity persistence
           </p>

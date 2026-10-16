@@ -7,6 +7,8 @@ export interface Contact {
   lastName: string;
   email: string;
   phone?: string;
+  mobile?: string;
+  leadSource?: string;
   jobTitle?: string;
   companyId?: string;
   status: 'LEAD' | 'PROSPECT' | 'CUSTOMER' | 'CHURNED';
@@ -22,7 +24,37 @@ export const contactService = {
     params ? api.get('/crm/contacts', { params }) : api.get('/crm/contacts'),
   getContact: (id: string) => api.get(`/crm/contacts/${id}`),
   createContact: (data: Partial<Contact>) => api.post('/crm/contacts', data),
-  updateContact: (id: string, data: Partial<Contact>) => api.put(`/crm/contacts/${id}`, data),
+  updateContact: (id: string, data: Partial<Contact>) => {
+    // GET returns audit and tenant fields that the update DTO rightly rejects.
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      mobile,
+      jobTitle,
+      companyId,
+      status,
+      leadSource,
+      tags,
+      customFields,
+      notes,
+    } = data;
+    return api.put(`/crm/contacts/${id}`, {
+      firstName,
+      lastName,
+      email,
+      phone,
+      mobile,
+      jobTitle,
+      companyId,
+      status,
+      leadSource,
+      tags,
+      customFields,
+      notes,
+    });
+  },
   deleteContact: (id: string) => api.delete(`/crm/contacts/${id}`),
   getActivities: (id: string) => api.get(`/crm/contacts/${id}/activities`),
   getDeals: (id: string) => api.get(`/crm/contacts/${id}/deals`),

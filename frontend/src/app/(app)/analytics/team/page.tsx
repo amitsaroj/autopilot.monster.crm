@@ -116,7 +116,9 @@ export default function AnalyticsTeamPage() {
                 <tr key={member.ownerId} className="hover:bg-muted/30 transition-colors">
                   <td className="px-5 py-4 font-medium text-foreground">{member.ownerId}</td>
                   <td className="px-5 py-4 text-muted-foreground">{member.deals}</td>
-                  <td className="px-5 py-4 text-green-700 dark:text-green-400 font-semibold">{member.won}</td>
+                  <td className="px-5 py-4 text-green-700 dark:text-green-400 font-semibold">
+                    {member.won}
+                  </td>
                   <td className="px-5 py-4 text-muted-foreground">{member.winRate.toFixed(1)}%</td>
                   <td className="px-5 py-4 text-foreground">${member.value.toLocaleString()}</td>
                 </tr>

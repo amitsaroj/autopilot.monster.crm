@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminVoiceService } from './sub-admin-voice.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { ProvisionVoiceNumberDto } from '../sub-admin.dto';
 
 @ApiTags('SubAdmin / Voice')
 @ApiBearerAuth()
@@ -21,7 +22,7 @@ export class SubAdminVoiceController {
 
   @Post('numbers')
   @ApiOperation({ summary: 'Provision a new voice number' })
-  async provisionNumber(@TenantId() tenantId: string, @Body() dto: any) {
+  async provisionNumber(@TenantId() tenantId: string, @Body() dto: ProvisionVoiceNumberDto) {
     return await this.voiceService.provisionNumber(tenantId, dto);
   }
 }

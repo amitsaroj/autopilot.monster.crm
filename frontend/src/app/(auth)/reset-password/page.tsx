@@ -79,10 +79,14 @@ function ResetPasswordForm() {
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div>
-        <label htmlFor="reset-password-password" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+        <label
+          htmlFor="reset-password-password"
+          className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+        >
           New Password
         </label>
-        <input id="reset-password-password"
+        <input
+          id="reset-password-password"
           {...register('password')}
           type="password"
           placeholder="••••••••"
@@ -95,10 +99,14 @@ function ResetPasswordForm() {
         {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
       </div>
       <div>
-        <label htmlFor="reset-password-confirmPassword" className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5">
+        <label
+          htmlFor="reset-password-confirmPassword"
+          className="text-sm font-medium text-gray-900 dark:text-foreground block mb-1.5"
+        >
           Confirm New Password
         </label>
-        <input id="reset-password-confirmPassword"
+        <input
+          id="reset-password-confirmPassword"
           {...register('confirmPassword')}
           type="password"
           placeholder="••••••••"

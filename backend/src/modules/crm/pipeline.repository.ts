@@ -12,4 +12,9 @@ export class PipelineRepository extends BaseRepository<Pipeline> {
   ) {
     super(pipelineRepo);
   }
+
+  /** Pipelines have no soft-delete column; stages cascade at the FK. */
+  async hardDelete(tenantId: string, id: string): Promise<void> {
+    await this.repository.delete({ id, tenantId });
+  }
 }

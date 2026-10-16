@@ -168,7 +168,9 @@ export default function SystemMetricsPage() {
             <Gauge className="w-5 h-5 text-blue-500" /> Live Workload Analysis
           </h3>
           {series.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-24 text-center">Collecting telemetry samples…</p>
+            <p className="text-sm text-muted-foreground py-24 text-center">
+              Collecting telemetry samples…
+            </p>
           ) : (
             <div className="h-[350px] w-full">
               <ResponsiveContainer width="100%" height="100%">

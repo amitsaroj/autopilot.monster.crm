@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminIntegrationsService } from './sub-admin-integrations.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { UpsertTenantSettingDto } from '../sub-admin.dto';
 
 @ApiTags('SubAdmin / Integrations')
 @ApiBearerAuth()
@@ -21,7 +22,7 @@ export class SubAdminIntegrationsController {
 
   @Post()
   @ApiOperation({ summary: 'Enable a new integration' })
-  async create(@TenantId() tenantId: string, @Body() dto: any) {
+  async create(@TenantId() tenantId: string, @Body() dto: UpsertTenantSettingDto) {
     return await this.integrationsService.upsert(tenantId, dto);
   }
 

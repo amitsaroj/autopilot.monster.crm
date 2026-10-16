@@ -157,13 +157,17 @@ export default function WhatsAppMetricsPage() {
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Total Volume
               </span>
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">{metrics.total}</span>
+              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                {metrics.total}
+              </span>
             </div>
             <div className="flex justify-between items-center p-4 rounded-2xl bg-card border border-border">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                 Outbound Share
               </span>
-              <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">{deliveryRate}%</span>
+              <span className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+                {deliveryRate}%
+              </span>
             </div>
             <div className="flex justify-between items-center p-4 rounded-2xl bg-card border border-border">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">

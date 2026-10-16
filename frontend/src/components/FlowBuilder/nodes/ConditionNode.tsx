@@ -33,7 +33,9 @@ export const ConditionNode = memo(({ data }: NodeProps) => {
             className="w-3 h-3 bg-green-500 border-2 border-white dark:border-[#1f2937]"
             style={{ left: '30%' }}
           />
-          <span className="text-[10px] font-bold text-green-700 dark:text-green-400 mt-2 block">YES</span>
+          <span className="text-[10px] font-bold text-green-700 dark:text-green-400 mt-2 block">
+            YES
+          </span>
         </div>
         <div className="relative">
           <Handle

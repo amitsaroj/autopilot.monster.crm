@@ -1,7 +1,12 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { WorkflowService } from './workflow.service';
-import { CreateWorkflowDto } from './dto/workflow.dto';
+import {
+  CreateWorkflowDto,
+  WorkflowPreviewDto,
+  WorkflowPayloadDto,
+  UpdateWorkflowDto,
+} from './dto/workflow.dto';
 import { JwtAuthGuard, TenantGuard, RolesGuard } from '../../common/guards';
 import { Roles, TenantId, PlanFeature, ResourcePermissions } from '../../common/decorators';
 
@@ -46,10 +51,28 @@ export class WorkflowController {
     return await this.workflowService.getExecutions(tenantId);
   }
 
+  @Post('executions/:execId/pause')
+  @Roles('TENANT_ADMIN')
+  pauseExecution(@TenantId() tenantId: string, @Param('execId') execId: string) {
+    return this.workflowService.controlExecution(tenantId, execId, 'pause');
+  }
+
+  @Post('executions/:execId/resume')
+  @Roles('TENANT_ADMIN')
+  resumeExecution(@TenantId() tenantId: string, @Param('execId') execId: string) {
+    return this.workflowService.controlExecution(tenantId, execId, 'resume');
+  }
+
+  @Post('executions/:execId/cancel')
+  @Roles('TENANT_ADMIN')
+  cancelExecution(@TenantId() tenantId: string, @Param('execId') execId: string) {
+    return this.workflowService.controlExecution(tenantId, execId, 'cancel');
+  }
+
   @Get('workflow-triggers')
   @ApiOperation({ summary: 'List available workflow trigger types' })
-  getTriggers() {
-    return this.workflowService.getTriggerTypes();
+  getTriggers(@TenantId() tenantId: string) {
+    return this.workflowService.getTriggerTypes(tenantId);
   }
 
   @Get('workflow-actions')
@@ -64,13 +87,33 @@ export class WorkflowController {
     return await this.workflowService.findOne(tenantId, id);
   }
 
+  @Post('preview')
+  @ApiOperation({ summary: 'Validate and preview a draft without executing actions' })
+  preview(@TenantId() tenantId: string, @Body() dto: WorkflowPreviewDto) {
+    return this.workflowService.preview(tenantId, dto);
+  }
+
+  @Post(':id/preview')
+  previewExisting(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: WorkflowPayloadDto,
+  ) {
+    return this.workflowService.previewExisting(tenantId, id, dto.payload);
+  }
+
+  @Get(':id/versions')
+  versions(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.workflowService.getVersions(tenantId, id);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update workflow' })
   @Roles('TENANT_ADMIN')
   async update(
     @TenantId() tenantId: string,
     @Param('id') id: string,
-    @Body() dto: Partial<CreateWorkflowDto>,
+    @Body() dto: UpdateWorkflowDto,
   ) {
     return await this.workflowService.update(tenantId, id, dto);
   }

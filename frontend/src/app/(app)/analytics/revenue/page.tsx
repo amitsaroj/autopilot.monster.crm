@@ -71,7 +71,9 @@ export default function RevenueInsightsPage() {
               <TrendingUp className="w-4 h-4 text-blue-600" />
             </div>
           </div>
-          <h2 className="text-3xl font-semibold text-foreground mb-4">{formatCurrency(data.mrr)}</h2>
+          <h2 className="text-3xl font-semibold text-foreground mb-4">
+            {formatCurrency(data.mrr)}
+          </h2>
           <p className="text-muted-foreground text-sm">{data.wonDealCount} won deals</p>
         </div>
 

@@ -42,14 +42,12 @@ describe('authentication state', () => {
     expect(localStorage.getItem('auth-storage')).not.toContain('secret-password');
   });
   it('hydrates roles during OAuth completion', () => {
-    useAuth
-      .getState()
-      .setAuth({
-        accessToken: token(['TENANT_ADMIN']),
-        refreshToken: 'refresh',
-        user: { id: 'user' },
-        tenant: { id: 'tenant' },
-      });
+    useAuth.getState().setAuth({
+      accessToken: token(['TENANT_ADMIN']),
+      refreshToken: 'refresh',
+      user: { id: 'user' },
+      tenant: { id: 'tenant' },
+    });
     expect(useAuth.getState().user.roles).toEqual(['TENANT_ADMIN']);
   });
 });

@@ -78,7 +78,9 @@ export default function BillingUsagePage() {
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">Metric</th>
-                <th className="text-right px-5 py-3 font-medium text-muted-foreground">Units Used</th>
+                <th className="text-right px-5 py-3 font-medium text-muted-foreground">
+                  Units Used
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

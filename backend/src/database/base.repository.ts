@@ -1,6 +1,22 @@
 import { Repository, SelectQueryBuilder, FindManyOptions, FindOneOptions } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 
+/** Columns a caller must never be able to set through a create/update payload. */
+export const IMMUTABLE_FIELDS = ['id', 'tenantId', 'createdAt', 'updatedAt', 'deletedAt'] as const;
+
+/**
+ * Returns a shallow copy of `data` without identity/ownership/timestamp keys,
+ * so a request body can never re-home a row to another tenant or overwrite
+ * its primary key. Use at every site that spreads user input into an entity.
+ */
+export function stripImmutableFields<D extends object>(
+  data: D,
+): Omit<D, (typeof IMMUTABLE_FIELDS)[number]> {
+  const copy = { ...data } as Record<string, unknown>;
+  for (const key of IMMUTABLE_FIELDS) delete copy[key];
+  return copy as Omit<D, (typeof IMMUTABLE_FIELDS)[number]>;
+}
+
 /**
  * BaseRepository — abstract base for all repositories providing tenant isolation.
  * Every repository SHOULD extend this class.
@@ -41,12 +57,12 @@ export abstract class BaseRepository<T extends { tenantId: string }> {
   }
 
   async create(tenantId: string, data: Partial<T>): Promise<T> {
-    const entity = this.repository.create({ ...data, tenantId } as any);
+    const entity = this.repository.create({ ...stripImmutableFields(data), tenantId } as any);
     return this.repository.save(entity) as unknown as Promise<T>;
   }
 
   async updateWithTenant(tenantId: string, id: string, data: Partial<T>): Promise<T> {
-    await this.repository.update({ id, tenantId } as any, data as any);
+    await this.repository.update({ id, tenantId } as any, stripImmutableFields(data) as any);
     const updated = await this.findById(tenantId, id);
     if (!updated) throw new Error('Entity not found after update');
     return updated;

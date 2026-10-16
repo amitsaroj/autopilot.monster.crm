@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { createHash, randomBytes } from 'crypto';
+import { createHash, createHmac, randomBytes } from 'crypto';
+import axios from 'axios';
 import { Repository } from 'typeorm';
 
 import { ApiKey } from '../../database/entities/api-key.entity';
@@ -12,6 +18,8 @@ import {
   CreateWebhookDto,
   UpdateWebhookDto,
 } from './dto/developer-settings.dto';
+import { publicWebhookAgents, validateWebhookUrl } from '../workflow/workflow-webhook.util';
+import { assertGrantablePermissions } from '../../common/utils/role-policy';
 
 export interface ApiKeyCreatedResult {
   id: string;
@@ -19,6 +27,7 @@ export interface ApiKeyCreatedResult {
   keyPrefix: string;
   key: string;
   permissions: string[];
+  rateLimit: number;
   expiresAt?: Date;
   createdAt: Date;
 }
@@ -35,6 +44,21 @@ export interface OAuthAppCreatedResult {
   createdAt: Date;
 }
 
+type PublicWebhook = Omit<Webhook, 'tenantId' | 'secret'>;
+type PublicApiKey = Pick<
+  ApiKey,
+  | 'id'
+  | 'name'
+  | 'keyPrefix'
+  | 'status'
+  | 'permissions'
+  | 'scopes'
+  | 'rateLimit'
+  | 'lastUsedAt'
+  | 'expiresAt'
+  | 'createdAt'
+>;
+
 @Injectable()
 export class DeveloperSettingsService {
   constructor(
@@ -46,18 +70,49 @@ export class DeveloperSettingsService {
     private readonly oauthAppRepository: Repository<OAuthApp>,
   ) {}
 
-  async listApiKeys(tenantId: string): Promise<ApiKey[]> {
-    return this.apiKeyRepository.find({
+  async listApiKeys(tenantId: string): Promise<PublicApiKey[]> {
+    const keys = await this.apiKeyRepository.find({
       where: { tenantId },
       order: { createdAt: 'DESC' },
     });
+    return keys.map((key) => ({
+      id: key.id,
+      name: key.name,
+      keyPrefix: key.keyPrefix,
+      status: key.status,
+      permissions: key.permissions,
+      scopes: key.scopes,
+      rateLimit: key.rateLimit,
+      lastUsedAt: key.lastUsedAt,
+      expiresAt: key.expiresAt,
+      createdAt: key.createdAt,
+    }));
   }
 
   async createApiKey(
     tenantId: string,
     userId: string,
     dto: CreateApiKeyDto,
+    actorPermissions: readonly string[],
+    actorRoles: readonly string[],
   ): Promise<ApiKeyCreatedResult> {
+    if (dto.expiresAt && new Date(dto.expiresAt) <= new Date())
+      throw new BadRequestException('API key expiry must be in the future');
+    const permissions = [...new Set(dto.permissions ?? [])];
+    assertGrantablePermissions(
+      permissions.map((name) => ({ resource: name.split(':')[0] ?? '', name })),
+      actorRoles,
+    );
+    const cannotGrant = permissions.find((permission) => {
+      const [resource, action] = permission.split(':');
+      return !(
+        actorPermissions.includes(permission) ||
+        actorPermissions.includes(`${resource}:manage`) ||
+        (action === 'read' && actorPermissions.includes(`${resource}:view`))
+      );
+    });
+    if (cannotGrant)
+      throw new ForbiddenException(`You cannot grant the API key permission "${cannotGrant}"`);
     const rawKey = `sk_live_${randomBytes(24).toString('hex')}`;
     const keyHash = createHash('sha256').update(rawKey).digest('hex');
     const keyPrefix = rawKey.slice(0, 12);
@@ -69,7 +124,9 @@ export class DeveloperSettingsService {
         name: dto.name,
         keyPrefix,
         keyHash,
-        permissions: dto.permissions ?? [],
+        permissions,
+        scopes: permissions,
+        rateLimit: dto.rateLimit ?? 1000,
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
       }),
     );
@@ -80,6 +137,7 @@ export class DeveloperSettingsService {
       keyPrefix: entity.keyPrefix,
       key: rawKey,
       permissions: entity.permissions,
+      rateLimit: entity.rateLimit,
       expiresAt: entity.expiresAt,
       createdAt: entity.createdAt,
     };
@@ -93,16 +151,24 @@ export class DeveloperSettingsService {
     await this.apiKeyRepository.softDelete({ id, tenantId });
   }
 
-  async listWebhooks(tenantId: string): Promise<Webhook[]> {
-    return this.webhookRepository.find({
+  async listWebhooks(tenantId: string): Promise<PublicWebhook[]> {
+    const webhooks = await this.webhookRepository.find({
       where: { tenantId },
       order: { createdAt: 'DESC' },
     });
+    return webhooks.map(({ tenantId: _tenantId, secret: _secret, ...webhook }) => {
+      void _tenantId;
+      void _secret;
+      return webhook;
+    });
   }
 
-  async createWebhook(tenantId: string, dto: CreateWebhookDto): Promise<Webhook> {
+  async createWebhook(tenantId: string, dto: CreateWebhookDto): Promise<Omit<Webhook, 'tenantId'>> {
+    if (validateWebhookUrl(dto.url).protocol !== 'https:') {
+      throw new BadRequestException('Webhook URL must use HTTPS');
+    }
     const secret = randomBytes(32).toString('hex');
-    return this.webhookRepository.save(
+    const webhook = await this.webhookRepository.save(
       this.webhookRepository.create({
         tenantId,
         name: dto.name,
@@ -112,20 +178,32 @@ export class DeveloperSettingsService {
         status: 'ACTIVE',
       }),
     );
+    const { tenantId: _tenantId, ...result } = webhook;
+    void _tenantId;
+    return result;
   }
 
-  async updateWebhook(tenantId: string, id: string, dto: UpdateWebhookDto): Promise<Webhook> {
+  async updateWebhook(tenantId: string, id: string, dto: UpdateWebhookDto): Promise<PublicWebhook> {
     const webhook = await this.webhookRepository.findOne({ where: { id, tenantId } });
     if (!webhook) {
       throw new NotFoundException('Webhook not found');
     }
 
     if (dto.name !== undefined) webhook.name = dto.name;
-    if (dto.url !== undefined) webhook.url = dto.url;
+    if (dto.url !== undefined) {
+      if (validateWebhookUrl(dto.url).protocol !== 'https:') {
+        throw new BadRequestException('Webhook URL must use HTTPS');
+      }
+      webhook.url = dto.url;
+    }
     if (dto.events !== undefined) webhook.events = dto.events;
     if (dto.status !== undefined) webhook.status = dto.status;
 
-    return this.webhookRepository.save(webhook);
+    const updated = await this.webhookRepository.save(webhook);
+    const { tenantId: _tenantId, secret: _secret, ...result } = updated;
+    void _tenantId;
+    void _secret;
+    return result;
   }
 
   async deleteWebhook(tenantId: string, id: string): Promise<void> {
@@ -145,20 +223,45 @@ export class DeveloperSettingsService {
       throw new NotFoundException('Webhook not found');
     }
 
-    const response = await fetch(webhook.url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Webhook-Secret': webhook.secret ?? '',
-      },
-      body: JSON.stringify({
-        event: 'webhook.test',
-        tenantId,
-        timestamp: new Date().toISOString(),
-      }),
+    const body = JSON.stringify({
+      event: 'webhook.test',
+      timestamp: new Date().toISOString(),
     });
+    // SSRF-safe: validates + pins a public DNS answer; no redirects, bounded time/size.
+    // The secret itself never leaves the server; receivers verify the HMAC signature.
+    const agents = await publicWebhookAgents(webhook.url);
+    let statusCode = 0;
+    try {
+      const response = await axios.request<unknown>({
+        url: webhook.url,
+        method: 'POST',
+        data: body,
+        ...agents,
+        proxy: false,
+        maxRedirects: 0,
+        timeout: 10000,
+        signal: AbortSignal.timeout(10000),
+        maxContentLength: 65536,
+        maxBodyLength: 1048576,
+        responseType: 'text',
+        validateStatus: () => true,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Webhook-Signature': createHmac('sha256', webhook.secret ?? '')
+            .update(body)
+            .digest('hex'),
+          'X-Webhook-Event': 'webhook.test',
+        },
+      });
+      statusCode = response.status;
+    } catch {
+      // Transport failure (timeout, refused, oversize): recorded as not delivered.
+    } finally {
+      agents.httpAgent.destroy();
+      agents.httpsAgent.destroy();
+    }
 
-    const delivered = response.ok;
+    const delivered = statusCode >= 200 && statusCode < 300;
     if (delivered) {
       webhook.lastSuccessAt = new Date();
       webhook.failureCount = 0;
@@ -168,7 +271,7 @@ export class DeveloperSettingsService {
     }
     await this.webhookRepository.save(webhook);
 
-    return { delivered, statusCode: response.status };
+    return { delivered, statusCode };
   }
 
   async listOAuthApps(tenantId: string): Promise<OAuthApp[]> {

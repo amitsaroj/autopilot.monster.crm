@@ -287,7 +287,8 @@ export default function GlobalEmailSettingsPage() {
 
           <div className="p-8 rounded-xl bg-card border border-border shadow-2xl space-y-8">
             <h3 className="text-foreground font-semibold text-sm uppercase tracking-wide flex items-center gap-3">
-              <Globe className="w-5 h-5 text-emerald-700 dark:text-emerald-400" /> Verified Providers
+              <Globe className="w-5 h-5 text-emerald-700 dark:text-emerald-400" /> Verified
+              Providers
             </h3>
 
             <div className="space-y-3">

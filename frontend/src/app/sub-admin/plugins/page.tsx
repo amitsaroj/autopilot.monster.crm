@@ -108,7 +108,9 @@ export default function SubAdminPluginsPage() {
       {plugins.length === 0 ? (
         <div className="p-10 rounded-2xl bg-card border border-border text-center">
           <Puzzle className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">No plugins are enabled for this workspace yet.</p>
+          <p className="text-sm text-muted-foreground">
+            No plugins are enabled for this workspace yet.
+          </p>
           <Link
             href="/sub-admin/marketplace"
             className="inline-flex items-center gap-1.5 mt-4 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400 hover:text-blue-300"

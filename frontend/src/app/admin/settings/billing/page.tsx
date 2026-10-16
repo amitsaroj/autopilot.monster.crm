@@ -103,9 +103,7 @@ export default function BillingPage() {
             </div>
             {subscription?.currentPeriodEnd && (
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide opacity-70">
-                  Renews
-                </p>
+                <p className="text-xs font-semibold uppercase tracking-wide opacity-70">Renews</p>
                 <p className="text-sm font-bold">
                   {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                 </p>

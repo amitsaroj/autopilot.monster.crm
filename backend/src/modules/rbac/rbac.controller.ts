@@ -13,7 +13,13 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { RbacService } from './rbac.service';
-import { CreateRoleDto, RoleFilterDto, PermissionFilterDto } from './dto/create-role.dto';
+import {
+  CreateRoleDto,
+  UpdateRoleDto,
+  CreatePermissionDto,
+  RoleFilterDto,
+  PermissionFilterDto,
+} from './dto/create-role.dto';
 import { RoleAssignmentDto } from './dto/role-assignment.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import { Roles, TenantId, CurrentUser, ResourcePermissions } from '../../common/decorators';
@@ -36,7 +42,7 @@ export class RbacController {
   @Post('permissions')
   @ApiOperation({ summary: 'Create a new global permission' })
   @Roles('SUPER_ADMIN')
-  async createPermission(@Body() data: any) {
+  async createPermission(@Body() data: CreatePermissionDto) {
     return this.rbacService.createPermission(data);
   }
 
@@ -48,7 +54,7 @@ export class RbacController {
     @CurrentUser() actor: IRequestContext,
     @Body() createRoleDto: CreateRoleDto,
   ) {
-    return this.rbacService.createRole(tenantId, createRoleDto, actor.userId);
+    return this.rbacService.createRole(tenantId, createRoleDto, actor.userId, actor.roles);
   }
 
   @Get('roles')
@@ -70,9 +76,9 @@ export class RbacController {
     @TenantId() tenantId: string,
     @CurrentUser() actor: IRequestContext,
     @Param('id') id: string,
-    @Body() updateRoleDto: Partial<CreateRoleDto>,
+    @Body() updateRoleDto: UpdateRoleDto,
   ) {
-    return this.rbacService.updateRole(tenantId, id, updateRoleDto, actor.userId);
+    return this.rbacService.updateRole(tenantId, id, updateRoleDto, actor.userId, actor.roles);
   }
 
   @Delete('roles/:id')
@@ -91,7 +97,7 @@ export class RbacController {
     @CurrentUser() actor: IRequestContext,
     @Body() dto: RoleAssignmentDto,
   ) {
-    return this.rbacService.assignRole(tenantId, dto.userId, dto.roleId, actor.userId);
+    return this.rbacService.assignRole(tenantId, dto.userId, dto.roleId, actor.userId, actor.roles);
   }
 
   @Post('revoke')
@@ -102,6 +108,6 @@ export class RbacController {
     @CurrentUser() actor: IRequestContext,
     @Body() dto: RoleAssignmentDto,
   ) {
-    return this.rbacService.revokeRole(tenantId, dto.userId, dto.roleId, actor.userId);
+    return this.rbacService.revokeRole(tenantId, dto.userId, dto.roleId, actor.userId, actor.roles);
   }
 }

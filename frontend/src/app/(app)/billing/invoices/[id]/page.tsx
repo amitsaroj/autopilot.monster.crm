@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { parseApiData } from '@/lib/api/parse-response';
 import { billingService, Invoice } from '@/services/billing.service';
 
 export default function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +17,7 @@ export default function InvoiceDetailPage({ params }: { params: Promise<{ id: st
     const load = async () => {
       try {
         const res = await billingService.getInvoice(id);
-        setInvoice(res.data.data);
+        setInvoice(parseApiData<Invoice>(res));
       } catch {
         toast.error('Failed to load invoice');
       } finally {

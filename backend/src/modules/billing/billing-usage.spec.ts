@@ -4,8 +4,7 @@ describe('BillingService usage metering', () => {
   const usageRepo = {
     findOne: jest.fn(),
     find: jest.fn(),
-    save: jest.fn(),
-    create: jest.fn(),
+    query: jest.fn(),
   };
 
   let service: BillingService;
@@ -31,32 +30,22 @@ describe('BillingService usage metering', () => {
   });
 
   it('creates a usage record when none exists for the period', async () => {
-    usageRepo.findOne.mockResolvedValue(null);
-    const created = { tenantId: 'tenant-1', metric: 'contacts_limit', quantity: 1 };
-    usageRepo.create.mockReturnValue(created);
-    usageRepo.save.mockResolvedValue(created);
+    usageRepo.query.mockResolvedValue([{ quantity: '1' }]);
 
-    await service.trackUsage('tenant-1', 'contacts_limit', 1, 'TOTAL');
+    await expect(service.trackUsage('tenant-1', 'contacts_limit', 1, 'TOTAL')).resolves.toBe(1);
 
-    expect(usageRepo.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tenantId: 'tenant-1',
-        metric: 'contacts_limit',
-        quantity: 1,
-      }),
+    expect(usageRepo.query).toHaveBeenCalledWith(
+      expect.stringContaining('ON CONFLICT (tenant_id, metric, period_start)'),
+      ['tenant-1', 'contacts_limit', 1, new Date(0), new Date('2099-12-31T23:59:59.999Z')],
     );
-    expect(usageRepo.save).toHaveBeenCalledWith(created);
   });
 
   it('increments an existing usage record for the period', async () => {
-    const existing = { quantity: 10 };
-    usageRepo.findOne.mockResolvedValue(existing);
-    usageRepo.save.mockImplementation((record) => Promise.resolve(record));
+    usageRepo.query.mockResolvedValue([{ quantity: '11' }]);
 
-    await service.trackUsage('tenant-1', 'contacts_limit', 1, 'TOTAL');
+    await expect(service.trackUsage('tenant-1', 'contacts_limit', 1, 'TOTAL')).resolves.toBe(11);
 
-    expect(existing.quantity).toBe(11);
-    expect(usageRepo.save).toHaveBeenCalledWith(existing);
+    expect(usageRepo.query).toHaveBeenCalledTimes(1);
   });
 
   it('returns zero when no usage record exists', async () => {
@@ -81,7 +70,7 @@ describe('BillingService usage metering', () => {
       { metric: 'deals_limit', quantity: 2 },
     ]);
 
-    const breakdown = await service.getUsageBreakdown('tenant-1', 'TOTAL');
+    const breakdown = await service.getUsageBreakdown('tenant-1');
 
     expect(breakdown).toEqual({
       contacts_limit: 5,

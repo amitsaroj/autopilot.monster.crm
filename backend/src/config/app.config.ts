@@ -55,6 +55,17 @@ export interface AppConfig {
     keySecret: string;
     webhookSecret: string;
   };
+  shopify: {
+    clientId: string;
+    clientSecret: string;
+    callbackUrl: string;
+    webhookUrl: string;
+    apiVersion: string;
+    scopes: string;
+    tokenKeyId: string;
+    tokenKeys: string;
+    legacyTokenKey: string;
+  };
   publishOpenApi?: boolean;
 }
 
@@ -113,6 +124,7 @@ export const appConfig = registerAs(
       keySecret: env.razorpay.keySecret,
       webhookSecret: env.razorpay.webhookSecret,
     },
+    shopify: env.shopify,
     publishOpenApi: env.app.publishOpenApi,
   }),
 );

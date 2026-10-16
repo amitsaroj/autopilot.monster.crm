@@ -62,7 +62,12 @@ export default function AnalyticsPipelinePage() {
             icon: BarChart3,
             color: 'text-[hsl(var(--brand))]',
           },
-          { label: 'Open Deals', value: String(totalDeals), icon: Target, color: 'text-blue-700 dark:text-blue-400' },
+          {
+            label: 'Open Deals',
+            value: String(totalDeals),
+            icon: Target,
+            color: 'text-blue-700 dark:text-blue-400',
+          },
           {
             label: 'Stages',
             value: String(stages.length),
