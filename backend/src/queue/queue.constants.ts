@@ -15,6 +15,7 @@ export const QUEUE_NAMES = {
   IMPORT: 'import',
   EXPORT: 'export',
   SEARCH_INDEX: 'search-index',
+  SHOPIFY: 'shopify-commerce',
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -33,6 +34,7 @@ export const JOB_NAMES = {
   PROCESS_IMPORT: 'process-import',
   PROCESS_EXPORT: 'process-export',
   PROCESS_BACKUP: 'process-backup',
+  PROCESS_SHOPIFY_WEBHOOK: 'process-shopify-webhook',
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];

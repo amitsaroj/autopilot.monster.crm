@@ -118,7 +118,23 @@ export default function AutomationCatalog({ publicView = false }: { publicView?:
         <div className="mt-4 divide-y divide-border">
           {coverage.data?.map((area) => (
             <section key={area.key} className="py-3">
-              <h2 className="text-sm font-semibold">{area.name}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-sm font-semibold">{area.name}</h2>
+                <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                  {area.support === 'PACK_AVAILABLE'
+                    ? 'Starter pack defined'
+                    : 'Integration required'}
+                </span>
+              </div>
+              {area.productSlugs.some((slug) => {
+                const product = products.data?.find((item) => item.slug === slug);
+                return product && !product.id;
+              }) && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Some starter packs still need an active marketplace catalog entry before they can
+                  be installed.
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap gap-2">
                 {area.productSlugs.map((slug) => {
                   const product = products.data?.find((item) => item.slug === slug);

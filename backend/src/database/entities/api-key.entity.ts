@@ -39,5 +39,5 @@ export class ApiKey extends BaseEntity {
   expiresAt?: Date;
 
   @Column({ type: 'jsonb', nullable: true })
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }

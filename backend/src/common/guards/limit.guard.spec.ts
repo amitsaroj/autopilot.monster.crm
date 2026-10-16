@@ -10,10 +10,10 @@ describe('LimitGuard', () => {
   const reflector = new Reflector();
   const pricingService = {
     getLimit: jest.fn(),
+    getLimitPeriod: jest.fn().mockResolvedValue('MONTHLY'),
   };
   const billingService = {
-    getUsage: jest.fn(),
-    trackUsage: jest.fn(),
+    reserveUsage: jest.fn(),
   };
   const moduleRef = {
     // Real DI resolves these by their class token (see limit.guard.ts) — keying
@@ -52,12 +52,12 @@ describe('LimitGuard', () => {
   it('allows when configured limit is unlimited', async () => {
     pricingService.getLimit.mockResolvedValue(-1);
     await expect(guard.canActivate(buildContext('contacts_limit', 'tenant-1'))).resolves.toBe(true);
-    expect(billingService.getUsage).not.toHaveBeenCalled();
+    expect(billingService.reserveUsage).not.toHaveBeenCalled();
   });
 
   it('blocks when configured limit is zero', async () => {
     pricingService.getLimit.mockResolvedValue(0);
-    billingService.getUsage.mockResolvedValue(0);
+    billingService.reserveUsage.mockResolvedValue(false);
 
     await expect(guard.canActivate(buildContext('deals_limit', 'tenant-1'))).rejects.toBeInstanceOf(
       ForbiddenException,
@@ -66,18 +66,24 @@ describe('LimitGuard', () => {
 
   it('blocks when usage reached configured limit', async () => {
     pricingService.getLimit.mockResolvedValue(100);
-    billingService.getUsage.mockResolvedValue(100);
+    billingService.reserveUsage.mockResolvedValue(false);
 
     await expect(
       guard.canActivate(buildContext('contacts_limit', 'tenant-1')),
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(pricingService.getLimit).toHaveBeenCalledWith('tenant-1', 'contacts_limit');
-    expect(billingService.getUsage).toHaveBeenCalledWith('tenant-1', 'contacts_limit');
+    expect(billingService.reserveUsage).toHaveBeenCalledWith(
+      'tenant-1',
+      'contacts_limit',
+      1,
+      'MONTHLY',
+      100,
+    );
   });
 
   it('allows when usage is below configured limit', async () => {
     pricingService.getLimit.mockResolvedValue(100);
-    billingService.getUsage.mockResolvedValue(42);
+    billingService.reserveUsage.mockResolvedValue(true);
 
     await expect(guard.canActivate(buildContext('contacts_limit', 'tenant-1'))).resolves.toBe(true);
   });

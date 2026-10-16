@@ -1,5 +1,12 @@
 import { Inbox } from '@/components/whatsapp/Inbox';
-export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConversationPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ phoneNumberId?: string }>;
+}) {
   const { id } = await params;
-  return <Inbox initialPhone={id} />;
+  const { phoneNumberId } = await searchParams;
+  return <Inbox initialPhone={id} initialPhoneNumberId={phoneNumberId} />;
 }

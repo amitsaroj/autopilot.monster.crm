@@ -7,11 +7,17 @@ export class WebhookDelivery extends BaseEntity {
   @Column({ name: 'webhook_id', type: 'uuid' })
   webhookId!: string;
 
+  @Column({ name: 'replay_of', type: 'uuid', nullable: true })
+  replayOf?: string;
+
+  @Column({ name: 'replay_request_key', length: 200, nullable: true })
+  replayRequestKey?: string;
+
   @Column({ length: 100 })
   event!: string;
 
   @Column({ type: 'jsonb' })
-  payload!: Record<string, any>;
+  payload!: Record<string, unknown>;
 
   @Column({ name: 'response_status', type: 'int', nullable: true })
   responseStatus?: number;

@@ -93,6 +93,30 @@ export default function TemplatesPage() {
       setBusy('');
     }
   };
+  const importFromMeta = async () => {
+    if (!selected || !selectedAccount || accounts.error || accounts.loading) return;
+    setBusy('import');
+    setError(null);
+    setNotice('');
+    try {
+      const response = await whatsappTemplateService.importFromMeta(selected);
+      const result = parseApiData<{
+        imported: number;
+        unchanged: number;
+        skippedUnsupported: number;
+        conflicts: number;
+      }>(response);
+      if (!result) throw new Error('Meta template import returned no result.');
+      await templates.reload();
+      setNotice(
+        `Imported ${result.imported}; ${result.unchanged} unchanged; ${result.skippedUnsupported} unsupported formats skipped; ${result.conflicts} conflicts. No templates were submitted to Meta.`,
+      );
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy('');
+    }
+  };
   return (
     <div className="space-y-6">
       <PageHeading
@@ -147,10 +171,18 @@ export default function TemplatesPage() {
           <RefreshCw className="h-4 w-4" />
           Refresh Meta status
         </button>
+        <button
+          className={secondaryClass}
+          disabled={!!busy || !selected || !selectedAccount || accounts.loading || !!accounts.error}
+          onClick={() => void importFromMeta()}
+        >
+          {busy === 'import' ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+          {busy === 'import' ? 'Importing templates…' : 'Import templates from Meta'}
+        </button>
       </div>
       {!selected && (
         <Notice>
-          Choose a connected Meta account to submit or refresh templates. Local drafts can still be
+          Choose a connected Meta phone number to import, submit, or refresh templates. Local drafts can still be
           created.
         </Notice>
       )}

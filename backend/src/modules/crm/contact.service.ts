@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { ContactRepository } from './contact.repository';
+import { CustomFieldRepository } from './crm-support.repository';
+import { validateCustomFieldValues } from './custom-field-values';
 import { CreateContactDto, CrmListQueryDto, UpdateContactDto } from './dto/crm.dto';
 import { CreateContactNoteDto } from './dto/deal-lifecycle.dto';
 import { Contact } from '../../database/entities/contact.entity';
@@ -33,9 +35,20 @@ export class ContactService {
     private readonly voiceCallRepository: Repository<VoiceCall>,
     @InjectRepository(WhatsAppMessage)
     private readonly whatsappRepository: Repository<WhatsAppMessage>,
+    private readonly customFieldRepository: CustomFieldRepository,
   ) {}
 
+  /** customFields replaces the stored object wholesale, so required fields are checked on every write. */
+  private async assertCustomFields(tenantId: string, values: Record<string, unknown>) {
+    const defs = await this.customFieldRepository.findAll(tenantId, {
+      where: { entityType: 'CONTACT' },
+    });
+    const errors = validateCustomFieldValues(defs, values);
+    if (errors.length) throw new BadRequestException(errors);
+  }
+
   async create(tenantId: string, dto: CreateContactDto, actorId?: string): Promise<Contact> {
+    await this.assertCustomFields(tenantId, dto.customFields ?? {});
     const contact = await this.contactRepository.create(tenantId, dto);
     this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, { contact, tenantId, actorId });
     return contact;
@@ -74,6 +87,7 @@ export class ContactService {
     actorId?: string,
   ): Promise<Contact> {
     await this.findOne(tenantId, id);
+    if (dto.customFields !== undefined) await this.assertCustomFields(tenantId, dto.customFields);
     const contact = await this.contactRepository.updateWithTenant(tenantId, id, dto);
     this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact, tenantId, actorId });
     return contact;
@@ -112,6 +126,14 @@ export class ContactService {
     if (!tags.includes(tag)) {
       tags.push(tag);
     }
+    const updated = await this.contactRepository.updateWithTenant(tenantId, id, { tags });
+    this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact: updated, tenantId, actorId });
+    return updated;
+  }
+
+  async removeTag(tenantId: string, id: string, tag: string, actorId?: string): Promise<Contact> {
+    const contact = await this.findOne(tenantId, id);
+    const tags = (contact.tags ?? []).filter((t) => t !== tag);
     const updated = await this.contactRepository.updateWithTenant(tenantId, id, { tags });
     this.eventEmitter.emit(EVENT_NAMES.CONTACT_UPDATED, { contact: updated, tenantId, actorId });
     return updated;

@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role } from '../../../database/entities/role.entity';
+import { CreateSubAdminRoleDto } from '../sub-admin.dto';
 
 @Injectable()
 export class SubAdminRolesService {
@@ -15,7 +16,7 @@ export class SubAdminRolesService {
     return this.roleRepo.find({ where: { tenantId } });
   }
 
-  async create(tenantId: string, dto: any) {
+  async create(tenantId: string, dto: CreateSubAdminRoleDto) {
     assertCustomRoleName(dto.name);
     const role = this.roleRepo.create({
       name: dto.name,

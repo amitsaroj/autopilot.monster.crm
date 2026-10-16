@@ -67,6 +67,11 @@ export default function BroadcastsPage() {
                     {b.total.toLocaleString()} recipients
                     {b.scheduledAt ? ` · Scheduled ${formatDate(b.scheduledAt)}` : ''}
                   </p>
+                  {b.approvalRequired && (
+                    <p className="mt-1 text-xs font-medium text-primary">
+                      Approval {b.approvalStatus.toLowerCase()}
+                    </p>
+                  )}
                 </div>
                 <StatusBadge value={b.status} />
               </Link>

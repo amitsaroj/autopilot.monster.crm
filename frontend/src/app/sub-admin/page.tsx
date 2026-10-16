@@ -39,7 +39,7 @@ const QUICK_LINKS = [
   { label: 'Billing', href: '/sub-admin/billing', icon: CreditCard },
   { label: 'AI', href: '/sub-admin/ai', icon: Bot },
   { label: 'Voice', href: '/sub-admin/voice', icon: Phone },
-  { label: 'WhatsApp', href: '/sub-admin/whatsapp', icon: MessageSquare },
+  { label: 'WhatsApp', href: '/whatsapp/settings', icon: MessageSquare },
   { label: 'Workflows', href: '/sub-admin/workflows', icon: Zap },
   { label: 'Marketplace', href: '/sub-admin/marketplace', icon: Store },
 ];

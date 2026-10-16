@@ -71,8 +71,8 @@ export class WorkflowController {
 
   @Get('workflow-triggers')
   @ApiOperation({ summary: 'List available workflow trigger types' })
-  getTriggers() {
-    return this.workflowService.getTriggerTypes();
+  getTriggers(@TenantId() tenantId: string) {
+    return this.workflowService.getTriggerTypes(tenantId);
   }
 
   @Get('workflow-actions')

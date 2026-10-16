@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 import { WorkflowActionExecutorService } from './workflow-action-executor.service';
 import { ContactService } from '../crm/contact.service';
+import { LeadService } from '../crm/lead.service';
 import { DealService } from '../crm/deal.service';
 import { TaskCrmService, NoteService, EmailCrmService } from '../crm/crm-support.service';
 import { EmailService } from '../../shared/email/email.service';
@@ -13,6 +14,7 @@ import { PipelineService } from '../crm/pipeline.service';
 import { TaskPriority } from '../../database/entities/task.entity';
 import { WorkflowAiService } from './workflow-ai.service';
 import { WorkflowRuntimePolicyService } from './workflow-runtime-policy.service';
+import { ShopifyIntegrationService } from '../commerce/shopify-integration.service';
 
 describe('WorkflowActionExecutorService', () => {
   let service: WorkflowActionExecutorService;
@@ -61,6 +63,7 @@ describe('WorkflowActionExecutorService', () => {
       providers: [
         WorkflowActionExecutorService,
         { provide: ContactService, useValue: mockContactService },
+        { provide: LeadService, useValue: { createFromWorkflow: jest.fn() } },
         { provide: DealService, useValue: mockDealService },
         { provide: TaskCrmService, useValue: mockTaskService },
         { provide: NoteService, useValue: mockNoteService },
@@ -73,6 +76,7 @@ describe('WorkflowActionExecutorService', () => {
         { provide: PipelineService, useValue: mockPipelineService },
         { provide: WorkflowAiService, useValue: { execute: jest.fn() } },
         { provide: WorkflowRuntimePolicyService, useValue: { assertAction: jest.fn() } },
+        { provide: ShopifyIntegrationService, useValue: { lookupOrderStatus: jest.fn() } },
       ],
     }).compile();
 

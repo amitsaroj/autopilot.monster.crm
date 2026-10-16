@@ -39,8 +39,8 @@ export default function BillingOverviewPage() {
           billingService.getUsage(),
           billingService.getRecovery().catch(() => null),
         ]);
-        setSub(subRes.data);
-        setUsage(usageRes.data ?? {});
+        setSub(parseApiData<Subscription>(subRes));
+        setUsage(parseApiData<Usage>(usageRes) ?? {});
         if (recoveryRes) {
           setRecovery(parseApiData<BillingRecovery>(recoveryRes) ?? recoveryRes.data?.data ?? null);
         }
@@ -73,8 +73,9 @@ export default function BillingOverviewPage() {
     setActionLoading('upgrade');
     try {
       const res = await billingService.createCheckout(planId, billingCycle);
-      if (res.data.url) {
-        window.location.href = res.data.url;
+      const url = parseApiData<{ url: string | null }>(res)?.url;
+      if (url) {
+        window.location.href = url;
       } else {
         toast.error('Failed to initiate checkout session');
       }
@@ -89,8 +90,9 @@ export default function BillingOverviewPage() {
     setActionLoading('portal');
     try {
       const res = await billingService.getPortal();
-      if (res.data.url) {
-        window.location.href = res.data.url;
+      const url = parseApiData<{ url: string }>(res)?.url;
+      if (url) {
+        window.location.href = url;
       } else {
         toast.error('Failed to initiate portal session');
       }

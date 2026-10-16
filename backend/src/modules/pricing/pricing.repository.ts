@@ -39,9 +39,9 @@ export class PricingRepository {
     return this.planRepo.save(plan);
   }
 
-  async updatePlan(id: string, data: Partial<Plan>): Promise<Plan> {
+  async updatePlan(id: string, data: Partial<Plan>): Promise<Plan | null> {
     await this.planRepo.update(id, data);
-    return this.planRepo.findOneBy({ id }) as any;
+    return this.planRepo.findOneBy({ id });
   }
 
   async deletePlan(id: string): Promise<void> {
@@ -53,9 +53,9 @@ export class PricingRepository {
     return this.featureRepo.save(feature);
   }
 
-  async updateFeature(id: string, data: Partial<PlanFeature>): Promise<PlanFeature> {
+  async updateFeature(id: string, data: Partial<PlanFeature>): Promise<PlanFeature | null> {
     await this.featureRepo.update(id, data);
-    return this.featureRepo.findOneBy({ id }) as any;
+    return this.featureRepo.findOneBy({ id });
   }
 
   async deleteFeature(id: string): Promise<void> {
@@ -67,9 +67,9 @@ export class PricingRepository {
     return this.limitRepo.save(limit);
   }
 
-  async updateLimit(id: string, data: Partial<PlanLimit>): Promise<PlanLimit> {
+  async updateLimit(id: string, data: Partial<PlanLimit>): Promise<PlanLimit | null> {
     await this.limitRepo.update(id, data);
-    return this.limitRepo.findOneBy({ id }) as any;
+    return this.limitRepo.findOneBy({ id });
   }
 
   async deleteLimit(id: string): Promise<void> {

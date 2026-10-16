@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { isAxiosError } from 'axios';
+import FormData from 'form-data';
 import { isIP } from 'net';
 
 import type { WhatsappProviderName } from '../../database/entities/whatsapp-account.entity';
@@ -51,7 +52,14 @@ export interface WhatsappPhoneHealth {
   codeVerificationStatus: 'VERIFIED' | 'NOT_VERIFIED' | 'EXPIRED' | 'UNKNOWN';
 }
 
-/** References to already-uploaded provider media or public HTTPS assets; no upload/fetch. */
+/** Health plus optional fields; null means Meta did not return it or the read failed. */
+export interface WhatsappDiagnostics extends WhatsappPhoneHealth {
+  nameStatus: string | null;
+  messagingLimitTier: string | null;
+  webhookSubscribed: boolean | null;
+}
+
+/** References to media IDs uploaded through the provider or public HTTPS assets. */
 export type WhatsappMediaReference = { id: string; link?: never } | { link: string; id?: never };
 export type WhatsappMediaType = 'image' | 'video' | 'audio' | 'document';
 export type WhatsappMediaPayload = WhatsappMediaReference & { caption?: string; filename?: string };
@@ -132,6 +140,11 @@ export interface WhatsappSendResult {
   providerMessageId: string;
 }
 
+export interface WhatsappMediaDownload {
+  buffer: Buffer;
+  mimeType: string;
+}
+
 export type WhatsappProviderFailureKind = 'NOT_SUBMITTED' | 'REJECTED' | 'AMBIGUOUS';
 
 /** Sanitized send failure. Never carries Axios config, response bodies, or a cause.
@@ -175,7 +188,12 @@ export interface WhatsappProvider {
   readonly name: WhatsappProviderName;
   readonly capabilities: Readonly<WhatsappCapabilities>;
   validateCredentials(credentials: WhatsappCredentials): Promise<WhatsappPhoneHealth>;
-  readHealth(credentials: WhatsappCredentials): Promise<WhatsappPhoneHealth>;
+  readHealth(credentials: WhatsappCredentials): Promise<WhatsappDiagnostics>;
+  /** Embedded Signup: exchange the FB.login `code` for a business integration token. */
+  exchangeSignupCode(code: string): Promise<string>;
+  subscribeApp(credentials: WhatsappCredentials): Promise<void>;
+  unsubscribeApp(credentials: WhatsappCredentials): Promise<void>;
+  registerPhone(credentials: WhatsappCredentials, pin: string): Promise<void>;
   send(credentials: WhatsappCredentials, message: WhatsappSendRequest): Promise<WhatsappSendResult>;
   /** Validated Meta-shaped content. Caller owns tenant consent/window/usage policy. */
   sendContent(
@@ -183,6 +201,13 @@ export interface WhatsappProvider {
     to: string,
     content: Readonly<Record<string, unknown>>,
   ): Promise<WhatsappSendResult>;
+  uploadMedia(
+    credentials: WhatsappCredentials,
+    file: Buffer,
+    mimeType: string,
+    filename: string,
+  ): Promise<string>;
+  downloadMedia(credentials: WhatsappCredentials, mediaId: string): Promise<WhatsappMediaDownload>;
 }
 
 interface MetaPhone {
@@ -191,6 +216,8 @@ interface MetaPhone {
   verified_name?: string;
   quality_rating?: string;
   code_verification_status?: string;
+  name_status?: string;
+  messaging_limit_tier?: string;
 }
 
 interface MetaPhonePage {
@@ -211,7 +238,7 @@ interface MetaPhonePage {
  * https://developers.facebook.com/docs/whatsapp/business-management-api/message-templates/coupon-templates
  * Adapter supports text; image/video/audio/document references; basic header/body
  * text + media header + URL/quick_reply/copy_code template buttons; interactive
- * reply buttons/lists. No uploads, asset fetching, flows, catalogs, groups or calls.
+ * reply buttons/lists. Upload/download supports an allowlisted subset; no flows, catalogs, groups or calls.
  * Capabilities describe implemented adapter content, not tenant policy/send readiness.
  */
 const API_VERSIONS: Readonly<Record<string, string | null>> = Object.freeze({
@@ -256,18 +283,22 @@ export class MetaWhatsappProvider implements WhatsappProvider {
   readonly name = 'meta' as const;
   readonly capabilities = WHATSAPP_PROVIDER_CAPABILITIES.meta;
   readonly apiVersion: string;
+  private readonly appId?: string;
+  private readonly appSecret?: string;
 
   constructor(config: ConfigService) {
     this.apiVersion = validateWhatsappApiVersion(
       config.get<string>('WHATSAPP_API_VERSION') ?? 'v23.0',
     );
+    this.appId = config.get<string>('META_APP_ID') || undefined;
+    this.appSecret = config.get<string>('META_APP_SECRET') || undefined;
   }
 
   async validateCredentials(credentials: WhatsappCredentials): Promise<WhatsappPhoneHealth> {
     assertWhatsappCredentials(credentials);
     // WABA access alone is insufficient: the phone must belong to this WABA.
     const business = await this.request<{ id?: string }>(
-      credentials,
+      credentials.accessToken,
       credentials.businessAccountId,
       'GET',
       { fields: 'id' },
@@ -279,7 +310,7 @@ export class MetaWhatsappProvider implements WhatsappProvider {
     const seenCursors = new Set<string>();
     for (let page = 0; page < 100; page += 1) {
       const result = await this.request<MetaPhonePage>(
-        credentials,
+        credentials.accessToken,
         `${credentials.businessAccountId}/phone_numbers`,
         'GET',
         {
@@ -307,9 +338,119 @@ export class MetaWhatsappProvider implements WhatsappProvider {
     throw new BadGatewayException('Meta phone ownership validation exceeded the pagination limit');
   }
 
-  readHealth(credentials: WhatsappCredentials): Promise<WhatsappPhoneHealth> {
+  async readHealth(credentials: WhatsappCredentials): Promise<WhatsappDiagnostics> {
     // Recheck membership as well as phone/token access; a phone may have moved WABAs.
-    return this.validateCredentials(credentials);
+    const phone = await this.validateCredentials(credentials);
+    // Optional fields are read separately so an unsupported field never fails connect/health.
+    const [extra, webhookSubscribed] = await Promise.all([
+      this.request<MetaPhone>(credentials.accessToken, credentials.phoneNumberId, 'GET', {
+        fields: 'name_status,messaging_limit_tier',
+      }).catch(() => null),
+      this.isAppSubscribed(credentials).catch(() => null),
+    ]);
+    const field = (value: unknown) =>
+      typeof value === 'string' && /^[A-Z0-9_]{1,40}$/.test(value) ? value : null;
+    return {
+      ...phone,
+      nameStatus: field(extra?.name_status),
+      messagingLimitTier: field(extra?.messaging_limit_tier),
+      webhookSubscribed,
+    };
+  }
+
+  async exchangeSignupCode(code: string): Promise<string> {
+    if (!this.appId || !this.appSecret) {
+      throw new ServiceUnavailableException(
+        'META_APP_ID and META_APP_SECRET must be configured for Embedded Signup',
+      );
+    }
+    if (typeof code !== 'string' || !/^\S{1,4096}$/.test(code)) {
+      throw new BadRequestException('Invalid Embedded Signup code');
+    }
+    let result: { access_token?: unknown };
+    try {
+      // App credentials authenticate this call; no bearer token. redirect_uri is not
+      // required for codes issued by the JS SDK popup.
+      result = await this.request<{ access_token?: unknown }>(null, 'oauth/access_token', 'GET', {
+        client_id: this.appId,
+        client_secret: this.appSecret,
+        code,
+      });
+    } catch (error: unknown) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException(
+          'Meta rejected the Embedded Signup code; it may be expired or already used',
+        );
+      }
+      throw error;
+    }
+    const token = result.access_token;
+    if (typeof token !== 'string' || !/^\S{1,8192}$/.test(token)) {
+      throw new BadGatewayException('Meta returned an invalid access token');
+    }
+    return token;
+  }
+
+  async subscribeApp(credentials: WhatsappCredentials): Promise<void> {
+    assertWhatsappCredentials(credentials);
+    await this.expectSuccess(
+      credentials.accessToken,
+      `${credentials.businessAccountId}/subscribed_apps`,
+      'POST',
+    );
+  }
+
+  async unsubscribeApp(credentials: WhatsappCredentials): Promise<void> {
+    assertWhatsappCredentials(credentials);
+    await this.expectSuccess(
+      credentials.accessToken,
+      `${credentials.businessAccountId}/subscribed_apps`,
+      'DELETE',
+    );
+  }
+
+  async registerPhone(credentials: WhatsappCredentials, pin: string): Promise<void> {
+    assertWhatsappCredentials(credentials);
+    if (typeof pin !== 'string' || !/^[0-9]{6}$/.test(pin)) {
+      throw new BadRequestException('PIN must be exactly 6 digits');
+    }
+    await this.expectSuccess(
+      credentials.accessToken,
+      `${credentials.phoneNumberId}/register`,
+      'POST',
+      {
+        messaging_product: 'whatsapp',
+        pin,
+      },
+    );
+  }
+
+  private async isAppSubscribed(credentials: WhatsappCredentials): Promise<boolean> {
+    const result = await this.request<{
+      data?: Array<{ whatsapp_business_api_data?: { id?: string } }>;
+    }>(credentials.accessToken, `${credentials.businessAccountId}/subscribed_apps`, 'GET');
+    if (!Array.isArray(result.data))
+      throw new BadGatewayException('Meta returned an invalid app list');
+    // Without META_APP_ID we can only tell that *some* app is subscribed.
+    return this.appId
+      ? result.data.some((app) => app.whatsapp_business_api_data?.id === this.appId)
+      : result.data.length > 0;
+  }
+
+  private async expectSuccess(
+    accessToken: string,
+    path: string,
+    method: 'POST' | 'DELETE',
+    data?: Record<string, unknown>,
+  ): Promise<void> {
+    const result = await this.request<{ success?: unknown }>(
+      accessToken,
+      path,
+      method,
+      undefined,
+      data,
+    );
+    if (result.success !== true) throw new BadGatewayException('Meta did not confirm the request');
   }
 
   async send(
@@ -375,11 +516,12 @@ export class MetaWhatsappProvider implements WhatsappProvider {
       const normalized = this.normalizeContent(content);
       submitted = true;
       const result = await this.request<{ messages?: Array<{ id?: string }> }>(
-        credentials,
+        credentials.accessToken,
         `${credentials.phoneNumberId}/messages`,
         'POST',
         undefined,
         { messaging_product: 'whatsapp', recipient_type: 'individual', to, ...normalized },
+        true,
       );
       const providerMessageId = Array.isArray(result.messages) ? result.messages[0]?.id : undefined;
       if (
@@ -392,6 +534,127 @@ export class MetaWhatsappProvider implements WhatsappProvider {
     } catch (error: unknown) {
       if (error instanceof WhatsappProviderError) throw error;
       throw new WhatsappProviderError(submitted ? 'AMBIGUOUS' : 'NOT_SUBMITTED', false);
+    }
+  }
+
+  async uploadMedia(
+    credentials: WhatsappCredentials,
+    file: Buffer,
+    mimeType: string,
+    filename: string,
+  ): Promise<string> {
+    assertWhatsappCredentials(credentials);
+    validateWhatsappApiVersion(this.apiVersion);
+    if (
+      !file.length ||
+      file.length > 16 * 1024 * 1024 ||
+      (mimeType.startsWith('image/') && file.length > 5 * 1024 * 1024) ||
+      !/^[\w.+-]+\/[\w.+-]+$/.test(mimeType)
+    ) {
+      throw new BadRequestException('Invalid WhatsApp media upload');
+    }
+    const safeFilename = filename.replace(/[^\w.-]/g, '_').slice(0, 120) || 'attachment';
+    const form = new FormData();
+    form.append('messaging_product', 'whatsapp');
+    form.append('type', mimeType);
+    form.append('file', file, { filename: safeFilename, contentType: mimeType });
+    try {
+      const response = await axios.post<{ id?: unknown }>(
+        `https://graph.facebook.com/${this.apiVersion}/${credentials.phoneNumberId}/media`,
+        form,
+        {
+          headers: { ...form.getHeaders(), Authorization: `Bearer ${credentials.accessToken}` },
+          timeout: 30000,
+          maxRedirects: 0,
+          maxBodyLength: 16 * 1024 * 1024 + 65536,
+          maxContentLength: 65536,
+        },
+      );
+      if (typeof response.data?.id !== 'string' || !/^[0-9]{1,128}$/.test(response.data.id)) {
+        throw new BadGatewayException('Meta returned an invalid media identifier');
+      }
+      return response.data.id;
+    } catch (error: unknown) {
+      if (error instanceof BadGatewayException) throw error;
+      if (isAxiosError(error) && [400, 401, 403, 413, 415].includes(error.response?.status ?? 0)) {
+        throw new BadRequestException(
+          'Meta rejected the media file; verify its format and account permissions',
+        );
+      }
+      throw new BadGatewayException('WhatsApp media upload failed');
+    }
+  }
+
+  async downloadMedia(
+    credentials: WhatsappCredentials,
+    mediaId: string,
+  ): Promise<WhatsappMediaDownload> {
+    assertWhatsappCredentials(credentials);
+    if (!/^[0-9]{1,128}$/.test(mediaId)) throw new BadRequestException('Invalid WhatsApp media ID');
+    const metadata = await this.request<{
+      url?: unknown;
+      mime_type?: unknown;
+      file_size?: unknown;
+    }>(credentials.accessToken, mediaId, 'GET', { phone_number_id: credentials.phoneNumberId });
+    if (
+      typeof metadata.url !== 'string' ||
+      typeof metadata.mime_type !== 'string' ||
+      (typeof metadata.file_size === 'number' &&
+        (!Number.isSafeInteger(metadata.file_size) || metadata.file_size < 1 || metadata.file_size > 20 * 1024 * 1024))
+    ) {
+      throw new BadGatewayException('Meta returned invalid media metadata');
+    }
+    let mediaUrl: URL;
+    try {
+      mediaUrl = new URL(metadata.url);
+    } catch {
+      throw new BadGatewayException('Meta returned an invalid media URL');
+    }
+    if (
+      mediaUrl.protocol !== 'https:' ||
+      mediaUrl.hostname !== 'lookaside.fbsbx.com' ||
+      !mediaUrl.pathname.startsWith('/whatsapp_business/attachments/') ||
+      mediaUrl.username ||
+      mediaUrl.password
+    ) {
+      throw new BadGatewayException('Meta returned an unsupported media host');
+    }
+    const mimeType = metadata.mime_type.split(';', 1)[0].trim().toLowerCase();
+    if (
+      ![
+        'image/jpeg',
+        'image/png',
+        'video/mp4',
+        'video/3gpp',
+        'audio/aac',
+        'audio/mp4',
+        'audio/mpeg',
+        'audio/amr',
+        'audio/ogg',
+        'application/pdf',
+        'text/plain',
+        'application/msword',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ].includes(mimeType)
+    ) {
+      throw new BadGatewayException('This WhatsApp media format cannot be previewed');
+    }
+    try {
+      const response = await axios.get<ArrayBuffer>(metadata.url, {
+        headers: { Authorization: `Bearer ${credentials.accessToken}` },
+        responseType: 'arraybuffer',
+        timeout: 20000,
+        maxRedirects: 0,
+        maxContentLength: 20 * 1024 * 1024,
+        maxBodyLength: 0,
+      });
+      return { buffer: Buffer.from(response.data), mimeType };
+    } catch {
+      throw new BadGatewayException('WhatsApp media download failed');
     }
   }
 
@@ -731,9 +994,14 @@ export class MetaWhatsappProvider implements WhatsappProvider {
   }
 
   private async readPhone(credentials: WhatsappCredentials): Promise<WhatsappPhoneHealth> {
-    const phone = await this.request<MetaPhone>(credentials, credentials.phoneNumberId, 'GET', {
-      fields: 'id,display_phone_number,verified_name,quality_rating,code_verification_status',
-    });
+    const phone = await this.request<MetaPhone>(
+      credentials.accessToken,
+      credentials.phoneNumberId,
+      'GET',
+      {
+        fields: 'id,display_phone_number,verified_name,quality_rating,code_verification_status',
+      },
+    );
     if (phone.id !== credentials.phoneNumberId) {
       throw new BadGatewayException('Meta returned a different phone ID');
     }
@@ -760,12 +1028,15 @@ export class MetaWhatsappProvider implements WhatsappProvider {
     };
   }
 
+  /** accessToken null = app-credential call (no Authorization header).
+   * sendSemantics maps failures to WhatsappProviderError for message submission. */
   private async request<T>(
-    credentials: WhatsappCredentials,
+    accessToken: string | null,
     path: string,
-    method: 'GET' | 'POST',
+    method: 'GET' | 'POST' | 'DELETE',
     params?: Record<string, string>,
     data?: Record<string, unknown>,
+    sendSemantics = false,
   ): Promise<T> {
     // Recheck expiration for long-running processes, not just at boot.
     validateWhatsappApiVersion(this.apiVersion);
@@ -779,7 +1050,7 @@ export class MetaWhatsappProvider implements WhatsappProvider {
         maxRedirects: 0,
         maxContentLength: 2 * 1024 * 1024,
         headers: {
-          Authorization: `Bearer ${credentials.accessToken}`,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           'Content-Type': 'application/json',
         },
       });
@@ -788,8 +1059,8 @@ export class MetaWhatsappProvider implements WhatsappProvider {
       }
       return response.data;
     } catch (error: unknown) {
-      // Never expose/chain/log Axios errors: config contains the Authorization token.
-      if (method === 'POST') {
+      // Never expose/chain/log Axios errors: config contains the token / app secret.
+      if (sendSemantics) {
         const status = isAxiosError(error) ? error.response?.status : undefined;
         const meta = isAxiosError(error)
           ? (

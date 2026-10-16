@@ -64,6 +64,24 @@ export class WorkflowExecutorService {
   }
 
   evaluateCondition(config: Record<string, unknown>, context: WorkflowExecutionContext): boolean {
+    if (Array.isArray(config.conditions)) {
+      const conditions = config.conditions;
+      if (
+        conditions.length < 1 ||
+        conditions.length > 10 ||
+        (config.logicalOperator !== 'AND' && config.logicalOperator !== 'OR')
+      ) {
+        throw new Error('Invalid condition group');
+      }
+      const evaluate = (condition: unknown): boolean => {
+        if (!condition || typeof condition !== 'object' || Array.isArray(condition))
+          throw new Error('Invalid condition');
+        return this.evaluateCondition(condition as Record<string, unknown>, context);
+      };
+      return config.logicalOperator === 'AND'
+        ? conditions.every(evaluate)
+        : conditions.some(evaluate);
+    }
     const field = config.field as string | undefined;
     if (!field) throw new Error('Condition requires field');
 

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantSettingsService } from './tenant-settings.service';
+import { UpsertTenantSettingDto } from './dto/tenant-setting.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import { Roles, CurrentUser, ResourcePermissions } from '../../common/decorators';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
@@ -24,7 +25,7 @@ export class TenantSettingsController {
   @ApiOperation({ summary: 'Update or create an integration setting' })
   async update(
     @CurrentUser() user: IRequestContext,
-    @Body() data: { key: string; value: any; group?: string },
+    @Body() data: UpsertTenantSettingDto,
   ) {
     return await this.service.updateSetting(user.tenantId, data);
   }

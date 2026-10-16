@@ -139,7 +139,7 @@ const adminNavItems: AdminNavItem[] = [
       { label: 'WhatsApp Admin', href: '/admin/whatsapp' },
       { label: 'WhatsApp Campaigns', href: '/admin/whatsapp/campaigns' },
       { label: 'WhatsApp Metrics', href: '/admin/whatsapp/metrics' },
-      { label: 'WhatsApp Profiles', href: '/admin/whatsapp/profiles' },
+      { label: 'WhatsApp Accounts', href: '/whatsapp/settings' },
     ],
   },
   {

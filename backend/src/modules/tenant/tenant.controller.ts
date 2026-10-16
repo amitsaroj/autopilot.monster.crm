@@ -1,8 +1,7 @@
 import { Controller, Get, Post, Body, Patch, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { TenantService } from './tenant.service';
-import { CreateTenantDto } from './dto/create-tenant.dto';
-import { UpdateBrandingDto, VerifyDomainDto } from './dto/tenant.dto';
+import { UpdateBrandingDto, UpdateWorkspaceSettingsDto, VerifyDomainDto } from './dto/tenant.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import { Roles, CurrentUser, ResourcePermissions } from '../../common/decorators';
 import { IRequestContext } from '../../common/interfaces/request-context.interface';
@@ -25,8 +24,8 @@ export class TenantController {
   @ApiOperation({ summary: 'Update current workspace settings' })
   @Roles('TENANT_ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
-  async updateMe(@CurrentUser() user: IRequestContext, @Body() dto: Partial<CreateTenantDto>) {
-    return this.tenantService.update(user.tenantId, dto);
+  async updateMe(@CurrentUser() user: IRequestContext, @Body() dto: UpdateWorkspaceSettingsDto) {
+    return this.tenantService.updateWorkspace(user.tenantId, dto);
   }
 
   @Post('settings/workspace/verify-domain')

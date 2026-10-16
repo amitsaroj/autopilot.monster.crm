@@ -53,4 +53,14 @@ export class WhatsAppMessage extends BaseEntity {
 
   @Column({ name: 'media_urls', type: 'text', array: true, default: '{}' })
   mediaUrls!: string[];
+
+  /** Meta `pricing` from status webhooks (migration 021). */
+  @Column({ name: 'pricing_billable', type: 'boolean', nullable: true })
+  pricingBillable?: boolean | null;
+
+  @Column({ name: 'pricing_category', type: 'varchar', length: 64, nullable: true })
+  pricingCategory?: string | null;
+
+  @Column({ name: 'pricing_model', type: 'varchar', length: 64, nullable: true })
+  pricingModel?: string | null;
 }

@@ -8,7 +8,6 @@ import {
   whatsappConversationService,
   type WhatsAppConversationSummary,
 } from '@/services/whatsapp-conversation.service';
-import { parseApiData } from '@/lib/api/parse-response';
 
 type InboxItem = {
   id: string;
@@ -81,7 +80,7 @@ function mapWhatsApp(conversations: WhatsAppConversationSummary[]): InboxItem[] 
     assignee: c.assigneeId || 'Unassigned',
     time: formatRelativeTime(c.lastMessageAt),
     unread: c.unreadCount || 0,
-    href: `/whatsapp/conversations/${encodeURIComponent(c.phone)}`,
+    href: `/whatsapp/conversations/${encodeURIComponent(c.phone)}${c.phoneNumberId ? `?phoneNumberId=${encodeURIComponent(c.phoneNumberId)}` : ''}`,
   }));
 }
 
@@ -105,10 +104,7 @@ export default function InboxPage() {
         // Omnichannel may still be unavailable; fall back to WhatsApp conversations.
       }
 
-      const waRes = await whatsappConversationService.list();
-      const waList =
-        parseApiData<WhatsAppConversationSummary[]>(waRes) ??
-        (Array.isArray(waRes.data) ? (waRes.data as WhatsAppConversationSummary[]) : []);
+      const waList = await whatsappConversationService.listAll();
       setItems(mapWhatsApp(waList));
       setSource('whatsapp');
     } catch {

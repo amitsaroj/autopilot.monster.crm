@@ -33,6 +33,10 @@ export function BroadcastDetail({ id }: { id: string }) {
   );
   const [preview, setPreview] = useState<BroadcastPreview | null>(null);
   const [at, setAt] = useState('');
+  const [recipientLocalTime, setRecipientLocalTime] = useState('');
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<'' | 'DAILY' | 'WEEKLY'>('');
+  const [recurrenceEndAt, setRecurrenceEndAt] = useState('');
+  const [recurrenceMaxOccurrences, setRecurrenceMaxOccurrences] = useState('');
   const [busy, setBusy] = useState(false);
   const [action, setAction] = useState<Action | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,29 +73,36 @@ export function BroadcastDetail({ id }: { id: string }) {
       setBusy(false);
     }
   }
-  function exportRecipients() {
-    const cell = (value: unknown) => {
-      const text = String(value ?? '');
-      return `"${(/^[=+@-]/.test(text) ? "'" + text : text).replaceAll('"', '""')}"`;
-    };
-    const csv = [
-      ['Contact ID', 'Phone', 'Outcome', 'Message ID', 'Error'],
-      ...recipients.map((row) => [
-        row.contactId,
-        row.phone,
-        row.outcome ?? 'Pending',
-        row.messageId,
-        row.error,
-      ]),
-    ]
-      .map((row) => row.map(cell).join(','))
-      .join('\r\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'whatsapp-campaign-recipients.csv';
-    link.click();
-    URL.revokeObjectURL(url);
+  async function exportRecipients() {
+    if (!b?.audiencePrepared) {
+      setError('Recipient export is available after the campaign audience has been prepared.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const name = (b.name || 'campaign')
+        .replace(/[^a-z0-9_-]+/gi, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 100);
+      const filename = `whatsapp-${name || 'campaign'}-recipients.csv`;
+      const streamed = await whatsappBroadcastService.streamRecipientsToFile(id, filename);
+      if (!streamed) {
+        const response = await whatsappBroadcastService.exportRecipients(id);
+        const url = URL.createObjectURL(response.data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+      }
+      setNotice('Exported all prepared campaign recipients.');
+    } catch (cause) {
+      if (!(cause instanceof DOMException && cause.name === 'AbortError'))
+        setError(errorMessage(cause));
+    } finally {
+      setBusy(false);
+    }
   }
   const clock = useResource(async () => Date.now(), 10000);
   const review = async () => {
@@ -113,12 +124,24 @@ export function BroadcastDetail({ id }: { id: string }) {
       if (action === 'schedule') {
         if (!at || new Date(at).getTime() <= Date.now())
           throw new Error('Choose a future schedule time.');
-        await whatsappBroadcastService.schedule(id, new Date(at).toISOString());
+        if (recurrenceFrequency && !recurrenceEndAt && !recurrenceMaxOccurrences)
+          throw new Error('Set a recurrence end time or maximum occurrence count.');
+        await whatsappBroadcastService.schedule(id, new Date(at).toISOString(), {
+          ...(recipientLocalTime ? { recipientLocalTime } : {}),
+          ...(recurrenceFrequency ? { recurrenceFrequency } : {}),
+          ...(recurrenceEndAt ? { recurrenceEndAt: new Date(recurrenceEndAt).toISOString() } : {}),
+          ...(recurrenceMaxOccurrences
+            ? { recurrenceMaxOccurrences: Number(recurrenceMaxOccurrences) }
+            : {}),
+        });
       } else await whatsappBroadcastService[action](id);
       setNotice(
         `Broadcast ${action === 'remove' ? 'deleted' : action === 'send' ? 'queued' : action === 'schedule' ? 'scheduled' : action === 'pause' ? 'paused' : action === 'resume' ? 'resumed' : 'cancelled'}.`,
       );
       setAction(null);
+      setRecurrenceFrequency('');
+      setRecurrenceEndAt('');
+      setRecurrenceMaxOccurrences('');
       if (action === 'remove') {
         router.push('/whatsapp/broadcast');
         return;
@@ -129,7 +152,10 @@ export function BroadcastDetail({ id }: { id: string }) {
       setError(
         e instanceof Error && e.message === 'Choose a future schedule time.'
           ? e.message
-          : errorMessage(e),
+          : e instanceof Error &&
+              e.message === 'Set a recurrence end time or maximum occurrence count.'
+            ? e.message
+            : errorMessage(e),
       );
     } finally {
       setBusy(false);
@@ -164,6 +190,8 @@ export function BroadcastDetail({ id }: { id: string }) {
             <span className="self-center text-sm text-muted-foreground">
               Sending number: {b.phoneNumberId || 'Not configured'} · Scheduled:{' '}
               {formatDate(b.scheduledAt)}
+              {b.recurrenceFrequency &&
+                ` · ${b.recurrenceFrequency.toLowerCase()} occurrence ${b.recurrenceOccurrence ?? 1}`}
             </span>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -230,7 +258,7 @@ export function BroadcastDetail({ id }: { id: string }) {
             </button>
             {canStart && (
               <>
-                <Field label="Schedule in your local timezone">
+                <Field label="Schedule date and time in your timezone">
                   <input
                     type="datetime-local"
                     className={`${inputClass} max-w-sm`}
@@ -238,6 +266,60 @@ export function BroadcastDetail({ id }: { id: string }) {
                     onChange={(e) => setAt(e.target.value)}
                   />
                 </Field>
+                <Field
+                  label="Optional recipient local send time"
+                  hint="When set, each recipient is queued at this time in their saved IANA timezone. Contacts without a valid timezone use UTC. The selected time is snapshotted when the audience is prepared."
+                >
+                  <input
+                    type="time"
+                    className={`${inputClass} max-w-xs`}
+                    value={recipientLocalTime}
+                    onChange={(event) => setRecipientLocalTime(event.target.value)}
+                  />
+                </Field>
+                <Field label="Repeat this broadcast">
+                  <select
+                    className={inputClass}
+                    value={recurrenceFrequency}
+                    onChange={(event) =>
+                      setRecurrenceFrequency(event.target.value as '' | 'DAILY' | 'WEEKLY')
+                    }
+                  >
+                    <option value="">One time only</option>
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                  </select>
+                </Field>
+                {recurrenceFrequency && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Stop at (optional, your local time)">
+                      <input
+                        type="datetime-local"
+                        className={inputClass}
+                        value={recurrenceEndAt}
+                        onChange={(event) => setRecurrenceEndAt(event.target.value)}
+                      />
+                    </Field>
+                    <Field
+                      label="Total occurrences (optional)"
+                      hint="Includes the first send; choose 2–366. Set an end time or this limit. If both are set, whichever comes first stops the series."
+                    >
+                      <input
+                        type="number"
+                        min={2}
+                        max={366}
+                        className={inputClass}
+                        value={recurrenceMaxOccurrences}
+                        onChange={(event) => setRecurrenceMaxOccurrences(event.target.value)}
+                      />
+                    </Field>
+                    {!recurrenceEndAt && !recurrenceMaxOccurrences && (
+                      <Notice error>
+                        Recurring broadcasts require an end time or occurrence limit.
+                      </Notice>
+                    )}
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   <button
                     className={buttonClass}
@@ -314,7 +396,8 @@ export function BroadcastDetail({ id }: { id: string }) {
             <h2 className="font-semibold">Recipient delivery log</h2>
             <p className="text-sm text-muted-foreground">
               Prepared recipients and stored outcomes. Provider acceptance is not confirmation of
-              delivery. Export includes only the records loaded below.
+              delivery. Export fetches the complete prepared audience, independently of the pages
+              loaded in this table.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -330,10 +413,10 @@ export function BroadcastDetail({ id }: { id: string }) {
               </button>
               <button
                 className={secondaryClass}
-                disabled={!recipients.length}
-                onClick={exportRecipients}
+                disabled={busy || !b.audiencePrepared}
+                onClick={() => void exportRecipients()}
               >
-                Export {recipients.length} loaded recipients
+                Export all recipients
               </button>
             </div>
             {cursor === null && !recipients.length && (

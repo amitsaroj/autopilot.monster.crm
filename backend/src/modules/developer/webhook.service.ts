@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { InjectRepository } from '@nestjs/typeorm';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { Repository } from 'typeorm';
+import { QueryDeepPartialEntity, Repository } from 'typeorm';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import { Webhook } from '../../database/entities/webhook.entity';
@@ -14,10 +14,32 @@ export const WEBHOOK_QUEUE = 'developer-webhooks';
 export const WEBHOOK_JOB = 'deliver-webhook';
 const MAX_ATTEMPTS = 5;
 const RETRY_DELAY = 5000;
+const QUEUE_FAILURE = 'Delivery could not be queued; replay required';
 
 export interface WebhookJobData {
   tenantId: string;
   deliveryId: string;
+}
+
+type PublicWebhook = Omit<Webhook, 'secret' | 'tenantId'>;
+
+function publicWebhook(webhook: Webhook): PublicWebhook {
+  const { secret: _secret, tenantId: _tenantId, ...safe } = webhook;
+  return safe;
+}
+
+function stableDeliveryId(
+  webhookId: string,
+  event: string,
+  payload: Record<string, unknown>,
+): string {
+  const sourceId = payload.eventId ?? payload.messageSid;
+  if (typeof sourceId !== 'string' || !sourceId) return crypto.randomUUID();
+  const digest = crypto.createHash('sha256').update(`${webhookId}:${event}:${sourceId}`).digest();
+  digest[6] = (digest[6] & 0x0f) | 0x50;
+  digest[8] = (digest[8] & 0x3f) | 0x80;
+  const hex = digest.subarray(0, 16).toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 @Injectable()
@@ -40,7 +62,7 @@ export class WebhookService {
     if (dto.url !== undefined) {
       if (typeof dto.url !== 'string' || dto.url.length > 500)
         throw new BadRequestException('Invalid webhook URL');
-      validateWebhookUrl(dto.url);
+      this.validateDestination(dto.url);
     }
     if (
       dto.events !== undefined &&
@@ -59,12 +81,22 @@ export class WebhookService {
     }
   }
 
-  async create(tenantId: string, dto: CreateWebhookDto): Promise<Webhook> {
+  private validateDestination(value: string): URL {
+    const url = validateWebhookUrl(value);
+    if (url.protocol !== 'https:')
+      throw new BadRequestException('Webhook destinations must use HTTPS to protect signatures');
+    return url;
+  }
+
+  async create(
+    tenantId: string,
+    dto: CreateWebhookDto,
+  ): Promise<PublicWebhook & { secret: string }> {
     this.validateFields(dto);
     if (dto.name === undefined || dto.url === undefined || dto.events === undefined) {
       throw new BadRequestException('Webhook name, URL and events are required');
     }
-    return this.webhookRepo.save(
+    const webhook = await this.webhookRepo.save(
       this.webhookRepo.create({
         tenantId,
         name: dto.name,
@@ -74,20 +106,29 @@ export class WebhookService {
         status: 'ACTIVE',
       }),
     );
+    return { ...publicWebhook(webhook), secret: webhook.secret! };
   }
 
-  async findAll(tenantId: string): Promise<Webhook[]> {
-    return this.webhookRepo.find({ where: { tenantId }, order: { createdAt: 'DESC' } });
+  async findAll(tenantId: string): Promise<PublicWebhook[]> {
+    const webhooks = await this.webhookRepo.find({
+      where: { tenantId },
+      order: { createdAt: 'DESC' },
+    });
+    return webhooks.map(publicWebhook);
   }
 
-  async findOne(tenantId: string, id: string): Promise<Webhook> {
+  private async findOwned(tenantId: string, id: string): Promise<Webhook> {
     const webhook = await this.webhookRepo.findOne({ where: { id, tenantId } });
     if (!webhook) throw new NotFoundException('Webhook not found');
     return webhook;
   }
 
-  async update(tenantId: string, id: string, dto: UpdateWebhookDto): Promise<Webhook> {
-    const webhook = await this.findOne(tenantId, id);
+  async findOne(tenantId: string, id: string): Promise<PublicWebhook> {
+    return publicWebhook(await this.findOwned(tenantId, id));
+  }
+
+  async update(tenantId: string, id: string, dto: UpdateWebhookDto): Promise<PublicWebhook> {
+    const webhook = await this.findOwned(tenantId, id);
     this.validateFields(dto);
     // Explicit fields protect ownership, credentials and concurrent delivery counters.
     const changes: Partial<Webhook> = {};
@@ -97,11 +138,11 @@ export class WebhookService {
     if (dto.status !== undefined) changes.status = dto.status;
     if (Object.keys(changes).length)
       await this.webhookRepo.update({ id: webhook.id, tenantId }, changes);
-    return this.findOne(tenantId, id);
+    return publicWebhook(await this.findOwned(tenantId, id));
   }
 
   async remove(tenantId: string, id: string): Promise<void> {
-    await this.webhookRepo.softRemove(await this.findOne(tenantId, id));
+    await this.webhookRepo.softRemove(await this.findOwned(tenantId, id));
   }
 
   async getDeliveries(
@@ -144,18 +185,37 @@ export class WebhookService {
     webhookId: string,
     event: string,
     payload: Record<string, unknown>,
+    replayOf?: string,
+    replayRequestKey?: string,
   ): Promise<WebhookDelivery> {
-    // shortcut: DB and queue writes are separate; use a shared outbox when atomic handoff is required.
-    const delivery = await this.deliveryRepo.save(
-      this.deliveryRepo.create({
+    const deliveryId = replayOf ? crypto.randomUUID() : stableDeliveryId(webhookId, event, payload);
+    const insert = this.deliveryRepo
+      .createQueryBuilder()
+      .insert()
+      .values({
+        id: deliveryId,
         tenantId,
         webhookId,
+        replayOf,
+        replayRequestKey,
         event,
-        payload,
+        payload: payload as QueryDeepPartialEntity<WebhookDelivery>['payload'],
         success: false,
         attempts: 0,
-      }),
-    );
+      })
+      .returning('id');
+    insert.orIgnore();
+    const inserted = await insert.execute();
+    const delivery = await this.deliveryRepo.findOne({
+      where: replayRequestKey
+        ? { tenantId, webhookId, replayRequestKey }
+        : { id: deliveryId, tenantId },
+    });
+    if (!delivery) throw new Error('Webhook delivery could not be recorded');
+    if (replayRequestKey && delivery.replayOf !== replayOf)
+      throw new BadRequestException('Idempotency key was already used for another replay');
+    // Retry only the explicit queue-failure state; normal redeliveries remain deduplicated.
+    if (!inserted.identifiers.length && delivery.responseBody !== QUEUE_FAILURE) return delivery;
     try {
       await this.queue.add(
         WEBHOOK_JOB,
@@ -168,26 +228,65 @@ export class WebhookService {
           removeOnFail: 1000,
         },
       );
+      if (delivery.responseBody === QUEUE_FAILURE) {
+        await this.deliveryRepo.update({ id: delivery.id, tenantId }, { responseBody: '' });
+      }
     } catch {
       await this.deliveryRepo.update(
         { id: delivery.id, tenantId },
-        { responseBody: 'Delivery could not be queued; replay required' },
+        { responseBody: QUEUE_FAILURE },
       );
       throw new Error('Webhook queue unavailable');
     }
     return delivery;
   }
 
-  async replay(tenantId: string, webhookId: string, deliveryId: string): Promise<WebhookDelivery> {
-    const webhook = await this.findOne(tenantId, webhookId);
+  async replay(
+    tenantId: string,
+    webhookId: string,
+    deliveryId: string,
+    replayRequestKey?: string,
+  ): Promise<WebhookDelivery> {
+    if (
+      replayRequestKey !== undefined &&
+      (!replayRequestKey.trim() || replayRequestKey.length > 200)
+    )
+      throw new BadRequestException('Idempotency-Key must contain 1–200 characters');
+    const webhook = await this.findOwned(tenantId, webhookId);
     if (webhook.status !== 'ACTIVE')
       throw new BadRequestException('Activate the webhook before replaying');
     const delivery = await this.deliveryRepo.findOne({
       where: { id: deliveryId, tenantId, webhookId },
     });
     if (!delivery) throw new NotFoundException('Webhook delivery not found');
+    const priorReplay = replayRequestKey
+      ? await this.deliveryRepo.findOne({
+          where: { tenantId, webhookId, replayRequestKey },
+        })
+      : null;
+    if (priorReplay) {
+      if (priorReplay.replayOf !== delivery.id)
+        throw new BadRequestException('Idempotency key was already used for another replay');
+      if (priorReplay.responseBody !== QUEUE_FAILURE) return priorReplay;
+      return this.enqueue(
+        tenantId,
+        webhookId,
+        delivery.event,
+        delivery.payload,
+        delivery.id,
+        replayRequestKey,
+      );
+    }
+    if (delivery.success) throw new BadRequestException('Successful deliveries cannot be replayed');
     // A new delivery preserves the original audit trail and has a separate retry budget.
-    return this.enqueue(tenantId, webhookId, delivery.event, delivery.payload);
+    return this.enqueue(
+      tenantId,
+      webhookId,
+      delivery.event,
+      delivery.payload,
+      delivery.id,
+      replayRequestKey,
+    );
   }
 
   async deliver(
@@ -220,6 +319,7 @@ export class WebhookService {
     let failure = 'Webhook destination unavailable or rejected';
     let agents: Awaited<ReturnType<typeof publicWebhookAgents>> | undefined;
     try {
+      this.validateDestination(webhook.url);
       agents = await publicWebhookAgents(webhook.url);
       const response = await axios.request<unknown>({
         url: webhook.url,
@@ -242,6 +342,7 @@ export class WebhookService {
             .digest('hex'),
           'X-Webhook-Event': delivery.event,
           'X-Webhook-Delivery': delivery.id,
+          'X-Webhook-Idempotency-Key': delivery.id,
         },
       });
       status = response.status;
@@ -290,14 +391,14 @@ export class WebhookService {
   }
 
   async rotateSecret(tenantId: string, id: string): Promise<{ secret: string }> {
-    const webhook = await this.findOne(tenantId, id);
+    const webhook = await this.findOwned(tenantId, id);
     const secret = crypto.randomBytes(32).toString('hex');
     await this.webhookRepo.update({ id: webhook.id, tenantId }, { secret });
     return { secret };
   }
 
   async test(tenantId: string, id: string): Promise<{ success: boolean; status?: number }> {
-    const webhook = await this.findOne(tenantId, id);
+    const webhook = await this.findOwned(tenantId, id);
     if (webhook.status !== 'ACTIVE')
       throw new BadRequestException('Activate the webhook before testing');
     const delivery = await this.deliveryRepo.save(

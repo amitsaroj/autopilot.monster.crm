@@ -12,6 +12,25 @@ interface DomainEventPayload {
   correlationId?: string;
 }
 
+/**
+ * Key names whose values must never be persisted to the audit trail
+ * (token, accessToken, resetToken, password, clientSecret, keyHash, apiKey ...).
+ * Anchored at the end so counters like `totalTokens` are kept.
+ */
+const SENSITIVE_KEY = /(token|password|secret|hash|api[-_]?key|mfa[-_]?code)$/i;
+
+/** Deep-copies `value`, replacing values under sensitive keys with '[REDACTED]'. */
+export function redactSensitive(value: unknown, depth = 0): unknown {
+  if (depth > 8 || value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map((item) => redactSensitive(item, depth + 1));
+  if (value instanceof Date) return value;
+  const out: Record<string, unknown> = {};
+  for (const [key, inner] of Object.entries(value)) {
+    out[key] = SENSITIVE_KEY.test(key) ? '[REDACTED]' : redactSensitive(inner, depth + 1);
+  }
+  return out;
+}
+
 @Injectable()
 export class AuditLogListener {
   private readonly logger = new Logger(AuditLogListener.name);
@@ -35,7 +54,7 @@ export class AuditLogListener {
         action,
         resource,
         resourceId,
-        changes: event.payload ?? {},
+        changes: redactSensitive(event.payload ?? {}) as Record<string, unknown>,
       });
     } catch (error) {
       this.logger.error(

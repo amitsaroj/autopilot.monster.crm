@@ -4,16 +4,9 @@ import { useState, useEffect } from 'react';
 import {
   MessageSquare,
   Search,
-  Filter,
-  User,
-  Bot,
-  Clock,
-  CheckCircle2,
   Phone,
   Mail,
-  ArrowRight,
   Plus,
-  MoreVertical,
   ChevronRight,
   Loader2,
 } from 'lucide-react';
@@ -65,8 +58,7 @@ export default function AdminCRMInboxPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await whatsappConversationService.list();
-        const items = res.data?.data ?? [];
+        const items = await whatsappConversationService.listAll();
         setThreads(
           items.map((c: WhatsAppConversation) => ({
             id: c.phone,

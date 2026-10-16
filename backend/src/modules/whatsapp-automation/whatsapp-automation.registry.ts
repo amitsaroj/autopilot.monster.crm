@@ -202,34 +202,39 @@ export const WHATSAPP_AUTOMATION_PRODUCTS: readonly AutomationProductDefinition[
     'lead-capture',
     'Inbound lead capture',
     'LEAD_CAPTURE',
-    'Create a CRM lead contact from an inbound WhatsApp request and acknowledge it.',
+    'Create a scored CRM lead record from an inbound WhatsApp request, even when the customer has no email, and acknowledge it.',
     [
       keyword,
       field(
         'firstName',
-        'Contact first name',
+        'Lead first name',
         'string',
         'Literal or workflow variable such as {{phone}}.',
         { maxLength: 100 },
       ),
       field(
         'email',
-        'Contact email',
+        'Lead email (optional)',
         'string',
-        'Literal or workflow variable resolving to a valid email; required by the existing CRM contact action.',
-        { maxLength: 255 },
+        'Optional literal or workflow variable; the WhatsApp sender number is captured automatically.',
+        { required: false, maxLength: 255 },
       ),
       message,
     ],
     [
       {
-        type: 'CREATE_CONTACT',
-        config: { firstName: '$firstName', email: '$email', phone: '{{phone}}', status: 'LEAD' },
+        type: 'CREATE_LEAD',
+        config: {
+          firstName: '$firstName',
+          email: '$email',
+          phone: '{{phone}}',
+          source: 'WhatsApp',
+        },
       },
       reply,
     ],
-    ['Match inbound keyword', 'Create CRM contact', 'Send acknowledgment'],
-    { requiredFeatures: ['whatsapp', 'workflow', 'crm'] },
+    ['Match inbound keyword', 'Create scored CRM lead', 'Send acknowledgment'],
+    { requiredFeatures: ['whatsapp', 'workflow', 'crm'], version: '1.1.0' },
   ),
   pack(
     'sales-handoff',
@@ -361,7 +366,7 @@ export const WHATSAPP_AUTOMATION_PRODUCTS: readonly AutomationProductDefinition[
     'shopify-recovery',
     'Shopify cart recovery',
     'ECOMMERCE',
-    'Requires a Shopify event/authentication adapter that is not implemented. Not installable.',
+    'Shopify connection and supported cart/order event intake are available, but abandoned-checkout recovery is not implemented. Not installable.',
     [],
     [],
     [],
@@ -376,7 +381,7 @@ export const WHATSAPP_AUTOMATION_PRODUCTS: readonly AutomationProductDefinition[
           label: 'Shopify adapter',
           implemented: false,
           description:
-            'Verified Shopify authentication, cart events and tenant mapping are not implemented.',
+            'Shopify OAuth and supported cart/order event intake exist; checkout recovery actions and live store verification remain unavailable.',
         },
       ],
     },
@@ -648,6 +653,77 @@ export const WHATSAPP_AUTOMATION_PACKS: readonly AutomationProductDefinition[] =
     ],
     { requiredFeatures: ['whatsapp', 'workflow', 'crm'] },
   ),
+  pack(
+    'travel-hospitality-inquiry',
+    'Travel and hospitality inquiry intake',
+    'INDUSTRIES',
+    'Route an inbound travel or stay inquiry to a teammate, create a follow-up task, and acknowledge the request. It does not read availability, quote prices, or confirm a reservation.',
+    [
+      keyword,
+      assignee,
+      field(
+        'taskTitle',
+        'Follow-up task title',
+        'string',
+        'Task title for the travel or stay inquiry.',
+        { maxLength: 255 },
+      ),
+      message,
+    ],
+    [
+      { type: 'ASSIGN_AGENT', config: { assigneeId: '$assigneeId', phone: '{{phone}}' } },
+      {
+        type: 'CREATE_TASK',
+        config: {
+          title: '$taskTitle',
+          description: '{{body}}',
+          assigneeId: '$assigneeId',
+          dueInHours: 24,
+        },
+      },
+      reply,
+    ],
+    [
+      'Match inquiry keyword',
+      'Assign a teammate',
+      'Create inquiry follow-up task',
+      'Acknowledge the request',
+    ],
+    { requiredFeatures: ['whatsapp', 'workflow', 'crm'] },
+  ),
+  pack(
+    'retail-service-inquiry',
+    'Retail and service request intake',
+    'INDUSTRIES',
+    'Capture an inbound retail or service question in a CRM note, notify a teammate, and acknowledge the customer. It does not check product inventory, orders, refunds, or service availability.',
+    [keyword, assignee, message],
+    [
+      {
+        type: 'CREATE_NOTE',
+        config: {
+          title: 'WhatsApp retail or service request',
+          content: '{{body}}',
+          tags: ['whatsapp', 'service-request'],
+        },
+      },
+      {
+        type: 'NOTIFY_TEAM',
+        config: {
+          userId: '$assigneeId',
+          title: 'Retail or service request',
+          message: '{{body}}',
+        },
+      },
+      reply,
+    ],
+    [
+      'Match inquiry keyword',
+      'Record CRM request note',
+      'Notify a teammate',
+      'Acknowledge the customer',
+    ],
+    { requiredFeatures: ['whatsapp', 'workflow', 'crm'] },
+  ),
 ];
 
 export const ALL_WHATSAPP_AUTOMATION_PRODUCTS: readonly AutomationProductDefinition[] = [
@@ -696,7 +772,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'inbox_routing',
         'Advanced inbox routing',
-        'Presence, skill/round-robin routing, SLA escalation, merge/export and CSAT are not implemented.',
+        'Manual, tenant/team round-robin, Redis-backed short-lived inbox presence and explicit online-teammate assignment, SLA reporting/owner notification, export and CSAT request/reply are available. Skill/availability routing, conversation merging and agent-performance reporting remain unavailable.',
       ),
     ],
   ),
@@ -708,7 +784,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'campaign_controls',
         'Campaign lifecycle integration',
-        'Use the existing broadcast product for approved-template campaigns. Recurrence, timezone/frequency controls, approvals, budgets and A/B attribution need campaign engine work; catalog packs do not launch broadcasts.',
+        'The broadcast product supports approved templates, scheduling/recurrence, recipient-local scheduling, frequency caps and approval. Budget enforcement, A/B testing and reliable conversion attribution remain unavailable; catalog packs do not launch broadcasts.',
       ),
     ],
   ),
@@ -720,7 +796,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'sequence_entry',
         'Advanced sequence criteria',
-        'Per-recipient timezone, arbitrary entry/goal criteria and richer sequence UX require additional engine/UI support. Follow-ups reuse one template for three touches.',
+        'Follow-ups reuse one approved template for three touches and support business-hours scheduling, stop-on-reply and stop-on-conversion. Arbitrary entry/goal criteria, per-contact timezone and richer sequence UX remain unavailable.',
       ),
     ],
   ),
@@ -732,7 +808,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'builder_controls',
         'Advanced builder controls',
-        'The existing graph editor supports WhatsApp keywords and implemented actions. Undo/redo, broader trigger selection and typed tool controls require builder work, not a separate installable pack.',
+        'The shared graph editor supports draft/publish, dry-run, undo/redo, WhatsApp and CRM triggers, delays, branching and AND/OR condition groups. Typed variable validation, AI tool controls and additional integration-backed triggers remain incomplete.',
       ),
     ],
   ),
@@ -744,7 +820,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'commerce_adapters',
         'Shopify / WooCommerce adapters',
-        'Verified connections, cart/order/catalog events, tenant mapping and requester authorization are required. Shopify recovery remains unavailable.',
+        'Shopify OAuth, configured webhook events and an inbound WhatsApp order-status lookup with sender-phone authorization are implemented. Cart recovery, catalog/product actions, WooCommerce and live protected-data verification require further integration work.',
       ),
     ],
   ),
@@ -756,7 +832,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'lead_qualification',
         'Qualification and attribution',
-        'Phone-only capture/deduplication, scoring, source attribution and sales round-robin need CRM support; existing capture requires email.',
+        'Phone-only CRM lead creation is available through the installable capture pack and shared workflow action, using the existing CRM score calculation and source field. Tenant-scoped normalized email/phone deduplication covers CRM creates, bulk imports and workflow events; ambiguous matches fail closed. Configurable qualification/scoring, attribution and sales round-robin remain unavailable.',
       ),
     ],
   ),
@@ -792,19 +868,24 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'retention_events',
         'Retention event integrations',
-        'Repeat-purchase, renewal and inactivity signals need verified business events; preference/frequency controls and attribution are not implemented.',
+        'Manual follow-up and campaign preference/frequency controls are available. Event-driven repeat-purchase, renewal and inactivity signals need business integrations; outcome attribution remains unavailable.',
       ),
     ],
   ),
   overview(
     'K',
     'Industries',
-    ['property-inquiry', 'education-inquiry'],
+    [
+      'property-inquiry',
+      'education-inquiry',
+      'travel-hospitality-inquiry',
+      'retail-service-inquiry',
+    ],
     [
       gap(
         'industry_systems',
         'Industry systems and review',
-        'Property inventory/viewing booking and student enrollment require adapters. Healthcare and financial packs require jurisdiction/security review before implementation.',
+        'These starter packs route inquiries and create CRM follow-ups only; property inventory/viewing booking, student enrollment, travel availability/reservations, and retail inventory/order/refund actions require verified adapters. Healthcare and financial-services automations are gated and unavailable until jurisdiction-specific compliance, security, and integration reviews are complete.',
       ),
     ],
   ),
@@ -828,7 +909,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'rich_messaging',
         'Additional messaging capabilities',
-        'Existing APIs support media references and interactive messages. Catalog packs use text/basic templates; uploads, media reasoning, Flows and commerce messages need additional support.',
+        'Text, approved basic templates, interactive messages, media upload and inbound media retrieval are supported where the connected account allows them. Catalog packs use text/basic templates; media reasoning, WhatsApp Flows and commerce messages remain unavailable.',
       ),
     ],
   ),
@@ -840,7 +921,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'consent_preferences',
         'Preferences and consent import',
-        'Packs reuse runtime purpose-specific consent and opt-out enforcement. Language/timezone preferences, consent imports and advanced suppression need dedicated support.',
+        'Runtime purpose-specific consent, opt-out enforcement, contact preferences, CSV consent import and paginated global opt-out review with evidence-backed re-consent are available. Contact-level do-not-contact review and paginated bulk suppression/restore are available for existing CRM contacts; restoring contact status does not clear an opted-out consent record.',
       ),
     ],
   ),
@@ -852,7 +933,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'template_dependencies',
         'Expanded template support',
-        'Packs require approved BODY-only templates with ordered parameters. Headers/buttons, dependency history and provider reconciliation need template lifecycle work.',
+        'Template submission, status refresh/webhooks, media headers, supported buttons and change history are available; authentication templates are not supported by this editor. Installable packs still require approved BODY-only templates, and comprehensive periodic provider-state reconciliation remains incomplete.',
       ),
     ],
   ),
@@ -876,7 +957,7 @@ export const WHATSAPP_AUTOMATION_CATEGORY_OVERVIEW: readonly AutomationCategoryO
       gap(
         'developer_auth',
         'Scoped service authentication / replay',
-        'Existing authenticated workflow and WhatsApp endpoints provide execution history and idempotency. Complete scoped-key/service-auth coverage and outbound replay tooling still require an audit and implementation.',
+        'Authenticated WhatsApp/workflow APIs, API-key authentication, execution history, idempotent inbound webhook handling and outbound webhook delivery replay are available. Broader scoped-key coverage and live queue retry/recovery still require verification.',
       ),
     ],
   ),

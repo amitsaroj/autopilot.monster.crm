@@ -8,11 +8,14 @@ import {
   Patch,
   UseGuards,
   Res,
+  Req,
+  Headers,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
 import { VoiceCallService } from './voice-call.service';
 import { VoiceCampaignService } from './voice-campaign.service';
@@ -456,7 +459,22 @@ export class VoiceController {
   @Public()
   @Post('ivr-callback')
   @ApiOperation({ summary: 'Twilio IVR webhook callback' })
-  async ivrCallback(@Body() body: Record<string, unknown>, @Res() res: Response) {
+  async ivrCallback(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Headers('host') host: string,
+    @Headers('x-twilio-signature') signature: string,
+  ) {
+    // Same Twilio signature check as TwilioController webhooks.
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const params: Record<string, string> = {};
+    for (const [key, value] of Object.entries(body)) {
+      if (value !== undefined && value !== null) params[key] = String(value);
+    }
+    const url = `${req.protocol}://${host}${req.originalUrl}`;
+    if (!this.twilioService.validateWebhookSignature(signature, url, params)) {
+      throw new ForbiddenException('Invalid Twilio webhook signature');
+    }
     // Generate IVR or route call
     const twiml = this.twilioService.generateIvrTwiml(body);
     res.type('text/xml').send(twiml);

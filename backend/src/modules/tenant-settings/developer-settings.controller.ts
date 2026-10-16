@@ -30,7 +30,13 @@ export class DeveloperSettingsController {
   @Post('api-keys')
   @ApiOperation({ summary: 'Create a new API key' })
   async createApiKey(@CurrentUser() user: IRequestContext, @Body() dto: CreateApiKeyDto) {
-    return await this.developerSettingsService.createApiKey(user.tenantId, user.userId, dto);
+    return await this.developerSettingsService.createApiKey(
+      user.tenantId,
+      user.userId,
+      dto,
+      user.permissions,
+      user.roles,
+    );
   }
 
   @Delete('api-keys/:id')

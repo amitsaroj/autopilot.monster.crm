@@ -61,6 +61,7 @@ import { SupportModule } from './modules/support/support.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { DataJobsModule } from './modules/data-jobs/data-jobs.module';
 import { DeveloperModule } from './modules/developer/developer.module';
+import { CommerceModule } from './modules/commerce/commerce.module';
 
 // Common
 import { ValidationPipe } from './common/pipes/validation.pipe';
@@ -132,6 +133,7 @@ import { ValidationPipe } from './common/pipes/validation.pipe';
     AnalyticsModule,
     DataJobsModule,
     DeveloperModule,
+    CommerceModule,
   ],
   providers: [
     // === Global Exception Filters (order matters: catch-all first) ===

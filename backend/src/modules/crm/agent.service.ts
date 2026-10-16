@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Agent } from '../../database/entities/agent.entity';
+import { stripImmutableFields } from '../../database/base.repository';
 
 @Injectable()
 export class AgentService {
@@ -22,13 +23,13 @@ export class AgentService {
   }
 
   async create(tenantId: string, data: Partial<Agent>) {
-    const agent = this.agentRepo.create({ ...data, tenantId });
+    const agent = this.agentRepo.create({ ...stripImmutableFields(data), tenantId });
     return this.agentRepo.save(agent);
   }
 
   async update(tenantId: string, id: string, data: Partial<Agent>) {
     await this.findOne(tenantId, id);
-    await this.agentRepo.update({ id, tenantId }, data);
+    await this.agentRepo.update({ id, tenantId }, stripImmutableFields(data));
     return this.findOne(tenantId, id);
   }
 

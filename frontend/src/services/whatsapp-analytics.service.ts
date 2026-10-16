@@ -10,12 +10,49 @@ export interface WhatsappAnalytics {
   read: number;
   failed: number;
   unknown: number;
+  csat: { responses: number; average: number | null };
   cost: null;
   revenueAttribution: null;
   averageResponseTimeMs: number;
   breached: number;
+  campaigns: {
+    summary: {
+      count: number;
+      recipients: number;
+      sent: number;
+      delivered: number;
+      read: number;
+      failed: number;
+      statuses: Record<string, number>;
+    };
+    items: Array<{
+      id: string;
+      name: string;
+      status: string;
+      createdAt: string;
+      total: number;
+      sent: number;
+      delivered: number;
+      read: number;
+      failed: number;
+    }>;
+  };
+  automationRuns: {
+    summary: { count: number; statuses: Record<string, number> };
+    items: Array<{
+      id: string;
+      flowId: string;
+      workflowName: string;
+      status: string;
+      startedAt: string;
+      completedAt: string | null;
+      eventName: string | null;
+    }>;
+  };
 }
 export const whatsappAnalyticsService = {
-  get: () => api.get<{ data: WhatsappAnalytics }>('/whatsapp/analytics'),
-  read: async () => parseApiData<WhatsappAnalytics>(await api.get('/whatsapp/analytics')),
+  get: (from?: string, to?: string) =>
+    api.get<{ data: WhatsappAnalytics }>('/whatsapp/analytics', { params: { from, to } }),
+  read: async (from?: string, to?: string) =>
+    parseApiData<WhatsappAnalytics>(await api.get('/whatsapp/analytics', { params: { from, to } })),
 };

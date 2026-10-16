@@ -1,4 +1,5 @@
 import { Test } from '@nestjs/testing';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { WorkflowProcessor } from './workflow.processor';
 import { WorkflowRepository } from './workflow.repository';
 import { WorkflowExecutorService } from './workflow-executor.service';
@@ -41,6 +42,7 @@ describe('WorkflowProcessor', () => {
         { provide: WorkflowService, useValue: workflows },
         { provide: WorkflowRuntimePolicyService, useValue: policy },
         { provide: WorkflowSequenceService, useValue: { inspect: jest.fn(), wait: jest.fn() } },
+        { provide: EventEmitter2, useValue: { emitAsync: jest.fn().mockResolvedValue([]) } },
       ],
     }).compile();
     processor = module.get(WorkflowProcessor);

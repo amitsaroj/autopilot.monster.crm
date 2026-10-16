@@ -50,9 +50,11 @@ type StepData = {
   isTrigger?: boolean;
 };
 type PaletteEntry = { type: string; label: string; configSchema: Record<string, string> };
+type ConditionRow = { field: string; operator: string; value?: unknown };
 const supportedEvents = new Set([
   'CONTACT_CREATED',
   'CONTACT_UPDATED',
+  'LEAD_CREATED',
   'DEAL_CREATED',
   'DEAL_STAGE_CHANGED',
   'DEAL_WON',
@@ -115,6 +117,16 @@ function WaitNode({ data }: NodeProps<StepData>) {
       <Handle type="source" position={Position.Bottom} id="fallback" style={{ left: '75%' }} />
     </div>
   );
+}
+function conditionRows(config: Record<string, unknown>): ConditionRow[] {
+  if (Array.isArray(config.conditions)) return config.conditions as ConditionRow[];
+  return [
+    {
+      field: String(config.field ?? ''),
+      operator: String(config.operator ?? 'equals'),
+      value: config.value,
+    },
+  ];
 }
 const nodeTypes = { branch: BranchNode, wait: WaitNode };
 const initialNodes: Node<StepData>[] = [
@@ -374,6 +386,16 @@ export default function Page() {
     );
     edited();
   }
+  function configureConditionGroup(conditions: ConditionRow[], logicalOperator = 'AND') {
+    setNodes((current) =>
+      current.map((entry) =>
+        entry.id === selected
+          ? { ...entry, data: { ...entry.data, config: { logicalOperator, conditions } } }
+          : entry,
+      ),
+    );
+    edited();
+  }
   function definition() {
     const keyword = nodes.find((entry) => entry.data.isTrigger)?.data.config.keyword;
     let goalValue: unknown = goalText;
@@ -540,12 +562,15 @@ export default function Page() {
       }),
     );
   }
-  const fields = node?.data.isTrigger
-    ? triggerEvent === 'WHATSAPP_KEYWORD'
-      ? { keyword: 'string' }
-      : {}
-    : (resources.data?.palette.find((entry) => entry.type === node?.data.nodeType)?.configSchema ??
-      {});
+  const fields =
+    node?.data.nodeType === 'CONDITION'
+      ? {}
+      : node?.data.isTrigger
+        ? triggerEvent === 'WHATSAPP_KEYWORD'
+          ? { keyword: 'string' }
+          : {}
+        : (resources.data?.palette.find((entry) => entry.type === node?.data.nodeType)
+            ?.configSchema ?? {});
   const nodeFields = {
     ...fields,
     ...(node &&
@@ -824,6 +849,23 @@ export default function Page() {
                 }}
               />
             </Field>
+            <label className="flex items-center gap-2 text-sm sm:col-span-3">
+              <input
+                type="checkbox"
+                checked={!!sequence.businessHours.useRecipientTimezone}
+                onChange={(event) => {
+                  setSequence((current) => ({
+                    ...current,
+                    businessHours: {
+                      ...current.businessHours!,
+                      useRecipientTimezone: event.target.checked,
+                    },
+                  }));
+                  edited();
+                }}
+              />
+              Use the contact’s saved WhatsApp timezone when available
+            </label>
             {(['startHour', 'endHour'] as const).map((key) => (
               <Field
                 key={key}
@@ -854,6 +896,10 @@ export default function Page() {
                   <input
                     type="checkbox"
                     checked={sequence.businessHours!.days.includes(index)}
+                    disabled={
+                      sequence.businessHours!.days.length === 1 &&
+                      sequence.businessHours!.days.includes(index)
+                    }
                     onChange={(event) => {
                       setSequence((current) => ({
                         ...current,
@@ -876,6 +922,7 @@ export default function Page() {
         <p className="text-xs text-muted-foreground">
           Opt-outs always stop pending WhatsApp work. Business-hour openings use the configured
           timezone, including daylight-saving changes, with up to 15 minutes of scheduling delay.
+          If enabled, a contact’s saved timezone is used and the configured timezone is the fallback.
         </p>
       </section>
       <div className="flex gap-2" aria-label="Edit history">
@@ -1043,11 +1090,111 @@ export default function Page() {
               )}
             </Field>
           ))}
-          {node?.data.nodeType === 'CONDITION' && (
-            <p className="text-xs text-muted-foreground">
-              Connect both the True and False outputs to their next action.
-            </p>
-          )}
+          {node?.data.nodeType === 'CONDITION' &&
+            (() => {
+              const conditions = conditionRows(node.data.config);
+              const grouped = Array.isArray(node.data.config.conditions);
+              const setCondition = (index: number, key: keyof ConditionRow, value: string) => {
+                const next = conditions.map((condition, row) =>
+                  row === index ? { ...condition, [key]: value } : condition,
+                );
+                if (grouped)
+                  configureConditionGroup(next, String(node.data.config.logicalOperator ?? 'AND'));
+                else
+                  setNodes((current) =>
+                    current.map((entry) =>
+                      entry.id === selected
+                        ? {
+                            ...entry,
+                            data: { ...entry.data, config: { ...entry.data.config, ...next[0] } },
+                          }
+                        : entry,
+                    ),
+                  );
+                if (!grouped) edited();
+              };
+              return (
+                <section className="space-y-3" aria-label="Condition rules">
+                  {grouped && (
+                    <Field label="Match rules">
+                      <select
+                        className={inputClass}
+                        value={String(node.data.config.logicalOperator)}
+                        onChange={(event) =>
+                          configureConditionGroup(conditions, event.target.value)
+                        }
+                      >
+                        <option value="AND">All conditions (AND)</option>
+                        <option value="OR">Any condition (OR)</option>
+                      </select>
+                    </Field>
+                  )}
+                  {conditions.map((condition, index) => (
+                    <div key={index} className="space-y-2 rounded-lg border border-border p-3">
+                      <Field label={`Condition ${index + 1} field`}>
+                        <input
+                          className={inputClass}
+                          value={condition.field}
+                          onChange={(event) => setCondition(index, 'field', event.target.value)}
+                        />
+                      </Field>
+                      <Field label="Operator">
+                        <select
+                          className={inputClass}
+                          value={condition.operator}
+                          onChange={(event) => setCondition(index, 'operator', event.target.value)}
+                        >
+                          {[...conditionOperators, 'greater_than', 'less_than'].map((operator) => (
+                            <option key={operator}>{operator}</option>
+                          ))}
+                        </select>
+                      </Field>
+                      {!['is_empty', 'is_not_empty'].includes(condition.operator) && (
+                        <Field label="Value">
+                          <input
+                            className={inputClass}
+                            value={String(condition.value ?? '')}
+                            onChange={(event) => setCondition(index, 'value', event.target.value)}
+                          />
+                        </Field>
+                      )}
+                      {grouped && (
+                        <button
+                          className={secondaryClass}
+                          disabled={conditions.length <= 1}
+                          onClick={() =>
+                            configureConditionGroup(
+                              conditions.filter((_, row) => row !== index),
+                              String(node.data.config.logicalOperator ?? 'AND'),
+                            )
+                          }
+                        >
+                          Remove condition
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    {grouped
+                      ? `${conditions.length} conditions · ${String(node.data.config.logicalOperator)}`
+                      : 'Single condition'}
+                    ; connect both True and False outputs.
+                  </p>
+                  <button
+                    className={secondaryClass}
+                    disabled={conditions.length >= 10}
+                    onClick={() =>
+                      configureConditionGroup([
+                        ...conditions,
+                        { field: 'body', operator: 'contains', value: '' },
+                      ])
+                    }
+                  >
+                    Add condition
+                  </button>
+                </section>
+              );
+            })()}
           {node && ['WAIT_FOR_REPLY', 'WAIT_UNTIL'].includes(node.data.nodeType) && (
             <p className="text-xs text-muted-foreground">
               Received / met continues normally. Timeout follows the fallback connection; without

@@ -31,8 +31,10 @@ export const developerService = {
   rotateWebhookSecret: (id: string) => api.post(`/developer/webhooks/${id}/rotate-secret`),
   getWebhookDeliveries: (id: string, page = 1, limit = 20) =>
     api.get(`/developer/webhooks/${id}/deliveries`, { params: { page, limit } }),
-  replayWebhookDelivery: (id: string, deliveryId: string) =>
-    api.post(`/developer/webhooks/${id}/deliveries/${deliveryId}/replay`),
+  replayWebhookDelivery: (id: string, deliveryId: string, idempotencyKey?: string) =>
+    api.post(`/developer/webhooks/${id}/deliveries/${deliveryId}/replay`, undefined, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    }),
 
   // OAuth Applications Management
   getOAuthApps: () => api.get('/developer/oauth/apps'),

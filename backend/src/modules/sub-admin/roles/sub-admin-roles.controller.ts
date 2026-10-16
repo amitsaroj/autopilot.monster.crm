@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminRolesService } from './sub-admin-roles.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { CreateSubAdminRoleDto } from '../sub-admin.dto';
 
 @ApiTags('SubAdmin / Roles')
 @ApiBearerAuth()
@@ -21,7 +22,7 @@ export class SubAdminRolesController {
 
   @Post()
   @ApiOperation({ summary: 'Create a custom role' })
-  async create(@TenantId() tenantId: string, @Body() dto: any) {
+  async create(@TenantId() tenantId: string, @Body() dto: CreateSubAdminRoleDto) {
     return await this.rolesService.create(tenantId, dto);
   }
 

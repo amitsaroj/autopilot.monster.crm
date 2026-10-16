@@ -1,8 +1,10 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
+  IsDefined,
   IsBoolean,
   IsEmail,
   IsEnum,
@@ -63,6 +65,57 @@ export class CrmListQueryDto {
   @IsUUID()
   @IsOptional()
   companyId?: string;
+}
+
+/** Filters for activity/note feeds. `page`/`limit` switch the response to a paginated envelope. */
+export class CrmFeedQueryDto {
+  @ApiPropertyOptional({ example: 1 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page?: number;
+
+  @ApiPropertyOptional({ example: 20 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  limit?: number;
+
+  @IsOptional()
+  @IsUUID()
+  contactId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  companyId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  dealId?: string;
+}
+
+export class CampaignListQueryDto {
+  @IsOptional()
+  @IsEnum(CampaignType)
+  type?: CampaignType;
+}
+
+export class SegmentMembersQueryDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  page?: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  limit?: number;
 }
 
 export class CreateContactDto {
@@ -237,15 +290,21 @@ export class CreateLeadDto {
   @MaxLength(255)
   lastName?: string;
 
-  @ApiProperty({ example: '+15551234567' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: '+15551234567' })
+  @IsOptional()
   @IsString()
   @MaxLength(50)
-  phone!: string;
+  phone?: string;
 
   @IsOptional()
   @IsEmail()
   email?: string;
+
+  @ApiPropertyOptional({ example: 'Webform' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  source?: string;
 
   @IsOptional()
   @IsString()
@@ -273,6 +332,7 @@ export class BulkCreateLeadsDto {
   @ApiProperty({ type: [CreateLeadDto] })
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(1000)
   @ValidateNested({ each: true })
   @Type(() => CreateLeadDto)
   leads!: CreateLeadDto[];
@@ -478,11 +538,12 @@ export class QuoteLineItemDto {
 }
 
 export class CreateQuoteDto {
-  @ApiProperty({ example: 'Q-2026-001' })
+  @ApiPropertyOptional({ example: 'Q-2026-001', description: 'Generated when omitted' })
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @MaxLength(50)
-  number!: string;
+  number?: string;
 
   @IsOptional()
   @IsUUID()
@@ -577,7 +638,7 @@ export class CreatePipelineDto {
   stages?: CreatePipelineStageDto[];
 }
 
-export class UpdatePipelineDto extends PartialType(CreatePipelineDto) {}
+export class UpdatePipelineDto extends PartialType(OmitType(CreatePipelineDto, ['stages'])) {}
 
 export class CreateCampaignDto {
   @ApiProperty()
@@ -638,6 +699,46 @@ export class CreateTagDto {
   type?: string;
 }
 
+export const SEGMENT_ENTITY_TYPES = ['LEAD', 'CONTACT', 'COMPANY', 'DEAL'] as const;
+export type SegmentEntityType = (typeof SEGMENT_ENTITY_TYPES)[number];
+export const SEGMENT_OPERATORS = [
+  'eq',
+  'equals',
+  'neq',
+  'contains',
+  'gt',
+  'gte',
+  'lt',
+  'lte',
+  'in',
+] as const;
+export type SegmentOperator = (typeof SEGMENT_OPERATORS)[number];
+
+export class SegmentConditionDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(50)
+  field!: string;
+
+  @IsOptional()
+  @IsIn(SEGMENT_OPERATORS)
+  operator?: SegmentOperator;
+
+  @IsDefined()
+  value!: string | number | boolean | Array<string | number>;
+}
+
+export class SegmentRulesDto {
+  @IsIn(['AND', 'OR'])
+  operator!: 'AND' | 'OR';
+
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => SegmentConditionDto)
+  conditions!: SegmentConditionDto[];
+}
+
 export class CreateSegmentDto {
   @IsNotEmpty()
   @IsString()
@@ -647,13 +748,39 @@ export class CreateSegmentDto {
   @IsString()
   description?: string;
 
-  @IsObject()
-  rules!: Record<string, unknown>;
+  @ValidateNested()
+  @Type(() => SegmentRulesDto)
+  rules!: SegmentRulesDto;
 
   @IsOptional()
-  @IsString()
-  entityType?: string;
+  @IsIn(SEGMENT_ENTITY_TYPES)
+  entityType?: SegmentEntityType;
 }
+
+export class TagTargetParamsDto {
+  @IsIn(['contacts', 'companies', 'deals'])
+  entity!: 'contacts' | 'companies' | 'deals';
+
+  @IsUUID()
+  id!: string;
+}
+
+export class AssignTagDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  tag!: string;
+}
+
+export const CUSTOM_FIELD_TYPES = [
+  'TEXT',
+  'NUMBER',
+  'DATE',
+  'SELECT',
+  'MULTI_SELECT',
+  'BOOLEAN',
+] as const;
+export type CustomFieldType = (typeof CUSTOM_FIELD_TYPES)[number];
 
 export class CreateCustomFieldDto {
   @IsNotEmpty()
@@ -665,8 +792,8 @@ export class CreateCustomFieldDto {
   label!: string;
 
   @IsOptional()
-  @IsString()
-  type?: string;
+  @IsIn(CUSTOM_FIELD_TYPES)
+  type?: CustomFieldType;
 
   @IsOptional()
   @IsArray()
@@ -674,7 +801,7 @@ export class CreateCustomFieldDto {
   options?: string[];
 
   @IsOptional()
-  @IsString()
+  @IsIn(['LEAD', 'CONTACT', 'COMPANY', 'DEAL', 'PRODUCT'])
   entityType?: string;
 
   @IsOptional()
@@ -720,6 +847,7 @@ export class CheckDuplicateDto {
 export class BulkStatusDto {
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(500)
   @IsUUID('4', { each: true })
   ids!: string[];
 
@@ -734,6 +862,7 @@ export class BulkStatusDto {
 export class BulkDeleteDto {
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(500)
   @IsUUID('4', { each: true })
   ids!: string[];
 
@@ -745,8 +874,11 @@ export class ImportCrmDataDto {
   @IsIn(['lead', 'contact'])
   entityType!: 'lead' | 'contact';
 
+  /** Each row is validated against CreateLeadDto / CreateContactDto in the controller. */
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(1000)
+  @IsObject({ each: true })
   data!: Record<string, unknown>[];
 }
 

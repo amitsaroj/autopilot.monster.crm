@@ -7,6 +7,12 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { ResourcePermissions } from '../../common/decorators';
 import { TenantId } from '../../common/decorators/tenant-id.decorator';
+import {
+  CreateArticleDto,
+  CreateTicketDto,
+  UpdateArticleDto,
+  UpdateTicketDto,
+} from './support.dto';
 
 @ApiTags('Support & Ticketing')
 @ResourcePermissions('support')
@@ -26,7 +32,7 @@ export class SupportController {
   @Post('tickets')
   @ApiOperation({ summary: 'Create support ticket' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async createTicket(@TenantId() tenantId: string, @Body() dto: any) {
+  async createTicket(@TenantId() tenantId: string, @Body() dto: CreateTicketDto) {
     return await this.supportService.create(tenantId, dto);
   }
 
@@ -40,7 +46,11 @@ export class SupportController {
   @Put('tickets/:id')
   @ApiOperation({ summary: 'Update ticket' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'USER')
-  async updateTicket(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+  async updateTicket(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateTicketDto,
+  ) {
     return await this.supportService.update(tenantId, id, dto);
   }
 
@@ -70,7 +80,7 @@ export class SupportController {
   @Post('articles')
   @ApiOperation({ summary: 'Create knowledge article' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async createArticle(@TenantId() tenantId: string, @Body() dto: any) {
+  async createArticle(@TenantId() tenantId: string, @Body() dto: CreateArticleDto) {
     return await this.supportService.createArticle(tenantId, dto);
   }
 
@@ -84,7 +94,11 @@ export class SupportController {
   @Put('articles/:id')
   @ApiOperation({ summary: 'Update article' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateArticle(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+  async updateArticle(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateArticleDto,
+  ) {
     return await this.supportService.updateArticle(tenantId, id, dto);
   }
 

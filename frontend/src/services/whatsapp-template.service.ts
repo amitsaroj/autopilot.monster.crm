@@ -12,6 +12,22 @@ export interface WhatsappTemplate {
   rejectionReason?: string;
 }
 
+export interface WhatsappTemplateHistory {
+  id: string;
+  templateId: string;
+  source: string;
+  actorId?: string | null;
+  snapshot: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface WhatsappTemplateImportResult {
+  imported: number;
+  unchanged: number;
+  skippedUnsupported: number;
+  conflicts: number;
+}
+
 export interface CreateWhatsappTemplatePayload {
   name: string;
   language: string;
@@ -63,6 +79,8 @@ export function buildComponents(payload: CreateWhatsappTemplatePayload): Record<
 export const whatsappTemplateService = {
   list: () => api.get<{ data: WhatsappTemplate[] }>('/whatsapp/templates'),
   get: (id: string) => api.get<{ data: WhatsappTemplate }>(`/whatsapp/templates/${id}`),
+  history: (id: string) =>
+    api.get<{ data: WhatsappTemplateHistory[] }>(`/whatsapp/templates/${id}/history`),
   create: (payload: CreateWhatsappTemplatePayload) =>
     api.post<{ data: WhatsappTemplate }>('/whatsapp/templates', {
       name: payload.name,
@@ -75,6 +93,8 @@ export const whatsappTemplateService = {
   refresh: (id: string, wabaId?: string) =>
     api.post<{ data: WhatsappTemplate }>(`/whatsapp/templates/${id}/refresh`, { wabaId }),
   refreshAll: (wabaId?: string) => api.post('/whatsapp/templates/refresh', { wabaId }),
+  importFromMeta: (wabaId: string) =>
+    api.post<{ data: WhatsappTemplateImportResult }>('/whatsapp/templates/import', { wabaId }),
   update: (id: string, payload: CreateWhatsappTemplatePayload) =>
     api.patch<{ data: WhatsappTemplate }>(`/whatsapp/templates/${id}`, {
       name: payload.name,

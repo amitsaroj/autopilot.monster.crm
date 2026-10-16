@@ -22,6 +22,8 @@ import { PaypalService } from './billing/paypal.service';
 import { RazorpayService } from './billing/razorpay.service';
 import { Coupon } from '../database/entities/coupon.entity';
 import { PlatformSetting } from '../database/entities/platform-setting.entity';
+import { BillingEventOutbox } from '../database/entities/billing-event-outbox.entity';
+import { BillingEventOutboxProcessor } from './billing/billing-event-outbox.processor';
 
 import { MonetizationController } from './monetization.controller';
 
@@ -41,6 +43,7 @@ import { MonetizationController } from './monetization.controller';
       Tenant,
       PlatformSetting,
       Coupon,
+      BillingEventOutbox,
     ]),
   ],
   controllers: [MonetizationController, BillingController, BillingExtController],
@@ -52,6 +55,7 @@ import { MonetizationController } from './monetization.controller';
     CouponService,
     PaypalService,
     RazorpayService,
+    BillingEventOutboxProcessor,
   ],
   exports: [PricingService, BillingService, WalletService, CouponService],
 })

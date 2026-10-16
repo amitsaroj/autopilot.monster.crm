@@ -49,7 +49,24 @@ export class AdminQueuesService {
   async cleanQueue(queueName: string) {
     const queue = this.queues[queueName];
     if (!queue) throw new Error('Queue not found');
-    await Promise.all([queue.clean(1000, 'completed'), queue.clean(1000, 'failed')]);
+    if (queueName !== QUEUE_NAMES.WHATSAPP) {
+      await Promise.all([queue.clean(1000, 'completed'), queue.clean(1000, 'failed')]);
+      return { success: true };
+    }
+    // WhatsApp webhook jobs carry only an inbox event ID (whatsapp_webhook_events is the
+    // source of truth and is re-driven by the sweeper), so removing them loses nothing.
+    // Pre-inbox jobs still carry the only copy of their payload and are kept.
+    await queue.clean(1000, 'completed');
+    const failed = await queue.getFailed();
+    await Promise.all(
+      failed
+        .filter(
+          (job) =>
+            job.name !== 'webhook-event' ||
+            (typeof job.data === 'object' && job.data !== null && 'eventId' in job.data),
+        )
+        .map((job) => job.remove()),
+    );
     return { success: true };
   }
 }

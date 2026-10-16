@@ -6,6 +6,7 @@ import {
   whatsappTemplateService,
   buildComponents,
   type WhatsappTemplate,
+  type WhatsappTemplateHistory,
   type CreateWhatsappTemplatePayload,
   type TemplateButton,
 } from '@/services/whatsapp-template.service';
@@ -55,6 +56,8 @@ export function TemplateEditor({ id }: { id?: string }) {
     buttons: [],
   });
   const [template, setTemplate] = useState<WhatsappTemplate>();
+  const [history, setHistory] = useState<WhatsappTemplateHistory[]>([]);
+  const [historyError, setHistoryError] = useState('');
   const accounts = useResource(whatsappAccountService.list);
   const [phoneId, setPhoneId] = useState('');
   const [savedForm, setSavedForm] = useState('');
@@ -168,6 +171,20 @@ export function TemplateEditor({ id }: { id?: string }) {
       live = false;
     };
   }, [id]);
+  useEffect(() => {
+    if (!id) return;
+    let live = true;
+    whatsappTemplateService
+      .history(id)
+      .then((response) => {
+        const entries = parseApiData<WhatsappTemplateHistory[]>(response);
+        if (live && entries) setHistory(entries);
+      })
+      .catch((e) => live && setHistoryError(errorMessage(e)));
+    return () => {
+      live = false;
+    };
+  }, [id]);
   const keys = variableKeys(form.body);
   const invalid =
     invalidVariables(form.body) ||
@@ -257,6 +274,43 @@ export function TemplateEditor({ id }: { id?: string }) {
           Meta status: {template.status}. {template.rejectionReason} Saving edits requires
           submission before sending.
         </Notice>
+      )}
+      {id && (
+        <section className={`${panelClass} space-y-3`} aria-labelledby="template-history-heading">
+          <div>
+            <h2 id="template-history-heading" className="font-semibold">
+              Version &amp; change history
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Immutable snapshots of local edits and Meta status/import changes.
+            </p>
+          </div>
+          {historyError && <Notice error>{historyError}</Notice>}
+          {!historyError && history.length === 0 && (
+            <p className="text-sm text-muted-foreground">No recorded changes yet.</p>
+          )}
+          <ol className="space-y-3">
+            {history.map((entry) => (
+              <li key={entry.id} className="rounded-lg border border-border p-3">
+                <div className="flex flex-wrap justify-between gap-2 text-sm">
+                  <span className="font-medium">{entry.source.replaceAll('_', ' ')}</span>
+                  <time dateTime={entry.createdAt} className="text-muted-foreground">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </time>
+                </div>
+                {entry.actorId && (
+                  <p className="mt-1 text-xs text-muted-foreground">Actor: {entry.actorId}</p>
+                )}
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs text-primary">View snapshot</summary>
+                  <pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap break-words rounded bg-muted p-3 text-xs">
+                    {JSON.stringify(entry.snapshot, null, 2)}
+                  </pre>
+                </details>
+              </li>
+            ))}
+          </ol>
+        </section>
       )}
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <form onSubmit={(e) => void save(e)} className={`${panelClass} space-y-4`}>

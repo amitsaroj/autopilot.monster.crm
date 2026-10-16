@@ -9,7 +9,13 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { UsersRepository } from './users.repository';
-import { UpdateUserDto, InviteUserDto } from './dto/users.dto';
+import {
+  UpdateUserDto,
+  InviteUserDto,
+  CreateTeamGroupDto,
+  UpdateTeamGroupDto,
+} from './dto/users.dto';
+import { stripImmutableFields } from '../../database/base.repository';
 import { UserEntity } from '../auth/entities/user.entity';
 import { TeamGroup } from '../../database/entities/team-group.entity';
 import { Invitation } from '../../database/entities/invitation.entity';
@@ -41,7 +47,7 @@ export class UsersService {
     actorId?: string,
   ): Promise<UserEntity> {
     await this.findOne(id, tenantId);
-    const updated = await this.usersRepo.update(id, tenantId, dto as any);
+    const updated = await this.usersRepo.update(id, tenantId, stripImmutableFields(dto));
     this.eventEmitter.emit(EVENT_NAMES.USER_UPDATED, {
       name: EVENT_NAMES.USER_UPDATED,
       tenantId,
@@ -114,15 +120,23 @@ export class UsersService {
     return group;
   }
 
-  async createGroup(tenantId: string, dto: any) {
-    const group = this.groupRepository.create({ ...dto, tenantId });
+  async createGroup(tenantId: string, dto: CreateTeamGroupDto) {
+    await this.assertLeaderInTenant(tenantId, dto.leaderId);
+    const group = this.groupRepository.create({ ...stripImmutableFields(dto), tenantId });
     return this.groupRepository.save(group);
   }
 
-  async updateGroup(id: string, tenantId: string, dto: any) {
+  async updateGroup(id: string, tenantId: string, dto: UpdateTeamGroupDto) {
     const group = await this.findOneGroup(id, tenantId);
-    Object.assign(group, dto);
+    await this.assertLeaderInTenant(tenantId, dto.leaderId);
+    Object.assign(group, stripImmutableFields(dto));
     return this.groupRepository.save(group);
+  }
+
+  private async assertLeaderInTenant(tenantId: string, leaderId?: string): Promise<void> {
+    if (leaderId && !(await this.usersRepo.findById(leaderId, tenantId))) {
+      throw new NotFoundException('Group leader not found in this tenant');
+    }
   }
 
   async removeGroup(id: string, tenantId: string) {

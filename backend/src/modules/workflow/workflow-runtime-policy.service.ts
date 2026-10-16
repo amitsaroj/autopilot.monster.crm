@@ -68,6 +68,7 @@ export class WorkflowRuntimePolicyService {
           ? 'voice'
           : [
                 'CREATE_CONTACT',
+                'CREATE_LEAD',
                 'UPDATE_CONTACT',
                 'CREATE_DEAL',
                 'UPDATE_DEAL',

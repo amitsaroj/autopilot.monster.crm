@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
@@ -8,12 +9,45 @@ import {
   MaxLength,
   MinLength,
   IsUUID,
+  IsInt,
+  Max,
+  Matches,
+  Min,
 } from 'class-validator';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
+
+export class WhatsappInboxQueryDto extends PaginationDto {
+  @ApiProperty({ example: 50, required: false, default: 50, maximum: 100 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  @IsOptional()
+  limit = 50;
+
+  @ApiPropertyOptional({ description: 'Restrict the inbox summary to one normalized phone number' })
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  phone?: string;
+
+  @ApiPropertyOptional({ description: 'Restrict a phone thread to one connected sender number' })
+  @IsString()
+  @Matches(/^[1-9][0-9]{0,63}$/)
+  @IsOptional()
+  phoneNumberId?: string;
+}
 
 export class AssignWhatsappConversationDto {
   @ApiProperty()
   @IsUUID()
   assigneeId!: string;
+}
+
+export class AssignWhatsappConversationTeamDto {
+  @ApiProperty()
+  @IsUUID()
+  teamId!: string;
 }
 
 export class SendConversationMessageDto {

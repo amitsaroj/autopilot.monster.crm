@@ -1,13 +1,18 @@
 import { Process, Processor } from '@nestjs/bull';
-import { HttpException } from '@nestjs/common';
+import { ConflictException, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Job } from 'bull';
-import { Contact } from '../../database/entities/contact.entity';
 import { WhatsAppBroadcastStatus as Status } from '../../database/entities/whatsapp-broadcast.entity';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
 import { WhatsappService } from './whatsapp.service';
-import { WhatsappBroadcastService } from './whatsapp-broadcast.service';
+import {
+  RecipientClaim,
+  RecipientOutcome,
+  WhatsappBroadcastService,
+} from './whatsapp-broadcast.service';
+import { WhatsappConsentService } from './whatsapp-consent.service';
 import { WhatsappProviderError } from './whatsapp-provider';
+import { classifyWhatsappError } from './whatsapp-error-codes';
 
 export interface WhatsappBroadcastJobPayload {
   tenantId: string;
@@ -18,12 +23,34 @@ export interface WhatsappBroadcastJobPayload {
   templateName?: string;
   language?: string;
   components?: unknown[];
+  recipientSendAt?: string;
 }
+
+const SENT_STATES = ['SUBMITTED', 'SENT', 'DELIVERED', 'READ'];
+/** Longest a worker blocks waiting for a per-number send slot before re-queueing the recipient. */
+const MAX_SLOT_WAIT_MS = 10000;
+/** RETRY_LATER provider errors (rate limits) per recipient before it is marked failed. */
+const MAX_RATE_RETRIES = 5;
+// Workers hold no DB lock during the HTTP send, so several can run per replica.
+const CONCURRENCY = Math.max(1, Number(process.env['WHATSAPP_BROADCAST_CONCURRENCY']) || 5);
+
+type PreSend =
+  | { action: 'send' }
+  | { action: 'skip'; reason: string }
+  | { action: 'pause'; reason: string }
+  | { action: 'defer'; at: number }
+  | { action: 'stop' };
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const messageOf = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 @Processor(QUEUE_NAMES.WHATSAPP)
 export class WhatsappBroadcastProcessor {
   constructor(
     private readonly whatsappService: WhatsappService,
     private readonly broadcasts: WhatsappBroadcastService,
+    private readonly consent: WhatsappConsentService,
     private readonly config: ConfigService,
   ) {}
   @Process('broadcast-start')
@@ -44,88 +71,191 @@ export class WhatsappBroadcastProcessor {
       throw error;
     }
   }
-  @Process({ name: 'broadcast-message', concurrency: 1 })
+
+  @Process({ name: 'broadcast-message', concurrency: CONCURRENCY })
   async handleBroadcastMessage(job: Job<WhatsappBroadcastJobPayload>): Promise<void> {
     const { tenantId, broadcastId, contactId } = job.data;
     if (!contactId) return; // Reject legacy freeform jobs.
-    let retryError: unknown;
-    let dueAt: number | undefined;
-    await this.broadcasts.locked(tenantId, broadcastId, async (b, m) => {
-      if (b.status !== Status.SENDING) return;
-      const [row] = await m.query(
-        `SELECT payload,outcome FROM whatsapp_broadcast_recipients WHERE tenant_id=$1 AND broadcast_id=$2 AND contact_id=$3 FOR UPDATE`,
-        [tenantId, broadcastId, contactId],
+    const claimed = await this.broadcasts.claimRecipient(tenantId, broadcastId, contactId);
+    if (claimed.state === 'busy') return this.broadcasts.deferRecipient(job.data, claimed.retryAt);
+    if (claimed.state === 'done') return;
+    const { claim } = claimed;
+    const release = (bumpAttempt: boolean) =>
+      this.broadcasts.releaseRecipient(tenantId, broadcastId, contactId, bumpAttempt);
+    const finish = (outcome: RecipientOutcome, messageId: string | null, reason: string | null) =>
+      this.broadcasts.finishRecipient(tenantId, broadcastId, contactId, outcome, messageId, reason);
+    const lastAttempt = job.attemptsMade + 1 >= (job.opts.attempts ?? 1);
+
+    let decision: PreSend;
+    try {
+      decision = await this.preSend(tenantId, broadcastId, contactId, claim);
+    } catch (error) {
+      // Nothing was submitted yet (DB/Redis hiccup): safe to hand back to Bull's backoff.
+      if (!lastAttempt) {
+        await release(false);
+        throw error;
+      }
+      await finish('failed', null, messageOf(error, 'Broadcast send preparation failed'));
+      return;
+    }
+    if (decision.action === 'skip') {
+      await finish('skipped', null, decision.reason);
+      return;
+    }
+    if (decision.action !== 'send') {
+      await release(false);
+      if (decision.action === 'pause')
+        await this.broadcasts.pauseForError(tenantId, broadcastId, decision.reason);
+      if (decision.action === 'defer') await this.broadcasts.deferRecipient(job.data, decision.at);
+      return;
+    }
+
+    const p = claim.payload;
+    // A fresh attempt gets a fresh key; the central sender refuses to resend an attempted key.
+    const key = `broadcast-${broadcastId}-${contactId}${claim.attempt ? `-a${claim.attempt}` : ''}`;
+    let error: unknown;
+    try {
+      const message = await this.whatsappService.sendTemplateMessage(
+        tenantId,
+        p.phone!,
+        p.templateName!,
+        p.language!,
+        p.components ?? [],
+        p.phoneNumberId ?? claim.phoneNumberId ?? undefined,
+        key,
+        broadcastId,
       );
-      if (!row || row.outcome) return;
-      const p = row.payload as WhatsappBroadcastJobPayload;
-      const configured = Number(this.config.get('WHATSAPP_BROADCAST_PACING_MS'));
-      const interval =
-        Number.isFinite(configured) && configured >= 100 ? Math.min(configured, 60000) : 1000;
-      if (b.nextSendAt && b.nextSendAt.getTime() > Date.now()) {
-        dueAt = b.nextSendAt.getTime();
-        return;
+      await (SENT_STATES.includes(message.status)
+        ? finish('sent', message.id, null)
+        : finish('unknown', message.id, `Message is ${message.status}; reconcile before retrying`));
+      return;
+    } catch (caught) {
+      error = caught;
+    }
+
+    // The central message row is the ground truth for whether anything may have reached Meta.
+    const row = await this.broadcasts.messageStatus(tenantId, key);
+    if (row && SENT_STATES.includes(row.status)) {
+      await finish('sent', row.id, null);
+      return;
+    }
+    const providerError = error instanceof WhatsappProviderError ? error : undefined;
+    if (
+      providerError?.ambiguous ||
+      error instanceof ConflictException ||
+      (row && row.status !== 'FAILED')
+    ) {
+      // Never retried automatically: a resend could double-message the contact.
+      await finish(
+        'unknown',
+        row?.id ?? null,
+        'Meta acceptance is unknown; reconcile before retrying',
+      );
+      return;
+    }
+    const reason = messageOf(error, 'Broadcast send failed');
+    if (providerError) {
+      const action = classifyWhatsappError(providerError.providerCode, providerError.httpStatus);
+      switch (action.type) {
+        case 'SUPPRESS_CONTACT':
+          await this.consent.recordOptOut(tenantId, p.phone!, 'meta_error_131050', {
+            scope: 'MARKETING',
+            evidence: `Broadcast ${broadcastId}`,
+          });
+          await finish('skipped', row?.id ?? null, action.reason);
+          return;
+        case 'PAUSE_BROADCAST':
+          await release(Boolean(row));
+          await this.broadcasts.pauseForError(tenantId, broadcastId, action.reason);
+          return;
+        case 'RETRY_LATER':
+          if (claim.attempt < MAX_RATE_RETRIES) {
+            await release(Boolean(row));
+            await this.broadcasts.deferRecipient(job.data, Date.now() + action.delayMs);
+          } else await finish('failed', row?.id ?? null, action.reason);
+          return;
+        case 'FAIL_PERMANENT':
+          await finish('failed', row?.id ?? null, action.reason);
+          return;
       }
-      b.nextSendAt = new Date(Date.now() + interval);
-      let outcome = 'failed';
-      let messageId: string | null = null;
-      let reason: string | null = null;
-      try {
-        const c = await m.getRepository(Contact).findOne({ where: { tenantId, id: contactId } });
-        if (
-          !c ||
-          c.doNotContact !== false ||
-          (c.mobile?.trim() || c.phone?.trim()) !== p.phone ||
-          b.contactFilter.excludeContactIds?.includes(c.id) ||
-          b.contactFilter.excludeTags?.some((tag) => c.tags.includes(tag))
-        ) {
-          reason = 'Recipient consent or phone changed';
-        } else {
-          const t = await this.broadcasts.approvedTemplate(tenantId, b.templateId);
-          if (t.name !== p.templateName || t.language !== p.language)
-            throw new HttpException('Template identity changed', 400);
-          const message = await this.whatsappService.sendTemplateMessage(
-            tenantId,
-            p.phone!,
-            p.templateName!,
-            p.language!,
-            p.components ?? [],
-            p.phoneNumberId ?? b.phoneNumberId,
-            `broadcast-${broadcastId}-${contactId}`,
-            broadcastId,
-          );
-          messageId = message.id;
-          if (['SUBMITTED', 'SENT', 'DELIVERED', 'READ'].includes(message.status)) outcome = 'sent';
-          else throw new Error('Template was not accepted');
-        }
-      } catch (error) {
-        reason = error instanceof Error ? error.message : 'Broadcast send failed';
-        // Central sender must reject ambiguous retries for this stable key.
-        const status = error instanceof HttpException ? error.getStatus() : undefined;
-        const permanent =
-          status !== undefined &&
-          status >= 400 &&
-          status < 500 &&
-          status !== 429 &&
-          !(error instanceof WhatsappProviderError && error.retryable);
-        if (!permanent && job.attemptsMade + 1 < (job.opts.attempts ?? 1)) retryError = error;
-      }
-      if (!retryError) {
-        const changed = await m.query(
-          `UPDATE whatsapp_broadcast_recipients SET outcome=$4,message_id=$5,error=$6 WHERE tenant_id=$1 AND broadcast_id=$2 AND contact_id=$3 AND outcome IS NULL RETURNING contact_id`,
-          [tenantId, broadcastId, contactId, outcome, messageId, reason],
-        );
-        if (changed.length) {
-          if (outcome === 'sent') b.sent++;
-          else b.failed++;
-          if (b.sent + b.failed >= b.total) b.status = b.sent ? Status.COMPLETED : Status.FAILED;
-        }
-      }
-      await m.save(b);
-    });
-    if (dueAt !== undefined) await this.broadcasts.deferRecipient(job.data, dueAt);
-    if (retryError) throw retryError;
+    }
+    if (row) {
+      await finish('failed', row.id, reason); // Definite rejection reported without provider detail.
+      return;
+    }
+    // No message row: the request never reached Meta.
+    const status = error instanceof HttpException ? error.getStatus() : undefined;
+    const permanent = status !== undefined && status >= 400 && status < 500 && status !== 429;
+    if (!permanent && !lastAttempt) {
+      await release(false);
+      throw error;
+    }
+    await finish('failed', null, reason);
   }
-  static computeDelay(index: number, pacingMs = 1000): number {
-    return index * Math.max(100, pacingMs);
+
+  private async preSend(
+    tenantId: string,
+    broadcastId: string,
+    contactId: string,
+    claim: RecipientClaim,
+  ): Promise<PreSend> {
+    const p = claim.payload;
+    const sender = p.phoneNumberId ?? claim.phoneNumberId ?? 'default';
+    const waitMs = await this.waitForSlot(sender);
+    if (waitMs > 0) return { action: 'defer', at: Date.now() + waitMs };
+
+    let category: Parameters<WhatsappConsentService['getEligibility']>[2];
+    try {
+      const t = await this.broadcasts.approvedTemplate(tenantId, claim.templateId);
+      if (t.name !== p.templateName || t.language !== p.language)
+        return { action: 'pause', reason: 'Template changed after the audience was prepared' };
+      category = t.category;
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() < 500)
+        return { action: 'pause', reason: `Template unavailable: ${error.message}` };
+      throw error;
+    }
+
+    // Consent can change while a campaign is pending: re-check every recipient right before sending.
+    const c = await this.broadcasts.recipientContact(tenantId, contactId);
+    if (
+      !c ||
+      c.doNotContact !== false ||
+      (c.mobile?.trim() || c.phone?.trim()) !== p.phone ||
+      claim.contactFilter.excludeContactIds?.includes(c.id) ||
+      claim.contactFilter.excludeTags?.some((tag) => c.tags.includes(tag))
+    )
+      return { action: 'skip', reason: 'Recipient consent or phone changed' };
+    try {
+      const eligibility = await this.consent.getEligibility(tenantId, p.phone!, category);
+      if (!eligibility.eligible)
+        return { action: 'skip', reason: eligibility.reason ?? 'Recipient is not eligible' };
+    } catch (error) {
+      if (error instanceof HttpException && error.getStatus() < 500)
+        return { action: 'skip', reason: error.message };
+      throw error;
+    }
+
+    // Pause/cancel/resume bump controlVersion; never send for a superseded run.
+    const state = await this.broadcasts.controlState(tenantId, broadcastId);
+    if (state?.status !== Status.SENDING) return { action: 'stop' };
+    // Paused and resumed meanwhile: the resume scan may have skipped this in-flight job, so re-queue.
+    if (state.controlVersion !== claim.controlVersion)
+      return { action: 'defer', at: Date.now() + 1000 };
+    return { action: 'send' };
+  }
+
+  /** Blocks briefly for a per-phone-number slot; returns >0 ms when the caller should re-queue. */
+  private async waitForSlot(phoneNumberId: string): Promise<number> {
+    const configured = Number(this.config.get('WHATSAPP_PHONE_NUMBER_MPS'));
+    const perSecond =
+      Number.isFinite(configured) && configured >= 1 ? Math.min(configured, 1000) : 20;
+    const deadline = Date.now() + MAX_SLOT_WAIT_MS;
+    for (;;) {
+      const wait = await this.broadcasts.acquireSendSlot(phoneNumberId, perSecond);
+      if (wait === 0) return 0;
+      if (Date.now() + wait > deadline) return wait;
+      await sleep(wait + Math.floor(Math.random() * 50));
+    }
   }
 }

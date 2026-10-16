@@ -15,14 +15,6 @@ import { analyticsService, type WhatsappAnalytics } from '@/services/analytics.s
 
 const MODULES = [
   {
-    label: 'WhatsApp Profiles',
-    href: '/admin/whatsapp/profiles',
-    icon: Settings,
-    desc: 'Manage WhatsApp Business profiles',
-    color: 'text-green-700 dark:text-green-400',
-    bg: 'bg-green-500/10',
-  },
-  {
     label: 'Inbox',
     href: '/whatsapp',
     icon: MessageSquare,
@@ -39,10 +31,10 @@ const MODULES = [
     bg: 'bg-amber-500/10',
   },
   {
-    label: 'Settings',
+    label: 'Accounts',
     href: '/whatsapp/settings',
     icon: Settings,
-    desc: 'WhatsApp channel configuration',
+    desc: 'Connected WhatsApp Business accounts',
     color: 'text-muted-foreground',
     bg: 'bg-gray-500/10',
   },

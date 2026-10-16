@@ -10,6 +10,10 @@ import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrato
 import { LeadIntelligenceService } from '../crm/lead-intelligence.service';
 import { VoiceCallService } from './voice-call.service';
 import { AiProviderService } from '../ai/providers/ai-provider.service';
+import { safeFetchPublicUrl } from '../../common/utils/safe-fetch.util';
+
+/** Audio downloads: public hosts only, re-validated redirects (Twilio -> S3), 25 MB / 30 s caps. */
+const AUDIO_FETCH = { timeoutMs: 30_000, maxBytes: 25 * 1024 * 1024, maxRedirects: 3 };
 
 export type VoiceSentiment = 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
 
@@ -75,19 +79,12 @@ export class VoiceAiService {
       return { text: existing.transcript, audioUrl, source: 'stored' };
     }
 
-    const audioResponse = await fetch(audioUrl);
-    if (!audioResponse.ok) {
-      throw new BadRequestException(
-        `Unable to download audio from audioUrl (${audioResponse.status})`,
-      );
-    }
-
-    const arrayBuffer = await audioResponse.arrayBuffer();
+    const audio = await this.downloadAudio(audioUrl, 'audioUrl');
     const { text: transcribed } = await this.aiProviderService.transcribeAudio(
       tenantId,
-      Buffer.from(arrayBuffer),
+      audio.body,
       'recording.mp3',
-      audioResponse.headers.get('content-type') || 'audio/mpeg',
+      audio.contentType || 'audio/mpeg',
     );
 
     const text = transcribed.trim();
@@ -157,18 +154,13 @@ export class VoiceAiService {
       throw new BadRequestException('sampleUrl is required');
     }
 
-    const audioResponse = await fetch(sampleUrl);
-    if (!audioResponse.ok) {
-      throw new BadRequestException(`Unable to download sample audio (${audioResponse.status})`);
-    }
+    const sample = await this.downloadAudio(sampleUrl, 'sample audio');
 
     const form = new FormData();
     form.append('name', `tenant-${tenantId.slice(0, 8)}`);
     form.append(
       'files',
-      new Blob([await audioResponse.arrayBuffer()], {
-        type: audioResponse.headers.get('content-type') || 'audio/mpeg',
-      }),
+      new Blob([new Uint8Array(sample.body)], { type: sample.contentType || 'audio/mpeg' }),
       'sample.mp3',
     );
 
@@ -190,6 +182,21 @@ export class VoiceAiService {
     }
 
     return { voiceId: payload.voice_id };
+  }
+
+  /** SSRF-safe download of a caller-supplied audio URL. */
+  private async downloadAudio(url: string, label: string) {
+    let res: Awaited<ReturnType<typeof safeFetchPublicUrl>>;
+    try {
+      res = await safeFetchPublicUrl(url, AUDIO_FETCH);
+    } catch (err) {
+      if (err instanceof BadRequestException) throw err;
+      throw new BadRequestException(`Unable to download ${label}`);
+    }
+    if (res.status < 200 || res.status >= 300) {
+      throw new BadRequestException(`Unable to download ${label} (${res.status})`);
+    }
+    return res;
   }
 
   private extractKeywords(transcript: string): string[] {

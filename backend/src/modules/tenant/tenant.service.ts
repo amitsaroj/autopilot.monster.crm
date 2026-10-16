@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { v4 as uuidv4 } from 'uuid';
 import * as dns from 'dns/promises';
@@ -8,7 +13,11 @@ import { TenantRepository } from './tenant.repository';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { Tenant } from '../../database/entities/tenant.entity';
 import { IPaginatedResult } from '../../common/interfaces/pagination.interface';
-import { TenantFilterDto } from './dto/tenant.dto';
+import {
+  TenantFilterDto,
+  UpdateBrandingDto,
+  UpdateWorkspaceSettingsDto,
+} from './dto/tenant.dto';
 
 export interface DomainVerificationResult {
   verified: boolean;
@@ -68,7 +77,38 @@ export class TenantService {
     return tenant;
   }
 
-  async update(id: string, updateTenantDto: Partial<CreateTenantDto>): Promise<Tenant> {
+  /**
+   * Tenant-admin self-service update. Only whitelisted profile fields are
+   * written; plan/status/overrides stay on the SUPER_ADMIN `update` path.
+   */
+  async updateWorkspace(id: string, dto: UpdateWorkspaceSettingsDto): Promise<Tenant> {
+    const current = await this.findOne(id);
+    const changes: Partial<Tenant> = {};
+    if (dto.name !== undefined) changes.name = dto.name;
+    if (dto.branding !== undefined) changes.branding = dto.branding;
+    if (dto.slug !== undefined && dto.slug !== current.slug) {
+      const taken = await this.tenantRepository.findBySlug(dto.slug);
+      if (taken && taken.id !== id) {
+        throw new ConflictException('Tenant with this slug already exists');
+      }
+      changes.slug = dto.slug;
+    }
+    if (dto.customDomain !== undefined) {
+      const requested = dto.customDomain?.trim() || null;
+      if (requested === null) {
+        // Clearing is always allowed (entity type lacks null; TypeORM writes NULL).
+        Object.assign(changes, { customDomain: null });
+      } else if (requested !== current.customDomain) {
+        throw new BadRequestException(
+          'Custom domains must be verified via POST settings/workspace/verify-domain',
+        );
+      }
+    }
+    if (Object.keys(changes).length === 0) return current;
+    return this.update(id, changes);
+  }
+
+  async update(id: string, updateTenantDto: Partial<Tenant>): Promise<Tenant> {
     await this.findOne(id);
     const tenant = await this.tenantRepository.update(id, updateTenantDto);
     this.eventEmitter.emit(EVENT_NAMES.TENANT_UPDATED, {
@@ -139,7 +179,7 @@ export class TenantService {
     }
   }
 
-  async updateBranding(id: string, data: any): Promise<Tenant> {
+  async updateBranding(id: string, data: UpdateBrandingDto): Promise<Tenant> {
     await this.findOne(id);
     return this.tenantRepository.update(id, { branding: data });
   }

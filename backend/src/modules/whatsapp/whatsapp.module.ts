@@ -14,7 +14,13 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 
-import { MetaWebhookController } from './meta-webhook.controller';
+import {
+  MetaWebhookController,
+  WhatsappReconciliationController,
+  WhatsappWebhookAdminController,
+  WhatsappWebhookTenantController,
+} from './meta-webhook.controller';
+import { WhatsAppWebhookEvent } from '../../database/entities/whatsapp-webhook-event.entity';
 import { WhatsappController } from './whatsapp.controller';
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappMessageRepository } from './whatsapp.repository';
@@ -23,9 +29,12 @@ import { WhatsappBroadcastService } from './whatsapp-broadcast.service';
 import { WhatsappBroadcastProcessor } from './whatsapp-broadcast.processor';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
 import { WhatsAppTemplate } from '../../database/entities/whatsapp-template.entity';
+import { WhatsAppTemplateHistory } from '../../database/entities/whatsapp-template-history.entity';
 import { WhatsAppBroadcast } from '../../database/entities/whatsapp-broadcast.entity';
 import { Contact } from '../../database/entities/contact.entity';
 import { Segment } from '../../database/entities/segment.entity';
+import { TeamGroup } from '../../database/entities/team-group.entity';
+import { Notification } from '../../database/entities/notification.entity';
 import { QUEUE_NAMES } from '../../queue/queue.constants';
 
 @Module({
@@ -40,9 +49,13 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
       UsageRecord,
       WhatsAppMessage,
       WhatsAppTemplate,
+      WhatsAppTemplateHistory,
       WhatsAppBroadcast,
       Contact,
       Segment,
+      TeamGroup,
+      WhatsAppWebhookEvent,
+      Notification,
     ]),
   ],
   controllers: [
@@ -50,6 +63,9 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     WhatsappController,
     WhatsappAccountController,
     WhatsappConsentController,
+    WhatsappReconciliationController,
+    WhatsappWebhookAdminController,
+    WhatsappWebhookTenantController,
   ],
   providers: [
     WhatsappAccountService,

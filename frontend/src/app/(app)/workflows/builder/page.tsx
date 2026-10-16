@@ -1,25 +1,63 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import ReactFlow, {
   Background,
   Controls,
+  Handle,
   MiniMap,
+  Position,
   addEdge,
   useNodesState,
   useEdgesState,
   type Connection,
   type Node,
+  type NodeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { ArrowLeft, Plus, Save, Zap, Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { workflowService, type WorkflowTrigger } from '@/services/workflow.service';
+import {
+  CONDITION_PORTS,
+  isConditionStep,
+  serializeWorkflowGraph,
+  type StepData,
+} from './serialize-graph';
+import {
+  validateWorkflowVariables,
+  WORKFLOW_VARIABLES,
+  WORKFLOW_VARIABLE_HINTS,
+} from './workflow-variables';
 
-type StepData = { label: string; stepType: string; config: Record<string, unknown> };
 const initialNodes: Node<StepData>[] = [];
+
+/** Condition step: one input, labelled true/false outputs that map to backend branch ports. */
+function ConditionNode({ data }: NodeProps<StepData>) {
+  return (
+    <div className="rounded-md border border-amber-500 bg-background px-4 pt-2 pb-5 text-xs min-w-[150px] text-center">
+      <Handle type="target" position={Position.Top} />
+      {data.label}
+      {CONDITION_PORTS.map((port, index) => (
+        <Handle
+          key={port}
+          id={port}
+          type="source"
+          position={Position.Bottom}
+          style={{ left: `${index === 0 ? 25 : 75}%` }}
+          aria-label={`${port} branch`}
+        >
+          <span className="absolute top-2 -translate-x-1/2 text-[10px] text-muted-foreground pointer-events-none">
+            {port}
+          </span>
+        </Handle>
+      ))}
+    </div>
+  );
+}
+const nodeTypes = { condition: ConditionNode };
 
 export default function WorkflowBuilderPage() {
   const router = useRouter();
@@ -31,6 +69,7 @@ export default function WorkflowBuilderPage() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [configText, setConfigText] = useState('{}');
+  const configTextarea = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -66,7 +105,7 @@ export default function WorkflowBuilderPage() {
       ...current,
       {
         id,
-        type: 'default',
+        type: isConditionStep(action.key) ? 'condition' : 'default',
         position: { x: 80, y: current.length * 130 + 40 },
         data: { label: action.label, stepType: action.key, config: {} },
       },
@@ -79,6 +118,8 @@ export default function WorkflowBuilderPage() {
       const value: unknown = JSON.parse(configText);
       if (!value || typeof value !== 'object' || Array.isArray(value))
         throw new Error('Configuration must be an object');
+      const variableError = validateWorkflowVariables(value);
+      if (variableError) throw new Error(variableError);
       const config = Object.fromEntries(Object.entries(value));
       setNodes((current) =>
         current.map((node) =>
@@ -86,39 +127,27 @@ export default function WorkflowBuilderPage() {
         ),
       );
       toast.success('Step configuration updated');
-    } catch {
-      toast.error('Enter a valid JSON object for the step configuration.');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Enter a valid JSON object.');
     }
   };
   const save = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!nodes.length) {
-      toast.error('Add at least one action.');
+    if (selectedNode && configText !== JSON.stringify(selectedNode.data.config, null, 2)) {
+      toast.error('Apply the selected step configuration before saving the draft.');
       return;
     }
-    // A linear graph matches the existing executor's single-successor contract.
-    const incoming = new Set(edges.map((edge) => edge.target));
-    const roots = nodes.filter((node) => !incoming.has(node.id));
-    if (
-      roots.length !== 1 ||
-      edges.length !== nodes.length - 1 ||
-      nodes.some(
-        (node) =>
-          edges.filter((edge) => edge.source === node.id).length > 1 ||
-          edges.filter((edge) => edge.target === node.id).length > 1,
-      )
-    ) {
-      toast.error('Connect every action in one sequence before saving.');
+    const graph = serializeWorkflowGraph(nodes, edges);
+    if (!graph.ok) {
+      toast.error(graph.error);
       return;
     }
-    const visited = new Set<string>();
-    let current: string | undefined = roots[0].id;
-    while (current && !visited.has(current)) {
-      visited.add(current);
-      current = edges.find((edge) => edge.source === current)?.target;
-    }
-    if (visited.size !== nodes.length) {
-      toast.error('Remove loops and connect every action.');
+    const variableError = graph.nodes.reduce<string | null>(
+      (error, node) => error ?? validateWorkflowVariables(node.data.config),
+      null,
+    );
+    if (variableError) {
+      toast.error(variableError);
       return;
     }
     setSaving(true);
@@ -129,8 +158,8 @@ export default function WorkflowBuilderPage() {
         isPublished: false,
         definition: {
           triggerEvent: trigger,
-          nodes: [roots[0], ...nodes.filter((node) => node.id !== roots[0].id)],
-          edges,
+          nodes: graph.nodes,
+          edges: graph.edges,
         },
       });
       if (!result.data.data?.id) throw new Error('No workflow returned');
@@ -156,7 +185,8 @@ export default function WorkflowBuilderPage() {
         <div>
           <h1 className="page-title">Workflow builder</h1>
           <p className="page-description">
-            Connect actions in sequence, configure each step, then save a draft.
+            Connect actions in sequence (conditions branch via true/false outputs), configure each
+            step, then save a draft.
           </p>
         </div>
         <span className="px-3 py-1 text-xs bg-muted rounded-full">Draft</span>
@@ -238,6 +268,7 @@ export default function WorkflowBuilderPage() {
           <ReactFlow
             nodes={nodes}
             edges={edges}
+            nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
@@ -268,11 +299,55 @@ export default function WorkflowBuilderPage() {
               </label>
               <textarea
                 id="step-config"
+                ref={configTextarea}
                 rows={12}
                 value={configText}
                 onChange={(event) => setConfigText(event.target.value)}
                 className="w-full rounded-lg border border-input bg-background p-3 text-xs font-mono"
               />
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <p className="text-xs font-semibold">Variable reference</p>
+                <p className="text-xs text-muted-foreground">
+                  Click to insert at the cursor (inside a JSON string). Syntax is checked when
+                  applying and saving. Values are only available if this trigger supplies them.
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {WORKFLOW_VARIABLES.map(({ path }) => (
+                    <button
+                      key={path}
+                      type="button"
+                      onClick={() => {
+                        const input = configTextarea.current;
+                        const token = `{{${path}}}`;
+                        const start = input?.selectionStart ?? configText.length;
+                        const end = input?.selectionEnd ?? start;
+                        const next = `${configText.slice(0, start)}${token}${configText.slice(end)}`;
+                        setConfigText(next);
+                        requestAnimationFrame(() => {
+                          input?.focus();
+                          input?.setSelectionRange(start + token.length, start + token.length);
+                        });
+                      }}
+                      className="rounded border border-border bg-muted px-2 py-1 font-mono text-[10px] hover:bg-accent"
+                      title={WORKFLOW_VARIABLES.find((item) => item.path === path)?.description}
+                    >
+                      {`{{${path}}}`}
+                    </button>
+                  ))}
+                </div>
+                <ul className="space-y-1 text-[11px] text-muted-foreground">
+                  {WORKFLOW_VARIABLE_HINTS.map((hint) => (
+                    <li key={hint} className="font-mono break-all">
+                      {hint}
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[11px] text-amber-700 dark:text-amber-400">
+                  Draft validation catches malformed placeholders, not missing runtime data. Confirm
+                  each path exists for the selected trigger; prior-step outputs require that step to
+                  have run first.
+                </p>
+              </div>
               <button
                 onClick={applyConfig}
                 className="product-button product-button-secondary w-full"

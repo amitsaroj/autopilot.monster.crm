@@ -10,11 +10,14 @@ export class Lead extends BaseEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   lastName?: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  phone!: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  phone?: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   email?: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  source?: string;
 
   @Column({ type: 'varchar', length: 50, default: 'NEW' })
   status!: string;

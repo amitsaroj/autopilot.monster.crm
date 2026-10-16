@@ -19,11 +19,36 @@ export interface WorkflowPlan {
   steps: WorkflowStep[];
 }
 
+export interface WorkflowCondition {
+  field: string;
+  operator?: string;
+  value?: unknown;
+}
+
+export interface WorkflowConditionGroup {
+  logicalOperator: 'AND' | 'OR';
+  conditions: WorkflowCondition[];
+}
+
+export interface WorkflowConditionConfig extends Record<string, unknown> {
+  field?: string;
+  operator?: string;
+  value?: unknown;
+  logicalOperator?: 'AND' | 'OR';
+  conditions?: WorkflowCondition[];
+}
+
 export interface WorkflowSequencePolicy {
   stopOnReply?: boolean;
   stopOnConversion?: boolean;
-  exitCondition?: { field: string; operator?: string; value?: unknown };
-  businessHours?: { timezone: string; startHour: number; endHour: number; days: number[] };
+  exitCondition?: WorkflowConditionConfig;
+  businessHours?: {
+    timezone: string;
+    startHour: number;
+    endHour: number;
+    days: number[];
+    useRecipientTimezone?: boolean;
+  };
 }
 
 export function sequencePolicy(value: unknown): WorkflowSequencePolicy {
@@ -48,8 +73,17 @@ export function sequencePolicy(value: unknown): WorkflowSequencePolicy {
     });
   if (policy.businessHours !== undefined) {
     const hours = record(policy.businessHours, 'business hours');
+    if (
+      Object.keys(hours).some(
+        (key) =>
+          !['timezone', 'startHour', 'endHour', 'days', 'useRecipientTimezone'].includes(key),
+      )
+    )
+      throw new BadRequestException('Unknown business-hours option');
     if (typeof hours.timezone !== 'string')
       throw new BadRequestException('A business timezone is required');
+    if (hours.useRecipientTimezone !== undefined && typeof hours.useRecipientTimezone !== 'boolean')
+      throw new BadRequestException('useRecipientTimezone must be boolean');
     try {
       new Intl.DateTimeFormat('en', { timeZone: hours.timezone }).format();
     } catch {
@@ -118,6 +152,7 @@ export const CONDITION_OPERATORS = new Set([
 ]);
 export const ACTION_TYPES = [
   'CREATE_CONTACT',
+  'CREATE_LEAD',
   'UPDATE_CONTACT',
   'CREATE_DEAL',
   'UPDATE_DEAL',
@@ -129,6 +164,7 @@ export const ACTION_TYPES = [
   'SEND_EMAIL',
   'SEND_WHATSAPP',
   'SEND_TEMPLATE',
+  'LOOKUP_SHOPIFY_ORDER',
   'ASSIGN_AGENT',
   'RESOLVE',
   'NOTIFY_TEAM',
@@ -186,21 +222,67 @@ function requireOne(config: Record<string, unknown>, keys: string[], label: stri
   }
 }
 
+function validateCondition(config: Record<string, unknown>, allowTimeout = false): void {
+  if (config.conditions !== undefined) {
+    const allowed = allowTimeout
+      ? ['logicalOperator', 'conditions', 'timeoutMinutes']
+      : ['logicalOperator', 'conditions'];
+    if (Object.keys(config).some((key) => !allowed.includes(key)))
+      throw new BadRequestException('Unknown condition group option');
+    if ('field' in config || 'operator' in config || 'value' in config)
+      throw new BadRequestException('Condition groups cannot mix grouped and single conditions');
+    if (config.logicalOperator !== 'AND' && config.logicalOperator !== 'OR')
+      throw new BadRequestException('Condition group requires AND or OR');
+    if (
+      !Array.isArray(config.conditions) ||
+      config.conditions.length < 1 ||
+      config.conditions.length > 10
+    )
+      throw new BadRequestException('Condition groups require 1–10 conditions');
+    for (const value of config.conditions) {
+      const condition = record(value, 'condition');
+      if (Object.keys(condition).some((key) => !['field', 'operator', 'value'].includes(key)))
+        throw new BadRequestException('Unknown condition option');
+      if (!nonempty(condition.field) || String(condition.field).length > 200)
+        throw new BadRequestException('Condition field must be 1–200 characters');
+      const operator = String(condition.operator ?? 'equals');
+      if (!CONDITION_OPERATORS.has(operator))
+        throw new BadRequestException('Unsupported condition operator');
+      if (!['is_empty', 'is_not_empty'].includes(operator) && condition.value === undefined)
+        throw new BadRequestException(`${operator} requires a condition value`);
+    }
+    return;
+  }
+  if (!nonempty(config.field) || String(config.field).length > 200)
+    throw new BadRequestException('Condition field must be 1–200 characters');
+  const operator = String(config.operator ?? 'equals');
+  if (!CONDITION_OPERATORS.has(operator))
+    throw new BadRequestException('Unsupported condition operator');
+  if (
+    allowTimeout &&
+    config.timeoutMinutes !== undefined &&
+    (!Number.isFinite(Number(config.timeoutMinutes)) ||
+      Number(config.timeoutMinutes) <= 0 ||
+      Number(config.timeoutMinutes) > 43200)
+  )
+    throw new BadRequestException('Wait timeout must be greater than zero and at most 30 days');
+}
+
 export function validateStepConfig(step: WorkflowStep): void {
   const c = step.config ?? {};
   const required: Record<string, string[]> = {
     CREATE_CONTACT: ['email'],
+    CREATE_LEAD: ['firstName'],
     ADD_TAG: ['tag', 'tagName'],
     SEND_EMAIL: ['to', 'recipient'],
     SEND_WHATSAPP: ['text', 'message', 'body'],
     SEND_TEMPLATE: ['templateId', 'templateName'],
+    LOOKUP_SHOPIFY_ORDER: ['orderName'],
     ASSIGN_OWNER: ['ownerId', 'userId', 'assigneeId'],
     ASSIGN_AGENT: ['assigneeId', 'ownerId', 'userId'],
     MOVE_PIPELINE_STAGE: ['stageId', 'toStageId'],
     CALL_WEBHOOK: ['url'],
     AI_CHAT: ['agentId'],
-    CONDITION: ['field'],
-    WAIT_UNTIL: ['field'],
   };
   if (required[step.type]) requireOne(c, required[step.type], step.type);
   if (step.type === 'UPDATE_CONTACT' || step.type === 'UPDATE_DEAL') {
@@ -227,12 +309,8 @@ export function validateStepConfig(step: WorkflowStep): void {
       }
     }
   }
-  if (
-    ['CONDITION', 'WAIT_UNTIL'].includes(step.type) &&
-    !CONDITION_OPERATORS.has(String(c.operator ?? 'equals'))
-  ) {
-    throw new BadRequestException('Unsupported condition operator');
-  }
+  if (['CONDITION', 'WAIT_UNTIL'].includes(step.type))
+    validateCondition(c, step.type === 'WAIT_UNTIL');
   if (
     ['WAIT_FOR_REPLY', 'WAIT_UNTIL'].includes(step.type) &&
     (!Number.isFinite(Number(c.timeoutMinutes ?? 1440)) ||

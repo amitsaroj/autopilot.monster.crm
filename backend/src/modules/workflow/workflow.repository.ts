@@ -4,6 +4,10 @@ import { EntityManager, QueryDeepPartialEntity, Repository } from 'typeorm';
 import { Flow } from '../../database/entities/flow.entity';
 import { WorkflowExecution } from '../../database/entities/workflow-execution.entity';
 import { WorkflowVersion } from '../../database/entities/workflow-version.entity';
+import {
+  WorkflowLifecycleOutbox,
+  WorkflowLifecycleEventName,
+} from '../../database/entities/workflow-lifecycle-outbox.entity';
 import { BaseRepository } from '../../database/base.repository';
 import { definitionHash } from './workflow-definition';
 
@@ -13,6 +17,8 @@ export class WorkflowRepository extends BaseRepository<Flow> {
     @InjectRepository(Flow) private readonly flowRepo: Repository<Flow>,
     @InjectRepository(WorkflowExecution)
     private readonly executionRepo: Repository<WorkflowExecution>,
+    @InjectRepository(WorkflowLifecycleOutbox)
+    private readonly lifecycleOutbox: Repository<WorkflowLifecycleOutbox>,
   ) {
     super(flowRepo);
   }
@@ -139,25 +145,61 @@ export class WorkflowRepository extends BaseRepository<Flow> {
     generation: number,
     token: string,
   ): Promise<WorkflowExecution | null> {
-    const result = await this.executionRepo
+    const claimed = await this.flowRepo.manager.transaction(async (manager) => {
+      const result = await manager
+        .getRepository(WorkflowExecution)
+        .createQueryBuilder()
+        .update()
+        .set({
+          leaseToken: token,
+          leaseExpiresAt: new Date(Date.now() + 90000),
+          status: 'RUNNING',
+        })
+        .where('id = :id AND tenant_id = :tenantId AND dispatch_generation = :generation', {
+          id,
+          tenantId,
+          generation,
+        })
+        .andWhere("status IN ('QUEUED','RUNNING','PAUSED')")
+        .andWhere("(pause_reason IS NULL OR pause_reason='delay')")
+        .andWhere('(resume_at IS NULL OR resume_at <= now())')
+        .andWhere('(lease_expires_at IS NULL OR lease_expires_at < now())')
+        .execute();
+      if (!result.affected) return false;
+      const execution = await manager.getRepository(WorkflowExecution).findOneBy({ id, tenantId });
+      if (!execution) throw new Error('Claimed workflow execution disappeared');
+      await this.insertLifecycleEvent(manager, execution, 'workflow.started');
+      return true;
+    });
+    return claimed ? this.findExecutionById(tenantId, id) : null;
+  }
+
+  private async insertLifecycleEvent(
+    manager: EntityManager,
+    execution: WorkflowExecution,
+    event: WorkflowLifecycleEventName,
+  ): Promise<void> {
+    const eventId = `workflow:${execution.id}:${event}:${execution.dispatchGeneration}`;
+    await manager
+      .getRepository(WorkflowLifecycleOutbox)
       .createQueryBuilder()
-      .update()
-      .set({
-        leaseToken: token,
-        leaseExpiresAt: new Date(Date.now() + 90000),
-        status: 'RUNNING',
+      .insert()
+      .values({
+        tenantId: execution.tenantId,
+        workflowId: execution.flowId,
+        executionId: execution.id,
+        event,
+        eventId,
+        payload: {
+          tenantId: execution.tenantId,
+          workflowId: execution.flowId,
+          executionId: execution.id,
+          versionId: execution.versionId ?? undefined,
+          eventId,
+        },
       })
-      .where('id = :id AND tenant_id = :tenantId AND dispatch_generation = :generation', {
-        id,
-        tenantId,
-        generation,
-      })
-      .andWhere("status IN ('QUEUED','RUNNING','PAUSED')")
-      .andWhere("(pause_reason IS NULL OR pause_reason='delay')")
-      .andWhere('(resume_at IS NULL OR resume_at <= now())')
-      .andWhere('(lease_expires_at IS NULL OR lease_expires_at < now())')
+      .orIgnore()
       .execute();
-    return result.affected ? this.findExecutionById(tenantId, id) : null;
   }
 
   async checkpoint(
@@ -166,11 +208,62 @@ export class WorkflowRepository extends BaseRepository<Flow> {
     token: string,
     data: Partial<WorkflowExecution>,
   ): Promise<void> {
-    const result = await this.executionRepo.update(
-      { id, tenantId, leaseToken: token },
-      data as QueryDeepPartialEntity<WorkflowExecution>,
+    await this.flowRepo.manager.transaction(async (manager) => {
+      const result = await manager
+        .getRepository(WorkflowExecution)
+        .update(
+          { id, tenantId, leaseToken: token },
+          data as QueryDeepPartialEntity<WorkflowExecution>,
+        );
+      if (!result.affected) throw new ConflictException('Workflow execution lease was lost');
+      if (data.status === 'COMPLETED' || data.status === 'FAILED') {
+        const execution = await manager
+          .getRepository(WorkflowExecution)
+          .findOneBy({ id, tenantId });
+        if (!execution) throw new Error('Completed workflow execution disappeared');
+        const event = data.status === 'COMPLETED' ? 'workflow.completed' : 'workflow.failed';
+        await this.insertLifecycleEvent(manager, execution, event);
+      }
+    });
+  }
+
+  claimLifecycleEvents(limit: number): Promise<WorkflowLifecycleOutbox[]> {
+    return this.lifecycleOutbox.query(
+      `WITH due AS (
+         SELECT id FROM workflow_lifecycle_outbox
+         WHERE (status='PENDING' AND next_attempt_at<=now())
+            OR (status='PROCESSING' AND lease_expires_at<now())
+         ORDER BY created_at LIMIT $1 FOR UPDATE SKIP LOCKED
+       )
+       UPDATE workflow_lifecycle_outbox AS event SET status='PROCESSING', attempts=event.attempts+1,
+         lease_expires_at=now()+interval '60 seconds', updated_at=now()
+       FROM due WHERE event.id=due.id
+       RETURNING event.id,event.tenant_id AS "tenantId",event.workflow_id AS "workflowId",
+         event.execution_id AS "executionId",event.event,event.event_id AS "eventId",event.payload,event.attempts`,
+      [limit],
     );
-    if (!result.affected) throw new ConflictException('Workflow execution lease was lost');
+  }
+
+  async markLifecycleEventDelivered(id: string): Promise<void> {
+    await this.lifecycleOutbox.update(
+      { id, status: 'PROCESSING' },
+      { status: 'DELIVERED', dispatchedAt: new Date(), leaseExpiresAt: null, lastError: null },
+    );
+  }
+
+  async retryLifecycleEvent(id: string): Promise<void> {
+    await this.lifecycleOutbox
+      .createQueryBuilder()
+      .update()
+      .set({
+        status: 'PENDING',
+        nextAttemptAt: () =>
+          `now() + make_interval(secs => LEAST(3600.0, 5.0 * power(2.0, LEAST(attempts, 10)))::double precision)`,
+        leaseExpiresAt: null,
+        lastError: 'event dispatch failed',
+      })
+      .where('id=:id AND status=:status', { id, status: 'PROCESSING' })
+      .execute();
   }
 
   heartbeat(tenantId: string, id: string, token: string): Promise<void> {

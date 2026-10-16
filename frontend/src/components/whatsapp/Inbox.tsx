@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { RefreshCw, Send } from 'lucide-react';
+import { Download, RefreshCw, Send, Shuffle } from 'lucide-react';
 import {
   whatsappConversationService,
   type WhatsAppConversationSummary,
@@ -25,6 +25,7 @@ import {
 import { DialogShell } from '@/components/ui/dialog-shell';
 import { ConversationTools } from './ConversationTools';
 import { RichComposer } from './RichComposer';
+import { MessageMediaPreview } from './MessageMediaPreview';
 import {
   PageHeading,
   Notice,
@@ -37,22 +38,76 @@ import {
   errorMessage,
   formatDate,
 } from './ui';
-export function Inbox({ initialPhone }: { initialPhone?: string }) {
+export function Inbox({
+  initialPhone,
+  initialPhoneNumberId,
+}: {
+  initialPhone?: string;
+  initialPhoneNumberId?: string;
+}) {
+  const threadPageSize = 50;
   const threads = useResource(
-    async () =>
-      parseApiData<WhatsAppConversationSummary[]>(await whatsappConversationService.list()) ?? [],
+    async () => {
+      const firstPage =
+        parseApiData<WhatsAppConversationSummary[]>(
+          await whatsappConversationService.list(1, threadPageSize),
+        ) ?? [];
+      if (
+        !initialPhone ||
+        firstPage.some(
+          (thread) =>
+            thread.phone === initialPhone &&
+            (!initialPhoneNumberId || thread.phoneNumberId === initialPhoneNumberId),
+        )
+      )
+        return firstPage;
+      const selected =
+        parseApiData<WhatsAppConversationSummary[]>(
+          await whatsappConversationService.list(
+            1,
+            1,
+            initialPhone,
+            initialPhoneNumberId,
+          ),
+        ) ?? [];
+      return [...firstPage, ...selected];
+    },
     15000,
   );
   const accounts = useResource(whatsappAccountService.list);
+  const onlineUsers = useResource(
+    async () =>
+      parseApiData<{ onlineUserIds: string[] }>(await whatsappConversationService.onlinePresence())
+        ?.onlineUserIds ?? [],
+    15000,
+  );
   const templates = useResource(
     async () => parseApiData<WhatsappTemplate[]>(await whatsappTemplateService.list()) ?? [],
   );
   const users = useResource(async () => parseApiData<User[]>(await userService.getUsers()) ?? []);
+  const teams = useResource(async () => parseApiData<Array<{ id: string; name: string }>>(await userService.getGroups()) ?? []);
+  useEffect(() => {
+    const heartbeat = () => {
+      if (document.visibilityState === 'visible')
+        void whatsappConversationService.heartbeatPresence().catch(() => undefined);
+    };
+    heartbeat();
+    const timer = window.setInterval(heartbeat, 25000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [active, setActive] = useState(initialPhone ?? '');
+  const [olderThreads, setOlderThreads] = useState<WhatsAppConversationSummary[]>([]);
+  const [threadPage, setThreadPage] = useState(1);
+  const [hasMoreThreads, setHasMoreThreads] = useState(false);
+  const [loadingMoreThreads, setLoadingMoreThreads] = useState(false);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('ALL');
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [messageLoading, setMessageLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [messagePage, setMessagePage] = useState(1);
+  const [hasOlderMessages, setHasOlderMessages] = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [draft, setDraft] = useState('');
   const [mode, setMode] = useState<'text' | 'template' | 'rich'>('text');
   const [richContent, setRichContent] = useState<Record<string, unknown> | null>(null);
@@ -61,7 +116,7 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
   const [templateId, setTemplateId] = useState('');
   const [parameters, setParameters] = useState<Record<string, string>>({});
   const [assignee, setAssignee] = useState('');
-  const [phoneId, setPhoneId] = useState('');
+  const [phoneId, setPhoneId] = useState(initialPhoneNumberId ?? '');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sendOpen, setSendOpen] = useState(false);
@@ -69,11 +124,31 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [contactLoading, setContactLoading] = useState(false);
   const request = useRef(0);
+  const preserveScroll = useRef<{ top: number; height: number } | null>(null);
+  const messageList = useRef<HTMLDivElement>(null);
   const end = useRef<HTMLDivElement>(null);
-  const summary = threads.data?.find((c) => c.phone === active);
+  const threadRows = Array.from(
+    new Map(
+      [...(threads.data ?? []), ...olderThreads].map((thread) => [
+        `${thread.phoneNumberId ?? ''}:${thread.phone}`,
+        thread,
+      ]),
+    ).values(),
+  ).sort((a, b) => Date.parse(b.lastMessageAt) - Date.parse(a.lastMessageAt));
+  const summary = threadRows.find(
+    (conversation) =>
+      conversation.phone === active && (!phoneId || conversation.phoneNumberId === phoneId),
+  );
   const connected = accounts.data?.filter((a) => a.status === 'CONNECTED') ?? [];
   const selectedPhoneId =
     summary?.phoneNumberId || phoneId || (connected.length === 1 ? connected[0].phoneNumberId : '');
+  const selectedAccount = connected.find((account) => account.phoneNumberId === selectedPhoneId);
+  const eligibleTemplates = templates.data?.filter(
+    (template) =>
+      template.status === 'APPROVED' &&
+      template.waTemplateId &&
+      template.businessAccountId === selectedAccount?.businessAccountId,
+  );
   const chosen = templates.data?.find((t) => t.id === templateId);
   const sendIssue = templateSendIssue(chosen);
   const keys = sendIssue ? [] : templateParameterKeys(chosen);
@@ -88,14 +163,24 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
     .sort(
       (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || b.id.localeCompare(a.id),
     )[0];
-  const loadMessages = async (phone: string, quiet = false) => {
+  const loadMessages = async (phone: string, senderPhoneId?: string, quiet = false) => {
     const serial = ++request.current;
     if (!quiet) setMessageLoading(true);
     try {
       const result =
-        parseApiData<WhatsAppMessage[]>(await whatsappConversationService.getMessages(phone)) ?? [];
+        parseApiData<WhatsAppMessage[]>(
+          await whatsappConversationService.getMessages(phone, senderPhoneId, 1, 50),
+        ) ?? [];
       if (serial === request.current) {
-        setMessages(result);
+        setHasOlderMessages(result.length === 50);
+        setMessages((current) => {
+          if (!quiet) return result;
+          const byId = new Map(current.map((message) => [message.id, message]));
+          result.forEach((message) => byId.set(message.id, message));
+          return [...byId.values()].sort(
+            (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id),
+          );
+        });
       }
     } catch (e) {
       if (serial === request.current) setError(errorMessage(e));
@@ -103,12 +188,113 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
       if (serial === request.current) setMessageLoading(false);
     }
   };
+  const loadOlderMessages = async () => {
+    if (!active || loadingOlderMessages || !hasOlderMessages) return;
+    setLoadingOlderMessages(true);
+    const container = messageList.current;
+    const previousHeight = container?.scrollHeight ?? 0;
+    const previousTop = container?.scrollTop ?? 0;
+    try {
+      const nextPage = messagePage + 1;
+      const older =
+        parseApiData<WhatsAppMessage[]>(
+          await whatsappConversationService.getMessages(active, selectedPhoneId || undefined, nextPage, 50),
+        ) ?? [];
+      setMessages((current) => {
+        const byId = new Map(older.map((message) => [message.id, message]));
+        current.forEach((message) => byId.set(message.id, message));
+        return [...byId.values()].sort(
+          (a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id),
+        );
+      });
+      setMessagePage(nextPage);
+      setHasOlderMessages(older.length === 50);
+      preserveScroll.current = { top: previousTop, height: previousHeight };
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setLoadingOlderMessages(false);
+    }
+  };
+  const loadMoreThreads = async () => {
+    if (loadingMoreThreads || !hasMoreThreads) return;
+    setLoadingMoreThreads(true);
+    try {
+      const nextPage = threadPage + 1;
+      const rows =
+        parseApiData<WhatsAppConversationSummary[]>(
+          await whatsappConversationService.list(nextPage, threadPageSize),
+        ) ?? [];
+      setOlderThreads((current) => {
+        const existing = new Set(
+          [...(threads.data ?? []), ...current].map(
+            (thread) => `${thread.phoneNumberId ?? ''}:${thread.phone}`,
+          ),
+        );
+        return [
+          ...current,
+          ...rows.filter((thread) => !existing.has(`${thread.phoneNumberId ?? ''}:${thread.phone}`)),
+        ];
+      });
+      setThreadPage(nextPage);
+      setHasMoreThreads(rows.length === threadPageSize);
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setLoadingMoreThreads(false);
+    }
+  };
+  const exportConversation = async () => {
+    if (!messages.length) return;
+    setExporting(true);
+    setError(null);
+    try {
+      const history = await whatsappConversationService.getAllMessages(
+        active,
+        selectedPhoneId || undefined,
+      );
+      const cell = (value: unknown) => {
+        const text = String(value ?? '');
+        const safe = /^[\s]*[=+\-@]/.test(text) ? `'${text}` : text;
+        return `"${safe.replaceAll('"', '""')}"`;
+      };
+      const csv = [
+        ['Timestamp', 'Direction', 'Status', 'Message'],
+        ...history.map((message) => [
+          message.createdAt,
+          message.direction,
+          message.status,
+          message.body,
+        ]),
+      ]
+        .map((row) => row.map(cell).join(','))
+        .join('\r\n');
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'whatsapp-conversation.csv';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  };
   useEffect(() => {
-    if (!active && threads.data?.length) setActive(threads.data[0].phone);
-  }, [threads.data, active]);
+    if (!active && threadRows.length) {
+      setActive(threadRows[0].phone);
+      setPhoneId(threadRows[0].phoneNumberId ?? '');
+    }
+  }, [threadRows, active]);
+  useEffect(() => {
+    if (threads.data) setHasMoreThreads(threads.data.length >= threadPageSize);
+  }, [threads.data]);
   useEffect(() => {
     const pending = request;
     setMessages([]);
+    setMessagePage(1);
+    setHasOlderMessages(false);
     setDraft('');
     setRichContent(null);
     setTemplateId('');
@@ -117,16 +303,23 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
     setError(null);
     setSendOpen(false);
     if (!active) return;
-    void loadMessages(active);
+    void loadMessages(active, phoneId || undefined);
     const id = setInterval(() => {
-      if (document.visibilityState === 'visible') void loadMessages(active, true);
+      if (document.visibilityState === 'visible')
+        void loadMessages(active, phoneId || undefined, true);
     }, 10000);
     return () => {
       pending.current++;
       clearInterval(id);
     };
-  }, [active]);
-  useEffect(() => {
+  }, [active, phoneId]);
+  useLayoutEffect(() => {
+    if (preserveScroll.current && messageList.current) {
+      messageList.current.scrollTop =
+        preserveScroll.current.top + messageList.current.scrollHeight - preserveScroll.current.height;
+      preserveScroll.current = null;
+      return;
+    }
     end.current?.scrollIntoView({ block: 'nearest' });
   }, [messages.length]);
   useEffect(() => {
@@ -156,7 +349,7 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
     try {
       await operation();
       await threads.reload();
-      await loadMessages(active, true);
+      await loadMessages(active, selectedPhoneId || undefined, true);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -233,7 +426,7 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
             className={secondaryClass}
             onClick={() => {
               void threads.reload();
-              if (active) void loadMessages(active);
+              if (active) void loadMessages(active, selectedPhoneId || undefined);
             }}
           >
             <RefreshCw className="h-4 w-4" />
@@ -269,7 +462,7 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
             {threads.loading ? (
               <Loading />
             ) : (
-              threads.data
+              threadRows
                 ?.filter(
                   (c) =>
                     (filter === 'ALL' ||
@@ -280,9 +473,12 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                 )
                 .map((c) => (
                   <button
-                    key={c.phone}
-                    className={`mb-1 block w-full rounded-lg p-3 text-left hover:bg-muted ${active === c.phone ? 'bg-muted' : ''}`}
-                    onClick={() => setActive(c.phone)}
+                    key={`${c.phoneNumberId ?? ''}:${c.phone}`}
+                    className={`mb-1 block w-full rounded-lg p-3 text-left hover:bg-muted ${active === c.phone && selectedPhoneId === c.phoneNumberId ? 'bg-muted' : ''}`}
+                    onClick={() => {
+                      setActive(c.phone);
+                      setPhoneId(c.phoneNumberId ?? '');
+                    }}
                   >
                     <div className="flex justify-between gap-2">
                       <span className="truncate text-sm font-medium">
@@ -297,6 +493,16 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                 ))
             )}
           </div>
+          {hasMoreThreads && (
+            <button
+              type="button"
+              className={`${secondaryClass} w-full`}
+              disabled={loadingMoreThreads}
+              onClick={() => void loadMoreThreads()}
+            >
+              {loadingMoreThreads ? 'Loading conversations…' : 'Load older conversations'}
+            </button>
+          )}
           <div className="border-t border-border pt-3">
             <Field label="Start from a CRM contact">
               <input
@@ -316,6 +522,7 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                 const phone = (c?.mobile || c?.phone || '').replace(/\D/g, '');
                 if (/^[1-9]\d{7,14}$/.test(phone)) {
                   setActive(phone);
+                  setPhoneId('');
                   setMode('template');
                 } else
                   setError('Contact needs an international phone number including a country code.');
@@ -349,6 +556,13 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                     <StatusBadge value={summary?.status || 'NEW'} />
                     <button
                       className={secondaryClass}
+                      disabled={!messages.length || messageLoading || exporting}
+                      onClick={() => void exportConversation()}
+                    >
+                      <Download className="h-4 w-4" /> {exporting ? 'Preparing…' : 'Export'}
+                    </button>
+                    <button
+                      className={secondaryClass}
                       disabled={!!busy || !summary || summary.status === 'RESOLVED'}
                       onClick={() =>
                         void mutate('resolve', () => whatsappConversationService.resolve(active))
@@ -356,6 +570,28 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                     >
                       Resolve
                     </button>
+                    {summary?.status === 'RESOLVED' && (
+                      <button
+                        className={secondaryClass}
+                        disabled={!!busy || !summary.canReply || summary.csatStatus === 'REQUESTED'}
+                        title={
+                          !summary.canReply ? 'The customer-service window must be open' : undefined
+                        }
+                        onClick={() =>
+                          void mutate('csat', () => whatsappConversationService.requestCsat(active))
+                        }
+                      >
+                        {summary.csatStatus === 'RECEIVED'
+                          ? `Rating ${summary.csatRating}/5`
+                          : summary.csatStatus === 'REQUESTED'
+                            ? 'Feedback requested'
+                            : summary.csatStatus === 'SENDING'
+                              ? 'Retry feedback request'
+                              : summary.csatStatus === 'EXPIRED'
+                                ? 'Request feedback again'
+                                : 'Request feedback'}
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -370,7 +606,8 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                         <option value="">Unassigned</option>
                         {users.data?.map((u) => (
                           <option key={u.id} value={u.id}>
-                            {[u.firstName, u.lastName].filter(Boolean).join(' ') || u.email}
+                            {([u.firstName, u.lastName].filter(Boolean).join(' ') || u.email) +
+                              (onlineUsers.data?.includes(u.id) ? ' (online)' : '')}
                           </option>
                         ))}
                       </select>
@@ -385,6 +622,53 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                       >
                         Assign
                       </button>
+                      <button
+                        className={secondaryClass}
+                        title="Assign to the next active teammate in the workspace rotation"
+                        disabled={!!busy || !summary || summary.status === 'RESOLVED'}
+                        onClick={() =>
+                          void mutate('round-robin', () =>
+                            whatsappConversationService.assignRoundRobin(active),
+                          )
+                        }
+                      >
+                        <Shuffle className="h-4 w-4" />
+                        Auto
+                      </button>
+                      <button
+                        className={secondaryClass}
+                        title="Assign round-robin to a teammate with a recent inbox heartbeat"
+                        disabled={
+                          !!busy ||
+                          !summary ||
+                          summary.status === 'RESOLVED' ||
+                          !onlineUsers.data?.length
+                        }
+                        onClick={() =>
+                          void mutate('online', () =>
+                            whatsappConversationService.assignOnline(active),
+                          )
+                        }
+                      >
+                        Online
+                      </button>
+                    </div>
+                  </Field>
+                  <Field label="Route to team">
+                    <div className="flex gap-2">
+                      <select
+                        className={inputClass}
+                        value={summary?.teamId ?? ''}
+                        disabled={!!teams.error || !!busy || !summary}
+                        onChange={(event) => {
+                          const teamId = event.target.value;
+                          if (teamId) void mutate('team', () => whatsappConversationService.assignTeam(active, teamId));
+                        }}
+                      >
+                        <option value="">Choose team</option>
+                        {teams.data?.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
+                      </select>
+                      <span className="self-center text-xs text-muted-foreground">Round-robin</span>
                     </div>
                   </Field>
                   <Field label="Sending number">
@@ -408,6 +692,15 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                     Teammate selection is unavailable: {users.error}
                   </p>
                 )}
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {onlineUsers.error
+                    ? 'Presence unavailable; regular round-robin is still available.'
+                    : onlineUsers.loading
+                      ? 'Checking teammate presence…'
+                      : onlineUsers.data?.length
+                        ? `${onlineUsers.data.length} teammate${onlineUsers.data.length === 1 ? '' : 's'} online; presence expires after 60 seconds.`
+                        : 'No teammates currently online; use regular round-robin or assign manually.'}
+                </p>
                 <Notice>
                   {canText
                     ? `Reply window open until ${formatDate(summary?.windowExpiresAt)}.`
@@ -424,9 +717,20 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                 />
               )}
               <div
+                ref={messageList}
                 aria-live="polite"
                 className="max-h-[450px] min-h-[220px] flex-1 space-y-4 overflow-y-auto bg-background p-4"
               >
+                {hasOlderMessages && (
+                  <button
+                    type="button"
+                    className={`${secondaryClass} mx-auto block`}
+                    disabled={loadingOlderMessages}
+                    onClick={() => void loadOlderMessages()}
+                  >
+                    {loadingOlderMessages ? 'Loading history…' : 'Load older messages'}
+                  </button>
+                )}
                 {messageLoading ? (
                   <Loading />
                 ) : messages.length ? (
@@ -439,11 +743,13 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                         className={`max-w-[85%] rounded-xl border p-3 text-sm ${m.direction === 'OUTBOUND' ? 'border-primary/20 bg-primary/10' : 'border-border bg-card'}`}
                       >
                         <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                        {m.mediaUrls?.length ? (
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            Media received. Download preview is not available for this provider.
-                          </p>
-                        ) : null}
+                        {m.mediaUrls?.map((_, index) => (
+                          <MessageMediaPreview
+                            key={`${m.id}:${index}`}
+                            messageId={m.id}
+                            index={index}
+                          />
+                        ))}
                         <p className="mt-2 text-xs text-muted-foreground">
                           {formatDate(m.createdAt)} · {m.status}
                         </p>
@@ -502,6 +808,15 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                   <RichComposer
                     media={capability?.media ?? false}
                     interactive={capability?.interactive ?? false}
+                    onUpload={async (file, type) => {
+                      const uploaded = await whatsappAccountService.uploadMedia(
+                        selectedPhoneId,
+                        type,
+                        file,
+                      );
+                      if (!uploaded?.mediaId) throw new Error('Upload did not return a media ID');
+                      return uploaded.mediaId;
+                    }}
                     onChange={setRichContent}
                   />
                 ) : (
@@ -516,15 +831,18 @@ export function Inbox({ initialPhone }: { initialPhone?: string }) {
                         }}
                       >
                         <option value="">Select approved template</option>
-                        {templates.data
-                          ?.filter((t) => t.status === 'APPROVED' && t.waTemplateId)
-                          .map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {t.name} · {t.language} · {t.category}
-                            </option>
-                          ))}
+                        {eligibleTemplates?.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name} · {t.language} · {t.category}
+                          </option>
+                        ))}
                       </select>
                     </Field>
+                    {selectedAccount && !eligibleTemplates?.length && (
+                      <Notice>
+                        No approved templates are synchronized for this sending account.
+                      </Notice>
+                    )}
                     {chosen && (
                       <p className="whitespace-pre-wrap rounded-lg bg-muted p-3 text-sm">
                         {templateBody(chosen)}

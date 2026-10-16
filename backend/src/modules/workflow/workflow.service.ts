@@ -20,6 +20,7 @@ import { WorkflowExecutorService } from './workflow-executor.service';
 import { WorkflowRuntimePolicyService } from './workflow-runtime-policy.service';
 import { resolveWorkflowConfig } from './workflow-template.util';
 import { validateWebhookUrl } from './workflow-webhook.util';
+import { ShopifyIntegrationService } from '../commerce/shopify-integration.service';
 
 @Injectable()
 export class WorkflowService implements OnModuleInit {
@@ -31,6 +32,7 @@ export class WorkflowService implements OnModuleInit {
     private readonly workflowRepo: WorkflowRepository,
     private readonly executor: WorkflowExecutorService,
     private readonly policy: WorkflowRuntimePolicyService,
+    private readonly shopify: ShopifyIntegrationService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -56,6 +58,25 @@ export class WorkflowService implements OnModuleInit {
     await this.policy.assertFlow(tenantId, flow, 'publish');
     for (const step of plan.steps) {
       await this.policy.assertReferences(tenantId, step.config ?? {}, true, manager);
+      if (step.type === 'LOOKUP_SHOPIFY_ORDER') {
+        if (
+          flow.type !== 'whatsapp' ||
+          !['WHATSAPP_MESSAGE_RECEIVED', 'WHATSAPP_KEYWORD'].includes(
+            String(flow.definition.triggerEvent ?? ''),
+          )
+        ) {
+          throw new BadRequestException(
+            'Shopify order lookup requires an inbound WhatsApp message trigger',
+          );
+        }
+        const shopify = await this.shopify.status(tenantId);
+        if (!shopify.connected || !shopify.scopes.includes('read_orders')) {
+          throw new BadRequestException(
+            'Connect Shopify with read_orders permission before publishing this workflow',
+          );
+        }
+      }
+      // Templated URLs are re-validated after rendering, at execution (callWebhook).
       if (step.type === 'CALL_WEBHOOK' && !String(step.config?.url).includes('{{'))
         validateWebhookUrl(String(step.config?.url));
     }
@@ -160,8 +181,8 @@ export class WorkflowService implements OnModuleInit {
     return execution;
   }
 
-  getTriggerTypes() {
-    return [
+  async getTriggerTypes(tenantId?: string) {
+    const triggers = [
       { key: 'CONTACT_CREATED', label: 'Contact Created', category: 'CRM' },
       { key: 'CONTACT_UPDATED', label: 'Contact Updated', category: 'CRM' },
       { key: 'DEAL_CREATED', label: 'Deal Created', category: 'CRM' },
@@ -169,6 +190,13 @@ export class WorkflowService implements OnModuleInit {
       { key: 'DEAL_WON', label: 'Deal Won', category: 'CRM' },
       { key: 'DEAL_LOST', label: 'Deal Lost', category: 'CRM' },
       { key: 'LEAD_CREATED', label: 'Lead Created', category: 'CRM' },
+      { key: 'SUBSCRIPTION_CREATED', label: 'Subscription Created', category: 'Billing' },
+      { key: 'SUBSCRIPTION_UPDATED', label: 'Subscription Updated', category: 'Billing' },
+      { key: 'SUBSCRIPTION_CANCELLED', label: 'Subscription Cancelled', category: 'Billing' },
+      { key: 'SUBSCRIPTION_RENEWED', label: 'Subscription Renewed', category: 'Billing' },
+      { key: 'PAYMENT_SUCCEEDED', label: 'Payment Succeeded', category: 'Billing' },
+      { key: 'PAYMENT_FAILED', label: 'Payment Failed', category: 'Billing' },
+      { key: 'PAYMENT_REFUNDED', label: 'Payment Refunded', category: 'Billing' },
       { key: 'CALL_COMPLETED', label: 'Call Completed', category: 'Voice' },
       {
         key: 'WHATSAPP_MESSAGE_RECEIVED',
@@ -179,13 +207,55 @@ export class WorkflowService implements OnModuleInit {
       { key: 'WHATSAPP_MESSAGE_DELIVERED', label: 'WhatsApp Delivered', category: 'WhatsApp' },
       { key: 'WHATSAPP_MESSAGE_READ', label: 'WhatsApp Read', category: 'WhatsApp' },
       { key: 'WHATSAPP_MESSAGE_FAILED', label: 'WhatsApp Failed', category: 'WhatsApp' },
+      {
+        key: 'WHATSAPP_CONVERSATION_RESOLVED',
+        label: 'WhatsApp Conversation Resolved',
+        category: 'WhatsApp',
+      },
+      {
+        key: 'WHATSAPP_CONVERSATION_REOPENED',
+        label: 'WhatsApp Conversation Reopened',
+        category: 'WhatsApp',
+      },
       { key: 'MANUAL', label: 'Manual Trigger', category: 'Manual' },
     ];
+    if (tenantId) {
+      const status = await this.shopify.status(tenantId);
+      if (status.connected && status.webhookStatus === 'READY') {
+        triggers.push(
+          { key: 'SHOPIFY_CART_UPDATED', label: 'Shopify Cart Updated', category: 'E-commerce' },
+          {
+            key: 'SHOPIFY_CHECKOUT_CREATED',
+            label: 'Shopify Checkout Created',
+            category: 'E-commerce',
+          },
+          {
+            key: 'SHOPIFY_CHECKOUT_UPDATED',
+            label: 'Shopify Checkout Updated',
+            category: 'E-commerce',
+          },
+          { key: 'SHOPIFY_ORDER_CREATED', label: 'Shopify Order Created', category: 'E-commerce' },
+          { key: 'SHOPIFY_ORDER_PAID', label: 'Shopify Order Paid', category: 'E-commerce' },
+          {
+            key: 'SHOPIFY_ORDER_FULFILLED',
+            label: 'Shopify Order Fulfilled',
+            category: 'E-commerce',
+          },
+          {
+            key: 'SHOPIFY_APP_UNINSTALLED',
+            label: 'Shopify App Uninstalled',
+            category: 'E-commerce',
+          },
+        );
+      }
+    }
+    return triggers;
   }
 
   getActionTypes() {
     return [
       { key: 'CREATE_CONTACT', label: 'Create Contact', category: 'CRM' },
+      { key: 'CREATE_LEAD', label: 'Create CRM Lead', category: 'CRM' },
       { key: 'UPDATE_CONTACT', label: 'Update Contact', category: 'CRM' },
       { key: 'CREATE_DEAL', label: 'Create Deal', category: 'CRM' },
       { key: 'UPDATE_DEAL', label: 'Update Deal', category: 'CRM' },
@@ -206,6 +276,11 @@ export class WorkflowService implements OnModuleInit {
       { key: 'LOG', label: 'Log Message', category: 'Flow' },
       { key: 'AI_CHAT', label: 'AI Chat', category: 'AI' },
       { key: 'SEND_TEMPLATE', label: 'Send WhatsApp Template', category: 'WhatsApp' },
+      {
+        key: 'LOOKUP_SHOPIFY_ORDER',
+        label: 'Look up Shopify order (sender verification required)',
+        category: 'E-commerce',
+      },
       { key: 'ASSIGN_AGENT', label: 'Assign WhatsApp Agent', category: 'WhatsApp' },
       { key: 'RESOLVE', label: 'Resolve Conversation', category: 'WhatsApp' },
     ];
@@ -353,8 +428,18 @@ export class WorkflowService implements OnModuleInit {
         flow.definition.phoneNumberId !== payload.phoneNumberId
       )
         continue;
-      const plan = await this.validatePublication(tenantId, flow);
-      await this.policy.assertFlow(tenantId, flow, 'execute');
+      let plan: WorkflowPlan;
+      try {
+        plan = await this.validatePublication(tenantId, flow);
+        await this.policy.assertFlow(tenantId, flow, 'execute');
+      } catch (error: unknown) {
+        // A targeted run reports its own error; fan-out must not let one bad flow block the rest.
+        if (workflowId) throw error;
+        this.logger.warn(
+          `Skipped workflow ${flow.id} for ${eventName}: ${error instanceof Error ? error.message : 'invalid workflow'}`,
+        );
+        continue;
+      }
       const version = await this.workflowRepo.snapshot(flow);
       const sourceId =
         eventId ?? (typeof payload.eventId === 'string' ? payload.eventId : undefined);

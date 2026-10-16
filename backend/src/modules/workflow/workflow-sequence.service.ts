@@ -42,6 +42,25 @@ export function nextBusinessOpening(
   throw new BadRequestException('No business opening found for the configured weekdays');
 }
 
+export function businessHoursForRecipient(
+  hours: NonNullable<WorkflowSequencePolicy['businessHours']>,
+  payload: Record<string, unknown>,
+): NonNullable<WorkflowSequencePolicy['businessHours']> {
+  if (!hours.useRecipientTimezone) return hours;
+  const contact = payload.contact as Record<string, unknown> | undefined;
+  const fields = contact?.customFields as Record<string, unknown> | undefined;
+  const timezone = fields?.whatsappTimezone;
+  if (typeof timezone !== 'string' || timezone.length > 100) return hours;
+  try {
+    return {
+      ...hours,
+      timezone: new Intl.DateTimeFormat('en', { timeZone: timezone }).resolvedOptions().timeZone,
+    };
+  } catch {
+    return hours;
+  }
+}
+
 @Injectable()
 export class WorkflowSequenceService {
   constructor(

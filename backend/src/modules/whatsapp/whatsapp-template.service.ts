@@ -8,28 +8,25 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import axios from 'axios';
-import { IsNull, Repository } from 'typeorm';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 
 import {
   WhatsAppTemplate,
+  WhatsAppTemplateCategory,
   WhatsAppTemplateStatus,
 } from '../../database/entities/whatsapp-template.entity';
+import { WhatsAppAccount } from '../../database/entities/whatsapp-account.entity';
+import { WhatsAppTemplateHistory } from '../../database/entities/whatsapp-template-history.entity';
 import { CreateWhatsappTemplateDto, UpdateWhatsappTemplateDto } from './dto/whatsapp-template.dto';
 import { WhatsappAccountService } from './whatsapp-account.service';
 
 @Injectable()
 export class WhatsappTemplateService {
-  private readonly submissions = new Map<
-    string,
-    {
-      phoneNumberId?: string;
-      promise: Promise<WhatsAppTemplate>;
-    }
-  >();
-
   constructor(
     @InjectRepository(WhatsAppTemplate)
     private readonly templateRepository: Repository<WhatsAppTemplate>,
+    @InjectRepository(WhatsAppTemplateHistory)
+    private readonly historyRepository: Repository<WhatsAppTemplateHistory>,
     private readonly accountService: WhatsappAccountService,
   ) {}
 
@@ -37,6 +34,18 @@ export class WhatsappTemplateService {
     return this.templateRepository.find({
       where: { tenantId },
       order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findHistoryForTemplate(
+    tenantId: string,
+    templateId: string,
+  ): Promise<WhatsAppTemplateHistory[]> {
+    await this.findOne(tenantId, templateId);
+    return this.historyRepository.find({
+      where: { tenantId, templateId },
+      order: { createdAt: 'DESC' },
+      take: 100,
     });
   }
 
@@ -48,28 +57,79 @@ export class WhatsappTemplateService {
     return template;
   }
 
-  create(tenantId: string, dto: CreateWhatsappTemplateDto): Promise<WhatsAppTemplate> {
+  async create(
+    tenantId: string,
+    dto: CreateWhatsappTemplateDto,
+    actorId?: string,
+  ): Promise<WhatsAppTemplate> {
     this.validateContent(dto.name, dto.language ?? 'en_US', dto.components);
-    return this.templateRepository.save(
-      this.templateRepository.create({
-        tenantId,
-        name: dto.name,
-        category: dto.category,
-        language: dto.language ?? 'en_US',
-        components: dto.components,
-        status: WhatsAppTemplateStatus.PENDING,
-      }),
-    );
+    return this.templateRepository.manager.transaction(async (manager) => {
+      const repository = manager.getRepository(WhatsAppTemplate);
+      const template = await repository.save(
+        repository.create({
+          tenantId,
+          name: dto.name,
+          category: dto.category,
+          language: dto.language ?? 'en_US',
+          components: dto.components,
+          status: WhatsAppTemplateStatus.PENDING,
+        }),
+      );
+      await this.recordHistory(
+        template,
+        'local_create',
+        actorId,
+        manager.getRepository(WhatsAppTemplateHistory),
+      );
+      return template;
+    });
   }
 
-  async update(
+  update(
     tenantId: string,
     id: string,
     dto: UpdateWhatsappTemplateDto,
+    actorId?: string,
   ): Promise<WhatsAppTemplate> {
-    const template = await this.findOne(tenantId, id);
-    if (this.submissions.has(`${tenantId}:${id}`))
-      throw new ConflictException('Wait for the current Meta submission before editing');
+    return this.withSubmissionLock(
+      tenantId,
+      id,
+      'Wait for the current Meta submission before editing',
+      (manager) => this.applyUpdate(tenantId, id, dto, actorId, manager),
+    );
+  }
+
+  /**
+   * Cross-replica mutual exclusion for a template's Meta submission and local edits.
+   * The transaction only holds the advisory lock; the work itself uses the default pool.
+   */
+  private withSubmissionLock<T>(
+    tenantId: string,
+    id: string,
+    busyMessage: string,
+    work: (manager: EntityManager) => Promise<T>,
+  ): Promise<T> {
+    return this.templateRepository.manager.transaction(async (manager) => {
+      const [row] = (await manager.query(
+        'SELECT pg_try_advisory_xact_lock(hashtext($1)) AS locked',
+        [`${tenantId}:${id}:whatsapp-template-submission`],
+      )) as Array<{ locked: boolean }>;
+      if (!row?.locked) throw new ConflictException(busyMessage);
+      return work(manager);
+    });
+  }
+
+  private async applyUpdate(
+    tenantId: string,
+    id: string,
+    dto: UpdateWhatsappTemplateDto,
+    actorId?: string,
+    manager?: EntityManager,
+  ): Promise<WhatsAppTemplate> {
+    const repository = manager?.getRepository(WhatsAppTemplate) ?? this.templateRepository;
+    const history = manager?.getRepository(WhatsAppTemplateHistory) ?? this.historyRepository;
+    const template = await repository.findOne({ where: { id, tenantId } });
+    if (!template) throw new NotFoundException('WhatsApp template not found');
     if (
       template.waTemplateId &&
       ((dto.name !== undefined && dto.name !== template.name) ||
@@ -91,7 +151,7 @@ export class WhatsappTemplateService {
       dto.components !== undefined;
     if (changed) {
       template.status = WhatsAppTemplateStatus.PENDING;
-      const result = await this.templateRepository
+      const result = await repository
         .createQueryBuilder()
         .update()
         .set({
@@ -110,42 +170,123 @@ export class WhatsappTemplateService {
         .execute();
       if (result.affected !== 1)
         throw new ConflictException('Template changed during editing; reload and retry');
-      return this.findOne(tenantId, id);
+      const updated = await repository.findOne({ where: { id, tenantId } });
+      if (!updated) throw new NotFoundException('WhatsApp template not found');
+      await this.recordHistory(updated, 'local_update', actorId, history);
+      return updated;
     }
     return template;
   }
 
-  async remove(tenantId: string, id: string): Promise<void> {
-    await this.findOne(tenantId, id);
-    await this.templateRepository.softDelete({ id, tenantId });
+  async remove(tenantId: string, id: string, actorId?: string): Promise<void> {
+    await this.templateRepository.manager.transaction(async (manager) => {
+      const repository = manager.getRepository(WhatsAppTemplate);
+      const template = await repository.findOne({ where: { id, tenantId } });
+      if (!template) throw new NotFoundException('WhatsApp template not found');
+      await repository.softDelete({ id, tenantId });
+      await this.recordHistory(
+        template,
+        'local_delete',
+        actorId,
+        manager.getRepository(WhatsAppTemplateHistory),
+      );
+    });
   }
 
   syncWithMeta(
     tenantId: string,
     id: string,
     requestedPhoneNumberId?: string,
+    actorId?: string,
   ): Promise<WhatsAppTemplate> {
-    const key = `${tenantId}:${id}`;
-    const existing = this.submissions.get(key);
-    if (existing) {
-      if (existing.phoneNumberId !== requestedPhoneNumberId) {
-        throw new ConflictException(
-          'Template submission is already in progress for another account selection',
-        );
-      }
-      return existing.promise;
-    }
-    const submission = this.submit(tenantId, id, requestedPhoneNumberId).finally(() =>
-      this.submissions.delete(key),
+    return this.withSubmissionLock(
+      tenantId,
+      id,
+      'Template submission is already in progress; refresh its status shortly',
+      () => this.submit(tenantId, id, requestedPhoneNumberId, actorId),
     );
-    this.submissions.set(key, { phoneNumberId: requestedPhoneNumberId, promise: submission });
-    return submission;
+  }
+
+  /**
+   * Applies a signed `message_template_status_update` webhook. The tenant is derived from the
+   * WABA's connected account(s); the template must already be bound to that WABA and Meta ID.
+   * Returns the number of local templates updated.
+   */
+  async applyStatusWebhook(
+    tenantId: string,
+    businessAccountId: string,
+    value: Record<string, unknown>,
+  ) {
+    const waTemplateId = String(value.message_template_id ?? '');
+    const event = String(value.event ?? '').toUpperCase();
+    if (!/^\d+$/.test(businessAccountId) || !/^\d+$/.test(waTemplateId) || !event) return 0;
+    const templates = await this.templateRepository
+      .createQueryBuilder('t')
+      .where(
+        't.tenantId = :tenantId AND t.waTemplateId = :waTemplateId AND t.businessAccountId = :businessAccountId',
+        {
+          tenantId,
+          waTemplateId,
+          businessAccountId,
+        },
+      )
+      .andWhere(
+        `EXISTS (SELECT 1 FROM whatsapp_accounts a WHERE a.tenant_id = t.tenant_id
+          AND a.business_account_id = :businessAccountId AND a.status = 'CONNECTED' AND a.deleted_at IS NULL)`,
+      )
+      .getMany();
+    const reason = typeof value.reason === 'string' && value.reason !== 'NONE' ? value.reason : '';
+    for (const template of templates) {
+      if (event === 'APPROVED') {
+        // Meta approved what was submitted; refresh compares it against local edits first.
+        const account = await this.templateRepository.manager
+          .getRepository(WhatsAppAccount)
+          .findOne({ where: { tenantId, businessAccountId, status: 'CONNECTED' } });
+        if (account)
+          await this.refreshStatus(
+            template.tenantId,
+            template.id,
+            account.phoneNumberId,
+            undefined,
+            'provider_webhook',
+          );
+        continue;
+      }
+      await this.templateRepository.manager.transaction(async (manager) => {
+        const repository = manager.getRepository(WhatsAppTemplate);
+        await repository.update(
+          { id: template.id, tenantId: template.tenantId },
+          event === 'REJECTED'
+            ? {
+                status: WhatsAppTemplateStatus.REJECTED,
+                rejectionReason: reason || 'Meta status: REJECTED',
+              }
+            : {
+                status: WhatsAppTemplateStatus.PENDING,
+                rejectionReason:
+                  event === 'PENDING'
+                    ? () => 'NULL'
+                    : `Meta status: ${event}${reason ? `: ${reason}` : ''}`,
+              },
+        );
+        const updated = await repository.findOne({ where: { id: template.id, tenantId } });
+        if (updated)
+          await this.recordHistory(
+            updated,
+            'provider_webhook',
+            undefined,
+            manager.getRepository(WhatsAppTemplateHistory),
+          );
+      });
+    }
+    return templates.length;
   }
 
   private async submit(
     tenantId: string,
     id: string,
     phoneNumberId?: string,
+    actorId?: string,
   ): Promise<WhatsAppTemplate> {
     const template = await this.findOne(tenantId, id);
     this.validateContent(template.name, template.language, template.components);
@@ -171,7 +312,13 @@ export class WhatsappTemplateService {
     }
     const sameContent = match && this.sameContent(template, match);
     if (match && sameContent && match.status !== 'REJECTED')
-      return this.persistStatus(template, match, credentials.businessAccountId);
+      return this.persistStatus(
+        template,
+        match,
+        credentials.businessAccountId,
+        actorId,
+        'provider_submit',
+      );
     // Update the existing provider ID for edits or resubmission without creating duplicates.
     const providerId = typeof match?.id === 'string' ? match.id : undefined;
     if (match && !providerId) throw new BadGatewayException('Invalid Meta template ID');
@@ -218,6 +365,8 @@ export class WhatsappTemplateService {
         status: result.status ?? 'PENDING',
       },
       credentials.businessAccountId,
+      actorId,
+      'provider_submit',
     );
   }
 
@@ -225,6 +374,8 @@ export class WhatsappTemplateService {
     tenantId: string,
     id: string,
     requestedPhoneNumberId?: string,
+    actorId?: string,
+    source = 'provider_refresh',
   ): Promise<WhatsAppTemplate> {
     const template = await this.findOne(tenantId, id);
     const credentials = await this.credentials(tenantId, requestedPhoneNumberId);
@@ -252,10 +403,117 @@ export class WhatsappTemplateService {
         rejected_reason: 'Template was not found in the selected Meta account',
       },
       credentials.businessAccountId,
+      actorId,
+      source,
     );
   }
 
-  async refreshAll(tenantId: string, requestedPhoneNumberId?: string): Promise<WhatsAppTemplate[]> {
+  /** Import supported provider-owned templates without overwriting local drafts. */
+  async importFromMeta(
+    tenantId: string,
+    requestedPhoneNumberId?: string,
+    actorId?: string,
+  ): Promise<{
+    imported: number;
+    unchanged: number;
+    skippedUnsupported: number;
+    conflicts: number;
+  }> {
+    const credentials = await this.credentials(tenantId, requestedPhoneNumberId);
+    const official = await this.listMeta(credentials);
+    return this.templateRepository.manager.transaction(async (manager) => {
+      const [lock] = (await manager.query(
+        'SELECT pg_try_advisory_xact_lock(hashtext($1)) AS locked',
+        [`${tenantId}:${credentials.businessAccountId}:whatsapp-template-import`],
+      )) as Array<{ locked: boolean }>;
+      if (!lock?.locked)
+        throw new ConflictException('Template import is already running; retry shortly');
+
+      const repository = manager.getRepository(WhatsAppTemplate);
+      const counts = { imported: 0, unchanged: 0, skippedUnsupported: 0, conflicts: 0 };
+      for (const item of official) {
+        const existing = await repository.findOne({
+          where: {
+            tenantId,
+            businessAccountId: credentials.businessAccountId,
+            waTemplateId: String(item.id),
+          },
+        });
+        if (existing) {
+          counts.unchanged += 1;
+          continue;
+        }
+
+        const name = String(item.name);
+        const language = String(item.language);
+        const category = item.category as WhatsAppTemplateCategory;
+        const components = { components: item.components as unknown[] };
+        try {
+          if (!Object.values(WhatsAppTemplateCategory).includes(category))
+            throw new BadRequestException('Unsupported template category');
+          this.validateContent(name, language, components);
+        } catch {
+          counts.skippedUnsupported += 1;
+          continue;
+        }
+
+        const duplicate = await repository
+          .createQueryBuilder('template')
+          .withDeleted()
+          .where('template.tenantId = :tenantId', { tenantId })
+          .andWhere('template.businessAccountId = :businessAccountId', {
+            businessAccountId: credentials.businessAccountId,
+          })
+          .andWhere('template.name = :name AND template.language = :language', {
+            name,
+            language,
+          })
+          .getOne();
+        if (duplicate) {
+          counts.conflicts += 1;
+          continue;
+        }
+
+        const imported = await repository.save(
+          repository.create({
+            tenantId,
+            name,
+            language,
+            category,
+            components,
+            businessAccountId: credentials.businessAccountId,
+            waTemplateId: String(item.id),
+            status:
+              item.status === 'APPROVED'
+                ? WhatsAppTemplateStatus.APPROVED
+                : item.status === 'REJECTED'
+                  ? WhatsAppTemplateStatus.REJECTED
+                  : WhatsAppTemplateStatus.PENDING,
+            rejectionReason:
+              item.status === 'REJECTED' && typeof item.rejected_reason === 'string'
+                ? item.rejected_reason
+                : item.status === 'APPROVED' || item.status === 'PENDING'
+                  ? undefined
+                  : `Meta status: ${String(item.status).slice(0, 100)}`,
+          }),
+        );
+        await this.recordHistory(
+          imported,
+          'provider_import',
+          actorId,
+          manager.getRepository(WhatsAppTemplateHistory),
+        );
+        counts.imported += 1;
+      }
+      return counts;
+    });
+  }
+
+  async refreshAll(
+    tenantId: string,
+    requestedPhoneNumberId?: string,
+    actorId?: string,
+  ): Promise<WhatsAppTemplate[]> {
     const credentials = await this.credentials(tenantId, requestedPhoneNumberId);
     const official = await this.listMeta(credentials);
     const templates = await this.templateRepository.find({
@@ -285,6 +543,8 @@ export class WhatsappTemplateService {
               rejected_reason: 'Template was not found in the selected Meta account',
             },
             credentials.businessAccountId,
+            actorId,
+            'provider_refresh_all',
           ),
         );
     }
@@ -397,6 +657,8 @@ export class WhatsappTemplateService {
     template: WhatsAppTemplate,
     official: Record<string, unknown>,
     businessAccountId: string,
+    actorId?: string,
+    source = 'provider_sync',
   ): Promise<WhatsAppTemplate> {
     if (
       typeof official.id !== 'string' ||
@@ -417,35 +679,75 @@ export class WhatsappTemplateService {
           : WhatsAppTemplateStatus.PENDING;
     const reason =
       typeof official.rejected_reason === 'string' ? official.rejected_reason : undefined;
-    const result = await this.templateRepository
-      .createQueryBuilder()
-      .update()
-      .set({
-        waTemplateId: official.id,
-        businessAccountId,
-        status: mapped,
-        rejectionReason: differs
-          ? `Local content differs from Meta; submit the draft before sending${status === 'REJECTED' ? `; Meta rejection: ${reason || 'REJECTED'}` : ''}`
-          : mapped === WhatsAppTemplateStatus.APPROVED || status === 'PENDING'
-            ? () => 'NULL'
-            : status === 'REJECTED'
-              ? reason || 'Meta status: REJECTED'
-              : `Meta status: ${status}${reason ? `: ${reason}` : ''}`,
-      })
-      .where(
-        "id = :id AND tenant_id = :tenantId AND date_trunc('milliseconds', updated_at) = :updatedAt AND business_account_id IS NOT DISTINCT FROM :previousBusinessAccountId AND wa_template_id IS NOT DISTINCT FROM :previousTemplateId AND deleted_at IS NULL",
-        {
-          id: template.id,
-          tenantId: template.tenantId,
-          updatedAt: template.updatedAt,
-          previousBusinessAccountId: template.businessAccountId ?? null,
-          previousTemplateId: template.waTemplateId ?? null,
+    const providerTemplateId = official.id;
+    return this.templateRepository.manager.transaction(async (manager) => {
+      const repository = manager.getRepository(WhatsAppTemplate);
+      const result = await repository
+        .createQueryBuilder()
+        .update()
+        .set({
+          waTemplateId: providerTemplateId,
+          businessAccountId,
+          status: mapped,
+          rejectionReason: differs
+            ? `Local content differs from Meta; submit the draft before sending${status === 'REJECTED' ? `; Meta rejection: ${reason || 'REJECTED'}` : ''}`
+            : mapped === WhatsAppTemplateStatus.APPROVED || status === 'PENDING'
+              ? () => 'NULL'
+              : status === 'REJECTED'
+                ? reason || 'Meta status: REJECTED'
+                : `Meta status: ${status}${reason ? `: ${reason}` : ''}`,
+        })
+        .where(
+          "id = :id AND tenant_id = :tenantId AND date_trunc('milliseconds', updated_at) = :updatedAt AND business_account_id IS NOT DISTINCT FROM :previousBusinessAccountId AND wa_template_id IS NOT DISTINCT FROM :previousTemplateId AND deleted_at IS NULL",
+          {
+            id: template.id,
+            tenantId: template.tenantId,
+            updatedAt: template.updatedAt,
+            previousBusinessAccountId: template.businessAccountId ?? null,
+            previousTemplateId: template.waTemplateId ?? null,
+          },
+        )
+        .execute();
+      if (result.affected !== 1)
+        throw new ConflictException('Template changed during Meta request; refresh and retry');
+      const updated = await repository.findOne({
+        where: { id: template.id, tenantId: template.tenantId },
+      });
+      if (!updated) throw new NotFoundException('WhatsApp template not found');
+      await this.recordHistory(
+        updated,
+        source,
+        actorId,
+        manager.getRepository(WhatsAppTemplateHistory),
+      );
+      return updated;
+    });
+  }
+
+  private recordHistory(
+    template: WhatsAppTemplate,
+    source: string,
+    actorId?: string,
+    repository = this.historyRepository,
+  ): Promise<WhatsAppTemplateHistory> {
+    return repository.save(
+      repository.create({
+        tenantId: template.tenantId,
+        templateId: template.id,
+        source,
+        actorId: actorId ?? null,
+        snapshot: {
+          name: template.name,
+          category: template.category,
+          language: template.language,
+          components: template.components,
+          status: template.status,
+          businessAccountId: template.businessAccountId ?? null,
+          waTemplateId: template.waTemplateId ?? null,
+          rejectionReason: template.rejectionReason ?? null,
         },
-      )
-      .execute();
-    if (result.affected !== 1)
-      throw new ConflictException('Template changed during Meta request; refresh and retry');
-    return this.findOne(template.tenantId, template.id);
+      }),
+    );
   }
 
   private providerError(error: unknown): BadGatewayException | GatewayTimeoutException {

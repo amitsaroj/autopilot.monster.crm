@@ -35,6 +35,7 @@ export const EVENT_NAMES = {
   SUBSCRIPTION_RENEWED: 'subscription.renewed',
   PAYMENT_SUCCEEDED: 'payment.succeeded',
   PAYMENT_FAILED: 'payment.failed',
+  PAYMENT_REFUNDED: 'payment.refunded',
   USAGE_LIMIT_REACHED: 'usage.limit.reached',
 
   // CRM
@@ -74,6 +75,15 @@ export const EVENT_NAMES = {
   MESSAGE_DELIVERED: 'message.delivered',
   MESSAGE_READ: 'message.read',
   MESSAGE_FAILED: 'message.failed',
+  WHATSAPP_CONVERSATION_RESOLVED: 'whatsapp.conversation.resolved',
+  WHATSAPP_CONVERSATION_REOPENED: 'whatsapp.conversation.reopened',
+  SHOPIFY_CART_UPDATED: 'shopify.cart.updated',
+  SHOPIFY_CHECKOUT_CREATED: 'shopify.checkout.created',
+  SHOPIFY_CHECKOUT_UPDATED: 'shopify.checkout.updated',
+  SHOPIFY_ORDER_CREATED: 'shopify.order.created',
+  SHOPIFY_ORDER_PAID: 'shopify.order.paid',
+  SHOPIFY_ORDER_FULFILLED: 'shopify.order.fulfilled',
+  SHOPIFY_APP_UNINSTALLED: 'shopify.app.uninstalled',
 
   // Notifications
   NOTIFICATION_SENT: 'notification.sent',

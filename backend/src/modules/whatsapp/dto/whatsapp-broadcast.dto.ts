@@ -6,6 +6,11 @@ import {
   IsUUID,
   IsDateString,
   IsArray,
+  IsEnum,
+  IsInt,
+  Max,
+  MaxLength,
+  Min,
   Matches,
   Validate,
   ValidatorConstraint,
@@ -13,6 +18,10 @@ import {
   ValidationArguments,
   isUUID,
 } from 'class-validator';
+import {
+  WhatsAppBroadcastApprovalStatus,
+  WhatsAppBroadcastRecurrence,
+} from '../../../database/entities/whatsapp-broadcast.entity';
 
 type JsonObject = Record<string, unknown>;
 function object(value: unknown): value is JsonObject {
@@ -239,10 +248,91 @@ export class CreateWhatsappBroadcastDto {
   @IsDateString()
   @IsOptional()
   scheduledAt?: string;
+
+  @ApiPropertyOptional({
+    description: 'Optional recipient-local HH:mm send time for a scheduled one-time broadcast.',
+    nullable: true,
+    example: '09:00',
+  })
+  @IsOptional()
+  @Matches(/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/)
+  recipientLocalTime?: string | null;
+
+  @ApiPropertyOptional({ enum: WhatsAppBroadcastRecurrence })
+  @IsOptional()
+  @IsEnum(WhatsAppBroadcastRecurrence)
+  recurrenceFrequency?: WhatsAppBroadcastRecurrence;
+
+  @ApiPropertyOptional({
+    description: 'Inclusive UTC end date; required when no count is supplied.',
+  })
+  @IsOptional()
+  @IsDateString()
+  recurrenceEndAt?: string;
+
+  @ApiPropertyOptional({
+    minimum: 2,
+    maximum: 366,
+    description: 'Total occurrences including the first.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(2)
+  @Max(366)
+  recurrenceMaxOccurrences?: number;
 }
 
 export class ScheduleWhatsappBroadcastDto {
   @ApiProperty()
   @IsDateString()
   scheduledAt!: string;
+
+  @ApiPropertyOptional({
+    description: 'Optional recipient-local HH:mm send time; null disables local-time scheduling.',
+    nullable: true,
+    example: '09:00',
+  })
+  @IsOptional()
+  @Matches(/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/)
+  recipientLocalTime?: string | null;
+
+  @ApiPropertyOptional({ enum: WhatsAppBroadcastRecurrence })
+  @IsOptional()
+  @IsEnum(WhatsAppBroadcastRecurrence)
+  recurrenceFrequency?: WhatsAppBroadcastRecurrence;
+
+  @ApiPropertyOptional({
+    description: 'Inclusive UTC end date; required when no count is supplied.',
+  })
+  @IsOptional()
+  @IsDateString()
+  recurrenceEndAt?: string;
+
+  @ApiPropertyOptional({
+    minimum: 2,
+    maximum: 366,
+    description: 'Total occurrences including the first.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(2)
+  @Max(366)
+  recurrenceMaxOccurrences?: number;
+}
+
+export class ReviewWhatsappBroadcastApprovalDto {
+  @ApiProperty({
+    enum: [WhatsAppBroadcastApprovalStatus.APPROVED, WhatsAppBroadcastApprovalStatus.REJECTED],
+  })
+  @IsEnum({
+    APPROVED: WhatsAppBroadcastApprovalStatus.APPROVED,
+    REJECTED: WhatsAppBroadcastApprovalStatus.REJECTED,
+  })
+  decision!: WhatsAppBroadcastApprovalStatus.APPROVED | WhatsAppBroadcastApprovalStatus.REJECTED;
+
+  @ApiPropertyOptional({ maxLength: 1000 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  note?: string;
 }

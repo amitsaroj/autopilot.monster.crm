@@ -15,7 +15,13 @@ export interface Workflow {
 export interface WorkflowSequencePolicy {
   stopOnReply?: boolean;
   stopOnConversion?: boolean;
-  businessHours?: { timezone: string; startHour: number; endHour: number; days: number[] };
+  businessHours?: {
+    timezone: string;
+    startHour: number;
+    endHour: number;
+    days: number[];
+    useRecipientTimezone?: boolean;
+  };
   exitCondition?: { field: string; operator?: string; value?: unknown };
 }
 

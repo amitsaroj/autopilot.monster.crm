@@ -3,6 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Ticket, TicketStatus, TicketPriority } from '../../database/entities/ticket.entity';
 import { Article, ArticleStatus } from '../../database/entities/article.entity';
+import { stripImmutableFields } from '../../database/base.repository';
+import {
+  CreateArticleDto,
+  CreateTicketDto,
+  UpdateArticleDto,
+  UpdateTicketDto,
+} from './support.dto';
 
 @Injectable()
 export class SupportService {
@@ -29,10 +36,10 @@ export class SupportService {
     return ticket;
   }
 
-  async create(tenantId: string, dto: any) {
+  async create(tenantId: string, dto: CreateTicketDto) {
     const ticketNumber = `TKT-${Date.now().toString().slice(-6)}`;
     const ticket = this.ticketRepository.create({
-      ...dto,
+      ...stripImmutableFields(dto),
       tenantId,
       ticketNumber,
       status: TicketStatus.OPEN,
@@ -40,9 +47,9 @@ export class SupportService {
     return this.ticketRepository.save(ticket);
   }
 
-  async update(tenantId: string, id: string, dto: any) {
+  async update(tenantId: string, id: string, dto: UpdateTicketDto) {
     const ticket = await this.findOne(tenantId, id);
-    Object.assign(ticket, dto);
+    Object.assign(ticket, stripImmutableFields(dto));
     return this.ticketRepository.save(ticket);
   }
 
@@ -77,10 +84,10 @@ export class SupportService {
     return article;
   }
 
-  async createArticle(tenantId: string, dto: any) {
+  async createArticle(tenantId: string, dto: CreateArticleDto) {
     const slug = dto.title.toLowerCase().replace(/ /g, '-');
     const article = this.articleRepository.create({
-      ...dto,
+      ...stripImmutableFields(dto),
       tenantId,
       slug,
       status: ArticleStatus.DRAFT,
@@ -88,9 +95,9 @@ export class SupportService {
     return this.articleRepository.save(article);
   }
 
-  async updateArticle(tenantId: string, id: string, dto: any) {
+  async updateArticle(tenantId: string, id: string, dto: UpdateArticleDto) {
     const article = await this.findOneArticle(tenantId, id);
-    Object.assign(article, dto);
+    Object.assign(article, stripImmutableFields(dto));
     return this.articleRepository.save(article);
   }
 

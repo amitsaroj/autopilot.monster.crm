@@ -13,7 +13,6 @@ import { SubAdminMarketplaceModule } from './marketplace/sub-admin-marketplace.m
 import { SubAdminWorkflowsModule } from './workflows/sub-admin-workflows.module';
 import { SubAdminAiModule } from './ai/sub-admin-ai.module';
 import { SubAdminVoiceModule } from './voice/sub-admin-voice.module';
-import { SubAdminWhatsappModule } from './whatsapp/sub-admin-whatsapp.module';
 
 @Module({
   imports: [
@@ -31,7 +30,6 @@ import { SubAdminWhatsappModule } from './whatsapp/sub-admin-whatsapp.module';
     SubAdminWorkflowsModule,
     SubAdminAiModule,
     SubAdminVoiceModule,
-    SubAdminWhatsappModule,
   ],
   controllers: [],
   providers: [],

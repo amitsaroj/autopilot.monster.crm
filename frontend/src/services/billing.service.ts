@@ -30,7 +30,7 @@ export interface BillingRecovery {
 export interface Invoice {
   id: string;
   number: string;
-  total: number;
+  total: number | string;
   currency: string;
   status: string;
   dueDate?: string;
@@ -43,8 +43,8 @@ export interface Plan {
   id: string;
   name: string;
   slug: string;
-  priceMonthly: number;
-  priceAnnual: number;
+  priceMonthly: number | string;
+  priceAnnual: number | string;
   currency: string;
 }
 
@@ -53,7 +53,10 @@ export const billingService = {
   getSubscription: () => api.get<Subscription>('/monetization/subscription'),
   getUsage: () => api.get<Record<string, number>>('/monetization/usage'),
   createCheckout: (planId: string, billingCycle: 'MONTHLY' | 'ANNUAL' = 'MONTHLY') =>
-    api.post<{ url: string }>('/monetization/upgrade', { planId, billingCycle }),
+    api.post<{ url: string | null; updated?: boolean }>('/monetization/upgrade', {
+      planId,
+      billingCycle,
+    }),
   getPortal: () => api.post<{ url: string }>('/monetization/portal'),
   getRecovery: () => api.get<{ data: BillingRecovery }>('/billing/subscription/recovery'),
   retryPayment: () =>
@@ -62,7 +65,7 @@ export const billingService = {
   cancel: (atPeriodEnd = true) => api.post('/billing/subscription/cancel', { atPeriodEnd }),
   reactivate: () => api.post('/billing/subscription/reactivate'),
   getInvoices: () => api.get<Invoice[]>('/billing/invoices'),
-  getInvoice: (id: string) => api.get<{ data: Invoice }>(`/billing/invoices/${id}`),
+  getInvoice: (id: string) => api.get<Invoice>(`/billing/invoices/${id}`),
   listPaymentMethods: () => api.get<{ data: PaymentMethod[] }>('/billing/payment-methods'),
   createSetupIntent: () => api.post<{ data: { clientSecret: string } }>('/billing/payment-methods'),
   attachPaymentMethod: (paymentMethodId: string, setDefault = false) =>

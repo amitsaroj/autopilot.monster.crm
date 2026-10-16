@@ -1,3 +1,6 @@
+> **Superseded (2026-10-14):** the live ledger is [`/TASKS.md`](../../TASKS.md). Entries below are historical and
+> were not evidence-verified; several are contradicted by the 2026-10-14 audit.
+
 ## COMPLETED
 
 - [x] Remove unused docs .md files

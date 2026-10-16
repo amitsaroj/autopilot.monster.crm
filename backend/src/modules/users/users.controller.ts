@@ -1,7 +1,12 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { UpdateUserDto, InviteUserDto } from './dto/users.dto';
+import {
+  UpdateUserDto,
+  InviteUserDto,
+  CreateTeamGroupDto,
+  UpdateTeamGroupDto,
+} from './dto/users.dto';
 import { JwtAuthGuard, RolesGuard, TenantGuard } from '../../common/guards';
 import {
   Roles,
@@ -56,7 +61,7 @@ export class UsersController {
   @Post('groups')
   @ApiOperation({ summary: 'Create team group' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async createGroup(@TenantId() tenantId: string, @Body() dto: any) {
+  async createGroup(@TenantId() tenantId: string, @Body() dto: CreateTeamGroupDto) {
     return await this.usersService.createGroup(tenantId, dto);
   }
 
@@ -70,7 +75,11 @@ export class UsersController {
   @Patch('groups/:id')
   @ApiOperation({ summary: 'Update team group' })
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN')
-  async updateGroup(@TenantId() tenantId: string, @Param('id') id: string, @Body() dto: any) {
+  async updateGroup(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateTeamGroupDto,
+  ) {
     return await this.usersService.updateGroup(id, tenantId, dto);
   }
 

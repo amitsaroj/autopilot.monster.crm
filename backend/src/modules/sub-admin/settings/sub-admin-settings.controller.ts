@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminSettingsService } from './sub-admin-settings.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { UpdateWorkspaceSettingsDto } from '../../tenant/dto/tenant.dto';
 
 @ApiTags('SubAdmin / Settings')
 @ApiBearerAuth()
@@ -21,7 +22,7 @@ export class SubAdminSettingsController {
 
   @Patch()
   @ApiOperation({ summary: 'Update tenant settings' })
-  async updateSettings(@TenantId() tenantId: string, @Body() dto: any) {
+  async updateSettings(@TenantId() tenantId: string, @Body() dto: UpdateWorkspaceSettingsDto) {
     return await this.settingsService.updateSettings(tenantId, dto);
   }
 }

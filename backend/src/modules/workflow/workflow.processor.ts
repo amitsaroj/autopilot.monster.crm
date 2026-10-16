@@ -1,5 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Interval } from '@nestjs/schedule';
 import { Job } from 'bull';
 import { randomUUID, createHash } from 'crypto';
 import { JOB_NAMES, QUEUE_NAMES } from '../../queue/queue.constants';
@@ -8,7 +10,11 @@ import { WorkflowExecutorService, WorkflowStepResult } from './workflow-executor
 import { WorkflowService } from './workflow.service';
 import { WorkflowRuntimePolicyService } from './workflow-runtime-policy.service';
 import { compileWorkflow, WorkflowStep, sequencePolicy } from './workflow-definition';
-import { WorkflowSequenceService, nextBusinessOpening } from './workflow-sequence.service';
+import {
+  WorkflowSequenceService,
+  businessHoursForRecipient,
+  nextBusinessOpening,
+} from './workflow-sequence.service';
 import { resolveWorkflowConfig } from './workflow-template.util';
 import { workflowCausation } from './workflow-causation';
 
@@ -22,6 +28,15 @@ export interface WorkflowJobData {
   generation?: number;
 }
 
+/**
+ * Jobs per worker process. Safe above 1: `claim` is an atomic lease UPDATE and every
+ * checkpoint is fenced by the lease token, so one execution never runs twice at once.
+ */
+export const WORKFLOW_WORKER_CONCURRENCY = Math.max(
+  1,
+  Number.parseInt(process.env['WORKFLOW_WORKER_CONCURRENCY'] ?? '5', 10) || 5,
+);
+
 export function workflowStepKey(executionId: string, stepId: string): string {
   return `wf-${executionId}-${createHash('sha256').update(stepId).digest('hex').slice(0, 32)}`;
 }
@@ -29,6 +44,7 @@ export function workflowStepKey(executionId: string, stepId: string): string {
 @Processor(QUEUE_NAMES.WORKFLOW)
 export class WorkflowProcessor {
   private readonly logger = new Logger(WorkflowProcessor.name);
+  private dispatchingLifecycleEvents = false;
 
   constructor(
     private readonly workflowRepo: WorkflowRepository,
@@ -36,9 +52,32 @@ export class WorkflowProcessor {
     private readonly workflowService: WorkflowService,
     private readonly policy: WorkflowRuntimePolicyService,
     private readonly sequences: WorkflowSequenceService,
+    private readonly events: EventEmitter2,
   ) {}
 
-  @Process(JOB_NAMES.EXECUTE_WORKFLOW)
+  @Interval(5000)
+  async dispatchLifecycleEvents(): Promise<void> {
+    if (this.dispatchingLifecycleEvents) return;
+    this.dispatchingLifecycleEvents = true;
+    try {
+      const events = await this.workflowRepo.claimLifecycleEvents(50);
+      for (const event of events) {
+        try {
+          await this.events.emitAsync(event.event, event.payload);
+          await this.workflowRepo.markLifecycleEventDelivered(event.id);
+        } catch {
+          await this.workflowRepo.retryLifecycleEvent(event.id);
+          this.logger.warn(`Workflow lifecycle event ${event.id} will be retried`);
+        }
+      }
+    } catch {
+      this.logger.warn('Workflow lifecycle outbox scan deferred');
+    } finally {
+      this.dispatchingLifecycleEvents = false;
+    }
+  }
+
+  @Process({ name: JOB_NAMES.EXECUTE_WORKFLOW, concurrency: WORKFLOW_WORKER_CONCURRENCY })
   async handleExecuteWorkflow(job: Job<WorkflowJobData>): Promise<{ status: string }> {
     const { tenantId, workflowId } = job.data;
     let executionId = job.data.executionId;
@@ -155,9 +194,12 @@ export class WorkflowProcessor {
           await save({ currentStepId: cursor });
           continue;
         }
+        const hours = sequence.businessHours
+          ? businessHoursForRecipient(sequence.businessHours, inspected.payload)
+          : undefined;
         const opening =
-          sequence.businessHours && ['SEND_WHATSAPP', 'SEND_TEMPLATE'].includes(step.type)
-            ? nextBusinessOpening(sequence.businessHours, new Date())
+          hours && ['SEND_WHATSAPP', 'SEND_TEMPLATE'].includes(step.type)
+            ? nextBusinessOpening(hours, new Date())
             : null;
         if (opening) {
           const generation = execution.dispatchGeneration + 1;
@@ -186,6 +228,7 @@ export class WorkflowProcessor {
           return { status: 'SCHEDULED' };
         }
         const repeatSafe = [
+          'CREATE_LEAD',
           'SEND_WHATSAPP',
           'SEND_TEMPLATE',
           'LOG',

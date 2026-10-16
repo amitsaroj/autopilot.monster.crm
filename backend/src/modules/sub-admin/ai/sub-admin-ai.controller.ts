@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SubAdminAiService } from './sub-admin-ai.service';
 import { JwtAuthGuard, RolesGuard } from '../../../common/guards';
 import { Roles, TenantId, ResourcePermissions } from '../../../common/decorators';
+import { UpsertTenantSettingDto } from '../sub-admin.dto';
 
 @ApiTags('SubAdmin / AI')
 @ApiBearerAuth()
@@ -21,7 +22,7 @@ export class SubAdminAiController {
 
   @Post('configs')
   @ApiOperation({ summary: 'Update AI configurations' })
-  async updateConfig(@TenantId() tenantId: string, @Body() dto: any) {
+  async updateConfig(@TenantId() tenantId: string, @Body() dto: UpsertTenantSettingDto) {
     return await this.aiService.updateConfig(tenantId, dto);
   }
 }

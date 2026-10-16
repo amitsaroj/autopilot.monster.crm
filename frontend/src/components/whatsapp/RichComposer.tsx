@@ -9,6 +9,13 @@ type ListSection = {
 const initialSections: ListSection[] = [
   { title: '', rows: [{ id: 'option-1', title: '', description: '' }] },
 ];
+const mediaAccept: Record<'image' | 'video' | 'audio' | 'document', string> = {
+  image: 'image/jpeg,image/png,.jpg,.jpeg,.png',
+  video: 'video/mp4,video/3gpp,.mp4,.3gp',
+  audio: 'audio/aac,audio/mp4,audio/mpeg,audio/amr,audio/ogg,.aac,.m4a,.mp3,.amr,.ogg',
+  document:
+    'application/pdf,text/plain,application/msword,application/vnd.ms-powerpoint,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx',
+};
 function validText(value: string, limit: number) {
   return !!value.trim() && value.length <= limit && !value.includes('\0');
 }
@@ -16,16 +23,21 @@ function validText(value: string, limit: number) {
 export function RichComposer({
   media,
   interactive,
+  onUpload,
   onChange,
 }: {
   media: boolean;
   interactive: boolean;
+  onUpload?: (file: File, type: 'image' | 'video' | 'audio' | 'document') => Promise<string>;
   onChange: (value: Record<string, unknown> | null) => void;
 }) {
   const [type, setType] = useState(media ? 'image' : interactive ? 'interactive' : '');
   const [link, setLink] = useState('');
   const [text, setText] = useState('');
   const [filename, setFilename] = useState('');
+  const [mediaId, setMediaId] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [buttons, setButtons] = useState(['']);
   const [listButton, setListButton] = useState('View options');
   const [sections, setSections] = useState<ListSection[]>(initialSections);
@@ -41,6 +53,7 @@ export function RichComposer({
             ? 'interactive'
             : '',
     );
+    setMediaId('');
     if (!media) {
       setLink('');
       setFilename('');
@@ -97,7 +110,7 @@ export function RichComposer({
           buttons.length <= 3 &&
           buttons.every((title) => validText(title, 20)) &&
           new Set(buttons.map((title) => title.trim())).size === buttons.length
-        : /^https:\/\//.test(link));
+        : !!mediaId || /^https:\/\//.test(link));
   const listContent = {
     type: 'interactive',
     interactive: {
@@ -145,7 +158,7 @@ export function RichComposer({
           : {
               type,
               [type]: {
-                link,
+                ...(mediaId ? { id: mediaId } : { link }),
                 ...(type !== 'audio' && text ? { caption: text } : {}),
                 ...(type === 'document' && filename ? { filename } : {}),
               },
@@ -160,7 +173,14 @@ export function RichComposer({
         <select
           className={inputClass}
           value={type}
-          onChange={(event) => edit(() => setType(event.target.value))}
+          onChange={(event) =>
+            edit(() => {
+              setType(event.target.value);
+              setMediaId('');
+              setLink('');
+              setUploadError('');
+            })
+          }
         >
           {media &&
             ['image', 'video', 'audio', 'document'].map((value) => (
@@ -171,17 +191,51 @@ export function RichComposer({
         </select>
       </Field>
       {!isInteractive && supported && (
-        <Field
-          label="Public HTTPS media URL"
-          hint="Use an existing public asset. Meta fetches this URL; no file is downloaded by the CRM."
-        >
-          <input
-            type="url"
-            className={inputClass}
-            value={link}
-            onChange={(event) => edit(() => setLink(event.target.value))}
-          />
-        </Field>
+        <>
+          <Field label="Upload media to WhatsApp" hint="Supported WhatsApp media formats; this uploader limits all files to 16 MB. Images are limited to 5 MB.">
+            <input
+              type="file"
+              className={inputClass}
+              accept={mediaAccept[type as keyof typeof mediaAccept] ?? ''}
+              disabled={!onUpload || uploading}
+              onChange={async (event) => {
+                const file = event.target.files?.[0];
+                if (!file || !onUpload) return;
+                const mediaType = (['image', 'video', 'audio', 'document'] as const).find(
+                  (candidate) => candidate === type,
+                );
+                if (!mediaType) return;
+                setUploading(true);
+                setUploadError('');
+                try {
+                  const id = await onUpload(file, mediaType);
+                  setMediaId(id);
+                  setLink('');
+                  onChange(null);
+                } catch {
+                  setUploadError('Upload failed. Check the file format and connected WhatsApp account, then try again.');
+                } finally {
+                  setUploading(false);
+                  event.target.value = '';
+                }
+              }}
+            />
+          </Field>
+          {uploading && <p className="text-xs text-muted-foreground">Uploading to WhatsApp…</p>}
+          {mediaId && <p className="text-xs text-emerald-700">Media uploaded and ready to send.</p>}
+          {uploadError && <Notice>{uploadError}</Notice>}
+          <Field
+            label="Or use a public HTTPS media URL"
+            hint="WhatsApp fetches this URL directly."
+          >
+            <input
+              type="url"
+              className={inputClass}
+              value={link}
+              onChange={(event) => edit(() => { setLink(event.target.value); setMediaId(''); })}
+            />
+          </Field>
+        </>
       )}
       {type !== 'audio' && (
         <Field label={isInteractive ? 'Message' : 'Caption (optional)'}>

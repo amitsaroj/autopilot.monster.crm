@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Headers,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -66,8 +67,9 @@ export class WebhookController {
     @TenantId() tenantId: string,
     @Param('id') id: string,
     @Param('deliveryId') deliveryId: string,
+    @Headers('idempotency-key') replayRequestKey?: string,
   ) {
-    return this.webhookService.replay(tenantId, id, deliveryId);
+    return this.webhookService.replay(tenantId, id, deliveryId, replayRequestKey);
   }
 
   @Post(':id/test')
