@@ -1,5 +1,7 @@
 # Local Docker and UI verification — 13 October 2026
 
+> Historical report for the specific local environment and commit exercised on this date. Its dependency versions, route counts, test totals, deployment observations and open issues are not current-state assertions. Consult [current implementation status](../implementation-status.md) and rerun the relevant checks before release.
+
 The backend runs at `http://localhost:8000/api/v1`. The development frontend runs at `http://localhost:3100`; the production build used for browser verification runs at `http://localhost:3101`. The ignored frontend `.env.local` points to the local API. The repository's production API default remains `https://api.autopilots.monster/api/v1`.
 
 Docker project `autopilot-ui-check` has its own PostgreSQL, Redis, MinIO, and Qdrant volumes. All four dependencies and the API readiness endpoint reported healthy. Redis is published on port 6380 because the host already has a Redis service on 6379. The local API is bound to loopback and the local Compose file explicitly selects the bundled database and development mode.

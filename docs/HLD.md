@@ -1,6 +1,6 @@
 # High-Level Design — Autopilot Monster CRM
 
-**Repository snapshot:** 2026-09-09
+**Repository snapshot:** 2026-10-16
 **Scope:** current source, configuration, Docker/Terraform, and GitHub Actions in this repository. This is implementation documentation, not a roadmap.
 
 ## 1. Executive summary
@@ -150,29 +150,10 @@ The diagram deliberately shows the principal relationships with TypeORM relation
 
 ## 11. Current project status
 
-The following is an **implementation-evidence score**, not a QA certification or production-readiness claim. It counts present UI routes, controllers/services/entities, queue processors, configurations, and IaC; it does not claim configured credentials or live provider acceptance.
-
-| Area | Evidence-based status | Estimate |
-|---|---|---:|
-| Overall | Broad modular-monolith implementation with API, UI, entities, migrations, tests and deployment artifacts | 82% |
-| Frontend | 337 `page.tsx` routes, reusable components/services, auth proxy | 84% |
-| Backend | 122 controller files, 80 entity classes, 10 migrations, 12 queues | 86% |
-| Infrastructure | Local/prod Compose, nginx, Terraform, CI/deploy workflows; single-host deployment | 74% |
-| Database | Entities/migrations/repositories and PostgreSQL configuration | 82% |
-| Authentication/authorization | JWT, refresh, MFA, OAuth strategies, guards/decorators and UI flows | 84% |
-| CRM | Full core entity/controller/service/UI footprint | 88% |
-| AI | Agents, prompts, KB/RAG, fine-tuning/inference paths; provider-dependent | 76% |
-| Voice | Calls, campaigns, number management, queue and Twilio paths | 74% |
-| WhatsApp | Templates, messages, broadcasts, webhook/processor paths | 78% |
-| Workflow | Flow/execution entities, executor/actions/listeners/processor and UI | 82% |
-| Marketplace/plugins | Entities, API services and UI; no isolated plugin runtime shown | 68% |
-| Billing | Stripe/domain entities/controllers/services and UI; live price/webhook setup required | 76% |
-| Analytics | Dashboards/reports/event listener/queue and UI | 78% |
-| Admin/sub-admin | Large API/UI administration surface | 80% |
-| Production readiness | Compose/CI/IaC/security controls exist; secrets, TLS, provider cutover, DR and scaling validation are operational gaps | 63% |
+This design intentionally contains no percentage-based completion score. Source presence, successful builds, tests, live provider verification, and production readiness are separate evidence classes. See [implementation status](implementation-status.md) for the current recorded checks and known failures, and [feature catalog](FEATURE_CATALOG.md) for module scope.
 
 ## 12. Known limitations and future scope
 
-Known from the repository: providers are environment-dependent; Stripe rejects placeholder values; production TLS needs an operational bootstrap; queues are in-process; deployment is a single EC2 host; the deployment workflow expects `backend/.env.production` even though it is not a tracked example; and no Kubernetes, isolated workers, managed observability, or documented DR exercise is supplied.
+Known from the repository: providers are environment-dependent; production TLS needs an operational bootstrap; queues are in-process; deployment targets a single EC2 host; secure runtime secret delivery is required; and no Kubernetes, isolated worker fleet, managed observability, or verified disaster-recovery exercise is supplied.
 
 These are limitations, not promises of future delivery. Natural next engineering investments would be worker separation, secret injection outside source/S3, managed data services, repeatable restore tests, and production provider contract tests.

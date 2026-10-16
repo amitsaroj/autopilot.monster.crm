@@ -1,6 +1,6 @@
 # Low-Level Design — Autopilot Monster CRM
 
-**Repository snapshot:** 2026-09-09. Paths and behavior below are taken from the checked-in source. “Partial” means code exists but needs external setup or the repository does not demonstrate a complete production boundary.
+**Repository snapshot:** 2026-10-16. Paths and behavior below describe the checked-in source. “Partial” means code exists but needs external setup, has bounded support, or lacks a demonstrated operational boundary. Counts are omitted because they change frequently.
 
 ## 1. Repository and folder structure
 
@@ -10,7 +10,7 @@ backend/
   src/app.module.ts           # CoreModule and global Nest providers
   src/common/                 # decorators, guards, filters, pipes, interceptors
   src/config/                 # app, database, Redis, MinIO, Qdrant, JWT, throttle config
-  src/database/               # TypeORM module, 78 entity files (77 decorated), 10 migrations
+  src/database/               # TypeORM module, entities, migrations and data source
   src/queue/                  # Bull root config, constants, shared processors
   src/events/                 # EventEmitter configuration
   src/modules/                # domain modules
@@ -65,7 +65,7 @@ Controllers use DTO classes in their module `dto/` folders and decorate handlers
 
 ## 3. Frontend architecture
 
-The UI is Next.js App Router. The source contains 337 `page.tsx` files, grouped into public marketing, auth, tenant app, admin, and super-admin routes. Services in `frontend/src/services` make domain-specific calls through `frontend/src/lib/api/client.ts`; that Axios instance adds `Authorization` from the `access_token` cookie and `x-tenant-id` from `localStorage`, refreshes on one 401 retry, and redirects on 403.
+The UI is Next.js App Router, grouped into public marketing, auth, tenant app, admin, and super-admin routes. Services in `frontend/src/services` make domain-specific calls through `frontend/src/lib/api/client.ts`; the Axios client adds `Authorization` from the `access_token` cookie and `x-tenant-id` from `localStorage`, refreshes on one 401 retry, and redirects on 403.
 
 `frontend/src/proxy.ts` treats marketing/auth paths as public, redirects unauthenticated internal traffic to login, and checks token role claims before `/admin` and `/superadmin` routes. This is navigation protection only; API guards enforce permissions.
 
@@ -82,21 +82,21 @@ The UI is Next.js App Router. The source contains 337 `page.tsx` files, grouped 
 |---|---|---|
 | Auth | `auth.controller.ts`, auth/MFA services, strategies and DTOs | Implemented; OAuth flows need provider credentials/callbacks |
 | Tenant, users, RBAC, settings | tenant/team/API key/flag controllers; users and RBAC modules; tenant settings | Implemented tenant control plane |
-| CRM | `crm.controller.ts`, reports/duplicates/omnichannel/quote-public controllers; 20 services and 5 repositories | Implemented core CRM; includes leads, contacts, companies, deals, pipelines, products, quotes, tasks and support records |
+| CRM | CRM controllers, services, repositories, DTOs and entities | Core CRM records include leads, contacts, companies, deals, pipelines, products, quotes, tasks, activities, notes, tags, segments and custom fields; see [CRM design](crm-design.md) |
 | Billing and monetization | billing controllers/services, pricing repository, `MonetizationModule` | Implemented application paths; live Stripe operation is configuration-dependent |
 | AI | six controllers, agents/conversations/prompts/KB/fine-tuning services, RAG and inference queue service | Partial operationally: requires OpenAI/Qdrant/MinIO availability |
 | Voice | voice, campaign and Twilio controllers; call/campaign/number services/repository | Partial operationally: requires Twilio and configured phone numbers |
-| WhatsApp | WhatsApp and Meta webhook controllers; service/template/broadcast/repository/processor | Partial operationally: requires Meta account/token/webhook setup |
+| WhatsApp | Account, message, template, consent, campaign, inbox, webhook and automation modules | Partial/external. Includes the catalog, shared workflow engine integration and documented constraints; see [WhatsApp checkpoint](whatsapp-automation-implementation.md) |
 | Workflow | workflows/meta controllers, repository, executor/action executor/event listener/processor | Implemented workflow runtime in-process |
 | Analytics/search | analytics dashboard/report/advanced controllers, event listener, queue service; search controller/listener | Implemented code paths; reporting data quality depends on emitted events |
 | Storage/data jobs | storage controllers/service, import/export/backup controllers and processors | Implemented; MinIO is required for object/backup operations |
 | Marketplace/plugins/developer | marketplace/template, plugin, OAuth/webhook/API-log controllers/services | Partial: registry/management is present; no separate sandboxed plugin execution host is present |
 | Social/scheduler/support/notifications | social scheduler/service, scheduled-job repository, support, WebSocket notification gateway | Implemented module artifacts; social providers are not established in checked-in configuration |
-| Admin/sub-admin/platform | 53 admin and 15 sub-admin controller/service files, platform module | Implemented administration surface; dependent on global authorization |
+| Admin/sub-admin/platform | Admin, delegated-admin and platform modules with related routes/services | Authorization and enabled features vary by role and tenant plan |
 
 ## 5. Database schema and relationships
 
-The database is PostgreSQL through TypeORM. `DatabaseModule` resolves config and enables `autoLoadEntities`. There are 80 decorated entity classes: 77 in `backend/src/database/entities` plus user, session, and refresh-token entities in `backend/src/modules/auth/entities`. Migrations live in `backend/src/database/migrations`; production Compose sets `DB_SYNCHRONIZE=false`, so migrations are the production schema mechanism.
+The database is PostgreSQL through TypeORM. `DatabaseModule` resolves config and enables `autoLoadEntities`. Entities live under `backend/src/database/entities` and auth-specific entity folders. Migrations live in `backend/src/database/migrations`; production Compose disables schema synchronization, so migrations are the production schema mechanism.
 
 ### Entity/table inventory by domain
 
@@ -136,8 +136,8 @@ All routes below are relative to `/api/v1`; method-level operations are generate
 | `auth` | identity, refresh, MFA and OAuth |
 | `crm`, `crm/duplicates`, `crm/reports`, `crm/quotes`, `omnichannel` | sales CRM and public quote access |
 | `ai`, `ai/agents`, `ai/prompts`, `ai/templates`, `ai/conversations`, `ai/knowledge-bases`, `ai/fine-tuning` | AI resources and inference-related operations |
-| `voice`, `voice/campaigns`, `voice/twilio`; `whatsapp`, `whatsapp/webhook` | voice and WhatsApp |
-| `workflows` plus root workflow metadata routes | workflows and execution metadata |
+| `voice`, `voice/campaigns`, `voice/twilio`; `whatsapp`, `whatsapp/accounts`, `whatsapp/broadcasts`, `whatsapp/conversations`, `whatsapp/templates`, `whatsapp/consent`, `whatsapp-automations`, `integrations/shopify` | voice, WhatsApp messaging/automation and supported Shopify integration |
+| `workflows` plus workflow execution/metadata routes | shared workflow definitions, preview, versions and execution lifecycle |
 | `billing`, `billing/coupons`, `monetization` | billing, coupons and pricing/usage controls |
 | `analytics`, `analytics/advanced`, `analytics/dashboards`, `analytics/reports`, `search` | reporting and search |
 | `marketplace`, `marketplace/templates`, `plugins`, `developer/oauth`, `developer/webhooks`, `developer/logs` | ecosystem/developer operations |
@@ -147,7 +147,7 @@ All routes below are relative to `/api/v1`; method-level operations are generate
 
 ## 7. Redis, Bull, events, scheduling and background work
 
-`QueueModule` configures Bull using the Redis config and registers 12 queues. It sets `removeOnComplete: true`, retains failed jobs, and defaults to 3 exponential-backoff attempts. Despite the requested term “BullMQ workers,” the installed and used library is **Bull 4 / `@nestjs/bull`**, with `@Processor` and `@Process` decorators—not BullMQ.
+`QueueModule` configures Bull using Redis and registers the queue names listed below. The installed API is **Bull / `@nestjs/bull`**, with `@Processor` and `@Process` decorators—not a separately deployed BullMQ worker fleet. Consult queue configuration for current retry and retention values.
 
 | Queue | Processor/job evidence |
 |---|---|
@@ -188,4 +188,4 @@ flowchart TD
 - **Implemented:** entities, migrations, API/UI module footprints, global security pipeline, Compose stacks, Terraform, CI, API/OpenAPI generation, Bull processors, event listeners, storage abstraction and health endpoints.
 - **Partial/external:** live payment, telephony, Meta, OpenAI, OAuth and SMTP behavior depends on credentials/provider configuration. Qdrant is present in compose/configuration but not proof of a provisioned production collection/service.
 - **Not implemented in repository:** Kubernetes manifests, a separately scaled worker service, managed monitoring/alerting/log export, a documented restore test, and a sandboxed marketplace plugin-runtime boundary.
-- **Production caveat:** the deploy workflow references a real `backend/.env.production`, which is not included; operational secret delivery needs validation before deployment.
+- **Production caveat:** deploy-time secret delivery, TLS, backups/restore, provider setup and health/alerting need target-environment verification. Consult [operations runbooks](operations-runbooks.md); no secret file belongs in git.

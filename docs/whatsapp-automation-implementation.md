@@ -1,6 +1,6 @@
 # WhatsApp automation implementation checkpoint
 
-Updated 15 October 2026. This is an implementation checkpoint, not a declaration that the entire master product scope is complete.
+Updated 16 October 2026. This is an implementation checkpoint, not a declaration that the entire master product scope is complete. The dated implementation notes below retain their original context; they must not be interpreted as the result of a fresh run against every later commit. The most recent recorded full backend Jest run on this repository state failed in `workflow-webhook-action.spec.ts` (31 suites passed, one failed; seven cases failed because the test executor fixture did not provide the workflow policy dependency). The frontend suite most recently passed 43 tests. See [implementation status](implementation-status.md) for the concise verification record and release gates.
 
 ## Customer lifecycle
 

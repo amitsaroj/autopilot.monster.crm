@@ -1,56 +1,57 @@
-# Autopilot Monster CRM | Backend API Node
+# Backend API
 
-Welcome to the **Backend Control Plane** of the Autopilot Monster CRM. This layer is engineered using NestJS to provide a highly scalable, fully normalized, and thoroughly documented micro-monolith API.
+This directory contains the NestJS API for Autopilot Monster CRM. It is a modular monolith: domain modules are composed by the application module, and Bull queue processors run in the API process. It is not a separately deployed microservice or worker fleet.
 
-## 🧬 Architectural Principles
+For the system context see [high-level design](../docs/HLD.md), implementation conventions [low-level design](../docs/LLD.md), current recorded checks [implementation status](../docs/implementation-status.md), and the overall [root README](../README.md). The generated OpenAPI JSON is available from a running local API at `http://localhost:8000/openapi.json`; Swagger UI is environment-dependent.
 
-*   **Dependency Injection:** A strict modular boundary model. Services isolate business logic from HTTP transport layers (Controllers).
-*   **Zero-Trust Security:** Global Bearer Token guards via `JwtAuthGuard` and `TenantGuard`. Every request explicitly requires a valid JWT and an `x-tenant-id` header to ensure total data isolation.
-*   **Event-Driven Workloads:** Long-running processes (CSV imports, AI training, bulk emails) are offloaded immediately to Redis Queues.
-*   **Documentation as Code:** NestJS Swagger dynamically generates the OpenAPI schema directly from TypeScript decorators and Data Transfer Objects (DTOs), ensuring the frontend engineers always possess perfectly synchronized API contracts.
+## Main modules
 
-## 📚 Core Modules
+- **Auth/tenant/RBAC:** local identity, session/token flows, MFA/OAuth paths, tenant membership, roles, permissions, API keys and settings.
+- **CRM:** contacts, companies, leads, deals/pipelines, activities, tasks, notes, products, quotes, segments, tags, imports/exports and related automation events.
+- **Billing/monetization:** plans, feature/limit checks, subscriptions, invoices, payments, coupons, usage and Stripe integration paths.
+- **AI:** agents, conversations, prompts, knowledge bases/RAG, inference and fine-tuning job records; provider operations require configuration.
+- **Voice/WhatsApp:** provider adapters, callbacks/webhooks, messaging/campaign or call queues, consent and status processing; live behavior requires external accounts.
+- **Workflow:** shared definitions, validation, triggers, action execution, durable execution records, waits/retries and queue processing.
+- **Platform:** analytics, search, developer webhooks/OAuth, marketplace/plugin metadata, notifications, storage, data jobs, support, admin and health.
 
-1.  **AuthModule & TenantGuard:** Master control of JWT issuance, TOTP-MFA verification, UUID bindings, and RBAC arrays.
-2.  **CrmModule:** Handles standard relations—Leads, Contacts, Companies, Pipelines (Deals), Notes, Tasks. Includes nested sub-services for deep analytical aggregations.
-3.  **AiModule & Qdrant:** Ties directly into OpenAI embeddings and Qdrant vector databases for RAG workflows. Connects Agents to dynamic tools via semantic query structures.
-4.  **CommunicationsModule:** Twilio (Voice/SMS), Email pipelines, and WhatsApp webhook processors.
-5.  **Admin & Settings Modules:** Sub-administration system settings, rate-limiting parameter overrides, plan/billing tracking, and audit log generation.
+Module presence is not proof of every endpoint or provider flow being operational. Check route DTOs, guards, services, migrations and the module-specific documentation for exact behavior.
 
-## 🛠 Local Development
+## Local development
 
-The backend can run either via the container orchestrator defined in the parent directory (`docker-compose.yml`), or directly on the host against dockerized PostgreSQL/Redis/MinIO/Qdrant — both are used in practice; there is no hard requirement to containerize the API itself for local dev.
-
-To run directly on the host:
+Prerequisites and service setup are maintained in the [root README](../README.md#local-development). Use this package's installed dependency lock and scripts:
 
 ```bash
-# Install exact dependencies
-npm install
-
-# backend/src/config/env.config.ts reads process.env directly at import time —
-# nothing calls dotenv.config() first, so a .env file alone will NOT be picked
-# up. Export it into the shell before starting Nest:
-set -a && source .env && set +a
-
-npm run migration:run   # first run only, or after pulling new migrations
-npm run seed:dev        # idempotent; seeds tenant/plans/RBAC/demo users+CRM data
-
-# Start development server with SWC fast-compilation
-npm run start:dev
-
-# Build production artifacts targeting dist/
-npm run build
+npm ci
+npm run dev
 ```
 
-Health check: `curl http://localhost:8000/api/v1/health/ready`. Demo login credentials for every role are listed in the [root README](../README.md#demo-personas).
+When running services directly on the host, supply environment variables using a local ignored `.env` or secure environment injection. `env.config.ts` reads `process.env` at module import; a plain `.env` file is not automatically loaded by the application in every command. Do not source untrusted env files. For example, in a private local development environment only:
 
-## 🔒 Environment Requirements
+```bash
+set -a
+source .env
+set +a
+npm run dev
+```
 
-You MUST supply exactly these secrets in `backend/.env` to successfully boot the NestFactory:
-*   `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-*   `REDIS_HOST`, `REDIS_PASSWORD`
-*   `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`
-*   `JWT_SECRET`, `JWT_REFRESH_SECRET`
-*   `QDRANT_URL`, `OPENAI_API_KEY` (For AI modules)
+Use the repository's migration script after provisioning the database and when new migrations are introduced. Seed only disposable development databases; seed scripts create demo data and credentials. Never run development seed commands against production.
 
-Failure to supply these will automatically halt the bootstrap process to protect against misconfigured staging/production setups — but only once they actually reach `process.env` (see the `dotenv` note above).
+## Package scripts
+
+```bash
+npm run build
+npm run typecheck
+npm run lint:check
+npm test -- --runInBand
+npm run test:integration
+npm run migration:run
+npm run seed:dev
+```
+
+Use the script names currently declared in `package.json`; CI/release policy may require a different command or order. Record test failures accurately. A passing typecheck/build does not replace tests, migration review, provider validation or security checks.
+
+## Configuration and security
+
+Use [`backend/.env.example`](.env.example) only as the variable-name reference. It includes configuration groups for API URLs/ports, PostgreSQL, Redis, JWT, storage, Qdrant/OpenAI, SMTP, Stripe, WhatsApp, Shopify, OAuth and observability. Which variables are mandatory depends on enabled features and deployment configuration; the old claim that one fixed list is universally required was incorrect.
+
+Do not commit `.env`, production secret files, provider tokens, private keys, encryption keys or customer data. Production secrets must be injected from the approved secret manager. Configure migrations with schema synchronization disabled. Read [security design](../docs/security.md) and [operations runbooks](../docs/operations-runbooks.md) before exposing the API.

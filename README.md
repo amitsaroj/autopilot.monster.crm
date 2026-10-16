@@ -31,7 +31,7 @@ Implementation evidence is not acceptance-test results or a go-live approval. Se
 - `PlanGuard`/`LimitGuard` resolved `PricingService`/`BillingService` by a string token that never matched their real DI token, `PlanGuard` crashed on `@Public()` routes, and the Enterprise/Pro/Starter/Free plans were missing feature flags (`billing`, `storage`, `export`, `import`) added to the seed script after those plans were first created — all three blocked or 403'd real pages regardless of role.
 - The `@Roles('ADMIN')` sub-admin tier (14 controllers) had no seeded role or demo user, so it was completely unreachable; added the `ADMIN` role and `subadmin@autopilotmonster.com`.
 
-See [`Docs/audit/FEATURE_COVERAGE_MATRIX.md`](Docs/audit/FEATURE_COVERAGE_MATRIX.md) and [`Docs/audit/UI_AUDIT.md`](Docs/audit/UI_AUDIT.md) for what these fixes change relative to the last full audit (2026-07-22).
+See the [documentation index](docs/README.md), [implementation status](docs/implementation-status.md), and [feature catalog](docs/FEATURE_CATALOG.md) for maintained product and architecture references. The obsolete audit scorecards and agent handoff notes were removed because their completion claims no longer described the current repository.
 
 ## Architecture summary
 
@@ -386,9 +386,15 @@ The API initializes Helmet, compression, production CORS validation, Sentry (whe
 
 ## Documentation
 
+- [Documentation index](docs/README.md)
 - [High-Level Design](docs/HLD.md)
 - [Low-Level Design](docs/LLD.md)
 - [Feature Catalog](docs/FEATURE_CATALOG.md)
+- [Current implementation status](docs/implementation-status.md)
+- [Security design](docs/security.md)
+- [CRM domain design](docs/crm-design.md)
+- [Operations runbooks](docs/operations-runbooks.md)
+- [WhatsApp platform and automation](docs/whatsapp-automation-implementation.md)
 
 ## License
 

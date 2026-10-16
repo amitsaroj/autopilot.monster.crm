@@ -1,47 +1,46 @@
-# Autopilot Monster CRM | Next.js Presentation Layer
+# Frontend application
 
-Welcome to the **Frontend Client** of the Autopilot Monster CRM. This interface is built utilizing bleeding-edge React architectures (Next.js 16 App Router) engineered to deliver an uncompromising user experience, blazing-fast data fetching, and an incredibly dense UI built for operational efficiency.
+The frontend is the Next.js App Router presentation layer for Autopilot Monster CRM. It contains public marketing/auth routes, the tenant workspace, administration routes, shared components and domain API clients. The current implementation uses Next.js 16, React 19, TypeScript, Tailwind CSS, Axios and Zustand; check `package.json` for exact pinned versions.
 
-## 🎨 Design & UI Philosophy
+The parent [README](../README.md) is the main user/developer guide. Architecture is described in [HLD](../docs/HLD.md) and [LLD](../docs/LLD.md); product route coverage and limitations are in the [feature catalog](../docs/FEATURE_CATALOG.md). WhatsApp route and workflow detail is in the root [WhatsApp guide](../README.md#whatsapp-business-platform-and-automation).
 
-- **Tailwind CSS + shadcn/ui:** We utilize utility-first atomic CSS strictly governed by a centralized design token system (`tailwind.config.ts`).
-- **Motion & 3D:** Seamless route transitions and 3D hero canvases implemented via Framer Motion and modern WebGL wrappers, creating that coveted "Wow Factor" for premium enterprise clients.
-- **React Server Components (RSC):** Aggressive use of server-side data fetching to minimize client bundle sizes. Protected routes are evaluated dynamically at the edge.
+## Route areas
 
-## 🚀 Key Feature Components
+- Public product, pricing, content and authentication pages.
+- Workspace CRM, AI, voice, WhatsApp, workflows, billing, analytics, marketplace, settings, storage and data-job pages.
+- `/admin/*` tenant-administration interface and `/superadmin/*` platform-administration interface.
+- `/sub-admin/*` has API support; do not infer a dedicated UI page from the API alone.
 
-- **CRM Kanban Boards:** Highly optimized drag-and-drop Deal interfaces. Local state is synchronized seamlessly via optimistic UI updates before confirming with the NestJS backend.
-- **Unified Inbox & Communications:** A real-time, socket-ready inbox that amalgamates Email, SMS, WhatsApp, and internal system logs into one cohesive feed per contact.
-- **AI Visual Flow Builders:** React Flow powers our custom bot-building graphical interfaces. Users can drag nodes and define branching logic visually.
-- **Admin Portals:** Dynamic, data-heavy tables with serverside pagination, sorting, and inline editing for tenant and platform operations. The tenant admin panel (`/admin`) has a dedicated `AdminSidebar` (`src/components/layout/admin-sidebar.tsx`) exposing all 74 admin pages grouped by domain (CRM, Users & RBAC, Billing, AI, Voice, WhatsApp, Workflows, Social, Support, Marketplace, Notifications, Settings) — separate from the tenant workspace `Sidebar` used under `/dashboard`. The `SUB_ADMIN`-tier API (`/sub-admin/*`) has services wired (`src/services/sub-admin-*.service.ts`) but no dedicated pages yet.
+Route existence is not proof that an action succeeds for every role/plan or that a connected provider is configured. API guards remain authoritative for authorization.
 
-## 🛠 Development & Deployment
+## API client and environment
 
-### Build Optimization
+Domain service modules under `src/services` use the shared client in `src/lib/api`. The client attaches session and tenant context and handles the API's response envelope and refresh behavior. Keep authentication, tenant selection, errors and permission checks consistent with those shared helpers; do not make direct unauthenticated calls for protected resources.
 
-The project configures Next.js for **Standalone output** (`output: 'standalone'` in `next.config.mjs`). This severely minimizes the size of the deployed Docker container by compiling node_modules to only include strictly necessary production dependencies.
+The principal browser-visible setting is `NEXT_PUBLIC_API_URL`, which must be a URL safe to expose to users. Local development normally uses `http://localhost:8000/api/v1`; production points at the deployed API. Never put provider secrets or server-only credentials in `NEXT_PUBLIC_*` variables. Other available variables are listed in [`frontend/.env.example`](.env.example).
 
-### Environment Linkage
+## Local development and checks
 
-The only required frontend environment variable is:
-
-```properties
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-```
-
-Because of browser security paradigms (CORS), the frontend is required to communicate over HTTPS/HTTP directly to the Backend Load Balancer or local Express gateway.
-
-### Running Locally
-
-While primarily orchestrated via Docker Compose, you can perform rapid UI iteration locally:
+Provision backend dependencies as described in the [root local-development guide](../README.md#local-development), then:
 
 ```bash
-# Intall exact UI dependencies
-npm install
-
-# Start hot-reloading dev server on port 3000
+npm ci
 npm run dev
-
-# Verify strict typings and linting
-npm run lint
 ```
+
+The frontend package provides:
+
+```bash
+npm run typecheck
+npm run lint:check
+npm test
+npm run build
+```
+
+For lint auto-fixes use the explicitly named fix script if present in `package.json`; do not use auto-fix as a substitute for reviewing a diff. The production build may regenerate `.next` output and type files.
+
+## UI and accessibility conventions
+
+Use the existing brand tokens, layout/sidebar patterns, Radix/shared dialog components, accessible labels and focus states. Preserve responsive behavior and reduced-motion preferences. Reuse existing loading, empty, error and success patterns. A mock, disabled or unimplemented control must be labeled honestly rather than implying a successful backend operation.
+
+The redesign notes under [`docs/redesign`](../docs/redesign/README.md) are dated design/verification records. They are not a promise that every route has been individually reviewed at every viewport.

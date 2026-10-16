@@ -1,6 +1,6 @@
 # Feature Catalog
 
-**Repository snapshot:** 2026-09-09. Status reflects code evidence, not vendor-account readiness. “Partial” means implementation requires an external provider/configuration or lacks an isolation/operations boundary in this repository.
+**Repository snapshot:** 2026-10-16. Status reflects code evidence, not vendor-account readiness or production approval. “Partial” means external setup is required, support is bounded, or a complete operational boundary is not demonstrated.
 
 | Feature | Module | Description and business purpose | Status | Dependencies |
 |---|---|---|---|---|
@@ -23,7 +23,7 @@
 | Knowledge base and RAG | AI | Knowledge-base upload/URL service, RAG service and vector configuration are present. Supports grounded answers over tenant knowledge. | Partial | MinIO, OpenAI, Qdrant |
 | Fine-tuning jobs | AI | Fine-tuning DTOs, entity, controller/service and UI page exist. Tracks model-training job requests. | Partial | OpenAI/provider readiness |
 | Voice calling and campaigns | Voice | Calls, phone numbers, campaigns, queue processor, transcript/sentiment paths and Twilio callback controller are present. Supports automated voice outreach. | Partial | Twilio, OpenAI/optional ElevenLabs, Redis |
-| WhatsApp inbox/templates/broadcasts | WhatsApp | Template, message, conversation, broadcast, webhook and queue processor code plus UI routes are present. Supports WhatsApp customer communication. | Partial | Meta WhatsApp account/token/webhook, Redis |
+| WhatsApp Business Platform and automation | WhatsApp | Tenant Meta accounts, messaging/templates/media, inbox, consent, campaigns, workflow sequences, automation catalog/install lifecycle, Shopify order lookup, developer webhooks and measured analytics. | Partial / external | Meta account/token/webhook, Redis, approved templates, consent, entitlements, provider credentials |
 | Workflow automation | Workflow | Flow/execution entities, templates, executor/action executor, event listener, processor, retries and builder pages are present. Automates reactions to domain events. | Implemented | EventEmitter, Redis/Bull, domain services |
 | Notifications | Notifications | Notification service/controller and Socket.IO gateway provide delivery and real-time notification paths. Keeps users informed. | Implemented | PostgreSQL; external channels as configured |
 | Email and SMS queues | Queue/shared | Email and SMS Bull processors are registered with job constants. Moves communications off request paths. | Partial | SMTP/SMS provider configuration, Redis |
@@ -37,3 +37,18 @@
 | Admin and sub-admin consoles | Admin/sub-admin | Extensive controller/service/UI surfaces cover tenants, users, plans, queues, workers, security, logs, storage and settings. Supports delegated platform operations. | Implemented | RBAC, PostgreSQL, Redis |
 | Health, logging and audit | Core/admin | Health endpoints, logger/Sentry wiring, audit/error/security entities and admin inspection endpoints exist. Supports operational visibility. | Partial | Sentry DSN and external log/alert tooling are optional/not configured |
 | Local/prod deployment | Infrastructure | Docker Compose, nginx, Terraform and GitHub CI/deploy workflows are checked in. Supports a single-host deployment path. | Partial | AWS, GHCR, S3, SSM, secrets, TLS/bootstrap |
+
+## WhatsApp scope and evidence
+
+The detailed product status, current routes, exact automation catalog, API contract, configuration checklist and known limits are in [the product README](../README.md#whatsapp-business-platform-and-automation) and [the implementation checkpoint](whatsapp-automation-implementation.md). The current registry has 20 definitions (19 installable; Shopify cart recovery is unavailable). Catalog presence is not proof that a provider is configured.
+
+Implemented areas include consent-aware Meta sends; approved-template handling; inbound webhook verification and idempotency; tenant-scoped inbox features; bounded recurring/approved campaigns; durable workflow sequences; the shared visual workflow editor; automation install and Stripe entitlement checks; CRM lead capture/deduplication; Shopify OAuth/event intake and phone-verified order-status lookup; scoped API keys/developer webhooks; and event-backed analytics.
+
+Not represented as complete: live provider acceptance, all AI personas or media reasoning, skill-based routing/conversation merge, campaign cost budgets/A-B/conversion attribution, abandoned-checkout recovery, broad commerce/scheduling/payment adapters, all industry packs, WhatsApp Flows, every template format, or every marketplace integration. See the checkpoint for exact constraints and runtime evidence.
+
+## Status semantics
+
+- **Present / implemented** describes code and an associated API/UI or execution path; it does not guarantee recent end-to-end verification.
+- **Partial / external** means a provider, credentials, permissions, approved content, runtime service, policy review, or product depth is required.
+- **Unavailable** means the catalog or route explicitly refuses production use for that capability.
+- No percentage completion estimates are maintained. See [implementation status](implementation-status.md) for recorded verification and known failures.

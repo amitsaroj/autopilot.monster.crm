@@ -1,7 +1,10 @@
 # Autopilot Monster — Task Ledger
 
-Persistent implementation ledger. Supersedes `Docs/tasks/TASKS.md` (its "completed" entries were not
-evidence-based; several are contradicted by the 2026-10-14 audit).
+Historical implementation-candidate ledger. The baseline and task statuses below were last recorded on
+2026-10-14 and have not been reconciled against the current `main` branch. Do not use them as current
+ownership, completion, release, or security status. `docs/implementation-status.md` is the maintained
+verification snapshot; re-audit a row before acting on it. The duplicate `Docs/tasks/TASKS.md` has been
+removed.
 
 Status values: `TODO` · `IN_PROGRESS` · `DONE_UNVERIFIED` (code + unit tests, no real-provider/E2E proof) ·
 `VERIFIED` (passing evidence recorded) · `BLOCKED` (needs owner action/credentials).
@@ -69,5 +72,5 @@ Priority: P0 = security/data-loss/revenue blocker · P1 = WhatsApp MVP · P2 = c
 | AM-033 | P2 | Frontend | 10 MOCK admin/superadmin pages; standardise on `parseApiData` | — | | TODO | |
 | AM-034 | P2 | Security | Refresh token → HttpOnly cookie; global upload size limits (F15, F16) | — | AM-008 | TODO | |
 | AM-035 | P3 | Infra | Terraform: IMDSv2, encrypted EBS, scoped S3, no SG ignore_changes, state lock, OIDC | — | | TODO | owner apply |
-| AM-036 | P3 | Docs | Merge `Docs/` into `docs/`; correct false claims (Swagger off, ui service, entity counts) | — | | TODO | |
+| AM-036 | P3 | Docs | Merge duplicate `Docs/` tree into canonical lowercase `docs/`; remove stale scorecards and agent reports; repair links | — | | VERIFIED | 2026-10-16: migrated unique CRM/security/operations guidance, updated canonical docs/index and removed superseded reports |
 | AM-040 | P1 | Security | Convert remaining `any`/`Partial`/`Record` request bodies to DTOs; then make ValidationPipe reject untyped bodies | — | AM-002 | TODO | |

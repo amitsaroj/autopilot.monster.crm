@@ -1,6 +1,6 @@
 # Autopilot Monster redesign
 
-The existing Next.js 16 / React 19 frontend now uses a light default theme with navy text, cool surfaces, and blue, cyan, and teal brand accents. Existing dark-theme switching remains available. The route inventory contains 352 pages; it distinguishes shared styling and direct source changes from actual browser verification. It does not claim that every protected route was visually verified.
+This redesign record is a dated implementation note, not a current exhaustive design audit. The Next.js 16 / React 19 frontend uses a light default theme with navy text, cool surfaces, and blue, cyan, and teal brand accents; dark-theme switching remains available. Route counts in older verification artifacts are snapshots, not live counts, and do not establish that every protected route was visually verified.
 
 ## Branding and design foundation
 
@@ -32,7 +32,7 @@ Production defaults use `https://api.autopilots.monster/api/v1`, deriving the ba
 - Standalone TypeScript checking passed after correcting a duplicate status-button attribute introduced during the accessibility pass. Existing Vitest globals are included in TypeScript configuration.
 - Existing frontend tests passed: 4 files, 7 tests. No new test cases were added.
 - Both staged and unstaged diff whitespace checks passed.
-- The lint command could not run because the repository lacks an ESLint flat configuration. Trying the installed Next configuration exposed an ESLint/parser incompatibility; that attempted configuration was removed and dependencies were not upgraded.
+- At the time of this initial redesign verification, lint could not run because an ESLint flat configuration was absent. ESLint configurations and lint scripts were added later; consult current package scripts and run `npm run lint:check` rather than treating this historical failure as current.
 - Homepage and pricing were checked at 320, 375, 768, 1024, 1440, and 1920 pixels. Login was checked at those widths; measured overflow came from browser-extension autofill elements, not application layout.
 - Additional public pages were inspected at 320 pixels. Recorded route-level results are in `route-inventory.json`; unverified routes remain explicitly identified.
 - Demo credentials were inspected on the existing demo page and tried through the real application login. The supplied remote API did not complete successfully from this environment; the UI displayed the connectivity error and re-enabled the form. An earlier external connectivity check timed out after 15 seconds.
@@ -40,6 +40,6 @@ Production defaults use `https://api.autopilots.monster/api/v1`, deriving the ba
 
 ## Remaining limitations
 
-The later [local verification report](local-verification.md) records checks of all 295 static destinations and 37 dynamic route patterns using the Docker API, along with the resulting runtime, response-shape, CRUD, and responsive fixes. Six destinations remain blocked by the current API role/feature configuration, and twenty dynamic patterns require missing records or provider inputs. Payment checkout, provider-backed messaging/calling, OAuth/MFA completion, and exhaustive control interactions still need verification. Existing marketing content outside the rebuilt homepage was largely retained and was not independently substantiated. Some routes inherit the foundation rather than a bespoke page-layout rewrite. Dedicated logo variants and the repository's lint configuration remain unfinished.
+The [local verification report](local-verification.md) is a dated report of its tested commit and local environment. It records route/browser checks and the limitations observed at that time. Payment checkout, provider-backed messaging/calling, OAuth/MFA completion and exhaustive control interactions require environment-specific verification. Existing marketing content outside the rebuilt homepage was largely retained and was not independently substantiated. Some routes inherit the shared foundation rather than a bespoke page layout. Dedicated logo variants remain a design follow-up. Current test and production readiness notes are in [implementation status](../implementation-status.md).
 
 Important implementation files include `src/app/globals.css`, `tailwind.config.ts`, `components/brand-logo.tsx`, `components/layout/*`, `components/marketing/pages/HomePageContent.tsx`, `components/settings/team-invite-form.tsx`, `components/settings/workspace-settings.tsx`, `components/billing/plan-picker.tsx`, `components/ui/dialog-shell.tsx`, `app/(app)/workflows/builder/page.tsx`, `components/FlowBuilder/FlowBuilder.tsx`, `lib/env.config.ts`, and `proxy.ts`, all under `frontend`.
