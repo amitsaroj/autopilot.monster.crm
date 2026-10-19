@@ -46,7 +46,10 @@ describe('ContactService.mergeContacts', () => {
     findById: jest.fn(),
     updateWithTenant: jest.fn(),
     delete: jest.fn(),
+    createMany: jest.fn(),
   };
+
+  const eventEmitter = { emit: jest.fn() };
 
   const dealService = {
     reassignContact: jest.fn(),
@@ -66,7 +69,7 @@ describe('ContactService.mergeContacts', () => {
         ContactService,
         { provide: ContactRepository, useValue: contactRepository },
         { provide: DealService, useValue: dealService },
-        { provide: EventEmitter2, useValue: { emit: jest.fn() } },
+        { provide: EventEmitter2, useValue: eventEmitter },
         { provide: getRepositoryToken(Activity), useValue: activityRepository },
         { provide: getRepositoryToken(Note), useValue: noteRepository },
         { provide: getRepositoryToken(EmailMessage), useValue: {} },
@@ -138,6 +141,33 @@ describe('ContactService.mergeContacts', () => {
       .mockResolvedValueOnce(null);
 
     await expect(service.mergeContacts('t1', 'c1', 'c2')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('emits contact-created events only after bulk persistence succeeds', async () => {
+    const created = [{ id: 'c1', tenantId: 't1' }, { id: 'c2', tenantId: 't1' }] as Contact[];
+    contactRepository.createMany.mockResolvedValue(created);
+
+    await expect(
+      service.bulkCreate('t1', [
+        { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
+        { firstName: 'Lin', lastName: 'Chen', email: 'lin@example.com' },
+      ]),
+    ).resolves.toEqual(created);
+
+    expect(contactRepository.createMany).toHaveBeenCalledTimes(1);
+    expect(eventEmitter.emit).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not emit contact-created events when bulk persistence fails', async () => {
+    contactRepository.createMany.mockRejectedValue(new Error('database failure'));
+
+    await expect(
+      service.bulkCreate('t1', [
+        { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.com' },
+      ]),
+    ).rejects.toThrow('database failure');
+
+    expect(eventEmitter.emit).not.toHaveBeenCalled();
   });
 });
 

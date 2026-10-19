@@ -1,66 +1,37 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Check, Zap, Building, Sparkles } from 'lucide-react';
-
-const plans = [
-  {
-    name: 'Starter',
-    price: '$49',
-    period: '/month',
-    desc: 'For small teams getting started with AI-powered sales.',
-    cta: 'Start Free Trial',
-    highlight: false,
-    features: [
-      'Up to 1,000 contacts',
-      '1 AI Agent',
-      '500 voice minutes',
-      'Basic CRM pipeline',
-      'Email support',
-      '5 workflows',
-    ],
-  },
-  {
-    name: 'Growth',
-    price: '$199',
-    period: '/month',
-    desc: 'For scaling teams that need full automation power.',
-    cta: 'Start Free Trial',
-    highlight: true,
-    badge: 'Most Popular',
-    features: [
-      'Up to 10,000 contacts',
-      '5 AI Agents',
-      '5,000 voice minutes',
-      'Advanced pipelines',
-      'WhatsApp inbox',
-      'Unlimited workflows',
-      'Custom analytics',
-      'Priority support',
-    ],
-  },
-  {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    desc: 'For large organizations with advanced security needs.',
-    cta: 'Contact Sales',
-    highlight: false,
-    features: [
-      'Unlimited contacts',
-      'Unlimited AI Agents',
-      'Unlimited voice',
-      'Multi-tenant isolation',
-      'SSO & SAML',
-      'Dedicated CSM',
-      'Custom SLA',
-      'On-premise option',
-    ],
-  },
-];
+import { ArrowRight, Loader2 } from 'lucide-react';
+import { billingService, type Plan } from '@/services/billing.service';
+import { parseApiData } from '@/lib/api/parse-response';
 
 export default function PricingPage() {
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+
+  const loadPlans = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    try {
+      const response = await billingService.getPlans();
+      const data = parseApiData<Plan[]>(response) ?? response.data;
+      if (!Array.isArray(data)) throw new Error('Invalid plans response');
+      setPlans(data);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadPlans();
+  }, [loadPlans]);
+
   return (
     <div className="pt-32 pb-20">
       <div className="max-w-6xl mx-auto px-6">
@@ -74,85 +45,138 @@ export default function PricingPage() {
             Pricing
           </span>
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-semibold text-gray-900 dark:text-white mb-6">
-            Simple, transparent pricing
+            Plans configured for your business
           </h1>
-          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
-            Start free. Scale as you grow. No hidden fees.
+          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+            Compare currently available plans. WhatsApp provider charges, AI usage, payment
+            processing and third-party integration fees may be billed separately where applicable.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {plans.map((plan, i) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.5 }}
-              className={`relative rounded-2xl p-8 flex flex-col ${
-                plan.highlight
-                  ? 'bg-gradient-to-b from-blue-500/10 to-blue-500/5 border-2 border-blue-500/30 shadow-2xl shadow-blue-500/10'
-                  : 'bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/[0.06]'
-              }`}
+        <div className="mb-8 flex justify-center gap-2" role="group" aria-label="Billing period">
+          {(['monthly', 'annual'] as const).map((cycle) => (
+            <button
+              key={cycle}
+              type="button"
+              aria-pressed={billingCycle === cycle}
+              onClick={() => setBillingCycle(cycle)}
+              className={`rounded-lg px-4 py-2 text-sm font-medium capitalize ${billingCycle === cycle ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'}`}
             >
-              {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-blue-700 to-cyan-700 text-white text-xs font-bold rounded-full shadow-lg">
-                  {plan.badge}
-                </span>
-              )}
-
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{plan.name}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{plan.desc}</p>
-
-              <div className="mb-8">
-                <span className="text-3xl sm:text-5xl font-semibold text-gray-900 dark:text-white">
-                  {plan.price}
-                </span>
-                <span className="text-gray-500 text-lg">{plan.period}</span>
-              </div>
-
-              <Link
-                href={plan.name === 'Enterprise' ? '/contact' : '/register'}
-                className={`w-full py-3 rounded-xl text-center font-semibold text-sm transition-all mb-8 block ${
-                  plan.highlight
-                    ? 'bg-gradient-to-r from-blue-700 to-cyan-700 text-gray-900 dark:text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02]'
-                    : 'bg-gray-100 dark:bg-white/[0.06] text-gray-900 dark:text-white border border-gray-200 dark:border-white/[0.08] hover:bg-white/[0.1]'
-                }`}
-              >
-                {plan.cta}
-              </Link>
-
-              <ul className="space-y-3 flex-1">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400"
-                  >
-                    <Check className="w-4 h-4 text-blue-700 dark:text-blue-400 shrink-0" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
+              {cycle}
+            </button>
           ))}
         </div>
 
-        {/* FAQ Teaser */}
+        {loading ? (
+          <div className="flex min-h-64 items-center justify-center" role="status">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <span className="sr-only">Loading plans</span>
+          </div>
+        ) : error ? (
+          <div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-red-50 p-8 text-center dark:border-red-900 dark:bg-red-950/30">
+            <p className="text-sm text-red-800 dark:text-red-200">
+              Pricing is temporarily unavailable. Please try again.
+            </p>
+            <button
+              type="button"
+              onClick={() => void loadPlans()}
+              className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm dark:bg-white/10 dark:text-white"
+            >
+              Retry
+            </button>
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="mx-auto max-w-xl rounded-2xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-white/10 dark:bg-white/[0.03]">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              No public plans are available right now. Contact sales for options.
+            </p>
+            <Link
+              href="/contact"
+              className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 dark:text-blue-400"
+            >
+              Contact Sales <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {plans.map((plan, index) => {
+              const price = Number(
+                billingCycle === 'annual' ? plan.priceAnnual : plan.priceMonthly,
+              );
+              const validPrice = Number.isFinite(price) && price >= 0;
+              let formattedPrice = 'Contact sales';
+              if (validPrice) {
+                try {
+                  formattedPrice = new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: plan.currency,
+                  }).format(price);
+                } catch {
+                  formattedPrice = `${plan.currency} ${price.toFixed(2)}`;
+                }
+              }
+
+              return (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.08, duration: 0.4 }}
+                  className="relative flex flex-col rounded-2xl border border-gray-200 bg-gray-50 p-8 dark:border-white/[0.06] dark:bg-white/[0.03]"
+                >
+                  <h2 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                    {plan.name}
+                  </h2>
+                  <p className="mb-6 min-h-10 text-sm text-gray-500 dark:text-gray-400">
+                    {plan.description ||
+                      'Plan details and entitlements are configured by your provider.'}
+                  </p>
+                  <div className="mb-8">
+                    <span className="text-3xl font-semibold text-gray-900 dark:text-white sm:text-5xl">
+                      {formattedPrice}
+                    </span>
+                    {validPrice && (
+                      <span className="ml-2 text-lg text-gray-500">
+                        /{billingCycle === 'annual' ? 'year' : 'month'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mb-8 flex-1 text-sm text-gray-500 dark:text-gray-400">
+                    Plan entitlements and usage limits are applied from the configured billing plan.
+                  </p>
+                  <Link
+                    href="/register"
+                    className="mb-8 block w-full rounded-xl border border-gray-200 bg-white py-3 text-center text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:border-white/[0.08] dark:bg-white/[0.06] dark:text-white dark:hover:bg-white/10"
+                  >
+                    Create an account
+                  </Link>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Creating an account does not start a subscription or charge your payment method.
+                  </p>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="mt-24 text-center"
         >
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Questions?</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">
-            Check our FAQ or contact our sales team for custom enterprise plans.
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 dark:text-white">
+            Need a custom plan?
+          </h2>
+          <p className="mb-6 text-gray-500 dark:text-gray-400">
+            Contact sales to discuss requirements and availability.
           </p>
           <Link
             href="/contact"
-            className="text-blue-700 dark:text-blue-400 hover:text-blue-300 font-medium flex items-center justify-center gap-2 transition-colors"
+            className="inline-flex items-center justify-center gap-2 font-medium text-blue-700 transition-colors hover:text-blue-500 dark:text-blue-400"
           >
-            Contact Sales <ArrowRight className="w-4 h-4" />
+            Contact Sales <ArrowRight className="h-4 w-4" />
           </Link>
         </motion.div>
       </div>

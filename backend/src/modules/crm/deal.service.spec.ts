@@ -73,4 +73,24 @@ describe('DealService', () => {
     expect(result.status).toBe(DealStatus.WON);
     expect(mockEventEmitter.emit).toHaveBeenCalled();
   });
+
+  it('rejects a stage from another pipeline without changing the deal', async () => {
+    const deal = {
+      id: 'deal-1',
+      tenantId: 'tenant-1',
+      pipelineId: 'pipeline-a',
+      stageId: 'stage-1',
+    } as Deal;
+    mockDealRepository.findOne.mockResolvedValue(deal);
+    mockStageRepository.findOne.mockResolvedValue(null);
+
+    await expect(service.moveStage('tenant-1', 'deal-1', 'stage-in-pipeline-b')).rejects.toThrow(
+      'Pipeline stage not found',
+    );
+
+    expect(mockStageRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 'stage-in-pipeline-b', tenantId: 'tenant-1', pipelineId: 'pipeline-a' },
+    });
+    expect(mockDealRepository.updateWithTenant).not.toHaveBeenCalled();
+  });
 });

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Contact } from '../../database/entities/contact.entity';
-import { BaseRepository } from '../../database/base.repository';
+import { BaseRepository, stripImmutableFields } from '../../database/base.repository';
 import { CrmListQueryDto } from './dto/crm.dto';
 
 @Injectable()
@@ -12,6 +12,15 @@ export class ContactRepository extends BaseRepository<Contact> {
     private readonly contactRepository: Repository<Contact>,
   ) {
     super(contactRepository);
+  }
+
+  async createMany(tenantId: string, data: Partial<Contact>[]): Promise<Contact[]> {
+    return this.contactRepository.manager.transaction(async (manager) => {
+      const repository = manager.getRepository(Contact);
+      return repository.save(
+        data.map((item) => repository.create({ ...stripImmutableFields(item), tenantId })),
+      );
+    });
   }
 
   async findFiltered(tenantId: string, query: CrmListQueryDto): Promise<[Contact[], number]> {

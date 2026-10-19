@@ -54,6 +54,14 @@ export class ContactService {
     return contact;
   }
 
+  async bulkCreate(tenantId: string, contacts: CreateContactDto[], actorId?: string): Promise<Contact[]> {
+    for (const contact of contacts) await this.assertCustomFields(tenantId, contact.customFields ?? {});
+    const created = await this.contactRepository.createMany(tenantId, contacts);
+    for (const contact of created)
+      this.eventEmitter.emit(EVENT_NAMES.CONTACT_CREATED, { contact, tenantId, actorId });
+    return created;
+  }
+
   async findAll(tenantId: string): Promise<Contact[]> {
     return this.contactRepository.findAll(tenantId);
   }

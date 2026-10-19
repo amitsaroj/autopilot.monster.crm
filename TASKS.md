@@ -1,76 +1,49 @@
-# Autopilot Monster — Task Ledger
+# Autopilot Monster implementation ledger
 
-Historical implementation-candidate ledger. The baseline and task statuses below were last recorded on
-2026-10-14 and have not been reconciled against the current `main` branch. Do not use them as current
-ownership, completion, release, or security status. `docs/implementation-status.md` is the maintained
-verification snapshot; re-audit a row before acting on it. The duplicate `Docs/tasks/TASKS.md` has been
-removed.
+**Updated:** 2026-10-16. This ledger is tied to the current local working tree, not a release commit. No deploy or push was performed. Detailed audit evidence: [`docs/PROJECT_AUDIT.md`](docs/PROJECT_AUDIT.md); readiness: [`docs/PRODUCTION_READINESS.md`](docs/PRODUCTION_READINESS.md).
 
-Status values: `TODO` · `IN_PROGRESS` · `DONE_UNVERIFIED` (code + unit tests, no real-provider/E2E proof) ·
-`VERIFIED` (passing evidence recorded) · `BLOCKED` (needs owner action/credentials).
+Status values: `NOT_STARTED`, `PARTIAL`, `IMPLEMENTED_UNVERIFIED`, `VERIFIED`, `BLOCKED`, `DEPRECATED`. VERIFIED requires command/manual evidence for the behavior described.
 
-Priority: P0 = security/data-loss/revenue blocker · P1 = WhatsApp MVP · P2 = commercial readiness · P3 = hardening.
+| ID | Priority | Module | Task | Owner | Dependencies | Status | Tests / evidence | Blocker |
+|---|---|---|---|---|---|---|---|---|
+| AM-001 | P0 | Production security | Remove unsafe DB/Redis/MinIO fallback credentials; require secret injection | DevOps + owner | Credential inventory and deliberate rotation | BLOCKED | Compose source audit found weak defaults; no live environment modified | Owner-managed secret rotation and deployment window |
+| AM-002 | P0 | Deployment | Gate production deployment, immutable image IDs, prevent unverified Terraform apply | DevOps | CI acceptance checks | PARTIAL | Workflow source audit; no production run | Review target/account and existing infrastructure state |
+| AM-003 | P0 | Security | Complete object-level authorization and tenant-isolation audit/regressions | Security + backend | PostgreSQL integration service | PARTIAL | Guard/service sources reviewed; adversarial DB proof absent | PostgreSQL unavailable in this environment |
+| AM-004 | P0 | Secrets | Inventory/rotate credentials found in historical repository objects | Owner + security | Secret-manager access | BLOCKED | No secret values reproduced | Rotation/revocation; history rewrite needs explicit authorization |
+| AM-005 | P1 | WhatsApp recovery | Pause credential-auth-failed broadcasts and resume when matching tenant/phone reconnects | WhatsApp | Meta sandbox, durable queue | IMPLEMENTED_UNVERIFIED | Recovery + workflow focused tests 10/10; final backend Jest 34 suites/199 tests passed | Live token revoke/reconnect and Redis/SQL crash-window test |
+| AM-006 | P1 | WhatsApp recovery | Make SQL state and Redis scheduling recoverable across process failure | WhatsApp/platform | Outbox/reconciliation design | NOT_STARTED | Current queue scheduling occurs during SQL transaction; no exactly-once claim | Persistent outbox or reconciler and crash injection |
+| AM-007 | P1 | WhatsApp provider | Verify Embedded Signup, scopes, phone mapping, token health and callback subscription | WhatsApp | Meta app + business account | BLOCKED | Source audit only | Authorized Meta credentials and public HTTPS callback |
+| AM-008 | P1 | Webhooks | Verify signatures, durability, duplicate/out-of-order handling and replay | WhatsApp | Meta test account; PostgreSQL/Redis | PARTIAL | Source contains durable event path; live/fault injection not run | Provider credentials and database service |
+| AM-009 | P1 | Campaigns | Validate consent, suppression, template/window eligibility and opt-out during queued campaign | WhatsApp/CRM | DB+queue integration | PARTIAL | Source audit; no production send | Integration test service and Meta sandbox |
+| AM-010 | P1 | Inbox | Verify team assignment, collision, media, status window and error states end-to-end | WhatsApp/frontend | API and UI runtime | PARTIAL | Static review only | Browser/provider environment |
+| AM-011 | P1 | Billing | Make payment-event and entitlement transitions atomic/idempotent | Billing | Stripe test mode | PARTIAL | Code audit found event marked processed before automation transition | Stripe sandbox keys and regression coverage |
+| AM-012 | P1 | CRM | Enforce deal-stage pipeline invariant and transactional contact imports | CRM | PostgreSQL | PARTIAL | Cross-pipeline stage regression passed; contact batch now persists transactionally; targeted CRM suite 8/8 and final backend suite 34/199 passed | PostgreSQL rollback/integration verification; CSV correctness remains |
+| AM-013 | P1 | Workflow | Durable event dispatch and functional scheduler execution under replicas | Workflow | Queue/DB runtime | PARTIAL | Source audit found lost-event window and scheduler log-only target | Distributed failure test and product decision for target registry |
+| AM-014 | P1 | CI | Run typecheck, lint, integration and builds as explicit CI gates | QA/DevOps | CI service containers | PARTIAL | Added backend/frontend typecheck and lint workflow steps; local checks pass; hosted workflow not run | Invoke PostgreSQL integration suite and verify skip behavior |
+| AM-015 | P1 | Commercial onboarding | Carry plan selection through signup/onboarding to actual configured checkout | Product/frontend/billing | Real pricing catalog | PARTIAL | Public pricing now loads active public plans from billing API; private plans are filtered and prices/features are no longer fabricated | Plan choice is not preserved through signup; no verified checkout flow |
+| AM-016 | P1 | Marketplace | Provide purchase path before premium install; report actual transactions only | Marketplace/billing | Entitlement/payment API | PARTIAL | Install checks entitlement; UI lacks customer checkout; revenue estimates not transactions | Marketplace payment model/accounting decision |
+| AM-017 | P2 | AI | Centralize quota reservation/metering and invalidate cached provider on credential rotation | AI/billing | Usage reservation service | PARTIAL | Static audit found concurrent quota race and cached key/provider issues | Cross-path integration work |
+| AM-018 | P2 | Knowledge | Delete tenant-scoped vectors on document/KB removal; accurately report partial indexing | AI/Qdrant | Qdrant service | PARTIAL | Source audit found metadata-only deletion and swallowed chunk failures | Qdrant integration service |
+| AM-019 | P2 | Product/admin | Replace static metrics and inert controls with API-backed states or explicit disabled states | Frontend/admin | Relevant APIs | PARTIAL | Source audit found mock/static figures and dead buttons | Route-level browser verification |
+| AM-020 | P2 | SRE | Verify encrypted backup/restore, alerting, queue recovery and capacity targets | DevOps/SRE | Target infrastructure access | BLOCKED | Runbook documented; no restore/alert/load evidence | Owner-authorized infrastructure environment |
+| AM-021 | P1 | Dependency security | Resolve remaining backend production and development dependency advisories | Backend/DevOps | Compatibility review | PARTIAL | Removed unused Fastify adapter, upgraded Nodemailer, aligned Nest versions; current production audit: backend 12 moderate, 0 high/critical; frontend 0 | Review moderate and dev dependency findings; results can change with registry advisories |
+| AM-022 | P1 | Verification/docs | Reconcile full test/build/audit results and update source-of-truth documents | Lead | Current commands complete | IMPLEMENTED_UNVERIFIED | Backend 34 suites/199 tests, typecheck/build passed; frontend 9 files/43 tests, typecheck/build passed; exact evidence in `docs/TEST_RESULTS.md` | PostgreSQL integration, provider/live environment, security and restore evidence remain external |
 
-## Baseline — 2026-10-14 (branch `fix/pipeline-ci`, commit `3beaae3`)
+## Completed this iteration (local, uncommitted)
 
-| Command | Exit | Notes |
-|---|---|---|
-| backend `npm run typecheck` | 0 | |
-| backend `npm run lint:check` | 0 | |
-| backend `npm test` | 0 | unit suites only; integration specs not run in baseline |
-| backend `npm run build` | 0 | |
-| backend `npm audit --omit=dev` | 1 | 53 vulns (1 critical `proxy-addr` IP spoofing, 24 high) |
-| frontend `npm run typecheck` | 0 | |
-| frontend `npm run lint:check` | 0 | warnings only (unused vars) |
-| frontend `npm test -- --run` | 0 | 8 files, 37 tests |
-| frontend `npm run build` | 0 | |
-| frontend `npm audit --omit=dev` | 1 | 30 vulns (1 critical, 11 high) |
-| prettier check (both) | 1 | only untracked generated `frontend/next-env.d.ts`; now ignored |
+- Added broadcast resume after a credential reconnect, scoped to tenant and phone number and queued with scheduled delay.
+- Added a focused regression spec for matching credentials and empty query result.
+- Corrected the existing workflow webhook action test fixture so the runtime policy is passed at the constructor dependency index actually used.
+- Applied non-force dependency audit fixes; aligned Nest common/core resolution after the first test run exposed an incompatible internal module version.
+- Removed the unused `@nestjs/platform-fastify` dependency and upgraded Nodemailer to address backend production advisories; frontend production audit is zero and backend has no remaining high/critical production findings.
+- Fixed WhatsApp media preview content-type handling for Axios header value types.
+- Constrained CRM deal-stage lookup to the deal's existing tenant-owned pipeline; focused regression passes and rejected moves never update the deal.
+- Made contact bulk import transactional using the existing TypeORM manager; validates custom fields before writes and publishes events only after successful commit.
+- Added backend/frontend typecheck and lint steps to CI; local workflow formatting check passed, but GitHub Actions has not run the patch.
+- Replaced hardcoded public pricing cards with configured billing plans, loading/error/empty states and real monthly/annual amounts; public plan query now excludes non-public plans. Purchase/plan-selection handoff remains incomplete.
+- Replaced hardcoded public pricing cards with configured billing plans, loading/error/empty states and real monthly/annual amounts; public plan query now excludes non-public plans. Purchase/plan-selection handoff remains incomplete.
+- Added current audit, module, roadmap, production-readiness, test-results, known-limitations and WhatsApp product-audit documents. Canonical docs remain in lowercase `docs/`.
 
-## Tasks
+## Verification discipline
 
-| ID | P | Module | Task | Owner | Deps | Status | Evidence / blocker |
-|---|---|---|---|---|---|---|---|
-| AM-001 | P0 | Security | Tenant self-upgrade via PATCH tenant/sub-admin settings (planId/overrides/status) (F2) | security-agent | | IN_PROGRESS | |
-| AM-002 | P0 | Security | Body `tenantId` overwrite moves rows cross-tenant (F3); untyped bodies skip validation (F1) | security-agent | | IN_PROGRESS | remaining `any`-body sites → AM-040 |
-| AM-003 | P0 | Security | RBAC escalation to `admin:*` / ADMIN; admin tenant-settings open to ADMIN (F4) | security-agent | | IN_PROGRESS | |
-| AM-004 | P0 | Security | OAuth authorize-details leaks other tenants' client secrets (F5) | security-agent | | IN_PROGRESS | |
-| AM-005 | P0 | Security | SSRF: KB crawl, voice URLs, developer-settings test webhook (F6, F8) | security-agent | | IN_PROGRESS | |
-| AM-006 | P0 | Security | SSRF: workflow CALL_WEBHOOK templated URLs / redirects (F7) | cleanup-agent | | IN_PROGRESS | |
-| AM-007 | P0 | Security | Login rate limit bypass via rotating `x-tenant-id` (F9) | security-agent | | IN_PROGRESS | Redis throttler storage TBD |
-| AM-008 | P1 | Security | Reset/verify tokens persisted in audit log; refresh-token `typ` + reuse detection; MFA disable w/o re-auth (F11–F13) | security-agent | | IN_PROGRESS | |
-| AM-009 | P1 | Security | Marketplace template IDOR; unsigned IVR callback; account enumeration (F14, F20, F10) | security-agent | | IN_PROGRESS | |
-| AM-010 | P0 | WhatsApp | Remove/lock insecure legacy settings modules (sub-admin profiles, admin whatsapp-settings plaintext secrets) | cleanup-agent | | IN_PROGRESS | |
-| AM-011 | P0 | DevOps | Migrations 018/020 fail or no-op on fresh DB; they import the live registry | cleanup-agent | | IN_PROGRESS | |
-| AM-012 | P1 | WhatsApp | Durable webhook inbox table, replay, template-status/quality/account_update handling | webhook-agent | | IN_PROGRESS | |
-| AM-013 | P1 | WhatsApp | Outbound reconciliation: buffer early status events, sweep stuck SENDING/UNKNOWN, manual reconcile | webhook-agent | AM-012 | IN_PROGRESS | |
-| AM-014 | P1 | WhatsApp | Real WhatsApp test suite; fix stale integration spec that silently skips | webhook-agent | | IN_PROGRESS | |
-| AM-015 | P1 | WhatsApp | Broadcast: no locks during HTTP, per-number rate limit, Meta error-code map (131050 suppress), UNKNOWN not retried, retry failed | broadcast-agent | | IN_PROGRESS | |
-| AM-016 | P1 | WhatsApp | Embedded Signup, subscribed_apps, health diagnostics, token key rotation | onboarding-agent | | IN_PROGRESS | real Meta app verification BLOCKED on credentials |
-| AM-017 | P1 | WhatsApp | Conversations table keyed (tenant, phone_number_id, phone); paginated inbox; SQL analytics | — | AM-012, AM-013 | TODO | in-memory full-table load today |
-| AM-018 | P2 | WhatsApp | Per-message pricing capture → cost analytics → overage billing | webhook-agent (capture) | AM-012 | IN_PROGRESS | |
-| AM-019 | P1 | Workflow | Builder cannot create condition branches (publish fails) | cleanup-agent | | IN_PROGRESS | |
-| AM-020 | P2 | Workflow | LEAD_CREATED trigger has no listener; one bad flow aborts trigger loop; worker concurrency 1 | cleanup-agent | | IN_PROGRESS | |
-| AM-021 | P1 | Billing UI | /billing upgrade+portal always fail, /billing/invoices always empty (response unwrap); marketing prices ≠ DB plans | billing-agent | | IN_PROGRESS | /settings/security crash still TODO |
-| AM-041 | P0 | Billing | New signups have no subscription → PlanGuard blocks CRM and even the upgrade route | billing-agent | auth.service change via security-agent | IN_PROGRESS | |
-| AM-042 | P0 | Billing | Contact/deal limits never enforced (guard reads MONTHLY, meter writes TOTAL); guard fails open; non-atomic usage writes | billing-agent | | IN_PROGRESS | |
-| AM-043 | P1 | Billing | Upgrade opens a 2nd Stripe subscription; webhooks not idempotent/ordered; planId not synced; no trial expiry / dunning grace | billing-agent | | IN_PROGRESS | real Stripe test-mode verification BLOCKED on keys |
-| AM-044 | P1 | CRM | Lead create 400 / update 404; pipeline delete 404; timeline shows all activity; 4 failing CRM integration suites | crm-agent | | IN_PROGRESS | baseline: 13/17 CRM+billing integration suites pass |
-| AM-045 | P2 | CRM | Tag assignment, segment evaluation, custom-field validation, bulk-delete RBAC, import validation, CSV export | crm-agent | | IN_PROGRESS | |
-| AM-046 | P2 | CRM | Fabricated company edit page, hardcoded trends, dead buttons, CRM email "send" never sends | crm-agent | | IN_PROGRESS | |
-| AM-022 | P1 | Onboarding | Onboarding flow unreachable after register; drops industry/role | — | | TODO | |
-| AM-023 | P0 | DevOps | Prod DB/Redis/MinIO on default passwords (host .env lacks secrets) | owner | | BLOCKED | needs AWS/GitHub secrets access |
-| AM-024 | P0 | DevOps | Rotate secrets leaked in git history (`f0bc080`, `aeb24db`) and purge history | owner | | BLOCKED | needs owner; history rewrite is destructive |
-| AM-025 | P1 | DevOps | Deploy: `set -e` on SSM steps, gate on CI, SHA-tagged images for rollback | — | | TODO | |
-| AM-026 | P1 | DevOps | Backups: EBS snapshot policy + nightly pg_dump to S3 + restore test | — | | TODO | needs AWS apply → owner |
-| AM-027 | P1 | DevOps | `PUBLISH_OPENAPI=true` in prod exposes Swagger | — | | TODO | |
-| AM-028 | P2 | DevOps | CI: lint step, run migrations with synchronize off, PG 15 parity; Dockerfile `USER node` + `npm ci` | — | | TODO | |
-| AM-029 | P1 | Deps | `npm audit fix` (non-breaking) both apps; critical `proxy-addr` | — | after agents finish | TODO | |
-| AM-030 | P2 | AI | Central quota + metering in AiProviderService; realtime voice bypasses adapter; lead-intel unmetered | — | | TODO | |
-| AM-031 | P2 | Scheduler | Tenant scheduler is a no-op and fires per replica; social cron double-posts | — | | TODO | |
-| AM-032 | P2 | AI | KB delete leaves vectors; ingestion over-reports chunks | — | | TODO | |
-| AM-033 | P2 | Frontend | 10 MOCK admin/superadmin pages; standardise on `parseApiData` | — | | TODO | |
-| AM-034 | P2 | Security | Refresh token → HttpOnly cookie; global upload size limits (F15, F16) | — | AM-008 | TODO | |
-| AM-035 | P3 | Infra | Terraform: IMDSv2, encrypted EBS, scoped S3, no SG ignore_changes, state lock, OIDC | — | | TODO | owner apply |
-| AM-036 | P3 | Docs | Merge duplicate `Docs/` tree into canonical lowercase `docs/`; remove stale scorecards and agent reports; repair links | — | | VERIFIED | 2026-10-16: migrated unique CRM/security/operations guidance, updated canonical docs/index and removed superseded reports |
-| AM-040 | P1 | Security | Convert remaining `any`/`Partial`/`Record` request bodies to DTOs; then make ValidationPipe reject untyped bodies | — | AM-002 | TODO | |
+Do not infer final results from in-progress commands. Append the exact command, exit result, counts and limitations to [`docs/TEST_RESULTS.md`](docs/TEST_RESULTS.md). Do not mark P0/P1 tasks verified without runtime evidence. No automated task in this ledger authorizes a production change.

@@ -27,6 +27,7 @@ import { WhatsappMessageRepository } from './whatsapp.repository';
 import { WhatsappTemplateService } from './whatsapp-template.service';
 import { WhatsappBroadcastService } from './whatsapp-broadcast.service';
 import { WhatsappBroadcastProcessor } from './whatsapp-broadcast.processor';
+import { WhatsappBroadcastRecoveryService } from './whatsapp-broadcast-recovery.service';
 import { WhatsAppMessage } from '../../database/entities/whatsapp-message.entity';
 import { WhatsAppTemplate } from '../../database/entities/whatsapp-template.entity';
 import { WhatsAppTemplateHistory } from '../../database/entities/whatsapp-template-history.entity';
@@ -77,6 +78,7 @@ import { QUEUE_NAMES } from '../../queue/queue.constants';
     WhatsappMessageRepository,
     WhatsappTemplateService,
     WhatsappBroadcastService,
+    WhatsappBroadcastRecoveryService,
     WhatsappBroadcastProcessor,
   ],
   exports: [

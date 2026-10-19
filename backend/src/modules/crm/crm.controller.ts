@@ -1100,10 +1100,10 @@ export class CrmController {
         actor.userId,
       );
     } else {
-      await Promise.all(
-        body.data.map((item) =>
-          this.contactService.create(tenantId, item as unknown as CreateContactDto, actor.userId),
-        ),
+      await this.contactService.bulkCreate(
+        tenantId,
+        body.data as unknown as CreateContactDto[],
+        actor.userId,
       );
     }
     return null;

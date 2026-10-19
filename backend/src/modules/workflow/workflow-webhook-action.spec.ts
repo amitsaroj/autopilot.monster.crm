@@ -17,8 +17,8 @@ describe('CALL_WEBHOOK SSRF hardening', () => {
   const resolve = lookup as unknown as jest.Mock;
   const policy = { assertAction: jest.fn() } as unknown as WorkflowRuntimePolicyService;
   // Only the policy dependency is touched by CALL_WEBHOOK.
-  const deps: unknown[] = Array.from({ length: 12 }, () => ({}));
-  const service = new (WorkflowActionExecutorService as unknown as Ctor)(...deps, policy);
+  const deps: unknown[] = Array.from({ length: 13 }, () => ({}));
+  const service = new (WorkflowActionExecutorService as unknown as Ctor)(...deps, policy, {});
   const context = { tenantId: 'tenant-1', eventName: 'MANUAL', payload: {} };
   const run = (url: string, payload: Record<string, unknown> = {}) =>
     service.executeAction(

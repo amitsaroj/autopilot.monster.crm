@@ -44,10 +44,10 @@ jobs:
       DB_USER: root
       DB_PASSWORD: password
       DB_NAME: autopilot_monster
-      DB_SYNCHRONIZE: "true"
+      DB_SYNCHRONIZE: 'true'
       REDIS_HOST: localhost
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
+      REDIS_PASSWORD: ''
       JWT_SECRET: ci-test-jwt-secret-key-32chars-min
       JWT_REFRESH_SECRET: ci-test-refresh-secret-key-32ch
       OPENAI_API_KEY: sk-ci-test-placeholder
@@ -70,6 +70,14 @@ jobs:
       - name: Install dependencies
         working-directory: backend
         run: npm ci
+
+      - name: Typecheck
+        working-directory: backend
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: backend
+        run: npm run lint:check
 
       - name: Build
         working-directory: backend
@@ -106,6 +114,14 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint:check
 
       - name: Unit tests
         working-directory: frontend

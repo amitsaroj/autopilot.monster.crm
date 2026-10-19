@@ -9,17 +9,25 @@
 | [Root README](../README.md) | Product overview, local setup, routes, WhatsApp product guide, integrations and operational boundaries |
 | [Feature catalog](FEATURE_CATALOG.md) | Module inventory and feature-level evidence/dependency classification |
 | [Implementation status](implementation-status.md) | Dated verification snapshot, known failures and external dependencies; not a completion percentage |
+| [Repository audit](PROJECT_AUDIT.md) | Actual app/module map, baseline, ranked risks and audit scope |
+| [Module status](MODULE_STATUS.md) | Evidence-calibrated status by product area |
+| [Implementation roadmap](IMPLEMENTATION_ROADMAP.md) | Dependency-ordered product/security work |
+| [Production readiness](PRODUCTION_READINESS.md) | Release gates and present blockers |
+| [Test results](TEST_RESULTS.md) | Dated commands, outcomes and limitations |
+| [Known limitations](KNOWN_LIMITATIONS.md) | External dependencies, unverified behavior and operational risks |
 | [High-level design](HLD.md) | System context, architecture, deployment shape, tenancy and domain boundaries |
 | [Low-level design](LLD.md) | API request lifecycle, modules, persistence, queues and implementation conventions |
 | [Security design](security.md) | Authentication, authorization, tenant isolation, secrets, webhooks and security limitations |
 | [CRM design](crm-design.md) | CRM entities, lead/contact identity, pipeline, activity, events and data lifecycle |
 | [Operations runbooks](operations-runbooks.md) | Production-only configuration, provider setup, deployment, health, rollback and recovery checks |
 | [WhatsApp implementation checkpoint](whatsapp-automation-implementation.md) | Current WhatsApp API contracts, catalog coverage, behavior, limitations and provider verification notes |
+| [WhatsApp product audit](WHATSAPP_PRODUCT_AUDIT.md) | Audited status of account, messaging, inbox, campaigns, automation, AI and analytics |
 
 ## Specialized documentation
 
 - [Redesign notes](redesign/README.md) describe the visual foundation and implementation scope.
 - [Local redesign verification](redesign/local-verification.md) is a dated report of that local browser/runtime pass, not a permanent guarantee.
+- [Architecture decisions](adr/) record intentional design choices and their limitations.
 - Environment variable names and safe defaults are listed in the root, backend, and frontend `.env.example` files. Those examples are authoritative for names; deploy-time values belong in a secret manager.
 
 ## Documentation rules

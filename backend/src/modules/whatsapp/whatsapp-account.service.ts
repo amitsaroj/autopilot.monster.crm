@@ -2,9 +2,11 @@ import {
   BadRequestException,
   ConflictException,
   HttpException,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
+  Optional,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -21,6 +23,7 @@ import {
   WhatsappProviderRegistry,
 } from './whatsapp-provider';
 import type { WhatsappCredentials } from './whatsapp-provider';
+import { WhatsappBroadcastRecoveryService } from './whatsapp-broadcast-recovery.service';
 
 /** Internal credential contract for the existing sender. Never expose through HTTP. */
 export interface WhatsappAccountCredentials extends WhatsappCredentials {
@@ -60,6 +63,8 @@ export class WhatsappAccountService {
     @InjectRepository(WhatsAppAccount) private readonly accounts: Repository<WhatsAppAccount>,
     private readonly providers: WhatsappProviderRegistry,
     config: ConfigService,
+    @Optional() @Inject(WhatsappBroadcastRecoveryService)
+    private readonly broadcastRecovery?: WhatsappBroadcastRecoveryService,
   ) {
     // Legacy single key is key id `v1` (every token stored before keyrings existed).
     const legacy = parseKey(config.get<string>('WHATSAPP_ENCRYPTION_KEY'));
@@ -189,6 +194,10 @@ export class WhatsappAccountService {
     // The token is stored first: an Embedded Signup code is single-use, so a remote setup
     // failure must not lose it. Failures are returned as warnings and persisted.
     const setupWarnings = await this.setupRemote(saved, credentials, pin);
+    await this.broadcastRecovery?.resumeAfterCredentialReconnect(
+      tenantId,
+      credentials.phoneNumberId,
+    );
     return { ...this.publicAccount(saved), setupWarnings };
   }
 

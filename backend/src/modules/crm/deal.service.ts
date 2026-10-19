@@ -124,7 +124,9 @@ export class DealService {
     reason?: string,
   ): Promise<Deal> {
     const deal = await this.findOne(tenantId, dealId);
-    const stage = await this.stageRepository.findOne({ where: { id: stageId, tenantId } });
+    const stage = await this.stageRepository.findOne({
+      where: { id: stageId, tenantId, pipelineId: deal.pipelineId },
+    });
     if (!stage) {
       throw new NotFoundException('Pipeline stage not found');
     }

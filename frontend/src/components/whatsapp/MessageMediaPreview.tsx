@@ -20,7 +20,8 @@ export function MessageMediaPreview({
       .then((response) => {
         if (!active || !(response.data instanceof Blob)) return;
         objectUrl = URL.createObjectURL(response.data);
-        setMedia({ url: objectUrl, type: response.headers['content-type'] ?? response.data.type });
+        const contentType = response.headers['content-type'];
+        setMedia({ url: objectUrl, type: typeof contentType === 'string' ? contentType : response.data.type });
       })
       .catch(() => {
         if (active) setError(true);

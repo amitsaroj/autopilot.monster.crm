@@ -43,6 +43,7 @@ export interface Plan {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
   priceMonthly: number | string;
   priceAnnual: number | string;
   currency: string;

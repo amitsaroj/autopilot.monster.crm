@@ -29,7 +29,10 @@ export class PricingRepository {
   }
 
   async findAllPlans(): Promise<Plan[]> {
-    return this.planRepo.find({ where: { status: 'ACTIVE' }, order: { sortOrder: 'ASC' } });
+    return this.planRepo.find({
+      where: { status: 'ACTIVE', isPublic: true },
+      order: { sortOrder: 'ASC' },
+    });
   }
 
   // --- Management ---
