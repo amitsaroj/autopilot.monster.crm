@@ -230,8 +230,13 @@ export class TwilioService implements VoiceProvider {
     url: string,
     params: Record<string, string>,
   ): Promise<boolean> {
-    const { client } = await this.getClient(tenantId);
-    return Boolean(signature && client.password && twilio.validateRequest(client.password, signature, url, params));
+    // Read the token fresh: the cached client survives credential rotation and may hold mock credentials.
+    const authToken =
+      (await this.configOrchestrator.get(tenantId, 'twilio_auth_token')) ||
+      this.configService.get<string>('TWILIO_AUTH_TOKEN') ||
+      '';
+    if (!signature || !authToken || authToken === 'mocktoken') return false;
+    return twilio.validateRequest(authToken, signature, url, params);
   }
 
   async listPhoneNumbers(tenantId: string): Promise<VoiceProviderPhoneNumber[]> {
