@@ -218,3 +218,4 @@ apps/**/.turbo/
 
 # Isolated redesign verification output
 frontend/.next-redesign/
+.remotion/
