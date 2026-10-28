@@ -21,6 +21,22 @@ export interface InitiateCallOptions {
   amdCallbackUrl?: string;
   statusCallbackUrl?: string;
   recordingCallbackUrl?: string;
+  /** Caller ID override; defaults to the provider's configured number. */
+  fromNumber?: string;
+  record?: boolean;
+  maxDurationSeconds?: number;
+}
+
+export interface VoiceProviderPhoneNumber {
+  id: string;
+  phoneNumber: string;
+  capabilities: Record<string, boolean>;
+}
+
+export interface VoiceProviderCallStatus {
+  status: string;
+  durationSeconds: number;
+  costAmount?: number;
 }
 
 export type VoiceProviderHealthStatus =
@@ -60,6 +76,19 @@ export interface VoiceProvider {
     url: string,
     params: Record<string, string>,
   ): boolean;
+
+  /** Tenant-credential signature check for the outbound runtime webhook. */
+  verifyWebhook(
+    tenantId: string,
+    signature: string | undefined,
+    url: string,
+    params: Record<string, string>,
+  ): Promise<boolean>;
+
+  listPhoneNumbers(tenantId: string): Promise<VoiceProviderPhoneNumber[]>;
+
+  /** Used to reconcile calls whose callbacks never arrived. */
+  getCallStatus(tenantId: string, providerCallId: string): Promise<VoiceProviderCallStatus>;
 
   /** Real, live check — never claim CONNECTED without actually verifying credentials resolve to something usable. */
   checkHealth(tenantId: string): Promise<VoiceProviderHealth>;

@@ -100,4 +100,8 @@ export class VoiceCampaign extends BaseEntity {
   /** Number the AI agent can transfer an interested caller to; unset = transfer tool disabled. */
   @Column({ name: 'human_transfer_number', length: 20, nullable: true })
   humanTransferNumber?: string;
+
+  /** Outbound runtime settings (audience, limits, consent, voice) — see VoiceRuntimeService.validate. */
+  @Column({ type: 'jsonb', default: {} })
+  configuration!: Record<string, any>;
 }

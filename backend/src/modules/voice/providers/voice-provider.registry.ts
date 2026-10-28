@@ -31,8 +31,9 @@ export class VoiceProviderRegistry {
     return name in this.providers ? name : 'twilio';
   }
 
-  async getProvider(tenantId: string): Promise<VoiceProvider> {
-    const name = await this.resolveProviderName(tenantId);
+  /** `name` pins a provider (e.g. the one a campaign/call was placed through) instead of the tenant default. */
+  async getProvider(tenantId: string, name?: string): Promise<VoiceProvider> {
+    name ??= await this.resolveProviderName(tenantId);
     const provider = this.providers[name];
     if (!provider) {
       throw new ServiceUnavailableException(`Voice provider '${name}' is not available`);

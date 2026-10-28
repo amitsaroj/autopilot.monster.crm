@@ -7,7 +7,9 @@ import { ConfigOrchestratorService } from '../tenant-settings/config-orchestrato
 import type {
   InitiateCallOptions,
   VoiceProvider,
+  VoiceProviderCallStatus,
   VoiceProviderHealth,
+  VoiceProviderPhoneNumber,
 } from './providers/voice-provider.interface';
 
 @Injectable()
@@ -112,8 +114,9 @@ export class TwilioService implements VoiceProvider {
       const call = await client.calls.create({
         twiml: twiml.toString(),
         to,
-        from,
-        record: true,
+        from: options?.fromNumber || from,
+        record: options?.record ?? true,
+        ...(options?.maxDurationSeconds ? { timeLimit: options.maxDurationSeconds } : {}),
         ...(options?.machineDetection
           ? {
               machineDetection: 'DetectMessageEnd' as const,
@@ -219,6 +222,36 @@ export class TwilioService implements VoiceProvider {
     }
 
     return twilio.validateRequest(authToken, signature, url, params);
+  }
+
+  async verifyWebhook(
+    tenantId: string,
+    signature: string | undefined,
+    url: string,
+    params: Record<string, string>,
+  ): Promise<boolean> {
+    const { client } = await this.getClient(tenantId);
+    return Boolean(signature && client.password && twilio.validateRequest(client.password, signature, url, params));
+  }
+
+  async listPhoneNumbers(tenantId: string): Promise<VoiceProviderPhoneNumber[]> {
+    const { client } = await this.getClient(tenantId);
+    const numbers = await client.incomingPhoneNumbers.list({ limit: 1000 });
+    return numbers.map((n) => ({
+      id: n.sid,
+      phoneNumber: n.phoneNumber,
+      capabilities: { ...n.capabilities },
+    }));
+  }
+
+  async getCallStatus(tenantId: string, callSid: string): Promise<VoiceProviderCallStatus> {
+    const { client } = await this.getClient(tenantId);
+    const call = await client.calls(callSid).fetch();
+    return {
+      status: String(call.status).toUpperCase(),
+      durationSeconds: Number(call.duration || 0),
+      costAmount: call.price ? Math.abs(Number(call.price)) : undefined,
+    };
   }
 
   generateIncomingStreamingTwiml(wssUrl: string): string {

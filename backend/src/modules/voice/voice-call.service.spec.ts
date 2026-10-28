@@ -131,6 +131,7 @@ describe('VoiceCallService', () => {
       costAmount: 0,
       provider: 'twilio',
       transferredToHuman: false,
+      lifecycle: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -187,6 +188,7 @@ describe('VoiceCallService', () => {
       costAmount: 0,
       provider: 'twilio',
       transferredToHuman: false,
+      lifecycle: {},
       createdAt: new Date(),
       updatedAt: new Date(),
     };

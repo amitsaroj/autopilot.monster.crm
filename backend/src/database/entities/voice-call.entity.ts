@@ -64,4 +64,17 @@ export class VoiceCall extends BaseEntity {
   /** True once the AI initiated a live transfer to a human during this call. */
   @Column({ name: 'transferred_to_human', default: false })
   transferredToHuman!: boolean;
+
+  /** Outbound call timestamps and finalization flag maintained by VoiceRuntimeService. */
+  @Column({ type: 'jsonb', default: {} })
+  lifecycle!: VoiceCallLifecycle;
+}
+
+export interface VoiceCallLifecycle {
+  initiatedAt?: string;
+  answeredAt?: string;
+  endedAt?: string;
+  maxSeconds?: number;
+  finalized?: boolean;
+  error?: string;
 }

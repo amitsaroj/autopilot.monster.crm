@@ -43,8 +43,12 @@ export class VoiceCampaignRecipient extends BaseEntity {
   @Column({ name: 'campaign_id', type: 'uuid' })
   campaignId!: string;
 
-  @Column({ name: 'contact_id', type: 'uuid' })
-  contactId!: string;
+  /** Exactly one of contactId / leadId is set, depending on the campaign audience type. */
+  @Column({ name: 'contact_id', type: 'uuid', nullable: true })
+  contactId?: string;
+
+  @Column({ name: 'lead_id', type: 'uuid', nullable: true })
+  leadId?: string;
 
   @Column({ length: 30 })
   phone!: string;

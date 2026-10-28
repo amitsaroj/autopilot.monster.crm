@@ -15,7 +15,7 @@ export class VoiceAudienceService {
   constructor(private readonly db: DataSource) {}
   async page(tenantId: string, source: Record<string, any>, after?: string, limit = 250) {
     const type = source.type === 'leads' ? Lead : Contact;
-    const query = this.db.getRepository(type).createQueryBuilder('recipient').where('recipient.tenantId = :tenantId', { tenantId });
+    const query = this.db.getRepository<Contact | Lead>(type).createQueryBuilder('recipient').where('recipient.tenantId = :tenantId', { tenantId });
     if (after) query.andWhere('recipient.id > :after', { after });
     if (source.ids?.length) query.andWhere('recipient.id IN (:...ids)', { ids: source.ids });
     if (source.status) query.andWhere('recipient.status = :status', { status: source.status });
@@ -46,7 +46,7 @@ export class VoiceAudienceService {
       if (!phone) continue;
       await recipients.createQueryBuilder().insert().values({ tenantId: campaign.tenantId, campaignId: campaign.id, ...(source.type === 'leads' ? { leadId: person.id } : { contactId: person.id }), phone, status: reason ? VoiceCampaignRecipientStatus.SKIPPED : VoiceCampaignRecipientStatus.PENDING, failureReason: reason, maxAttempts: campaign.maxAttempts }).orIgnore().execute();
     }
-    campaign.configuration = { ...config, audienceCursor: rows.at(-1)?.id ?? config.audienceCursor, audiencePrepared: rows.length < 250 };
+    campaign.configuration = { ...config, audienceCursor: rows[rows.length - 1]?.id ?? config.audienceCursor, audiencePrepared: rows.length < 250 };
     campaign.totalContacts = await recipients.countBy({ tenantId: campaign.tenantId, campaignId: campaign.id });
     await this.db.getRepository(VoiceCampaign).save(campaign);
     return campaign.configuration.audiencePrepared;
